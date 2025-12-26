@@ -1,0 +1,100 @@
+<a href="#the-format-shortcut"                         > <strong>$ (Format)</strong>&emsp;<big><span class="blue">4.9</span></big></a><br>
+<a href="#the-above-shortcut"                          > <strong>% (Above)</strong>&emsp;<big><span class="blue">4.12</span></big></a><br>
+<a href="#self-documenting-code-fields-sdcfs"          > <strong>% (Self-Documenting Code Fields)</strong>&emsp;<big><span class="blue">4.11</span></big></a><br>
+<a href="#table-call-syntax"                           > <span class="green"><strong>∆F Call Syntax</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5a.</span></big></a><br>
+<a href="#table-option-details"                        > <span class="green"><strong>∆F Option Details</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5b.</span></big></a><br>
+<a href="#f-call-syntax-overview"                      > <strong>∆F, Call Syntax Overview</strong>&emsp;<big><span class="blue">5.1</span></big></a><br>
+<a href="#f-fstring-building-blocks"                   > <strong>∆F, F‑string Building Blocks</strong>&emsp;<big><span class="blue">5.4</span></big></a><br>
+<a href="#f-installation"                              > <strong>∆F, Installation</strong>&emsp;<big><span class="blue">1.1</span></big></a><br>
+<a href="#loading-and-running-f"                       > <strong>∆F, Loading and Running</strong>&emsp;<big><span class="blue">1.2</span></big></a><br>
+<a href="#f-option-details"                            > <strong>∆F, Option Details</strong>&emsp;<big><span class="blue">5.2</span></big></a><br>
+<a href="#inside-preparing"                            > <span class="red"><big><strong>∆F, Preparing to Run</strong></big></span>&emsp;<big><span class="blue">1.</span></big></a><br>
+<a href="#inside-reference"                            > <span class="red"><big><strong>∆F, Reference</strong></big></span>&emsp;<big><span class="blue">5.</span></big></a><br>
+<a href="#f-return-value"                              > <strong>∆F, Return Values</strong>&emsp;<big><span class="blue">5.3</span></big></a><br>
+<a href="#the-above-shortcut"                          > <strong>\`A (Above)</strong>&emsp;<big><span class="blue">4.12</span></big></a><br>
+<a href="#the-above-shortcut"                          > <strong>Above Shortcut</strong>&emsp;<big><span class="blue">4.12</span></big></a><br>
+<a href="#inside-appendices"                           > <span class="red"><big><strong>Appendices</strong></big></span>&emsp;<big><span class="blue">6.</span></big></a><br>
+<a href="#the-serialise-shortcut"                      > <strong>Array Notation (Serialise)</strong>&emsp;<big><span class="blue">4.19</span></big></a><br>
+<a href="#the-box-shortcut"                            > <strong>\`B (Box)</strong>&emsp;<big><span class="blue">4.5</span></big></a><br>
+<a href="#box-mode"                                    > <strong>Box Option</strong>&emsp;<big><span class="blue">4.6</span></big></a><br>
+<a href="#the-box-shortcut"                            > <strong>Box Shortcut</strong>&emsp;<big><span class="blue">4.5</span></big></a><br>
+<a href="#the-shortcut-for-numeric-commas"             > <strong>\`C (Commas)</strong>&emsp;<big><span class="blue">4.10</span></big></a><br>
+<a href="#table-call-syntax"                           > <span class="green"><strong>Call Syntax</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5a.</span></big></a><br>
+<a href="#table-escapes"                               > <span class="green"><strong>Code Field Escape Sequences</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5e.</span></big></a><br>
+<a href="#code-field-shortcuts"                        > <span class="red"><big><strong>Code Field Shortcuts</strong></big></span>&emsp;<big><span class="blue">5.5</span></big></a><br>
+<a href="#table-shortcuts"                             > <span class="green"><strong>Code Field Shortcuts (details)</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5d.</span></big></a><br>
+<a href="#code-fields"                                 > <strong>Code Fields</strong>&emsp;<big><span class="blue">4.1</span></big></a><br>
+<a href="#code-fields-continued"                       > <strong>Code Fields (cont.)</strong>&emsp;<big><span class="blue">4.4</span></big></a><br>
+<a href="#quoted-strings-in-code-fields"               > <strong>Code Fields (Quoted Strings)</strong>&emsp;<big><span class="blue">5.7</span></big></a><br>
+<a href="#the-shortcut-for-numeric-commas"             > <strong>Commas Shortcut (Numeric)</strong>&emsp;<big><span class="blue">4.10</span></big></a><br>
+<a href="#a-shortcut-for-dates-and-times-part-ii"      > <strong>\`D (Date)</strong>&emsp;<big><span class="blue">4.17</span></big></a><br>
+<a href="#a-shortcut-for-dates-and-times-part-ii"      > <strong>Date Shortcut (alias)</strong>&emsp;<big><span class="blue">4.17</span></big></a><br>
+<a href="#table-default-options"                       > <span class="green"><strong>Default Options</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5c.</span></big></a><br>
+<a href="#precomputed-fstrings-with-the-dfn-option"    > <strong>dfn option (precomputed F-strings)</strong>&emsp;<big><span class="blue">4.22</span></big></a><br>
+<a href="#table-quote-characters"                      > <span class="green"><strong>Doubling Quote Characters</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5f.</span></big></a><br>
+<a href="#table-escapes"                               > <span class="green"><strong>Escape Sequences</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5e.</span></big></a><br>
+<a href="#escape-sequences-text-fields-quoted-strings" > <strong>Escape Sequences in Quoted Strings</strong>&emsp;<big><span class="blue">5.6</span></big></a><br>
+<a href="#escape-sequences-text-fields-quoted-strings" > <strong>Escape Sequences in Text Fields</strong>&emsp;<big><span class="blue">5.6</span></big></a><br>
+<a href="#inside-examples"                             > <span class="red"><big><strong>Examples</strong></big></span>&emsp;<big><span class="blue">4.</span></big></a><br>
+<a href="#the-format-shortcut"                         > <strong>\`F (Format)</strong>&emsp;<big><span class="blue">4.9</span></big></a><br>
+<a href="#referencing-the-fstring-itself"              > <strong>F-string, referencing</strong>&emsp;<big><span class="blue">4.8</span></big></a><br>
+<a href="#table-field-types"                           > <span class="green"><strong>Field Types</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 2a.</span></big></a><br>
+<a href="#table-library-parameters"                    > <span class="green"><strong>file, Library parameters</strong></span>&emsp;<big><span class="blue"><small><em>Fig.</em></small> 4.21</span></big></a><br>
+<a href="#table-library-filetypes"                     > <span class="green"><strong>Filetypes, Library (\`L and £ options)</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5g.</span></big></a><br>
+<a href="#the-format-shortcut"                         > <strong>Format Shortcut</strong>&emsp;<big><span class="blue">4.9</span></big></a><br>
+<a href="#displaying-f-help-in-apl"                    > <strong>Help, Displaying in Apl</strong>&emsp;<big><span class="blue">1.3</span></big></a><br>
+<a href="#text-justification-shortcut"                 > <strong>\`J (Justification)</strong>&emsp;<big><span class="blue">4.13</span></big></a><br>
+<a href="#text-justification-shortcut"                 > <strong>Justification Shortcut</strong>&emsp;<big><span class="blue">4.13</span></big></a><br>
+<a href="#the-session-library-shortcut"                > <strong>\`L (Library)</strong>&emsp;<big><span class="blue">4.21</span></big></a><br>
+<a href="#the-session-library-shortcut"                > <strong>£ (Library)</strong>&emsp;<big><span class="blue">4.21</span></big></a><br>
+<a href="#table-library-filetypes"                     > <span class="green"><strong>Library Filetypes (\`L and £ options)</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5g.</span></big></a><br>
+<a href="#table-library-parameters"                    > <span class="green"><strong>Library parameters  (file)</strong></span>&emsp;<big><span class="blue"><small><em>Fig.</em></small> 4.21</span></big></a><br>
+<a href="#the-session-library-shortcut"                > <strong>Library Shortcut (Session)</strong>&emsp;<big><span class="blue">4.21</span></big></a><br>
+<a href="#multiline-f-strings-in-dyalog-20"            > <strong>Multiline F-strings (Dyalog 20)</strong>&emsp;<big><span class="blue">4.23</span></big></a><br>
+<a href="#null-space-fields"                           > <strong>Null Space Fields</strong>&emsp;<big><span class="blue">4.3</span></big></a><br>
+<a href="#the-shortcut-for-numeric-commas"             > <strong>Numeric Commas Shortcut</strong>&emsp;<big><span class="blue">4.10</span></big></a><br>
+<a href="#omega-shortcut-expressions-details"          > <strong>Omega Shortcut Expressions (Details)</strong>&emsp;<big><span class="blue">5.8</span></big></a><br>
+<a href="#omega-shortcuts-explicit"                    > <strong>Omega Shortcuts (Explicit)</strong>&emsp;<big><span class="blue">4.7</span></big></a><br>
+<a href="#omega-shortcuts-implicit"                    > <strong>Omega Shortcuts (Implicit)</strong>&emsp;<big><span class="blue">4.14</span></big></a><br>
+<a href="#table-option-details"                        > <span class="green"><strong>Option Details</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5b.</span></big></a><br>
+<a href="#table-default-options"                       > <span class="green"><strong>Options, default</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5c.</span></big></a><br>
+<a href="#inside-overview"                             > <span class="red"><big><strong>Overview</strong></big></span>&emsp;<big><span class="blue">2.</span></big></a><br>
+<a href="#precomputed-fstrings-with-the-dfn-option"    > <strong>Precomputed F‑strings</strong>&emsp;<big><span class="blue">4.22</span></big></a><br>
+<a href="#appendix-ii-python-fstrings"                 > <strong>Python f‑strings</strong>&emsp;<big><span class="blue">6.2</span></big></a><br>
+<a href="#the-quote-shortcut"                          > <strong>\`Q (Quote)</strong>&emsp;<big><span class="blue">4.18</span></big></a><br>
+<a href="#inside-quick-start"                          > <span class="red"><big><strong>Quick Start</strong></big></span>&emsp;<big><span class="blue">3.</span></big></a><br>
+<a href="#table-quote-characters"                      > <span class="green"><strong>Quote Characters (doubling)</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5f.</span></big></a><br>
+<a href="#the-quote-shortcut"                          > <strong>Quote Shortcut</strong>&emsp;<big><span class="blue">4.18</span></big></a><br>
+<a href="#table-quote-characters"                      > <span class="green"><strong>Quoted Strings (doubling quote chars.)</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5f.</span></big></a><br>
+<a href="#escape-sequences-text-fields-quoted-strings" > <strong>Quoted Strings (Escape Sequences)</strong>&emsp;<big><span class="blue">5.6</span></big></a><br>
+<a href="#quoted-strings-in-code-fields"               > <strong>Quoted Strings in Code Fields</strong>&emsp;<big><span class="blue">5.7</span></big></a><br>
+<a href="#the-serialise-shortcut"                      > <strong>\`S (Serialise)</strong>&emsp;<big><span class="blue">4.19</span></big></a><br>
+<a href="#self-documenting-code-fields-sdcfs"          > <strong>Self-Documenting Code fields (SDCFs)</strong>&emsp;<big><span class="blue">4.11</span></big></a><br>
+<a href="#the-serialise-shortcut"                      > <strong>Serialise Shortcut (Array Notation)</strong>&emsp;<big><span class="blue">4.19</span></big></a><br>
+<a href="#serialise-shortcut-expressions-details"      > <strong>Serialise Shortcut (Details)</strong>&emsp;<big><span class="blue">5.9</span></big></a><br>
+<a href="#table-library-parameters"                    > <span class="green"><strong>Session Library parameters (file)</strong></span>&emsp;<big><span class="blue"><small><em>Fig.</em></small> 4.21</span></big></a><br>
+<a href="#the-session-library-shortcut"                > <strong>Session Library Shortcut</strong>&emsp;<big><span class="blue">4.21</span></big></a><br>
+<a href="#session-library-shortcut-details"            > <strong>Session Library Shortcut (Details)</strong>&emsp;<big><span class="blue">5.11</span></big></a><br>
+<a href="#table-shortcuts"                             > <span class="green"><strong>Shortcuts (details)</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5d.</span></big></a><br>
+<a href="#code-field-shortcuts"                        > <span class="red"><big><strong>Shortcuts, All</strong></big></span>&emsp;<big><span class="blue">5.5</span></big></a><br>
+<a href="#table-brief-shortcuts"                       > <span class="green"><strong>Shortcuts, Brief</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 3a.</span></big></a><br>
+<a href="#shortcuts-with-apl-expressions"              > <strong>Shortcuts, With APL Expressions</strong>&emsp;<big><span class="blue">4.15</span></big></a><br>
+<a href="#text-fields-and-space-fields"                > <strong>Space Fields</strong>&emsp;<big><span class="blue">4.2</span></big></a><br>
+<a href="#null-space-fields"                           > <strong>Space Fields (Null)</strong>&emsp;<big><span class="blue">4.3</span></big></a><br>
+<a href="#inside-reference"                            > <span class="red"><big><strong>Syntax (∆F Reference)</strong></big></span>&emsp;<big><span class="blue">5.</span></big></a><br>
+<a href="#table-call-syntax"                           > <span class="green"><strong>Syntax, ∆F Call</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5a.</span></big></a><br>
+<a href="#a-shortcut-for-dates-and-times-part-i"       > <strong>\`T (Time)</strong>&emsp;<big><span class="blue">4.16</span></big></a><br>
+<a href="#table-escapes"                               > <span class="green"><strong>Text Field Escape sequences</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5e.</span></big></a><br>
+<a href="#text-fields-and-space-fields"                > <strong>Text Fields</strong>&emsp;<big><span class="blue">4.2</span></big></a><br>
+<a href="#escape-sequences-text-fields-quoted-strings" > <strong>Text Fields (Escape Sequences)</strong>&emsp;<big><span class="blue">5.6</span></big></a><br>
+<a href="#a-shortcut-for-dates-and-times-part-i"       > <strong>Time Shortcut</strong>&emsp;<big><span class="blue">4.16</span></big></a><br>
+<a href="#appendix-i-underdocumented-features"         > <strong>Un(der)documented Features</strong>&emsp;<big><span class="blue">6.1</span></big></a><br>
+<a href="#the-wrap-shortcut"                           > <strong>\`W (Wrap)</strong>&emsp;<big><span class="blue">4.20</span></big></a><br>
+<a href="#the-wrap-shortcut"                           > <strong>Wrap Shortcut</strong>&emsp;<big><span class="blue">4.20</span></big></a><br>
+<a href="#wrap-shortcut-details"                       > <strong>Wrap Shortcut (Details)</strong>&emsp;<big><span class="blue">5.10</span></big></a><br>
+<a href="#self-documenting-code-fields-sdcfs"          > <strong>→ (Self-Documenting Code Fields)</strong>&emsp;<big><span class="blue">4.11</span></big></a><br>
+<a href="#self-documenting-code-fields-sdcfs"          > <strong>↓ (Self-Documenting Code Fields)</strong>&emsp;<big><span class="blue">4.11</span></big></a><br>
+<a href="#omega-shortcuts-implicit"                    > <strong>\`⍵, ⍹ (Omega, implicit)</strong>&emsp;<big><span class="blue">4.14</span></big></a><br>
+<a href="#omega-shortcuts-explicit"                    > <strong>\`⍵𝑑𝑑, ⍹𝑑𝑑 (Omega, explicit)</strong>&emsp;<big><span class="blue">4.7</span></big></a><br>
+<a href="#omega-shortcuts-implicit"                    > <strong>⍹ (See \`⍵)</strong>&emsp;<big><span class="blue">4.14</span></big></a><br>
+<a href="#omega-shortcuts-explicit"                    > <strong>⍹𝑑𝑑 (See \`⍵𝑑𝑑)</strong>&emsp;<big><span class="blue">4.7</span></big></a><br>

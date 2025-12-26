@@ -1,0 +1,113 @@
+﻿1.  ⋄ inside-preparing                   ⋄ ∆F preparing to run
+1.  ⋄ inside-preparing                   ⋄ preparing to run ∆F 
+1.1 ⋄ f-installation                     ⋄ ∆F installation
+1.1 ⋄ f-installation                     ⋄ installing ∆F 
+1.2 ⋄ loading-and-running-f              ⋄ ∆F loading and running
+1.2 ⋄ loading-and-running-f              ⋄ loading ∆F 
+1.2 ⋄ loading-and-running-f              ⋄ running  ∆F 
+1.3 ⋄ displaying-f-help-in-apl           ⋄ Help, displaying in Apl
+2.  ⋄ inside-overview                    ⋄ Overview
+3.  ⋄ inside-quick-start                 ⋄ Quick start 
+Tbl. 3a. ⋄ table-brief-shortcuts         ⋄ shortcuts, brief  
+Tbl. 3d. ⋄ table-brief-shortcuts         ⋄ code field shortcuts, brief
+Tbl. 2a. ⋄ table-field-types             ⋄ field types  
+Tbl. 5a. ⋄ table-call-syntax             ⋄ Call syntax
+Tbl. 5a. ⋄ table-call-syntax             ⋄ Syntax, ∆F Call
+Tbl. 5a. ⋄ table-call-syntax             ⋄ ∆F Call Syntax
+Tbl. 5b. ⋄ table-option-details          ⋄ option details
+Tbl. 5c. ⋄ table-default-options         ⋄ options, default
+Tbl. 5c. ⋄ table-default-options         ⋄ Default options 
+Tbl. 5d. ⋄ table-shortcuts               ⋄ shortcuts, details
+Tbl. 5d. ⋄ table-shortcuts               ⋄ code field shortcuts, details
+Tbl. 5e. ⋄ table-escapes                 ⋄ escape sequences 
+Tbl. 5e. ⋄ table-escapes                 ⋄ code field escape sequences 
+Tbl. 5e. ⋄ table-escapes                 ⋄ text field escape sequences 
+Tbl. 5f. ⋄ table-quote-characters        ⋄ quote characters, doubling
+Tbl. 5f. ⋄ table-quote-characters        ⋄ doubling quote characters
+Tbl. 5f. ⋄ table-quote-characters        ⋄ quoted strings, doubling quote chars.
+Tbl. 5g. ⋄ table-library-filetypes       ⋄ library Filetypes: see `L and £ 
+Tbl. 5g. ⋄ table-library-filetypes       ⋄ Filetypes, library: see `L and £
+Fig. 4.21 ⋄ table-library-parameters     ⋄ library parameters, file of (.∆F) 
+Fig. 4.21 ⋄ table-library-parameters     ⋄ Session library parameters, file (.∆F)  
+Fig. 4.21 ⋄ table-library-parameters     ⋄ File, of library parameters (.∆F) 
+4.  ⋄ inside-examples                    ⋄ Examples
+4.1 ⋄ code-fields                        ⋄ code fields
+4.2 ⋄ text-fields-and-space-fields       ⋄ text fields 
+4.2 ⋄ text-fields-and-space-fields       ⋄ space fields
+4.3 ⋄ null-space-fields                  ⋄ Null space fields 
+4.3 ⋄ null-space-fields                  ⋄ space fields, null
+4.4 ⋄ code-fields-continued              ⋄ code fields (continued)
+4.5 ⋄ the-box-shortcut                   ⋄ Box shortcut
+4.5 ⋄ the-box-shortcut                   ⋄ `B (box)
+4.6 ⋄ box-mode                           ⋄ Box option 
+4.7 ⋄ omega-shortcuts-explicit           ⋄ Omega shortcuts, explicit
+4.7 ⋄ omega-shortcuts-explicit           ⋄ `⍵𝑑𝑑, ⍹𝑑𝑑 (omega, explicit)
+4.7 ⋄ omega-shortcuts-explicit           ⋄ ⍹𝑑𝑑 [<strong>⍵</strong>-underscore]: see `⍵𝑑𝑑
+4.8 ⋄ referencing-the-fstring-itself     ⋄ F-string, referencing
+4.9 ⋄ the-format-shortcut                ⋄ Format shortcut
+4.9 ⋄ the-format-shortcut                ⋄ `F (format)
+4.9 ⋄ the-format-shortcut                ⋄ $ (format)
+4.10 ⋄ the-shortcut-for-numeric-commas   ⋄ Commas shortcut, numeric
+4.10 ⋄ the-shortcut-for-numeric-commas   ⋄ `C (numeric commas)
+4.10 ⋄ the-shortcut-for-numeric-commas   ⋄ Numeric commas shortcut 
+4.11 ⋄ self-documenting-code-fields-sdcfs⋄ Self-documenting code fields (SDCFs)
+4.11 ⋄ self-documenting-code-fields-sdcfs⋄ SDCFs: self-documenting code fields
+4.11 ⋄ self-documenting-code-fields-sdcfs⋄ ↓ (vertical SDCF) 
+4.11 ⋄ self-documenting-code-fields-sdcfs⋄ Vertical SDCF (↓ or %)
+4.11 ⋄ self-documenting-code-fields-sdcfs⋄ % (vertical SDCF)
+4.11 ⋄ self-documenting-code-fields-sdcfs⋄ → (horizontal SDCF)
+4.11 ⋄ self-documenting-code-fields-sdcfs⋄ Horizontal SDCF (→)
+4.12 ⋄ the-above-shortcut                ⋄ Above shortcut
+4.12 ⋄ the-above-shortcut                ⋄ % (above)
+4.12 ⋄ the-above-shortcut                ⋄ `A (above)
+4.13 ⋄ text-justification-shortcut       ⋄ Justification shortcut
+4.13 ⋄ text-justification-shortcut       ⋄ `J (Justification)
+4.14 ⋄ omega-shortcuts-implicit          ⋄ Omega shortcuts, implicit
+4.14 ⋄ omega-shortcuts-implicit          ⋄ `⍵, ⍹ (omega, implicit) 
+4.14 ⋄ omega-shortcuts-implicit          ⋄  ⍹ [<strong>⍵</strong>-underscore]: see <em>`⍵</em>
+4.15 ⋄ shortcuts-with-apl-expressions    ⋄ shortcuts, with Apl expressions
+4.16 ⋄ a-shortcut-for-dates-and-times-part-i⋄ Time shortcut  
+4.16 ⋄ a-shortcut-for-dates-and-times-part-i⋄ `T (time)
+4.17 ⋄ a-shortcut-for-dates-and-times-part-ii⋄ Date shortcut (alias)
+4.17 ⋄ a-shortcut-for-dates-and-times-part-ii⋄ `D (date)
+4.18 ⋄ the-quote-shortcut                ⋄ quote shortcut
+4.18 ⋄ the-quote-shortcut                ⋄ `Q (quote)
+4.19 ⋄ the-serialise-shortcut            ⋄ Serialise shortcut, array notation
+4.19 ⋄ the-serialise-shortcut            ⋄ `S (serialise)
+4.19 ⋄ the-serialise-shortcut            ⋄ Array notation, serialise
+4.20 ⋄ the-wrap-shortcut                 ⋄ Wrap shortcut 
+4.20 ⋄ the-wrap-shortcut                 ⋄ `W (wrap)
+4.21 ⋄ the-session-library-shortcut      ⋄ Session library shortcut 
+4.21 ⋄ the-session-library-shortcut      ⋄ `L (library)
+4.21 ⋄ the-session-library-shortcut      ⋄ £ (library)
+4.21 ⋄ the-session-library-shortcut      ⋄ library shortcut, session 
+4.22 ⋄ precomputed-fstrings-with-the-dfn-option⋄ Precomputed F‑strings 
+4.22 ⋄ precomputed-fstrings-with-the-dfn-option⋄ dfn option, precomputed F-strings
+4.23 ⋄ multiline-F-strings-in-dyalog-20  ⋄ Multiline f-strings, Dyalog 20
+5.  ⋄ inside-reference                   ⋄ ∆F reference section
+5.  ⋄ inside-reference                   ⋄ Syntax (∆F reference)
+5.1 ⋄ f-call-syntax-overview             ⋄ ∆F call syntax overview
+5.2 ⋄ f-option-details                   ⋄ ∆F option details
+5.3 ⋄ f-return-value                     ⋄ ∆F return values
+5.4 ⋄ f-fstring-building-blocks          ⋄ ∆F f-string building blocks
+5.5 ⋄ code-field-shortcuts               ⋄ code field shortcuts
+5.5 ⋄ code-field-shortcuts               ⋄ shortcuts, all 
+5.6 ⋄ escape-sequences-text-fields-quoted-strings⋄ escape sequences in quoted strings
+5.6 ⋄ escape-sequences-text-fields-quoted-strings⋄ escape sequences in text fields  
+5.6 ⋄ escape-sequences-text-fields-quoted-strings⋄ text fields, escape sequences in
+5.6 ⋄ escape-sequences-text-fields-quoted-strings⋄ quoted strings, escape sequences in
+5.7 ⋄ quoted-strings-in-code-fields      ⋄ quoted strings in code fields
+5.7 ⋄ quoted-strings-in-code-fields      ⋄ code fields, quoted strings in
+5.8 ⋄ omega-shortcut-expressions-details ⋄ Omega shortcut expressions, details
+5.8 ⋄ omega-shortcut-expressions-details ⋄ `⍵ and ⍹, details
+5.8 ⋄ omega-shortcut-expressions-details ⋄ Omega underscore (⍹), details
+5.8 ⋄ omega-shortcut-expressions-details ⋄ escape omega, details 
+5.9 ⋄ serialise-shortcut-expressions-details  ⋄ Serialise shortcut, details
+5.10 ⋄ wrap-shortcut-details             ⋄ Wrap shortcut, details
+5.11 ⋄ session-library-shortcut-details  ⋄ Session library shortcut, details
+6.  ⋄ inside-appendices                  ⋄ Appendices
+6.1 ⋄ appendix-i-underdocumented-features⋄ Underdocumented features  
+6.1 ⋄ appendix-i-underdocumented-features⋄ Undocumented features  
+6.2 ⋄ appendix-ii-python-fstrings        ⋄ Python f‑strings 
+0.  ⋄ intro                              ⋄ F-strings, definition  
+6.2 ⋄ appendix-ii-python-fstrings        ⋄ F-strings, Python

@@ -1,0 +1,9 @@
+﻿r←simple n
+::DEF sqrt ← 0.5*⍨
+::DEF sq   ← 2*⍨
+::DEF inc  ← 1+
+::VAL const ← sq(○1)
+
+ a←sqrt 4
+ b←sq   a
+ c←(inc a)+(inc b)+const

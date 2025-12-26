@@ -1,0 +1,16 @@
+# Ignore OS X Unix-generated temp / backup files like these: 
+#         myFile~ | #UpdatedFile.data  | myFile.data~
+*~
+\#*
+\.*
+*.dylib
+*.so
+src/∆FC.dylib
+src/pmsLibrary/
+src/obsolete2/
+src/∆F_C.so
+src/gmp
+src/aplcore
+src/index.html
+src/index.html
+/src/MyDyalogLib

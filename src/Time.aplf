@@ -1,0 +1,59 @@
+﻿{⍙res⍙}←{⍙opts⍙}Time ⍙codeList⍙
+;⍙Func⍙;⍙ns
+
+⍝ [ timings ] ←  [ opts ] ∇ 'code1' [ 'code2' [...] ]
+⍝    codeN: a piece of code to time (char vec)
+⍝    opts: Sets behavior & timing limits* for each code segment
+⍝                                                      *   Overall CPU and wallclock may be (much) higher.
+⍝         loopMax=10, quiet=0                          <== If item omitted or 0, default (after =) is used.
+⍝         cpuMin=0.05, cpuMax=0.5, wallMax=1           <== In sec. If item omitted or 0, default (after =) is used.
+⍝ Returns:
+⍝         timings (shyly) for each code segment (in seconds).
+⍝ Unless (quiet=1), reports as it goes with more detail.
+
+⍝ Limit namespace pollution...
+⍙ns← ⎕NS''
+⍝ Set Options. If a parameter is 0 or omitted, use the default...
+⍝ Options are input in seconds, but internally ms are used (to match ⎕MONITOR).
+⍙ns.defaults← 10 0 0.05 0.5  1              ⍝ Defaults: loopMax quiet cpuMin(s) cpuMax(s) wallMax(s)
+⍙ns.SetOpts←  1  1 1000 1000 1000× (⊃⎕RSI).{0=⎕NC ⍵: ⍺ ⋄ w+⍺×0=w←(≢⍺)↑⎕OR ⍵} 
+⍙ns.( loopMax quiet cpuMin cpuMax wallMax← defaults SetOpts '⍙opts⍙' )
+
+⍙ns.codeWidth←10⌈(⎕PW-60)⌊⌈/≢¨⍙codeList⍙
+⍙ns.TimeMs←(⊃⎕RSI).{2↑2↓,⎕MONITOR'⍙Func⍙'}      ⍝ ∇ ⍬: Returns:  [0] CPU TIME (ms), [1] ELAPSED TIME (ms)'
+
+:IF 0=⍙ns.quiet
+    ⎕←('Code'↑⍨⍙ns.codeWidth),' | CPU/Iter (s) | # Iter | Tot CPU (s)  | Tot Wall (s)'
+:Endif 
+
+⍙res⍙←⍬ ⋄ ⍙ns.isBase←1    
+⍝ First time through determines the baseline per statement
+:For ⍙ns.code :In '0',⍥⊆⍙codeList⍙
+
+    {}⎕WA
+    ⎕FX'{⍙t⍙}←⍙Func⍙'('⍙t⍙←',⍙ns.code)
+    1 ⎕MONITOR'⍙Func⍙'                      ⍝ Clears monitor...
+
+    ⍙ns.lc←0                                ⍝ Loops for this <code>
+    :Repeat
+        ⍙Func⍙
+        ⍙ns.lc+←1
+        ⍙ns.(cpu wall←TimeMs ⍬)
+    :Until ⍙ns.( (cpu>cpuMin)∧ lc≥ loopMax) ⍝ Loop at least cpuMin ms
+    :OrIf ⍙ns.(cpu≥cpuMax)                  ⍝ End execution if we've exceeded total CPU* per test
+    :OrIf ⍙ns.(wall≥wallMax)                ⍝ End execution if we've exceeded wallclock*. Beware ⎕DL, etc.
+                                            ⍝        * Based on timings JUST for the <code> line.
+
+    :If ⍙ns.isBase
+        ⍙ns.(isBase baseCPU←0 cpu ÷ lc)
+    :Else
+        ⍙res⍙,←0.001×0⌈⍙ns.( baseCPU-⍨ cpu ÷ lc)
+        {
+                1=⍵.quiet:
+                _←⍵.(codeWidth↑code)       ⋄  _,←' | ',(10 ¯3⍕⊃⌽⍙res⍙),'   '
+                _,←'| ',(6 ¯2⍕⍵.lc),' '     ⋄  _,←'|  ',(6 ¯3⍕0.001×⍵.cpu),'      '
+                _,←'| ',(5⍕0.001×⍵.wall) ⋄  ⎕←_
+        }⍙ns
+    :EndIf
+
+:EndFor

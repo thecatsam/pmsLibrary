@@ -1,0 +1,2506 @@
+#.isolate
+
+:Class APLProcess
+    ⍝ Start (and eventually dispose of) a Process
+    ⍝ Note: ssh support under Windows requires Renci.SshNet.dll
+
+    (⎕IO ⎕ML)←1 1
+
+    :Field Public Args←''
+    :Field Public Ws←''
+    :Field Public Exe←''
+    :Field Public Proc←⎕NS ''
+    :Field Public onExit←''
+    :Field Public RunTime←0    ⍝ Boolean or name of runtime executable
+    :Field Public Platform
+    :Field Public IsWin
+    :Field Public IsMac
+    :Field Public IsSsh
+
+    endswith←{w←,⍵ ⋄ a←,⍺ ⋄ w≡(-(⍴a)⌊⍴w)↑a}
+    tonum←{⊃⊃(//)⎕VFI ⍵}
+    eis←{2>|≡⍵:,⊂⍵ ⋄ ⍵} ⍝ enclose if simple
+
+    ∇ path←SourcePath;source
+    ⍝ Determine the source path of the class
+     
+      :Trap 6
+          source←⍎'(⊃⊃⎕CLASS ⎕THIS).SALT_Data.SourceFile' ⍝ ⍎ works around a bug
+      :Else
+          :If 0=⍴source←{((⊃¨⍵)⍳⊃⊃⎕CLASS ⎕THIS)⊃⍵,⊂''}5177⌶⍬
+              source←⎕WSID
+          :Else ⋄ source←4⊃source
+          :EndIf
+      :EndTrap
+      path←{(-⌊/(⌽⍵)⍳'\/')↓⍵}source
+    ∇
+
+    ∇ make
+      :Access public instance
+      :Implements constructor
+      make_common
+    ∇
+
+    ∇ make1 args;rt;cmd;ws
+      :Access Public Instance
+      :Implements Constructor
+      ⍝ args is:
+      ⍝  [1]  the workspace to load
+      ⍝  [2]  any command line arguments
+      ⍝ {[3]} if present, a Boolean indicating whether to use the runtime version, OR a character vector of the executable name to run
+      ⍝ {[4]} if present, the RIDE_INIT parameters to use
+      ⍝ {[5]} if present, a log-file prefix for process output
+      make_common
+      args←{2>|≡⍵:,⊂⍵ ⋄ ⍵}args
+      args←5↑args,(⍴args)↓'' '' 0 '' ''
+      (ws cmd rt RIDE_INIT OUT_FILE)←args
+      PATH←SourcePath
+      Start(ws cmd rt)
+    ∇
+
+    ∇ make_common
+       Platform←⊃#.⎕WG'APLVersion'
+      IsWin←'Win'≡3↑Platform
+      IsMac←'Mac'≡3↑Platform  
+      IsSsh←0
+    ∇  
+
+    ∇ Run
+      :Access Public Instance
+      Start(Ws Args RunTime)
+    ∇
+
+    ∇ Start(ws args rt);psi;pid;cmd;host;port;keyfile;exe;z;output
+      (Ws Args)←ws args
+      args,←' RIDE_INIT="',RIDE_INIT,'"',(0≠≢RIDE_INIT)/' RIDE_SPAWNED=1'
+        ⍝ NB Always set RIDE_INIT to override current process setting
+     
+      :If ~0 2 6∊⍨10|⎕DR rt ⍝ if rt is character or nested, it defines what to start
+          Exe←(RunTimeName⍣rt)GetCurrentExecutable ⍝ else, deduce it
+      :Else
+          Exe←rt
+          rt←0
+      :EndIf
+     
+      :If IsWin∧~IsSsh←326=⎕DR Exe
+          ⎕USING←'System,System.dll'
+          psi←⎕NEW Diagnostics.ProcessStartInfo,⊂Exe(ws,' ',args)
+          psi.WindowStyle←Diagnostics.ProcessWindowStyle.Minimized
+          Proc←Diagnostics.Process.Start psi
+      :Else ⍝ Unix
+          :If ~∨/'LOG_FILE'⍷args            ⍝ By default
+              args,←'LOG_FILE=/dev/nul '   ⍝    no log file
+          :EndIf
+     
+          :If IsSsh
+              (host port keyfile exe)←Exe
+              cmd←args,' ',exe,' +s -q ',ws
+              Proc←SshProc host port keyfile cmd
+          :Else
+              z←⍕GetCurrentProcessId
+              output←(1+×≢OUT_FILE)⊃'/dev/null'OUT_FILE
+              pid←_SH'{ ',args,' ',Exe,' +s -q ',ws,' -c APLppid=',z,' </dev/null >',output,' 2>&1 & } ; echo $!'
+              Proc.Id←pid
+              Proc.HasExited←HasExited
+          :EndIf
+          Proc.StartTime←⎕NEW Time ⎕TS
+      :EndIf
+    ∇
+
+    ∇ Close;count;limit
+      :Implements Destructor
+      WaitForKill&200 0.1 ⍝ Start a new thread to do the dirty work
+    ∇
+
+    ∇ WaitForKill(limit interval);count
+      :If (0≠⍴onExit)∧~HasExited ⍝ If the process is still alive
+          :Trap 0 ⋄ ⍎onExit ⋄ :EndTrap ⍝ Try this
+     
+          count←0
+          :While ~HasExited
+              {}⎕DL interval
+              count←count+1
+          :Until count>limit
+      :EndIf ⍝ OK, have it your own way
+     
+      {}Kill Proc
+    ∇
+
+    ∇ r←GetCurrentProcessId;t;IsWin;IsMac;IsSsh;Platform
+      :Access Public Shared 
+      make_common
+      :If IsWin
+          r←⍎'t'⎕NA'U4 kernel32|GetCurrentProcessId'
+      :ElseIf IsSsh
+          r←Proc.Pid
+      :Else
+          r←tonum⊃_SH'echo $PPID'
+      :EndIf
+    ∇
+
+    ∇ r←GetCurrentExecutable;⎕USING;t;gmfn;IsWin;IsMac;IsSsh;Platform
+      :Access Public Shared      
+      make_common
+      :If IsWin
+          r←''
+          :Trap 0
+              'gmfn'⎕NA'U4 kernel32|GetModuleFileName* P =T[] U4'
+              r←⊃⍴/gmfn 0(1024⍴' ')1024
+          :EndTrap
+          :If 0∊⍴r
+              ⎕USING←'System,system.dll'
+              r←2 ⎕NQ'.' 'GetEnvironment' 'DYALOG'
+              r←r,(~(¯1↑r)∊'\/')/'/' ⍝ Add separator if necessary
+              r←r,(Diagnostics.Process.GetCurrentProcess.ProcessName),'.exe'
+          :EndIf
+      :ElseIf IsSsh
+          ∘∘∘ ⍝ Not supported
+      :Else
+          t←⊃_PS'-o args -p ',⍕GetCurrentProcessId ⍝ AWS
+          :If '"'''∊⍨⊃t  ⍝ if command begins with ' or "
+              r←{⍵/⍨{∧\⍵∨≠\⍵}⍵=⊃⍵}t
+          :Else
+              r←{⍵↑⍨¯1+1⍳⍨(¯1↓0,⍵='\')<⍵=' '}t ⍝ otherwise find first non-escaped space (this will fail on files that end with '\\')
+          :EndIf
+      :EndIf
+    ∇
+
+    ∇ r←RunTimeName exe
+    ⍝ Assumes that:
+    ⍝ Windows runtime ends in "rt.exe"
+    ⍝ *NIX runtime ends in ".rt"
+      r←exe
+      :If IsWin
+          :If 'rt.exe'≢¯6↑{('rt.ex',⍵)[⍵⍳⍨'RT.EX',⍵]}exe ⍝ deal with case insensitivity
+              r←'rt.exe',⍨{(~∨\⌽<\⌽'.'=⍵)/⍵}exe
+          :EndIf
+      :Else
+          r←exe,('.rt'≢¯3↑exe)/'.rt'
+      :EndIf
+    ∇
+
+
+    ∇ r←KillChildren Exe;kids;⎕USING;p;m;i;mask
+      :Access Public Shared
+      ⍝ returns [;1] pid [;2] process name of any processes that were not killed
+      r←0 2⍴0 ''
+      :If ~0∊⍴kids←ListProcesses Exe ⍝ All child processes using the exe
+          :If IsWin
+              ⎕USING←'System,system.dll'
+              p←Diagnostics.Process.GetProcessById¨kids[;1]
+              p.Kill
+              ⎕DL 1
+              :If 0≠⍴p←(~p.HasExited)/p
+                  ⎕DL 1
+                  p.Kill
+                  ⎕DL 1
+                  :If ∨/m←~p.HasExited
+                      r←(kids[;1]∊m/p.Id)⌿kids
+                  :EndIf
+              :EndIf
+          :ElseIf IsSsh
+              ∘∘∘
+          :Else
+              mask←(⍬⍴⍴kids)⍴0
+              :For i :In ⍳⍴mask
+                  mask[i]←Shoot kids[i;1]
+              :EndFor
+              r←(~mask)⌿kids
+          :EndIf
+      :EndIf
+    ∇
+
+    ∇ r←{all}ListProcesses procName;me;⎕USING;procs;unames;names;name;i;pn;kid;parent;mask;n
+      :Access Public Shared
+    ⍝ returns either my child processes or all processes
+    ⍝ procName is either '' for all children, or the name of a process
+    ⍝ r[;1] - child process number (Id)
+    ⍝ r[;2] - child process name
+      me←GetCurrentProcessId
+      r←0 2⍴0 ''
+      procName←,procName
+      all←{6::⍵ ⋄ all}0 ⍝ default to just my childen
+     
+      :If IsWin
+          ⎕USING←'System,system.dll'
+     
+          :If 0∊⍴procName ⋄ procs←Diagnostics.Process.GetProcesses''
+          :Else ⋄ procs←Diagnostics.Process.GetProcessesByName⊂procName ⋄ :EndIf
+          :If all
+              r←↑procs.(Id ProcessName)
+              r⌿⍨←r[;1]≠me
+          :Else
+              :If 0<⍴procs
+                  unames←∪names←procs.ProcessName
+                  :For name :In unames
+                      :For i :In ⍳n←1+.=(,⊂name)⍳names
+                          pn←name,(n≠1)/'#',⍕i
+                          :Trap 0 ⍝ trap here just in case a process disappeared before we get to it
+                              parent←⎕NEW Diagnostics.PerformanceCounter('Process' 'Creating Process Id'pn)
+                              :If me=parent.NextValue
+                                  kid←⎕NEW Diagnostics.PerformanceCounter('Process' 'Id Process'pn)
+                                  r⍪←(kid.NextValue)name
+                              :EndIf
+                          :EndTrap
+                      :EndFor
+                  :EndFor
+              :EndIf
+          :EndIf
+      :ElseIf IsSsh
+          ∘∘∘
+      :Else ⍝ Linux
+      ⍝ unfortunately, Ubuntu (and perhaps others) report the PPID of tasks started via ⎕SH as 1
+      ⍝ so, the best we can do at this point is identify processes that we tagged with ppid=
+          mask←' '∧.=procs←' ',↑_PS'-eo pid,cmd',((~all)/' | grep APLppid=',(⍕GetCurrentProcessId)),(0<⍴procName)/' | grep ',procName,' | grep -v grep' ⍝ AWS
+          mask∧←2≥+\mask
+          procs←↓¨mask⊂procs
+          mask←me≠tonum¨1⊃procs ⍝ remove my task
+          procs←mask∘/¨procs[1 2]
+          mask←1
+          :If 0<⍴procName
+              mask←∨/¨(procName,' ')∘⍷¨(2⊃procs),¨' '
+          :EndIf
+          mask>←∨/¨'grep '∘⍷¨2⊃procs ⍝ remove procs that are for the searches
+          procs←mask∘/¨procs
+          r←↑[0.1]procs
+      :EndIf
+    ∇
+
+    ∇ r←Kill;delay
+      :Access Public Instance
+      r←0 ⋄ delay←0.1
+      :Trap 0
+          :If IsWin
+              Proc.Kill
+              :Repeat
+                  ⎕DL delay
+                  delay+←delay
+              :Until (delay>10)∨Proc.HasExited
+          :ElseIf IsSsh
+              ∘∘∘
+          :Else ⍝ Local UNIX
+              {}UNIXIssueKill 3 Proc.Id ⍝ issue strong interrupt
+              {}⎕DL 2 ⍝ wait a couple seconds for it to react
+              :If ~Proc.HasExited←~UNIXIsRunning Proc.Id
+                  {}UNIXIssueKill 9 Proc.Id ⍝ issue strong interrupt
+                  {}⎕DL 2 ⍝ wait a couple seconds for it to react
+              :AndIf ~Proc.HasExited←~UNIXIsRunning Proc.Id
+                  :Repeat
+                      ⎕DL delay
+                      delay+←delay
+                  :Until (delay>10)∨Proc.HasExited~UNIXIsRunning Proc.Id
+              :EndIf
+          :EndIf
+          r←Proc.HasExited
+      :EndTrap
+    ∇
+
+    ∇ r←Shoot Proc;MAX;res
+      MAX←100
+      r←0
+      :If 0≠⎕NC⊂'Proc.HasExited'
+          :Repeat
+              :If ~Proc.HasExited
+                  :If IsWin
+                      Proc.Kill
+                      ⎕DL 0.2
+                  :ElseIf IsSsh
+                      ∘∘∘
+                  :Else
+                      {}UNIXIssueKill 3 Proc.Id ⍝ issue strong interrupt AWS
+                      {}⎕DL 2 ⍝ wait a couple seconds for it to react
+                      :If ~Proc.HasExited←0∊⍴res←UNIXGetShortCmd Proc.Id       ⍝ AWS
+                          Proc.HasExited∨←∨/'<defunct>'⍷⊃,/res
+                      :EndIf
+                  :EndIf
+              :EndIf
+              MAX-←1
+          :Until Proc.HasExited∨MAX≤0
+          r←Proc.HasExited
+      :ElseIf 2=⎕NC'Proc' ⍝ just a process id?
+          {}UNIXIssueKill 9 Proc.Id
+          {}⎕DL 2
+          r←~UNIXIsRunning Proc.Id  ⍝ AWS
+      :EndIf
+    ∇
+
+    ∇ r←HasExited
+      :Access public instance
+      :If IsWin∨IsSsh
+          r←{0::⍵ ⋄ Proc.HasExited}1
+      :Else
+          r←~UNIXIsRunning Proc.Id ⍝ AWS
+      :EndIf
+    ∇
+
+    ∇ r←IsRunning args;⎕USING;start;exe;pid;proc;diff;res
+      :Access public shared
+      ⍝ args - pid {exe} {startTS}
+      r←0
+      args←eis args
+      (pid exe start)←3↑args,(⍴args)↓0 ''⍬
+      :If IsWin
+          ⎕USING←'System,system.dll'
+          :Trap 0
+              proc←Diagnostics.Process.GetProcessById pid
+              r←1
+          :Else
+              :Return
+          :EndTrap
+          :If ''≢exe
+              r∧←exe≡proc.ProcessName
+          :EndIf
+          :If ⍬≢start
+              :Trap 90
+                  diff←|-/#.DFSUtils.DateToIDN¨start(proc.StartTime.(Year Month Day Hour Minute Second Millisecond))
+                  r∧←diff≤24 60 60 1000⊥0 1 0 0÷×/24 60 60 1000 ⍝ consider it a match within a 1 minute window
+              :Else
+                  r←0
+              :EndTrap
+          :EndIf
+      :ElseIf IsSsh
+          ∘∘∘
+      :Else
+          r←UNIXIsRunning pid
+      :EndIf
+    ∇
+
+    ∇ r←Stop pid;proc
+      :Access public shared
+    ⍝ attempts to stop the process with processID pid
+      :If IsWin
+          ⎕USING←'System,system.dll'
+          :Trap 0
+              proc←Diagnostics.Process.GetProcessById pid
+          :Else
+              r←1
+              :Return
+          :EndTrap
+          proc.Kill
+          {}⎕DL 0.5
+          r←~##.APLProcess.IsRunning pid
+      :ElseIf IsSsh
+          ∘∘∘
+      :ElseIf
+          {}UNIXIssueKill 3 pid ⍝ issue strong interrupt
+      :EndIf
+    ∇
+
+    ∇ r←UNIXIsRunning pid;txt
+    ⍝ Return 1 if the process is in the process table and is not a defunct
+      r←0
+      →(r←' '∨.≠txt←UNIXGetShortCmd pid)↓0
+      r←~∨/'<defunct>'⍷txt
+    ∇
+
+    ∇ {r}←UNIXIssueKill(signal pid)
+      signal pid←⍕¨signal pid
+      cmd←'kill -',signal,' ',pid,' >/dev/null 2>&1 ; echo $?'
+      :If IsSsh
+          ∘∘∘
+      :Else
+          r←⎕SH cmd
+      :EndIf
+    ∇
+
+    ∇ r←UNIXGetShortCmd pid;cmd
+      ⍝ Retrieve sort form of cmd used to start process <pid>
+      cmd←(1+IsMac)⊃'cmd' 'command'
+      cmd←'ps -o ',cmd,' -p ',(⍕pid),' 2>/dev/null ; exit 0'
+      :If IsSsh
+          ∘∘∘
+      :Else
+          r←⊃1↓⎕SH cmd
+      :EndIf
+    ∇
+
+    ∇ r←_PS cmd;ps
+      ps←'ps ',⍨('AIX'≡3↑⊃'.'⎕WG'APLVersion')/'/usr/sysv/bin/'    ⍝ Must use this ps on AIX
+      r←1↓⎕SH ps,cmd,' 2>/dev/null; exit 0'                  ⍝ Remove header line
+    ∇
+
+    ∇ r←{quietly}_SH cmd
+      :Access public shared
+      quietly←{6::⍵ ⋄ quietly}0
+      :If quietly
+          cmd←cmd,' </dev/null 2>&1'
+      :EndIf
+      r←{0::'' ⋄ ⎕SH ⍵}cmd
+    ∇
+
+    :Class Time
+        :Field Public Year
+        :Field Public Month
+        :Field Public Day
+        :Field Public Hour
+        :Field Public Minute
+        :Field Public Second
+        :Field Public Millisecond
+
+        ∇ make ts
+          :Implements Constructor
+          :Access Public
+          (Year Month Day Hour Minute Second Millisecond)←7↑ts
+          ⎕DF(⍕¯2↑'00',⍕Day),'-',((12 3⍴'JanFebMarAprMayJunJulAugSepOctNovDec')[⍬⍴Month;]),'-',(⍕100|Year),' ',1↓⊃,/{':',¯2↑'00',⍕⍵}¨Hour Minute Second
+        ∇
+
+    :EndClass
+
+    ∇ r←ProcessUsingPort port;t
+    ⍝ return the process ID of the process (if any) using a port
+      :Access public shared
+      r←⍬
+      :If IsWin
+          :If ~0∊⍴t←_SH'netstat -a -n -o'
+          :AndIf ~0∊⍴t/⍨←∨/¨'LISTENING'∘⍷¨t
+          :AndIf ~0∊⍴t/⍨←∨/¨((':',⍕port),' ')∘⍷¨t
+              r←∪∊¯1↑¨(//)∘⎕VFI¨t
+          :EndIf
+      :Else
+          :If ~0∊⍴t←_SH'netstat -l -n -p 2>/dev/null | grep '':',(⍕port),' '''
+              r←∪∊{⊃(//)⎕VFI{(∧\⍵∊⎕D)/⍵}⊃¯1↑{⎕ML←3 ⋄ (' '≠⍵)⊂⍵}⍵}¨t
+          :EndIf
+      :EndIf
+    ∇
+
+    ∇ r←MyDNSName;GCN;IsWin;IsSsh;IsMac;Platform
+      :Access Public Shared
+      
+      make_common ⍝ because this method is shared 
+
+      :If IsWin
+          'GCN'⎕NA'I4 Kernel32|GetComputerNameEx* U4 >0T =U4'
+          r←2⊃GCN 7 255 255
+          :Return
+      ⍝ ComputerNameNetBIOS = 0
+      ⍝ ComputerNameDnsHostname = 1
+      ⍝ ComputerNameDnsDomain = 2
+      ⍝ ComputerNameDnsFullyQualified = 3
+      ⍝ ComputerNamePhysicalNetBIOS = 4
+      ⍝ ComputerNamePhysicalDnsHostname = 5
+      ⍝ ComputerNamePhysicalDnsDomain = 6
+      ⍝ ComputerNamePhysicalDnsFullyQualified = 7 <<<
+      ⍝ ComputerNameMax = 8
+      :ElseIf IsSsh
+          ∘∘∘ ⍝ Not supported
+      :Else
+          r←⊃_SH'hostname'
+      :EndIf
+    ∇
+
+    ∇ Proc←SshProc(host user keyfile cmd);conn;z;kf;allpids;guid;listpids;pids;⎕USING;pid;tid
+      ⎕USING←'Renci.SshNet,',PATH,'/Renci.SshNet.dll'
+      kf←⎕NEW PrivateKeyFile(,⊂keyfile)
+      conn←⎕NEW SshClient(host 22 user(,kf))
+     
+      :Trap 0
+          conn.Connect    ⍝ This is defined to be a void()
+      :Case 90 ⋄ ('Error creating ssh client instance: ',⎕EXCEPTION.Message)⎕SIGNAL 11
+      :Else ⋄ 'Unexpected error creating ssh client instance'⎕SIGNAL 11
+      :EndTrap
+     
+      listpids←{0~⍨2⊃(⎕UCS 10)⎕VFI(conn.RunCommand⊂'ps -u ',user,' | grep dyalog | grep -v grep | awk ''{print $2}''').Result}
+      guid←'dyalog-ssh-',(⍕⎕TS)~' '
+      pids←listpids ⍬
+      Proc←⎕NS''
+      Proc.SshConn←conn
+      Proc.HasExited←0
+      tid←{SshRun conn ⍵ Proc}&⊂cmd
+      Proc.tid←tid
+      ⎕DL 1
+      :If 1=⍴pid←(listpids ⍬)~pids ⋄ pid←⊃pid
+      :Else ⋄ ∘∘∘ ⋄ :EndIf ⍝ failed to start
+      Proc.Pid←pid
+    ∇
+
+    ∇ SshRun(conn cmd proc)
+    ⍝ Wait until APL exits, then set HasExited←1
+      conn.RunCommand cmd
+      proc.HasExited←1
+    ∇
+
+:EndClass
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.AddServer←{ ⍝ ⍵: ip-address port-numbers
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.AddServer ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.Available←{ ⍝ 1 if an item of ⍵ has been computed, 0 if it is still a future
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.Available ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.Config←{ ⍝ ⍵: option new-value (or '' to list current settings)
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.Config ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.Failed←{⍝ 1 if an items of ⍵ was a future but computation failed, else 0
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.Failed ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.New←{⍝ Return new isolate with contents specified by ⍵
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.New⊢⍵
+[3]   }
+     ∇
+
+      isolate.RPCServer
+#.isolate.RPCServer
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.RPCServer.AllowRemoteAccess filters;i
+[1]   ⍝ By default, RPCServer will only accept connections from the local machine
+[2]   ⍝ /// validation?
+[3]   
+[4]   r←filters
+[5]   
+[6]   :If 0=⍴allowremote←r
+[7]   Log'Local access only'
+[8]   :Else
+[9]   Log'Remote access allowed for ',,⍕filters
+[10]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.RPCServer.Boot;name;port;certfile;keyfile;sslflags;num;secure;load;l;folder;z;autoshut;quiet;allowremote;commasep;localaddrs
+[1]   ⍝ Bootstrap an RPC-Server using the following command line parameters
+[2]   ⍝ -Port=nnnn
+[3]   ⍝ -Load=.dyalog files to load before start
+[4]   ⍝ -AllowRemote=filter1,filter2,filter3
+[5]   ⍝ SSL Options
+[6]   ⍝ -CertFile=CertFile
+[7]   ⍝ -KeyFile=KeyFile
+[8]   ⍝ -SSLFlags=flags
+[9]   ⍝ /// Could be extended with
+[10]   ⍝ -Config=name of a configuration file
+[11]   ⍝ -ClientAddr=limit to connections from given site
+[12]  
+[13]   folder←{(1-⌊/(⌽⍵)⍳'/\')↓⍵}⎕WSID
+[14]   num←{⊃2⊃⎕VFI ⍵}
+[15]   sslflags←32+64 ⍝ Accept without Validating, RequestClientCertificate
+[16]  
+[17]   name←'RPCSRV'
+[18]   port←num GetEnv'Port'
+[19]   autoshut←num GetEnv'AutoShut' ⍝ Shut down if 1st connection is lost
+[20]   quiet←num GetEnv'Quiet'       ⍝ Suppress diagnostic session output
+[21]   allowremote←GetEnv'AllowRemote' ⍝ Remote access
+[22]   allowremote←(0≠≢allowremote)/{1↓¨(⍵=',')⊂⍵}',',allowremote
+[23]  
+[24]   z←##.DRC.Init''
+[25]   localaddrs←⊃⍪/{0::0 3⍴⊂⍬ ⋄ DNSLookup ⍵}¨'' 'localhost' ⍝ Find all local addresses
+[26]   :If 0=≢localaddrs ⍝ /// paranoia: the above SHOULD work
+[27]   localaddrs←1 3⍴'IPv4' '127.0.0.1'(127 0 0 1)
+[28]   :EndIf
+[29]  
+[30]   :If 0≠⍴load←GetEnv'Load'
+[31]   load←{1↓¨(','=⍵)⊂⍵}',',load
+[32]   :For l :In load
+[33]   ⎕SE.SALT.Load folder,l,' -target=#'
+[34]   :EndFor
+[35]   :EndIf
+[36]  
+[37]   :If secure←0≠⍴certfile←GetEnv'CertFile'
+[38]   keyfile←GetEnv'KeyFile'
+[39]   sslflags←num GetEnv'SSLFlags'
+[40]   z←1 quiet autoshut Run name port('CertFile'certfile)('KeyFile'keyfile)('SSLFlags'sslflags)
+[41]   :Else
+[42]   z←1 quiet autoshut Run name port
+[43]   :EndIf
+[44]  
+[45]   :If 0≠1⊃z ⋄ Log z ⋄ ⎕DL 10 ⋄ :EndIf ⍝ /// Pop up? Log?
+[46]  
+[47]   :While ##.DRC.Exists name
+[48]   ⎕DL 10
+[49]   :EndWhile
+[50]  
+[51]   ⎕OFF
+     ∇
+
+      isolate.RPCServer.CPU  (type=I ⍴⍴=0 ⍴=⍬)
+0
+
+      isolate.RPCServer.Commands  (type=I ⍴⍴=0 ⍴=⍬)
+0
+
+      isolate.RPCServer.DEBUG  (type=I ⍴⍴=0 ⍴=⍬)
+0
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.RPCServer.DNSLookup args;port;address;noport
+[1]   ⍝ r[;1] protocol, [;2] address txt, [;3] numeric address, [;4] port
+[2]   ⍝ /// Should really make its way into DRC
+[3]   
+[4]   :If noport←1=≡args ⋄ args←args 80 ⋄ :EndIf
+[5]   (address port)←args
+[6]   :If 1037=⊃r←##.DRC.GetProp'.' 'tcplookup'address port
+[7]   r←##.DRC.GetProp'.' 'lookup'address port ⍝ name changed around Conga 2.5.22481
+[8]   :EndIf
+[9]   (⍕r)⎕SIGNAL(0≠1⊃r)⍴11
+[10]   r←(-noport)↓⍤1↑2⊃r
+[11]   r[;2]←((-(⍳∘':'⌽)¨r[;2]))↓¨r[;2]
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.RPCServer.End x
+[1]   r←done←x ⍝ Will cause server to shut down
+     ∇
+
+      isolate.RPCServer.Errors  (type=I ⍴⍴=0 ⍴=⍬)
+0
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.RPCServer.GetEnv name;args;z
+[1]   ⍝ Look for environment settings, allowing Command Line overrides
+[2]   ⍝ Added to support isolates as bound executables under Windows
+[3]   
+[4]   :If 1=⍴z←name{(((1+≢⍺)↑¨⍵)∊⊂⍺,'=')/⍵}2 ⎕NQ'.' 'GetCommandLineArgs'
+[5]   r←(1+⍴name)↓⊃z
+[6]   :Else
+[7]   r←2 ⎕NQ'.' 'GetEnvironment'name
+[8]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←{folder}isolate.RPCServer.Launch(params port);z;folder;ws
+[1]   ⍝ Launch RPC Server as an external process
+[2]   ⍝ Params should include -Load=
+[3]   ⍝ See Boot for additional parameters
+[4]   ⍝ RPCServer.dyalog and RPCServer.dws must exist in same folder as current ws
+[5]   ⍝ /// Currently Windows only ///
+[6]   
+[7]   :If 0=⎕NC'folder' ⋄ folder←{(1-⌊/(⌽⍵)⍳'/\')↓⍵}⎕WSID ⋄ :EndIf
+[8]   ws←'"',folder,'RPCServer.DWS"'
+[9]   params←params,' Port=',⍕port
+[10]   r←⎕NEW #.APLProcess(ws params)
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.RPCServer.Log text
+[1]   →DEBUG↓0
+[2]   ⎕←text
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.RPCServer.Process(obj data);r;c
+[1]   ⍝ Process a call. data[1] contains function name, data[2] an argument
+[2]   
+[3]   :If SendProgress
+[4]   {}##.DRC.Progress obj('    Thread ',(⍕⎕TID),' started to run: ',,⍕data) ⍝ Send progress report
+[5]   :EndIf
+[6]   
+[7]   :If (,1⊃data)≡,'ß' ⍝ stats collection?
+[8]   r←(0(StartTime Commands Errors CPU))
+[9]   :Else
+[10]   :Trap 0 ⋄ c←⎕AI[3] ⋄ r←0((⍎1⊃data)(2⊃data)) ⋄ CPU+←⎕AI[3]-c ⋄ Commands+←1
+[11]   :Else ⋄ r←⎕EN ⎕DM ⋄ Errors+←1
+[12]   :EndTrap
+[13]   :EndIf
+[14]  
+[15]   :Trap 11
+[16]   {}##.DRC.Respond obj r
+[17]   :Else
+[18]   {}##.DRC.Respond obj(99999('Unable to return result: ',⎕DMX.Message))
+[19]   :EndTrap
+     ∇
+
+      isolate.RPCServer.Protocol  (type=C ⍴⍴=1 ⍴=0)
+
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←{start}isolate.RPCServer.Run args;sink;done;data;event;obj;rc;wait;z;cmd;name;port;protocol;srvparams;msg;rt;quiet;autoshut;tid;addr;ok;i;filter;first;⎕TRAP
+[1]   ⍝ Run a Simple RPC Server
+[2]   
+[3]   (name port)←2↑args
+[4]   srvparams←2↓args
+[5]   
+[6]   :If 0=⎕NC'start' ⋄ start←1 ⋄ :EndIf         ⍝ start may be (start quiet)
+[7]   rt←'R'∊'.'⎕WG'APLVersion'                   ⍝ Runtime or DLLRT
+[8]   (start quiet autoshut)←0 rt 0∨3↑start
+[9]   {}##.DRC.Init''
+[10]   :If (⊂Protocol)∊'IPv4' 'IPv6' ⋄ ##.DRC.SetProp'.' 'Protocol'Protocol ⋄ :EndIf
+[11]  
+[12]   :If start
+[13]   :If 0≠1⊃r←##.DRC.Srv(name''port'Command'),srvparams ⋄ :Return ⋄ :EndIf ⍝ Exit if unable to start server
+[14]   :If ~rt ⋄ tid←0 quiet autoshut Run&name port
+[15]   ⍝ Above line may start handler on separate thread
+[16]   ⍝ /// Looks like a bug to Morten if your application is in a runtime
+[17]   ⍝ /// That should probably only be done if BOOTING in a runtime
+[18]   ⍪quiet↓⊂'Server ''',name,''', listening on port ',⍕port
+[19]   ⍪quiet↓⊂' Handler thread started: ',⍕tid
+[20]   r←0 tid
+[21]   :Return ⍝ New TID
+[22]   :EndIf
+[23]   :EndIf
+[24]  
+[25]   ⍝ Handle the server (maybe in a new thread)
+[26]   ⍪quiet↓⊂'Thread ',(⍕⎕TID),' is now handling server ''',name,'''.'
+[27]   done←0 ⍝ Done←1 in function "End"
+[28]   first←''
+[29]  
+[30]   :While ~done
+[31]   :Trap 1002 1003 ⍝ trap weak and strong interrupts - on UNIX kill -2 and kill -3
+[32]  
+[33]   rc obj event data←4↑wait←##.DRC.Wait name 10000 ⍝ Time out now and again
+[34]  
+[35]   :Select rc
+[36]   :Case 0
+[37]   :Select event
+[38]   :Case 'Error'
+[39]   ⍪quiet↓⊂'Error ',(⍕data),' on ',obj
+[40]   :If ~done∨←(⊂obj)∊name first ⍝ Error on the listener or 1st connection?
+[41]   {}##.DRC.Close obj ⍝ Close connection in error
+[42]   :EndIf
+[43]  
+[44]   :If autoshut=1
+[45]   :AndIf 0=#.DRC.Exists first
+[46]   ⍪quiet↓⊂'First connection lost - AutoShut initiated'
+[47]   done←1 ⋄ autoshut←2
+[48]   :EndIf
+[49]  
+[50]   :Case 'Receive'
+[51]   :If 2≠⍴data ⍝ Command is expected to be (function name)(argument)
+[52]   {}##.DRC.Respond obj(99999 'Bad command format') ⋄ :Leave
+[53]   :EndIf
+[54]  
+[55]   :If 3≠⎕NC cmd←1⊃data ⍝ Command is expected to be a function in this ws
+[56]   {}##.DRC.Respond obj(99999('Illegal command: ',cmd)) ⋄ :Leave
+[57]   :EndIf
+[58]  
+[59]   Process&obj data ⍝ Handle each call in new thread
+[60]  
+[61]   :Case 'Connect' ⍝ Set 'KeepAlive' to 10 seconds so we discover IP disconnections
+[62]   first,←(0=⍴first)/obj ⍝ bond to parent
+[63]   {}##.DRC.SetProp obj'KeepAlive' 10000 10000
+[64]   addr←{(-(⌽⍵)⍳':')↓⍵}2 2⊃##.DRC.GetProp obj'PeerAddr'
+[65]   addr←addr~'[]'
+[66]   addr←(7×'::ffff:'≡7↑addr)↓addr ⍝ IPv4 wrapped in IPv6
+[67]  
+[68]   :If ~ok←(⊂addr)∊localaddrs[;2] ⍝ remote
+[69]   :For i :In ⍳≢allowremote
+[70]   :Select 3↑filter←i⊃allowremote
+[71]   :CaseList 'ip=' 'IP=' ⍝ ip address
+[72]   :If ok←ok∨addr{⍵≡(⍴⍵)↑⍺}3↓filter ⋄ :Leave ⋄ :EndIf
+[73]   :EndSelect
+[74]   :EndFor
+[75]  
+[76]   :AndIf ~ok ⍝ Still not OK
+[77]   Log'Connection refused from: ',addr
+[78]   Log'Filters: 'allowremote
+[79]   {}##.DRC.Close obj ⍝ 'bye
+[80]   :EndIf
+[81]  
+[82]   :Case 'Timeout' ⍝ Eventmode Timeout - see 100 below
+[83]  
+[84]   :Else ⍝ Unexpected result? should NEVER happen
+[85]   ⎕←'Unexpected result "',event,'" from object "',name,'" - RPC Server shutting down' ⋄ done←1
+[86]  
+[87]   :EndSelect
+[88]  
+[89]   :Case 100  ⍝ Time out - Insert code for housekeeping tasks here
+[90]  
+[91]   :Case 1010 ⍝ Object Not Found
+[92]   ⎕←'Server object ''',name,''' has been closed - RPC Server shutting down' ⋄ done←1
+[93]  
+[94]   :Else
+[95]   ⎕←'Error in RPC.Wait: ',⍕wait
+[96]   :EndSelect
+[97]   :Else ⍝ got an interrupt
+[98]   ⎕←((1002 1003⍳⎕EN)⊃'Weak' 'Strong' 'Unknown?'),' interrupt received, RPC Server shutting down'
+[99]   done←1
+[100]   :EndTrap
+[101]  :EndWhile
+[102]  :If autoshut≠2 ⋄ ⎕DL 1 ⋄ :EndIf ⍝ Give responses time to complete
+[103]  {}##.DRC.Close name
+[104]  ⍪quiet↓⊂'Server ',name,' terminated.'
+     ∇
+
+      isolate.RPCServer.SendProgress  (type=I ⍴⍴=0 ⍴=⍬)
+0
+
+      isolate.RPCServer.StartTime  (type=I ⍴⍴=1 ⍴=7)
+2018 8 14 1 24 48 305
+
+     ∇ isolate.RPCServer.ß←{}
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.RemoveServer←{⍝ Remove remote server added with AddServer
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.RemoveServer ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.Reset←{ ⍝ Reset all isolate processes
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.Reset ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.Running←{ ⍝ 1 for items of ⍵ which are still futures which are being computed, else 0
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.Running ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.StartServer←{ ⍝ Start an Isolate Server (not usually called by application code)
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.StartServer ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.State←{ ⍝ Report on state of isolate processes
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.State ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.Stats←{
+[1]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[2]   ynys.Stats ⍵
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.Values←{ ⍝ Return computed values in ⍵, return ⍺ in place of futures (or ⎕NULL if ⍺ not specified)
+[1]   ⍺←⊢
+[2]   0::(⊃⍬⍴⎕DM)⎕SIGNAL ⎕EN
+[3]   ⍵≡⍺ ⍵:ynys.Values⊢⍵
+[4]   ⍺(ynys.Values)⍵
+[5]   }
+     ∇
+
+      isolate.Version  (type=C ⍴⍴=1 ⍴=68)
+Version 1.1 (2018-05-30 10:45:24 +0100) built at 2018-08-14 01:24:48
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.isSlave ⍝ Return 1 if the current process is an isolate server
+[1]   r←'isolate'≡RPCServer.GetEnv'isolate'
+     ∇
+
+      isolate.onerror  (type=C ⍴⍴=1 ⍴=0)
+
+
+      isolate.ynys
+#.isolate.ynys
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.AddServer w;msg;addr;ports;z;ss;id;pclts;m;old;local
+[1]   msg←messages'⍝- '
+[2]   :If 'server'≡Config'status' ⋄ r←0⊃msg ⋄ :Return ⋄ :EndIf
+[3]   :If local←''≡w
+[4]   addr←whoami''
+[5]   :Else
+[6]   :If ''⍬≢0/¨w ⋄ r←1⊃msg ⋄ :Return ⋄ :EndIf
+[7]   (addr ports)←,¨w
+[8]   :If {1∊∊∘∊⍨⍵⊣⎕ML←0}addr ports ⋄ r←2⊃msg ⋄ :Return ⋄ :EndIf
+[9]   :EndIf
+[10]   z←Config'status' 'client'
+[11]   z←Init 0
+[12]   ss←session
+[13]   :If (⊂addr)∊ss.procs[;2] ⋄ r←(3⊃msg),' ',addr ⋄ :Return ⋄ :EndIf
+[14]   :If local
+[15]   ss.procs⍪←ss InitProcesses options
+[16]   :Else
+[17]   id←(⍳≢ports)+1+0⌈⌈/⊣/ss.procs
+[18]   ss.retry_limit←2⊣old←ss.retry_limit
+[19]   pclts←id InitConnections addr ports ¯1 ⍬
+[20]   ss.retry_limit←old
+[21]   :If m←0∊≢¨pclts ⋄ r←(4⊃msg),' ',addr,': ',⍕m/ports ⋄ :Return ⋄ :EndIf
+[22]   ss.procs⍪←id,0,(⊂addr),ports,⍪pclts
+[23]   :EndIf
+[24]   r←State''
+[25]  ⍝- Session already started as server
+[26]  ⍝- Argument must be 'ip-address' (ip-ports)
+[27]  ⍝- IP-address nor IP-ports can be empty
+[28]  ⍝- Already added:
+[29]  ⍝- Unable to connect to
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.Available name
+[1]   r←(1⊃(1⊃⎕RSI).(702⌶)name)∊4 5
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.Config←{⍺←⊢
+[1]   newSession'':{              ⍝ else Init has already run
+[2]   0::(⊃⎕DMX.DM)⎕SIGNAL ⎕DMX.EN
+[3]   setDefaults ⍵
+[4]   }⍵
+[5]   trapErr''::signal''
+[6]   getSet ⍵
+[7]   
+[8]   ⍝ set or query single option
+[9]   ⍝ ⍵         '' | name | name value
+[10]  ⍝ name      one of params defined in setDefaults
+[11]  ⍝ value     new value for param
+[12]  ⍝ ←         ⍵:''            : table of all names and values
+[13]  ⍝           ⍵:name          : value
+[14]  ⍝           ⍵:name value    : old value having set new in param
+[15]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.DRCClt args;count
+[1]   ⍝ Create a DRC Client, looping a bit
+[2]   
+[3]   {}DRC.Close⊃args ⍝ Paranoia, the bug is somewhere else, sorry!
+[4]   count←0
+[5]   :While 0≠⊃r←DRC.Clt args ⍝ Cannot connect
+[6]   :Select ⊃r
+[7]   :Case 1106
+[8]   ('ISOLATE: Unable to resolve or parse hostname: ',⍕args)⎕SIGNAL 11
+[9]   :CaseList 61 111 1111 10061 ⍝ Connection Refused is 61 on macOS, 10061 under Windows
+[10]   {}⎕DL session.retry_interval×count+←1 ⍝ longer wait each time
+[11]   :Else
+[12]   ('ISOLATE: Unable to connect to isolate process: ',⍕args)⎕SIGNAL 11
+[13]   :EndSelect
+[14]   :Until count≥session.retry_limit
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.Description
+[1]   r←'' 'For information on how to use Futures and Isolates,'
+[2]   r,←⊂'see the manual "Parallel Language Features",'
+[3]   r,←⊂'which can be found in the Dyalog Documentation Centre'
+[4]   r,←⊂'at http://docs.dyalog.com'
+[5]   r←⍪r
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.Failed name
+[1]   r←(1⊃(1⊃⎕RSI).(702⌶)name)∊2 3
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ {r}←{allowremote}isolate.ynys.Init local;here;z;ss;op;maxws;ws;rt;iso;ports;pids;pclts;t
+[1]   r←⎕THIS.⎕IO←0
+[2]   :If 0=⎕NC'allowremote' ⋄ allowremote←⍬ ⋄ :EndIf
+[3]   :If newSession''
+[4]   here.iSpace←here←⎕THIS
+[5]   z←here.(proxyClone←⎕NS'').⎕FX¨proxySpace.(⎕CR¨↓⎕NL 3)
+[6]   z←here.proxyClone.⎕FX iSpace.⎕CR'tracelog'
+[7]   ss←here.session←⎕NS''
+[8]   here.(signal←⎕SIGNAL/∘{(⊃⍬⍴⎕DM)⎕EN})
+[9]   z←setDefaults''
+[10]   op←options
+[11]   z←getSet'debug'op.debug    ⍝ on or off
+[12]   :Trap trapErr''
+[13]   ##.DRC←here.DRC←getDRC op.drc
+[14]   :If ~(⊃z←DRC.Init ⍬)∊0
+[15]   ('CONGA INIT FAILED: ',,⍕z)⎕SIGNAL 11
+[16]   :EndIf
+[17]   z←DRC.SetProp'.' 'Protocol'(op.protocol)
+[18]   ss.retry_limit←99      ⍝ How many retries
+[19]   ss.retry_interval←0.25 ⍝ Length of first wait (increases with interval each wait)
+[20]   ss.orig←whoami''
+[21]   ss.homeport←7051
+[22]   ss.listen←localServer options.listen   ⍝ ⌽⊖'ISOL'
+[23]   ss.nextid←2⊃⎕AI                   ⍝ isolate id
+[24]   ss.callback←1+(2*15)|+/⎕AI        ⍝ queue for calls back
+[25]   ss.remoteclients←allowremote
+[26]   z←⎕TPUT ss.assockey←1+ss.callback ⍝ queue for assoc and procs
+[27]   ss.assoc←dix'proc iso busy'(3⍴⍬ ⍬)
+[28]   ss.procs←0 5⍴0 ⍬'' 0 ''
+[29]  
+[30]   :If 1≡local ⍝ if we're to start local processes
+[31]   ss.procs⍪←ss InitProcesses op
+[32]   :EndIf
+[33]  
+[34]   ss.started←sessionStart''               ⍝ last thing so we know
+[35]  
+[36]   :If ss.listen ⍝ set up list of acceptable client addresses
+[37]   t←↑{0=⊃p←DRC.GetProp ⍵'peeraddr':2↑1↓1⊃p ⋄ ⍬ ⍬}¨session.procs[;4]
+[38]   t[;0]←{⌽(1+⍵⍳':')↓⍵}∘⌽¨t[;0]
+[39]   ##.RPCServer.localaddrs←(⊂''),⊣⌸t
+[40]   :EndIf
+[41]   r←1
+[42]   :Else
+[43]   signal''
+[44]   :EndTrap
+[45]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←pid isolate.ynys.InitConnection(addr port id remote);z;ok
+[1]   ⍝ Establish connection to new process,
+[2]   ⍝ Verify it's identity and configure it
+[3]   ⍝ Return CONGA client name or '' on failure
+[4]   
+[5]   ok←0
+[6]   :If 0≠⊃z←DRCClt('PROC',⍕pid)addr port
+[7]   ('ISOLATE: Unable to connect to ',addr,':',(⍕port),':',,⍕z)⎕SIGNAL 11
+[8]   :Else ⍝ Connection made
+[9]   r←1⊃z
+[10]   ok←id∊¯1,1⊃SendWait r('#.isolate.ynys.execute'('' 'identify'))
+[11]   :If id≠¯1 ⍝ Only set remote access if we started the process
+[12]   ok←(0=⍴remote)∨remote≡SendWait r('AllowRemoteAccess'remote)
+[13]   :EndIf
+[14]  
+[15]   :If ~ok
+[16]   r←''⊣DRC.Close r
+[17]   :EndIf
+[18]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←pids isolate.ynys.InitConnections(addr ports id remote);i
+[1]   ⍝ Establish connections to all new processes
+[2]   r←(≢pids)⍴⊂''
+[3]   :For i :In ⍳≢pids
+[4]   :Trap 0
+[5]   (i⊃r)←(i⊃pids)InitConnection addr(i⊃ports)id remote
+[6]   :EndTrap
+[7]   :EndFor
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←ss isolate.ynys.InitProcesses op;z;count;limit;ok;maxws;ws;rt;iso;ports;pids;pclts;procs;m
+[1]   (count limit)←0 3
+[2]   maxws←' MAXWS=',⍕op.maxws
+[3]   ws←op.workspace
+[4]   :If (⊂rt←op.runtime)∊0 1      ⍝ if rt is boolean
+[5]   rt←rt∧op.onerror≢'debug' ⍝ force runtime←0 if onerror≡'debug'
+[6]   :EndIf
+[7]   iso←('isolate=isolate onerror=',(⍕op.onerror),' isoid=',(⍕ss.callback),maxws)
+[8]   iso,←' protocol=',op.protocol,' quiet=1'
+[9]   :If ws∨.≠' ' ⋄ ws←1⌽'""',checkWs addWSpath ws ⋄ :EndIf ⍝ if no path ('\/')
+[10]   ports←ss.homeport+1+⍳op.(processors×processes)
+[11]  
+[12]   :Repeat
+[13]   :If 0∊m←checkPortIsFree¨ports
+[14]   ⎕←'*** Warning - isolate port(s) in use: ',(~m)/ports
+[15]   ports←ports+1+⍴ports
+[16]   :EndIf
+[17]   :Until (∧/m)∨(⊃ports)>1+op.homeportmax
+[18]   'ISOLATE: Unable to find free ports'⎕SIGNAL(∧/m)↓11
+[19]  
+[20]   pids←(1⊃⎕AI)+⍳⍴ports
+[21]  
+[22]   :Repeat
+[23]   count+←1
+[24]   procs←{⎕NEW ##.APLProcess(ws ⍵ rt)}∘{'AutoShut=1 Port=',(⍕⍵),' APLCORENAME=',(⍕⍵),' ',iso}¨ports
+[25]   procs.onExit←{'{}#.DRC.Close ''PROC',⍵,''''}¨⍕¨pids ⍝ signal soft shutdown to process
+[26]  
+[27]   pclts←pids InitConnections ss.orig ports ss.callback ss.remoteclients
+[28]  
+[29]   :If ~ok←~∨/0∊≢¨pclts ⍝ at least one failed
+[30]   ⎕←'ISOLATE: Unable to connect to started processes (attempt ',(⍕count),' of ',(⍕limit),')'
+[31]   ⎕DL 5 ⋄ {}procs.Kill ⋄ ⎕DL 5
+[32]   ports+←1+op.(processors×processes)
+[33]   :EndIf
+[34]   :Until ok∨count≥limit
+[35]   'ISOLATE: Unable to initialise isolate processes'⎕SIGNAL ok↓11
+[36]   r←pids,procs,(⊂ss.orig),ports,⍪pclts
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.InternalState←{⍺←⊢
+[1]   newSession'':⍳0 0
+[2]   {⍵.({⍵,⍪⍎⍕⍵}↓⎕NL 2)}⍣('namespace'≢minuscule ⍵)⊢session.assoc
+[3]   ⍝
+[4]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.New←{⍺←⊢
+[1]   z←Init 1
+[2]   trapErr''::signal''
+[3]   caller←callerSpace''
+[4]   source←caller argType ⍵
+[5]   id←⍬ isolates source
+[6]   proxy←caller.⎕NS proxyClone
+[7]   proxy.(iSpace iD iCarus)←iSpace id,suicide.New'cleanup'id
+[8]   z←proxy.⎕DF(⍕caller),'.[isolate]'
+[9]   z←1(700⌶)proxy
+[10]   1:proxy
+[11]  ⍝ simulate isolate primitive: UCS 164 / sol
+[12]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.RemoveServer server;mask;iso;isos;clt;mask2;local;ok;count
+[1]   :If 2=⎕NC'session.procs'
+[2]   :If 0=⍴server ⋄ server←whoami'' ⋄ :EndIf
+[3]   :If ∨/mask←server∘≡¨session.procs[;2]
+[4]   :If 2=⎕NC'session.assoc.proc'
+[5]   :If 0≠≢isos←(mask2←session.assoc.proc∊mask/session.procs[;0])/session.assoc.iso
+[6]   :For iso :In isos
+[7]   {}DRC.Close'Iso',⍕iso
+[8]   :EndFor
+[9]   session.assoc.(busy iso proc)/⍨←⊂~mask2
+[10]   :EndIf
+[11]   :EndIf
+[12]  
+[13]   :For clt :In mask/session.procs[;4]
+[14]   {}DRC.Close clt
+[15]   :EndFor
+[16]  
+[17]   :If 0≠≢local←{(⍵≠0)/⍵}mask/session.procs[;1]
+[18]   :If 'server'≡options.status
+[19]   local.Kill
+[20]   :Else
+[21]   count←0
+[22]   :While ~ok←∧/local.HasExited
+[23]   ⎕DL session.retry_interval×count←count+1
+[24]   :Until count>session.retry_limit
+[25]   :EndIf
+[26]   :EndIf
+[27]   session.procs⌿⍨←~mask
+[28]   r←State''
+[29]   :Else
+[30]   r←'[server "',server,'" not found]'
+[31]   :EndIf
+[32]   :Else
+[33]   r←'[no servers defined]'
+[34]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.Reset kill;iso;clt;ok;local;count;z;close
+[1]   r←''
+[2]   close←{0::'' ⋄ DRC.Close ⍵} ⍝ try to close, ignore all errors
+[3]   
+[4]   :If 2=⎕NC'session.assoc.iso'
+[5]   r,←(⍕≢session.assoc.iso),' isolates, '
+[6]   :For iso :In session.assoc.iso ⍝ For each known isolate
+[7]   {}close'Iso',⍕iso
+[8]   :EndFor
+[9]   :EndIf
+[10]  
+[11]   :If 2=⎕NC'session.procs'
+[12]   r,←(⍕≢session.procs),' processes, '
+[13]   :For clt :In session.procs[;4] ⍝ For each process
+[14]   {}close clt
+[15]   :EndFor
+[16]  
+[17]   count←0
+[18]   :If 0≠≢local←session.((procs[;1]≠0)/procs[;1]) ⍝ local processes
+[19]  
+[20]   :While ~ok←∧/local.HasExited
+[21]   ⎕DL session.retry_interval×count←count+1
+[22]   :Until count>session.retry_limit
+[23]  
+[24]   :If ~ok
+[25]   :If 'server'≡options.status
+[26]   r←r,' (service processes killed), ' ⋄ z←local.Kill
+[27]   :Else
+[28]   r←r,' (service processes have not died), '
+[29]   :EndIf
+[30]   :EndIf
+[31]   :EndIf
+[32]  
+[33]   :EndIf
+[34]  
+[35]   :If 2=⎕NC'session.listeningtid'
+[36]   ⎕TKILL session.listeningtid
+[37]   r,←'callback listener, '
+[38]   :EndIf
+[39]  
+[40]   :If 0≠≢r ⋄ r←'Reset: ',¯2↓r
+[41]   :Else ⋄ r←'Nothing found to reset'
+[42]   :EndIf
+[43]   ⎕EX'session'
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.Running name;complete;failed
+[1]   r←0=1⊃(1⊃⎕RSI).(702⌶)name
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.SendWait(r cmd);z
+[1]   ⍝ Used by InitConnection for first 2 transactions with newly started process
+[2]   :If 0=⊃z←DRC.Send r cmd
+[3]   :AndIf 0=⊃z←DRC.Wait r 30000
+[4]   :If 0 'Receive'≡z[0 2]
+[5]   r←3 1⊃z
+[6]   :EndIf
+[7]   :Else
+[8]   {}DRC.Close r
+[9]   ('ISOLATE: New process did not respond to handshake:',,⍕z)⎕SIGNAL 11
+[10]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.StartServer←{⍺←⊢
+[1]   msg←messages'⍝- ' ⍝
+[2]   ~newSession'':(0⊃msg),' ',options.status
+[3]   z←Config'status' 'server'
+[4]   allowremote←validateRemoteFilters ⍵
+[5]   
+[6]   z←allowremote Init 1
+[7]   
+[8]   address←##.APLProcess.MyDNSName
+[9]   addresses←##.RPCServer.DNSLookup address
+[10]   addresses←addresses[⍋↑addresses[;2];0 1]
+[11]   addresses←addresses[;0]{⊂⍺ ⍵}⌸0 1↓addresses
+[12]  
+[13]   ports←∪session.procs[;3]
+[14]   info←(1 2⊃¨⊂msg),⍪address ports
+[15]   res←{4<≢⍵:msg[4 5 6 7],⍪address(⊃⍵)(≢⍵)''
+[16]   msg[4 5 7],⍪address((⊃⍵)+⍳≢⍵)''}ports
+[17]   res←∊⍕¨res
+[18]   ⎕←⍪,' ',⍪info(3⊃msg)res
+[19]   ⎕←⍪'' 'Full IP address list:' ''
+[20]   ⎕←addresses
+[21]   1:''
+[22]  
+[23]  ⍝- Session already started as
+[24]  ⍝- Machine Name:
+[25]  ⍝- IP Ports:
+[26]  ⍝- Enter the following in the client session:
+[27]  ⍝-       #.isolate.AddServer '
+[28]  ⍝- ' (
+[29]  ⍝- -⎕IO-⍳
+[30]  ⍝- )
+[31]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.State dummy;counts
+[1]   ⍝ Return current process & isolate state
+[2]   
+[3]   :If 9=⎕NC'session'
+[4]   :If 0≠≢session.procs
+[5]   counts←session.assoc.(proc{⍺,(+/⍵),+/~⍵}⌸busy)
+[6]   r←session.procs[;2 3]
+[7]   r,←{⍵,+/⍵}(counts⍪0)[counts[;0]⍳session.procs[;0];1 2]
+[8]   r[(0,2≡/r[;0])/⍳1↑⍴r;0]←⊂''
+[9]   r←({⍵,[¯0.5](≢¨⍵)⍴¨'-'}'Host' 'Port' 'Busy' 'Idle' 'Isolates')⍪r
+[10]   r←r[;0 1 4 2]
+[11]   :Else
+[12]   r←'[no servers defined]'
+[13]   :EndIf
+[14]   :Else
+[15]   r←'[not initialised]'
+[16]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.Stats dummy;n;stats;proc;z
+[1]   :If 9=⎕NC'session'
+[2]   :If 0≠n←≢session.procs
+[3]   stats←⍬
+[4]   :For proc :In session.procs[;4]
+[5]   :If 0=⊃z←DRC.Send proc('ß' '')
+[6]   :AndIf 0=⊃z←DRC.Wait 1⊃z
+[7]   :AndIf 0=⊃z←3⊃z
+[8]   stats,←z[1]
+[9]   :Else
+[10]   stats,←⊂⍬
+[11]   :EndIf
+[12]   :EndFor
+[13]   r←session.procs[;2 3]
+[14]   r[(0,2≡/r[;0])/⍳1↑⍴r;0]←⊂''
+[15]   r,←↑stats
+[16]   r[;2]←↓'ZI4,<->,ZI2,<->,ZI2,< >,ZI2,<:>,ZI2,<:>,ZI2'⎕FMT 0 ¯1↓↑r[;2]
+[17]   r←({⍵,[¯0.5](≢¨⍵)⍴¨'-'}'Host' 'Port' 'Start' 'Cmds' 'Errs' 'CPU')⍪r
+[18]   :Else
+[19]   r←'[no servers defined]'
+[20]   :EndIf
+[21]   :Else
+[22]   r←'[not initialised]'
+[23]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←{default}isolate.ynys.Values name
+[1]   :If 0=⎕NC'default' ⋄ default←⊢ ⋄ :EndIf
+[2]   r←⊃default(1⊃⎕RSI).(702⌶)name
+     ∇
+
+      isolate.ynys._IO
+#.isolate.ynys._IO
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.addWSpath←{⍺←⊢
+[1]   ∨/'/\'∊ws←⍵:⊢ws       ⍝ assume extant path is good
+[2]   dir←##.RPCServer.GetEnv'DYALOG'
+[3]   sep←⊃'/\'∩dir
+[4]   dir,←sep~⊢/dir        ⍝ append sep if needs
+[5]   dir,'ws',sep,ws       ⍝ WS folder
+[6]   ⍝ add ...dyalog/ws/   to ws if no path spec'd
+[7]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.and←{⍺←⊢
+[1]   ⍺⍺⊣⍵:⍵⍵⊣⍵
+[2]   0
+[3]   ⍝ left to right checking
+[4]   ⍝ try ⍵⍵ only if ⍺⍺ true
+[5]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.argType←{⍺←⊢
+[1]   trapErr''::signal''
+[2]   (0∊⍴)⍵:⍺.⎕NS''                                         ⍝ empty
+[3]   (0=≡)and{9=⎕NC'⍵'}⍵:⍵                                  ⍝ ns
+[4]   (1=≡)and(''≡0⍴⊢)⍵:checkWs ⍵
+[5]   (2=≡)and(''≡0⍴⊃)nl←,¨⍵:⍺.⎕NS↑nl                              ⍝ nl
+[6]   ⎕SIGNAL 11
+[7]   ⍝ ⍺ caller
+[8]   ⍝ ⍵ arg to new - empty | space | namelist | string
+[9]   ⍝ ← :
+[10]  ⍝      arg | res
+[11]  ⍝      --- + ---
+[12]  ⍝    empty | empty ns
+[13]  ⍝    space | clone ns
+[14]  ⍝     list | ns containing named fns
+[15]  ⍝   string | validated wsid
+[16]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.callerSpace←{⍺←⊢
+[1]   ⍬⍴((0,⎕RSI)~0,⎕THIS,##,⍵),#
+[2]   ⍝ caller excluding this space and the main isolate method-space above it.
+[3]   ⍝ none of the code above is redundant. 2014-01-09
+[4]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.checkLocalServer w;z
+[1]   ⍝ take opportunity to check listener is up
+[2]   :If options.listen
+[3]   :If 2≠⎕NC'session.listeningtid'
+[4]   :OrIf session.listeningtid(~∊)⎕TNUMS
+[5]   ⎕←'ISOLATE: Callback server restarted'
+[6]   onerror←options.onerror
+[7]   z←localServer 1
+[8]   :EndIf
+[9]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.checkPortIsFree n;z
+[1]   ⍝ Check that TCP port is currently free
+[2]   :If r←0=⊃z←DRC.Srv'' ''n
+[3]   z←DRC.Close 1⊃z
+[4]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.checkWs←{⍺←⊢
+[1]   ⍝ ⍵ IS a string
+[2]   z←⎕NS''
+[3]   0::'WS NOT FOUND'⎕SIGNAL 11  ⍝ any error bar Value
+[4]   6::⍵                          ⍝ value error implies copy ok
+[5]   z←{}'⎕IO'z.⎕CY ⍵              ⍝ force value error → return ⍵
+[6]   ⍝
+[7]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.cleanDM r;t;msg;line;caret;m
+[1]   →(0=⊃r)⍴0         ⍝ Not an error
+[2]   →(3≠⍴t←1⊃r)⍴0     ⍝ Not a ⎕DM
+[3]   (msg line caret)←t
+[4]   msg←('⍎'=⊃msg)↓msg
+[5]   :If 'f[] f←'≡6↑line ⋄ (line caret)←6↓¨line caret
+[6]   :ElseIf 'decode['≡7↑line
+[7]   :If ∨/':Case'⍷line ⋄ line←caret←''
+[8]   :ElseIf ∨/m←'c⌷[d]where.'⍷line
+[9]   (line caret)←(11+m⍳1)↓¨line caret
+[10]   line←((⌊/line⍳') ')↑line),'[...]',('←'∊line)/'←...'
+[11]   :Else ⋄ (line caret)←(1+line⍳']')↓¨line caret
+[12]   :EndIf
+[13]   :EndIf
+[14]   (1⊃r)←msg line caret
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.cleanup←{⍺←⊢
+[1]   trapErr''::signal''
+[2]   (chrid port numid)←⍵.(chrid port numid)
+[3]   ⎕←⍪'.'/⍨options.debug
+[4]   (ns←⎕NS proxyClone).(iD iSpace)←⍵ iSpace    ⍝ recreate temp proxy
+[5]   rem←{session.assoc.(iso proc busy⌿⍨←⊂iso≠⍵)}
+[6]   11::rem numid                               ⍝ DRC reported errors
+[7]   z←ns.iSend{⍵(1('{#.⎕EX''',⍵,'''}')0)}chrid  ⍝ expunge remote namespace
+[8]   z←DRC.Close chrid
+[9]   rem numid                                   ⍝ remove numid from table
+[10]   1:
+[11]  ⍝ called by destructor of suicide class when isolate proxy disappears.
+[12]  ⍝ ⍵     space: chrid port mumid
+[13]  ⍝ numid unique numeric identifier for isolate
+[14]  ⍝ chrid identifies DRC client and isolate space in remote process
+[15]  ⍝ port  on which process is listening
+[16]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.connect(chrid host port data);count
+[1]   :If 0=⊃r←DRCClt chrid host port  ⍝ DRCClt will retry
+[2]   :AndIf 0=⊃r←DRC.Send chrid data  ⍝ on any
+[3]   :AndIf 0=⊃r←DRC.Wait(1⊃r)20000   ⍝ error
+[4]   :AndIf 'Timeout'≢3⊃r             ⍝ eventmode timeout
+[5]   :Else
+[6]   {}DRC.Close chrid
+[7]   ('ISOLATE: Connection to ',host,':',(⍕port),' failed: ',,⍕r)qsignal 6
+[8]   :EndIf
+[9]   ⍝ connect and send Initial payload
+[10]  ⍝ ⍺     attempts
+[11]  ⍝ ⍵     client-id ip-port data
+[12]  ⍝ data  function and argument
+[13]  ⍝ ←     final return from DRC
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.dateNo←{⍺←⊢
+[1]   ⊢2 ⎕NQ'.' 'DateToIDN'⍵
+[2]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ res←where isolate.ynys.decode(a b c d e);home;x;DMX
+[1]   home←where=#  ⍝ would be #.IsoNNNNN for outward call
+[2]   x←where.⍎
+[3]   :Trap 999×{0::0 ⋄ ##.onerror≡⍵}'debug'
+[4]   :Select a
+[5]   :Case 0 ⋄ res←0(x b)
+[6]   :Case 1 ⋄ res←0((x b)c)
+[7]   :Case 2 ⋄ res←0(b(x c)d)
+[8]   :Case 3 ⍝ Assignment
+[9]   :If (0=⍴⍴c)∧1=≡c ⋄ where.⎕FX c ⋄ res←0 c ⍝ c is ⎕OR
+[10]   :Else ⋄ res←0(c⊢b{x ⍺,'←⍵'}c)
+[11]   :EndIf
+[12]   :Case 4 ⋄ res←0(⍎'c⌷[d]where.',b)
+[13]   :Case 5 ⋄ res←0(⍎'(c⌷[d]where.',b,')←e')
+[14]   :EndSelect
+[15]   :Else
+[16]   :If ⎕DMX.(EN ENX)≡11 4 ⍝ DOMAIN ERROR: isolate function iSyntax does not exist ...
+[17]   res←11((⊂'ISOLATE ERROR: Callbacks not enabled'),1↓⎕DM)
+[18]   :ElseIf ⎕DMX.((EN=6)∧∨/'##'⍷,⍕DM)
+[19]   res←6((⊂'VALUE ERROR IN CALLBACK'),1↓⎕DM)
+[20]   :Else
+[21]   res←⎕DMX.(EN DM)
+[22]   :EndIf
+[23]   :EndTrap
+[24]  ⍝ ⍺ target space
+[25]  ⍝ ⍵ encoded list
+[26]  ⍝   decode list and execute requisite syntax in target.
+[27]  ⍝   return (0 value) if OK, (⎕EN ⎕DM) on failure
+[28]  ⍝ Syntax cases:
+[29]  ⍝ a | b      | c       | d    | e
+[30]  ⍝ 0 | array  |         |      |
+[31]  ⍝ 0 | nilad  |         |      |
+[32]  ⍝ 0 | (expr) |         |      |
+[33]  ⍝ 1 | monad  | rarg    |      |
+[34]  ⍝ 2 | larg   | dyad    | rarg |
+[35]  ⍝ 3 | array  | value   |      |
+[36]  ⍝ 4 | array  | indices | axes |
+[37]  ⍝ 5 | array  | indices | axes | value
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.derv←{⍺←⊢
+[1]   ⍕{
+[2]   ⊃,/{
+[3]   0=≡⍵:⍵
+[4]   0∊⍴⍵:((''⍬ ⍵)⍳⊂⍵)⊃'''''' '⍬'⍵
+[5]   ⍝             1=≡⍵:'(',,∘')'⊃,/(⊂(' ',,⍵)⍳,⍵)⌷(⊂''' '' '),,⍵
+[6]   1=≡⍵:'(',,∘')'⊃,/,⍵
+[7]   ⊃,/'(',,∘')'∇¨⍵
+[8]   }⍵
+[9]   }⎕CR(f←⍺⍺)/'f'
+[10]  ⍝ ⍺⍺    derv
+[11]  ⍝ ←     executable text-string representation of ⍺⍺
+[12]  ⍝ sometimes adds too many parens but would need MUCH more analysis not to
+[13]  ⍝ handles scalar nums, ' ', '' & ⍬ but not arrays in general
+[14]  ⍝ e.g.
+[15]  ⍝       sec ← (⊢⊣)/∘⍳∘(15E5∘×)
+[16]  ⍝       sec derv 0
+[17]  ⍝ ((((⊢⊣)/)∘⍳)∘( 1500000 ∘×))
+[18]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.dix←{⍺←⊢
+[1]   r←(⍺⊣#).⎕NS''
+[2]   r⊣r.{⍎⍕'(',⍺,')←⍵'}/⍵
+[3]   ⍝ dictionary
+[4]   ⍝ [⍺]       container space for dictionary - dflt: #
+[5]   ⍝ ⍵         names values
+[6]   ⍝ names     ' '-del'd or nested list
+[7]   ⍝ values    conformable with names
+[8]   ⍝ e.g.      pt←(dix'⎕ml'3).⊂
+[9]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.easy←{⍺←⊢
+[1]   expose ⎕THIS(↓##.⎕NL 3 4)
+[2]   ⍝ expose public functions in root
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.encode←{⍺←⊢
+[1]   la←(⍵≡⍺ ⍵)↓⊂⍺⊣0  ⍝ enclosed if supplied
+[2]   ra←(⊢⍴⍨1~⍨⍴)3↓⍵  ⍝  - empty if not
+[3]   (x nc s)←3⍴⍵
+[4]   pargs←{⍺←⊢       ⍝ analyse [PropertyArguments]
+[5]   ra←⍵
+[6]   9≠⎕NC'ra':ra                  ⍝ not a space
+[7]   nms←'Indexers' 'IndexersSpecified' 'IndexOrigin' 'NewValue'
+[8]   3>+/nms/⍨←∧\2=⌊ra.⎕NC nms:ra  ⍝ not a [PropertyArgs]
+[9]   n←ra.⍎¨nms
+[10]   (0⊃n)←(-2⊃n)+(0,1⊃n)/0,0⊃n     ⍝ 0+indices sans ⎕NULLs
+[11]   (1⊃n)←{⍵/⍳⍴⍵}1⊃n               ⍝ 0+axes
+[12]   ((⍴n)↑1 1 0 1)/n
+[13]   }
+[14]   args←la,(⊂x),pargs ra
+[15]   code←nc{6|0(3 2)(3 3)(2 2)(2 3)(2 4)⍳⊂⍺,⍵}⍴args
+[16]   code,args
+[17]  ⍝ called in ##.proxyClone.iEvaluate - here because its inverse has to be
+[18]  ⍝ ⍺ larg to iEvaluate - larg to isolate.dyad
+[19]  ⍝ ⍵ rarg to iEvaluate - name class syntax [rarg | PropertyArguments]
+[20]  ⍝   creates list that encodes syntax and includes arguments
+[21]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.execute(name data);z;n;space;zz;wsid;⎕TRAP
+[1]   :If name≡''
+[2]   :Select data
+[3]   :Case 'identify' ⍝ return isoid
+[4]   r←0(⊃1⊃⎕VFI+##.RPCServer.GetEnv'isoid')
+[5]   :Else
+[6]   r←11('ISOLATE: Unknown command'data)
+[7]   :EndSelect
+[8]   :Else
+[9]   :Trap 6 ⋄ space←#.⍎name
+[10]   :Else ⍝ Seems the isolate ns was not created
+[11]   r←6('Isolate initialization failed - check workspace name' '' '^')
+[12]   →0
+[13]   :EndTrap
+[14]  
+[15]   :Hold 'ISO_',name
+[16]   :If {0::0 ⋄ ##.onerror≡⍵}'debug'
+[17]   wsid←⎕WSID
+[18]   ⎕TRAP←0 'E' '⎕WSID←''ISOLATE - '',{(100⌊⍴⍵)↑⍵},⍕2↑⎕DM ⋄ ⎕←↑⎕DM ⋄ ⎕←''To resume:'',(⎕UCS 13),''      →⎕LC'''
+[19]   r←space decode 5↑data
+[20]   ⎕WSID←wsid ⋄ z←{0::0 ⋄ 2022⌶⍵}0 ⍝ Flush session caption
+[21]   :Else
+[22]   r←space decode 5↑data
+[23]   :EndIf
+[24]  
+[25]   :If 0=⎕NC'session' ⍝ In the isolate
+[26]   :Trap 6
+[27]   z←+r ⍝ Block on futures here to provoke (and trap) the VALUE ERROR
+[28]   :Else
+[29]   :If 2=⎕NC n←name,'error'
+[30]   r←⍎n ⋄ ⎕EX n
+[31]   (1 0⊃r),←' IN CALLBACK'
+[32]   :Else
+[33]   r←6('VALUE ERROR: Callback failed'(1⊃data)'^')
+[34]   :EndIf
+[35]   :EndTrap
+[36]   :If (⎕NC⊂'zz'⊣zz←1⊃r)∊9.2 9.4 9.5
+[37]   r←11('ISOLATE ERROR: Result cannot be returned from isolate' '')
+[38]   :EndIf
+[39]  
+[40]   :EndIf
+[41]   r←cleanDM r
+[42]   :EndHold
+[43]   :EndIf
+[44]  ⍝ this is the function called by RPCServer.Process
+[45]  ⍝ ⍵     name data
+[46]  ⍝ data  list created by encode below.
+[47]  ⍝ ←     result or assignment of decoded ⍵
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.expose←{⍺←⊢
+[1]   (src snm)←⍵
+[2]   (tgt tnm)←⍺⊣#             ⍝ dflt target  - #
+[3]   tnm←snm∘⊣⍣(tgt≡tnm)⊢tnm   ⍝ dflt tnames  - snames
+[4]   ss←⍕src
+[5]   trap←'⋄0::(⊃⍬⍴⎕DMX.EN) ⎕SIGNAL ⎕DMX.⎕EN⋄'
+[6]   fix←{op←4=src.⎕NC ⍵
+[7]   (aa ww)←2↑(0 2⊃src.⎕AT ⍵)⍴'⍺⍺' '⍵⍵'
+[8]   ⍝         tgt.⎕FX(⍺,'←{⍺←⊢')trap('⍵≡⍺⍵:',aa,ss,'.',⍵,ww,'⊢⍵')('⍺(',aa,ss,'.',⍵,ww,')⍵')'}'
+[9]   tgt.⎕FX,⊂⍺,'←{⍺←⊢',trap,(op/'⍵≡⍺⍵:',aa,ss,'.',⍵,ww,'⊢⍵⋄'),'⍺(',aa,ss,'.',⍵,ww,')⍵}'
+[10]   }
+[11]   z←tnm fix¨snm
+[12]   1:1
+[13]  ⍝ expose public functions and operators elsewhere
+[14]  ⍝ ⍵         (src) (snms)
+[15]  ⍝ ⍺         [tgt  [tnms] ]
+[16]  ⍝ src       ref containing fns to run
+[17]  ⍝ snms      names of fns & ops therein
+[18]  ⍝ tgt       ref to contain fns to call - dflt #
+[19]  ⍝ tnms      corresponding names in tgt - dflt snms
+[20]  ⍝ tgt.tnm←{⍺←⊢⋄0::(⊃⍬⍴⎕DM)⎕SIGNAL⎕EN⋄                      ⍺(  #.src.snm  )⍵} ⍝ function
+[21]  ⍝ tgt.tnm←{⍺←⊢⋄0::(⊃⍬⍴⎕DM)⎕SIGNAL⎕EN⋄ ⍵≡⍺⍵:⍺⍺#.src.snm  ⊢⍵⋄⍺(⍺⍺#.src.snm  )⍵} ⍝ adverb
+[22]  ⍝ tgt.tnm←{⍺←⊢⋄0::(⊃⍬⍴⎕DM)⎕SIGNAL⎕EN⋄ ⍵≡⍺⍵:⍺⍺#.src.snm⍵⍵⊢⍵⋄⍺(⍺⍺#.src.snm⍵⍵)⍵} ⍝ conjunction
+[23]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.fnSpace←{⍺←⊢
+[1]   
+[2]   trapErr''::signal''
+[3]   s←(callerSpace'').⎕NS''
+[4]   N←,⍵
+[5]   f←⍺⍺
+[6]   c←⎕CR'f'
+[7]   q←'#'≡⊃⊃c    ⍝ qualified
+[8]   c←⊃∘⌽⍣q⊢c    ⍝ remove qualification
+[9]   d←'{'≡⍬⍴c    ⍝ anon dfn
+[10]   t←1=≢⍴c      ⍝ tacit derv
+[11]   n←s.⎕FX{,↓⍣(1=≡⍵){N,'←',1↓,'⋄',⍵}⍣d⊢⍵}c
+[12]   ⍝ name anon dfn as N
+[13]   z←s.⎕FX(,↓N,'←{⍺←⊢ ⋄ ⍺',n,'⍵}')/⍨~(⊂n)∊N 0 1
+[14]   ⍝ if not N then N calls it
+[15]   z←s.⍎⍣t⊢N,'←',f derv⍣t⊢0
+[16]   1:s
+[17]  ⍝ ⍺⍺ fn
+[18]  ⍝ ⍵  required name for fn in space
+[19]  ⍝ ←  space child of caller containing fn as ⍵
+[20]  ⍝    for use by ephemeral isolates in llEach &c.
+[21]  
+[22]   trapErr''::signal''
+[23]   op←{}
+[24]   z←⎕FX,⊂'op←{⍵.',⍵,'←⍺⍺ ⋄ ⍵}'
+[25]   1:⍺⍺ op(callerSpace'').⎕NS''
+[26]  ⍝ possible alternative algorithm 2014-03-09
+[27]  ⍝ so far I can't find the reason I thought I needed
+[28]  ⍝ all the other stuff as this seems to do it ok.
+[29]  
+[30]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.getDRC←{⍺←⊢
+[1]   ⍵≠#:⍵                          ⍝ if not # it must exist
+[2]   9=#.⎕NC'DRC':#.DRC             ⍝ in # already?
+[3]   ws←addWSpath'conga'            ⍝ dyalog WS
+[4]   0::⊢#.DRC                      ⍝ this is result
+[5]   z←{}'DRC'#.⎕CY ws              ⍝ ⎕CY no result
+[6]   ⍝
+[7]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.getDefaultWS←{
+[1]   win←'W'≡⊃3⊃#.⎕WG'APLVersion'
+[2]   ∨/('/\'[win],⍵)⍷⎕WSID:⎕WSID
+[3]   ⍵ ⍝ ⍵ is normally 'isolate'
+[4]   ⍝ use exact current ws if looks like an isolate development ws
+[5]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.getSet←{⍺←⊢
+[1]   
+[2]   0∊⍴⍵:{(~⍵[;0]∊'debug' 'status')⌿⍵}options.({⍵,⍪⍎⍕⍵}⎕NL-2 9)
+[3]   one←1=≡⍵
+[4]   two←one<(,2)≡⍴⍵
+[5]   sig11←⎕SIGNAL∘11
+[6]   msg←'Argument should be '''', name or (name value)'
+[7]   one⍱two:sig11 msg
+[8]   (nam new)←⊂⍣one⊢⍵
+[9]   ''≢0⍴nam:sig11 msg
+[10]   nam←minuscule nam
+[11]   ~(⊂nam)∊options.⎕NL-2 9:sig11'Unknown parameter: ',nam
+[12]   old←options.⍎nam
+[13]   one:old
+[14]  
+[15]  ⍝ then two
+[16]   and←{⍺⍺⊣⍵:⍵⍵⊣⍵ ⋄ 0}
+[17]   (range type)←(domains types).⍎⊂nam
+[18]   (s b i r a)←'SBIRA'=type
+[19]   msg←nam,' should be a',⍕s b i r/'string' 'boolean' 'integer' 'ref'
+[20]  
+[21]   ok←a ⍝ Any array
+[22]   ok←ok∨b and(⊢≡1=⊢)new
+[23]   ok←ok∨i and{0=1↑0⍴⍵}and(⊢=⌊)new
+[24]   ok←ok∨s and{''≡0⍴⍵}new
+[25]   ok←ok∨r and{9=⎕NC'⍵'}new
+[26]   ~ok:sig11 msg
+[27]   ok←ok∧((1=⍴)∨(⊂new)∊⊢)range
+[28]   ~ok:sig11⍕nam,' should be one of:',range
+[29]  
+[30]   (ws db li)←'workspace' 'debug' 'listen'∊⊂nam ⍝ special
+[31]   0::(⊃⎕DMX.DM)⎕SIGNAL ⎕DMX.EN                         ⍝
+[32]   z←checkWs⍣(ws∧new≢'')⊢new                            ⍝
+[33]   z←{⎕THIS.(trapErr←(⍵↓0)∘⊣) ⋄ 0}⍣db⊢new       ⍝
+[34]   z←localServer⍣li⊢new                         ⍝ cases
+[35]   old⊣nam options.{⍎⍺,'←⍵'}new
+[36]  
+[37]  ⍝    }⍵
+[38]  ⍝ ⍺ target space
+[39]  ⍝ ⍵ '' | name | name value
+[40]  ⍝ ← (⍵:'') all names and values
+[41]  ⍝   (⍵:name) value
+[42]  ⍝   (⍵:name value) value re-assigned
+[43]  ⍝ called by both Config and setDefaults
+[44]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.isoStart←{⍺←⊢
+[1]   ##.onerror←##.RPCServer.GetEnv'onerror'
+[2]   protocol←##.RPCServer.GetEnv'protocol'
+[3]   iso←'isolate'
+[4]   parm←##.RPCServer.GetEnv iso
+[5]   parm≢iso:Description
+[6]   msgbox←{
+[7]   last←{⍺ ⍺⍺[(≢⍴⍵)-~⎕IO]⍵}
+[8]   ctr←{(⌊0.5×⍺-⍨⊢/⍴⍵)⌽⍺↑last ⍵}
+[9]   'W'=⊃2↓'#'⎕WG'APLVersion':⎕DQ'msg'⎕WC'MsgBox'⍺ ⍵'Error'
+[10]   {⎕SM←2 7⍴⍺ 1 1 0 0 0 2059,⍵ 3 1 0 0 0 2059 ⋄ (⎕SM←0⌿⎕SM)⊢''⊣⎕SR 1
+[11]   }/⊃¨ctr/¨(2↑⍉⍪⍺){(⌈/≢∘⍉¨⍺ ⍵){⍺ ⍵}¨⍺ ⍵}↑⍵
+[12]   }
+[13]   f00←{
+[14]   'R'∊⊃⊢/'#'⎕WG'APLVersion':{
+[15]   Caption←'Isolate Startup Failure'
+[16]   Text←⎕DM
+[17]   Caption msgbox Text
+[18]   }''
+[19]   (⊃⍬⍴⎕DMX.DM)⎕SIGNAL ⎕DMX.EN
+[20]   }
+[21]   ⎕TRAP←0 'C' 'f00⍬'
+[22]  
+[23]   ##.DRC←⎕THIS.DRC←getDRC #
+[24]   ##.RPCServer.SendProgress←0 ⍝ Do not send progress reports
+[25]   ##.RPCServer.Protocol←protocol
+[26]   ##.RPCServer.Boot
+[27]  ⍝ start as process if loaded with "isolate=isolate" in commandline
+[28]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.isolates←{⍺←⊢
+[1]   ss←session
+[2]   source←⍵                    ⍝ ns or wsid
+[3]   receive←(⍕⎕THIS),'.receive'
+[4]   numid←ss.nextid←ss.nextid+2
+[5]   tgt←'#.',chrid←'Iso',⍕numid
+[6]   
+[7]   ⍝ ss.procs contains all proc ids; assoc.(busy/proc) only those with busy isos
+[8]   max←options.isolates
+[9]   ass←ss.assoc
+[10]   z←⎕TGET ss.assockey         ⍝ see Init
+[11]   procs←⊣/ss.procs
+[12]   load←¯1+{≢⍵}⌸procs,ass.proc         ⍝ isolate load
+[13]   busy←¯1+{≢⍵}⌸procs,ass.(busy/proc)  ⍝ busy isolates
+[14]   ok←options.isolates>load
+[15]   ~∨/ok:'ISOLATE ERROR: All processes are in use'⎕SIGNAL 11⊣⎕TPUT ss.assockey
+[16]   use←(load=⌊/load)/⍳⍴load ⍝ procs with same load
+[17]   proc←procs⊃⍨use←use[⊃⍋busy[use]]     ⍝ pick one with fewest busy isolates
+[18]   ass.(iso busy proc),←numid 0,proc
+[19]   z←⎕TPUT ss.assockey
+[20]   (host port)←ss.procs[procs⍳proc;2 3]
+[21]   data←host ss.orig chrid numid tgt ss.homeport port
+[22]   id←dix'host orig chrid numid tgt home port'data
+[23]   z←connect chrid host port,⊂receive(source options.listen id)
+[24]   id
+[25]  ⍝ Create DRC client for isolate.
+[26]  ⍝ Create id space to send and return for corresponding proxy.
+[27]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.ll←{⍺←⊢
+[1]   z←Init 1
+[2]   trapErr''::signal''
+[3]   s←⍺⍺ fnSpace'f'
+[4]   
+[5]   i←New s
+[6]   ⍵≡⍺ ⍵:i.f ⍵    ⍝ monad
+[7]   ⍺ i.f ⍵        ⍝ dyad
+[8]   
+[9]   ⍝ parallel
+[10]  ⍝ ⍺     [larg]
+[11]  ⍝ ⍺⍺    [fn to apply to or between [⍺] and or ⍵
+[12]  ⍝ ⍵     rarg
+[13]  ⍝ ←     result of running ⍺⍺ in a parallel process.
+[14]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.llEach←{⍺←⊢
+[1]   z←Init 1
+[2]   trapErr''::signal''
+[3]   n←⍺⍺ fnSpace'f'
+[4]   s←⍴⍺⊢¨⍵
+[5]   i←New¨s⍴n
+[6]   ⍵≡⍺ ⍵:i.f ⍵    ⍝ monad
+[7]   ⍺ i.f ⍵        ⍝ dyad
+[8]   
+[9]   ⍝ parallel each
+[10]  ⍝ ⍺     [larg]
+[11]  ⍝ ⍺⍺    fn to apply to or between corresponding items of [⍺] and/or ⍵
+[12]  ⍝ ⍵     rarg
+[13]  ⍝ ←     results (which may be futures) of running ⍺⍺ in each
+[14]  ⍝       of one or more ephemeral isolates
+[15]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.llKey←{⍺←⊢                                    ⍝ key operator
+[1]   z←Init 1
+[2]   trapErr''::signal''
+[3]   ⍵≡⍺ ⍵:⍵ ∇(callerSpace'').⍳≢⍵
+[4]   
+[5]   j←⍋i←{(∪⍳⊢)↓⍣(≢1↓⍴⍵)⊢⍵}⍺
+[6]   (⊂⍤¯1⊢((⍳⍴i)=i⍳i)⌿⍺)⍺⍺ llEach(2≠/¯1,i[j])⊂[0](⊂j)⌷⍵
+[7]   
+[8]   ⍝ parallel key : ⍺ ⍺⍺ llkey ⍵
+[9]   ⍝ ⍺     [larg] - array (≢⍺) ≡ ≢⍵
+[10]  ⍝       ⍺⍺ llKey ⍵ ←→ ⍵ ⍺⍺ llKey ⍳≢⍵
+[11]  ⍝ ⍺⍺    fn to apply between each unique major cell of ⍺ and
+[12]  ⍝       the corresponding subarray of ⍵ ; or to the latter.
+[13]  ⍝ ⍵     rarg - array
+[14]  ⍝ ←     futures array - results of each application of ⍺⍺
+[15]  ⍝ to emulate primitive key completely it should mix (↑) the results.
+[16]  ⍝   This CANNOT BE DONE here as it would dereference the futures.
+[17]  ⍝ Phil Last ⍝ 2007-06-22 22:57
+[18]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.llOuter←{⍺←'VALENCE ERROR'⎕SIGNAL 6
+[1]   z←Init 1
+[2]   trapErr''::signal''
+[3]   (⍉(⌽s)⍴⍉⍺)⍺⍺ llEach ⍵⍴⍨s←(⍴⍺),⍴⍵
+[4]   
+[5]   ⍝     s←,⍴a←∪,⍺
+[6]   ⍝     s,←⍴w←∪,⍵
+[7]   ⍝     r←(⍉(⌽s)⍴⍉a)⍺⍺ llEach s⍴w
+[8]   ⍝     1:r[a⍳⍺;w⍳⍵]
+[9]   
+[10]  ⍝ parallel outer product
+[11]  ⍝ ⍺  array
+[12]  ⍝ ⍺⍺ fn to apply between items of ⍺ and ⍵
+[13]  ⍝ ⍵  array
+[14]  ⍝ ←  aray of futures from ⍺⍺ applied between
+[15]  ⍝    each pair of items selected from ⍺ and ⍵
+[16]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.llRank←{⍺←⊢
+[1]   z←Init 1
+[2]   trapErr''::signal''
+[3]   mlr←⌽3⍴⌽⍵⍵,⍬
+[4]   m←⍵≡⍺ ⍵
+[5]   l r←-1↓r⌊|l+r×0>l←(⊂⍒m×⍳3)⌷mlr⌊r←3⍴(⍴⍴⍵),⍴⍴⍺⊣0
+[6]   w←⊂[r↑⍳⍴⍴⍵]⍵
+[7]   m:⍺⍺ llEach w              ⍝ monad
+[8]   (⊂[l↑⍳⍴⍴⍺]⍺)⍺⍺ llEach w    ⍝ dyad
+[9]   ⍝ parallel rank
+[10]  ⍝ ⍺     [larg]
+[11]  ⍝ ⍺⍺    fn to apply to or between corresponding cells of [⍺] and/or ⍵
+[12]  ⍝ ⍵⍵    ranks (monadic, left, right) of cells of [⍺] and/or ⍵
+[13]  ⍝           to or between which to apply ⍺⍺
+[14]  ⍝ ⍵     rarg
+[15]  ⍝ ←     results or futures from running ⍺⍺ in each of one
+[16]  ⍝           or more ephemeral isolates
+[17]  ⍝ to emulate primitive rank completely it should mix (↑) the results.
+[18]  ⍝   This CANNOT BE DONE here as it dereferences the futures.
+[19]  ⍝ Phil Last ⍝ 2007-06-22 22:57
+[20]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.localServer r;srv;rc;z;old
+[1]   →(0=⎕NC'session.homeport')⍴0
+[2]   
+[3]   :If r=0
+[4]   :AndIf r←DRC.Exists srv←'ISO',⍕session.homeport ⍝ Server exists
+[5]   {}DRC.Close srv ⍝ Left over - object there but no thread
+[6]   :If 2=⎕NC'session.listeningtid'
+[7]   ⎕TKILL session.listeningtid
+[8]   ⎕EX'session.listeningtid'
+[9]   :EndIf
+[10]   :Else
+[11]  
+[12]   :If r←DRC.Exists srv←'ISO',⍕session.homeport ⍝ Server exists
+[13]   :If r←2=⎕NC'session.listeningtid'
+[14]   :AndIf r←session.listeningtid∊⎕TNUMS
+[15]   :Else
+[16]   {}DRC.Close srv ⍝ Left over - object there but no thread
+[17]   :EndIf
+[18]   :EndIf
+[19]  
+[20]   :If ~r ⍝ Already got a listening server
+[21]   :AndIf options.listen
+[22]   old←{0::0 ⋄ 2503⌶⍵}3 ⍝ Make thread and children un-interruptible
+[23]   :Repeat
+[24]   :If r←0=rc←⊃z←1 1 ##.RPCServer.Run srv session.homeport
+[25]   session.listeningtid←1⊃z
+[26]   :ElseIf 10048=rc ⍝ Socket already in use
+[27]   session.homeport+←options.(1+processes×processors)
+[28]   :EndIf
+[29]   :Until r∨session.homeport>options.homeportmax
+[30]   old←{0::0 ⋄ 2503⌶⍵}old ⍝ Restore thread state
+[31]   ('Unable to create listener: ',,⍕z)⎕SIGNAL r↓11
+[32]   :EndIf
+[33]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.messages←{⍺←⊢
+[1]   {(+/∨\' '≠⌽⍵)↑¨↓⍵}⍵{(0,⍴,⍺)↓⍵⌿⍨>/⍺⍷⍵}⎕CR⊃1↓⎕XSI
+[2]   ⍝ attached to caller
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.minuscule←{⍺←⊢
+[1]   ('abcdefghijklmnopqrstuvwxyz',,⍵)[(⎕A,,⍵)⍳⍵]
+[2]   ⍝
+[3]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.newSession w;z
+[1]   :If 0=⎕NC'session.started'
+[2]   :OrIf 0.0001<|session.started-sessionStart''
+[3]   r←1
+[4]   :Else ⋄ r←0 ⍝ not a new session
+[5]   session.listen←options.listen
+[6]   checkLocalServer ⍬
+[7]   :EndIf
+[8]   
+[9]   ⍝ The session is new if session.started is missing.
+[10]  ⍝ It needs to be restarted if session.started differs from the actual
+[11]  ⍝ start of the session by more than 8.64 seconds (1/10000 of a day)
+[12]  ⍝ that indicates that the ws was saved with the session space intact
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.processors←{1111⌶⍬}
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.prof←{⍺←⊢ ⋄ ⎕IO←0
+[1]   z←⎕PROFILE'clear'
+[2]   z←⎕PROFILE'start'
+[3]   r←⍺ ⍺⍺⍣⍵⍵⊢⍵
+[4]   z←⎕PROFILE'stop' ⋄ e←⍬⍴⎕LC
+[5]   p←e↓⎕PROFILE'data'
+[6]   p[;3 4]{⌊0.5+100×⍺÷⍵}←0 4⌷p
+[7]   p[;]←p[⍒p[;3];]
+[8]   n←{⍺,~∘' '⍕,'[',(⍪⍵),']'}/2↑⍤1⊢p
+[9]   p←4↑⍤1⊢n,0 2↓p
+[10]   p⍪⍨←'operation[]' 'called' 'exclusive %' 'inclusive %'
+[11]   r p
+[12]  ⍝ ⍺     [larg]
+[13]  ⍝ ⍺⍺    fn
+[14]  ⍝ ⍵⍵    rop to ⍣ (fn or int)
+[15]  ⍝ ⍵     rarg
+[16]  ⍝ ←     res prof
+[17]  ⍝ res   result of: ⍺ ⍺⍺⍣⍵⍵⊢⍵
+[18]  ⍝ prof  ⎕profile wherein
+[19]  ⍝       cols[0,1] joined as fnname[lineno]
+[20]  ⍝       times converted to % so ⍺⍺ takes 100 overall
+[21]  ⍝       last two cols missing
+[22]   }
+     ∇
+
+      isolate.ynys.proxySpace
+#.isolate.ynys.proxySpace
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.proxySpace.iEvaluate←{z←{0::0 ⋄ 2503⌶⍵}3 ⍝ Thread and its children are un-interruptible
+[1]   ⍺←⊢
+[2]   data←⍺ iSpace.encode ⍵
+[3]   ID←iD.numid
+[4]   ss←{iSpace.session}⍣home⊢home←2∊⎕NC'iSpace.session.started' ⍝ is this true ?
+[5]   z←{iso←ss.assoc.iso
+[6]   (≢iso)≤i←iso⍳⍵:'ISOLATE: No longer accessible'⎕SIGNAL 6
+[7]   (i⊃ss.assoc.busy)←1}⍣home⊢ID
+[8]   (rc res)←z←iSend iD.tgt data      ⍝ the biz
+[9]   ok←0=rc
+[10]   ~home:{rc=0:⍵ ⋄ ⍎'#.Iso',(⍕ID),'error←rc ⍵' ⋄ ⎕SIGNAL rc}res   ⍝ call back? then we're done
+[11]   z←ss.assoc.{((iso⍳⍵)⊃busy)←0}ID
+[12]   ok:⊢res                           ⍝ spiffing!
+[13]   (,⍕(⍕rc),': ',(0⊃res),{(⍵∨.≠' ')/': ',⍵}1⊃res,'' '')iSpace.qsignal rc
+[14]   ⍝ execute expression supplied to isolate
+[15]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←isolate.ynys.proxySpace.iSend data;send;ev;nm;rc;res;cmd
+[1]   send←((⍕iSpace),'.execute')data    ⍝ RPCServer runs this
+[2]   :Trap 0 ⋄ res←iSpace.DRC.Send iD.chrid send
+[3]   :Else
+[4]   'ISOLATE: Transmission failure'iSpace.qsignal 6
+[5]   :EndTrap
+[6]   rc cmd ev data←4↑res
+[7]   :If 0≠rc ⋄ r←86(('COMMUNICATIONS FAILURE ',⍕rc cmd)ev)          ⍝ ret ⎕EN ⎕DM
+[8]   :Else
+[9]   WAIT:
+[10]   :Trap 1000
+[11]   :Repeat
+[12]   res←(rc nm ev data)←4↑iSpace.DRC.Wait cmd
+[13]   :Until ~(rc=100)∨(⊂ev)∊'Progress' 'Timeout' ⍝ Tolerate eventmode on (ev="Timeout") or off (rc=100)
+[14]   :Else
+[15]   iSpace.checkLocalServer ⍬
+[16]   ⍞←'ISOLATE: Interrupt - continue waiting (Y/N)? '
+[17]   →(∨/'Yy'∊⊃{(1+⍵⍳'?')↓⍵}⍞~' ')⍴WAIT
+[18]   ('USER INTERRUPT ',⍕⎕DMX.EN)iSpace.qsignal 6
+[19]   :EndTrap
+[20]   :If rc=0
+[21]   :If 0=⊃data ⋄ r←1⊃data     ⍝ if rc is 0 res which will be (0 result)
+[22]   :Else ⋄ r←(1↑data),⊂1↓data,⊂'' ⍝ error from RPCServer framework itself
+[23]   :EndIf
+[24]   :Else ⋄ r←rc((⍕rc nm)ev) ⍝ else return rc and faked ⎕DM
+[25]   :EndIf
+[26]   ⍝ called from iSyntax, iEvaluate and from
+[27]   ⍝ ##.cleanup to remove isolate from remote process
+[28]   :EndIf
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.proxySpace.iSyntax←{⍺←⊢
+[1]   ⍝z←tracelog ⍵
+[2]   c←⊣/⍵
+[3]   '('=c:⊢3 32                            ⍝ if '(expr)' ⍝ 1 0 0 0 0 0
+[4]   '{'=c:⊢3 52                            ⍝ if '{defn}' ⍝ 1 1 0 1 0 0
+[5]   '#'∊⍵:⊢0 0                             ⍝ # in anything un-parenthesised is an error
+[6]   '⎕'=c:⊢{0::0 0 ⋄ x←⍎⍵ ⋄ c←⎕NC'x' ⋄ (2 3⍳c)⊃(2 0)(3 52)(0 0)}⍵ ⍝ assumes ⎕FNS ambi
+[7]   ⍝ ↑ reject ops & nss
+[8]   f←',⊢-⊂⍴⊃≡+!=⍳⊣↓↑|⍪⍕⍎∊⌽~×≠>⌊∨?⌷<≢⌈≥⍷⍉∪÷⍒⊥∧⍋⊖*○⍲⍱⍟⌹⊤≤∩'
+[9]   
+[10]   c∊f:⊢3 52
+[11]   0>⎕NC ⍵:⊢0 0                           ⍝ primitive operators
+[12]   expr←'((2⍴⎕nc∘⊂,⎕at),''',⍵,''')'       ⍝ then what is it?
+[13]   (rc res)←iSend iD.tgt(0 expr)          ⍝ from the horse's mouth
+[14]   rc≠0:(,⍕res)iSpace.qsignal rc          ⍝ lost connection?
+[15]   (nc at)←res                            ⍝ ⎕NC ⎕AT - rc?
+[16]   nc∊3.2 3.3:⊢3 52                       ⍝ 3,32+16+4 res ambi omega
+[17]   c←⌊nc                                  ⍝ class
+[18]   c∊0 2:⊢2 0                             ⍝ undef, var
+[19]   (r fv ov)←at                           ⍝ result, valence
+[20]   w←∨/(a d w)←fv=¯2 2 1                  ⍝ (ambi, dyad, omega)
+[21]   r←c,2⊥r a d w 0 0                      ⍝ class, encoded syntax
+[22]   1:⊢r
+[23]   ⍝ return nameclass and syntax for supplied name (string)
+[24]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.publicMethods←{⍺←⊢
+[1]   messages'⍝- '
+[2]   ⍝- AddServer
+[3]   ⍝- Config
+[4]   ⍝- InternalState
+[5]   ⍝- LastError
+[6]   ⍝- New
+[7]   ⍝- StartServer
+[8]   ⍝- RemoveServer
+[9]   ⍝- Stats
+[10]  ⍝- ll
+[11]  ⍝- llEach
+[12]  ⍝- llKey
+[13]  ⍝- llOuter
+[14]  ⍝- llRank
+[15]  
+[16]  ⍝ add more after prefix '⍝- '
+[17]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←x isolate.ynys.qsignal y
+[1]   ⍝ To help signal an error that will not terminate a dfn capsule
+[2]   y←(y 86)[y>999] ⍝ Use 86 for interrupts and CONGA ERRORS
+[3]   ⎕SIGNAL⊂('EN'y)('EM'x)('Message'x)
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.receive←{⍺←⊢
+[1]   (source listen id)←⍵                           ⍝ this all happens remotely
+[2]   name←id.chrid
+[3]   root←⎕NS''
+[4]   z←{root.⎕FX¨proxySpace.(⎕CR¨⎕NL ¯3),⊂⎕CR'tracelog'}⍣listen⊢1  ⍝ prepare for calls back
+[5]   root.iSpace←⎕THIS
+[6]   id.(port←home)
+[7]   id.(chrid←'Iso',⍕1+numid)
+[8]   id.tgt←,'#'
+[9]   root.iD←id
+[10]   iso←root.⎕NS(⍴⍴source)⊃source''                ⍝ clone of source
+[11]   z←iso.{6::0 ⋄ z←{}⎕CY ⍵}⍣(≡source)⊢source      ⍝ or copy if ws
+[12]   z←iso.{6::0 ⋄ z←{}(↑'⎕io' '⎕ml')⎕CY ⍵}⍣(≡source)⊢source
+[13]   z←name{#.⍎⍺,'←⍵'}iso                           ⍝ name it in root
+[14]   z←#.DRC.Clt⍣listen⊢id.(chrid orig port)        ⍝ orig=host if local
+[15]   1⊣1(700⌶)root                                  ⍝ Make isolate
+[16]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.sessionStart←{⍺←⊢
+[1]   24 60 60 1000{(dateNo ⍵)-(⍺-⍺⍺⊥3↓⍵)÷×/⍺⍺}/(2⊃⎕AI)⎕TS
+[2]   ⍝ diff twixt ⎕ts and ⎕ai
+[3]   ⍝ ← number of days and the decimal part thereof after the start of the last
+[4]   ⍝   day of the penultimate year of the nineteenth century: 1899-12-31 00.00
+[5]   ⍝ immune to system clock change as both rely on that.
+[6]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.setDefaults←{⍺←⊢
+[1]   here←⎕THIS
+[2]   new←0=here.⎕NC⊂'options'                      ⍝ set defaults only once
+[3]   z←{
+[4]   spaces←here.(types options domains)←here.⎕NS¨⍬ ⍬ ⍬
+[5]   tod←{(2⍴⍵),⊂1↓⍵}                          ⍝ type: Str Bool Int Ref
+[6]   ⍝ ensure all param names are minuscule as arg to Config is converted thus.
+[7]   ⍝        spaces.param← tod 'S' 'Default' 'and' 'the' 'Rest'
+[8]   spaces.debug←tod'B' 0                     ⍝ cut back on error
+[9]   spaces.drc←tod'R'#                        ⍝ copy into # if # and missing
+[10]   spaces.listen←tod'B' 0                    ⍝ can isolate call back to ws
+[11]   spaces.onerror←tod'S' 'signal' 'debug' 'return'
+[12]   spaces.processors←tod'I'(processors ⍬)    ⍝ no. processors (fn ignores ⍵)
+[13]   spaces.processes←tod'I' 1                 ⍝ per processor
+[14]   spaces.isolates←tod'I' 99                 ⍝ per process
+[15]   spaces.homeport←tod'I' 7051               ⍝ first port to attempt to use
+[16]   spaces.homeportmax←tod'I' 7151            ⍝ highest port allowed
+[17]   spaces.runtime←tod'A' 1                   ⍝ use runtime version
+[18]   spaces.protocol←tod'S' 'IPv4' 'IPv6' 'IP' ⍝ default to IPv4
+[19]   spaces.maxws←tod'S'(##.RPCServer.GetEnv'MAXWS')
+[20]   spaces.status←tod'S' 'client' 'server'    ⍝ set as 'server' by StartServer
+[21]   spaces.workspace←tod'S'(getDefaultWS'isolate') ⍝ load current ws for remotes?
+[22]   1:1
+[23]   }⍣new⊢0
+[24]   0::(⊃⍬⍴⎕DMX.DM)⎕SIGNAL ⎕DMX.EN
+[25]   ⊢getSet ⍵                                     ⍝ this where Config called prior Init
+[26]   ⍝ called by Config before Init runs and by Init when it does.
+[27]  ⍝ set default options and permit user changes
+[28]  ⍝ but leave Init to apply them.
+[29]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.stop;⎕TRAP
+[1]   ⎕TRAP←0 'S' ⋄ ∘
+     ∇
+
+    :Class suicide
+        ∇ inst←New data;whence
+          :Access public shared
+          whence←⍬⍴⎕RSI
+          inst←whence.⎕NEW ⎕THIS
+          inst.(whence data)←whence data
+        ∇
+
+        ∇ coroner
+          :Implements destructor
+          :Trap 0
+              (fn arg)←data
+              (whence.⍎fn)arg
+          :EndTrap
+        ∇
+   ⍝ set a destructor on an ordinary container space.
+   ⍝ When the space into which the instance is set,
+   ⍝ e.g. 'this' in:
+   ⍝       this.close←suicide.New name arg
+   ⍝ is destroyed, the function named as the first of
+   ⍝ two items in New's argument, that must be in the
+   ⍝ space that called 'New', is called with the second
+   ⍝ item of that same arg and can be made to release
+   ⍝ resources even though space - 'this' has gone.
+   ⍝ Phil Last ⍝ 2013-06-29 10:31
+    :EndClass
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.tracelog←{⎕←((1⊃⎕SI),'[',(⍕1⊃⎕LC),']')⍵}
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.until←{⍺←⊢ ⋄ f←⍺⍺ ⋄ t←⍵⍵
+[1]   ⍵≡⍺ ⍵:f⍣(t⊣)⍵
+[2]   ⍺{ ⍝ keep recursion local
+[3]   (⍺-1)∘∇⍣((⍺>1)>t z)⊢z←f ⍵
+[4]   }⍵
+[5]   ⍝ ⍺     [max]
+[6]   ⍝ ⍺⍺    monadic fn on arg - may be composed: (const∘function)
+[7]   ⍝ ⍵⍵    monadic test on arg or subsequent results
+[8]   ⍝ ⍵     arg
+[9]   ⍝       apply fn [up to max times] until test result
+[10]  ⍝ ←     last application of fn
+[11]  ⍝ e.g.
+[12]  ⍝       10 +∘1 until (≥∘5) 0
+[13]  ⍝ 5
+[14]  ⍝       10 +∘1 until (≥∘15) 0
+[15]  ⍝ 10
+[16]  ⍝       +∘1 until (≥∘5) 0
+[17]  ⍝ 5
+[18]  ⍝       +∘1 until (≥∘15) 0
+[19]  ⍝ 15
+[20]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.validateRemoteFilters←{
+[1]   0=⍴⍵:⍵ ⍝ Validate filters and return nested vector
+[2]   z←{1↓¨(','=⍵)⊂⍵}',',⍵~' ' ⍝ Split on comma
+[3]   0∊(3↑¨z)∊'ip=' 'IP=':'INVALID FILTERS'⎕SIGNAL 11
+[4]   z
+[5]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.whoami←{⍺←⊢
+[1]   'localhost'
+[2]   (W wc wa L lc la A ac aa)←messages'⍝- '
+[3]   (adr cfg)←(W L A⍳⊂3⍴⊃#.⎕WG'APLVersion')⊃(wa wc)(la lc)(aa ac)
+[4]   ⊃{(⍵≠' ')⊂⍵⊣⎕ML←3}(1↓⍳∘':'↓⊢)⊃{⍵⌿⍨∨/adr⍷minuscule↑⍵}⎕CMD cfg
+[5]   ⍝- Win
+[6]   ⍝- ipconfig
+[7]   ⍝- ipv4 address
+[8]   
+[9]   ⍝- Lin
+[10]  ⍝- /sbin/ifconfig
+[11]  ⍝- inet addr
+[12]  
+[13]  ⍝- AIX
+[14]  ⍝- ifconfig
+[15]  ⍝- inet addr
+[16]   }
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ isolate.ynys.ynys←{⍺←⊢
+[1]   ⍝ ynys - Welsh - island - cognate with insular, isolate &c.
+[2]   ⍝ and beginning with "y" it's at the bottom of autocomplete
+[3]   }
+     ∇
+
+      ll
+#.ll
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ ll.Each←{⍺←⊢ ⋄ ⍺(⍺⍺ EachX ⍬)⍵}
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←{left}(fns ll.EachX iss)right;dyadic;fn;cb;n;counts;shape;ni;i;count;done;failed;next;run1iso;callbk;expr;z;PF;cblarg;cancelled;cbprovided;noIso;cr
+[1]   ⍝ IÏ using queueing on persistent Isolates:
+[2]   ⍝
+[3]   ⍝ iss is a list of refs to pre-existing isolates to use
+[4]   ⍝     or if scalar, processors×processes clones will be made
+[5]   ⍝
+[6]   ⍝ fns is either:
+[7]   ⍝     a simple char vec name of function expected to be in supplied isolates
+[8]   ⍝     a nested vec of two fn names, in which case 2nd name is a progress callback
+[9]   ⍝     use empty callback fn for default display
+[10]  
+[11]   :If dyadic←2=⎕NC'left' ⍝ Scalar extension
+[12]   :If 1=×/⍴left ⋄ left←(⍴right)⍴left
+[13]   :ElseIf 1=×/⍴right ⋄ right←(⍴left)⍴right
+[14]   :EndIf
+[15]   :EndIf
+[16]  
+[17]   :If noIso←0=≢iss ⋄ iss←⊂'' ⋄ :EndIf ⍝ No isolate passed
+[18]  
+[19]   :If 3=⎕NC'fns'          ⍝ A real function?
+[20]   :If 1=⍴⍴cr←⎕CR'fns' ⋄ fns←(⊃cr)''⊣⎕EX'fns' ⋄ ⍝ primitive?
+[21]   :Else
+[22]   :If noIso ⋄ iss←⎕NS'' ⋄ :EndIf
+[23]   fn←⊃(,iss).⎕FX⊂⎕CR'fns'
+[24]   fns←fn'' ''⊣⎕EX'fns'
+[25]   :EndIf
+[26]  
+[27]   :EndIf
+[28]  
+[29]   :If 0=⍴⍴iss ⍝ If scalar, clone
+[30]   iss←#.isolate.{New¨(×/Config¨'processors' 'processes')⍴⍵}iss
+[31]   :EndIf
+[32]  
+[33]   :If cbprovided←2=≡fns   ⍝ We MAY have a callback function
+[34]   (fn cb cblarg)←3↑fns,'' ''
+[35]   cbprovided←cb∨.≠' ' ⍝ We DO have a callback function
+[36]   cblarg,←(0=≢cblarg)/'ll.Each Progress - ',fn,' (',(⍕×/⍴right),')'
+[37]   :Else ⍝ No callback function defined
+[38]   fn←fns ⋄ (cb cblarg)←'' 'll.Each Progress'
+[39]   :EndIf
+[40]  
+[41]   :If 0=⍴cb  ⍝ Default Progress Form
+[42]   :If PEACHForm cblarg(≢iss)(×/⍴right)
+[43]   cb←'PEACHUpdate'
+[44]   :EndIf
+[45]   :EndIf ⍝ Default
+[46]  
+[47]   :If cbprovided
+[48]   callbk←(⊃⎕RSI)⍎cb
+[49]   :Else
+[50]   callbk←⍎cb
+[51]   :EndIf
+[52]  
+[53]   ni←≢iss
+[54]   shape←⍴right
+[55]   n←⍴right←,right ⋄ :If dyadic ⋄ left←,left ⋄ :EndIf
+[56]   counts←ni⍴0 ⋄ done←failed←n⍴count←0
+[57]   r←n⍴⎕NULL
+[58]  
+[59]   run1iso←{⍝ drive isolate ⍵ until we are done
+[60]   n<next←⎕THIS.(count←count+1):0 ⍝ no more to do
+[61]   r[next]←⊂⍎expr
+[62]   counts[⍺]+←1
+[63]   z←{0::failed[⍵]←1 ⋄ done[⍵]←1⊣+r[⍵]}next ⍝ Reference it
+[64]   cblarg callbk counts,count⌊n:''⊣⎕THIS.cancelled←1
+[65]   ⍺ ∇⍵    ⍝ loop until done
+[66]   }
+[67]  
+[68]   expr←(dyadic/'(next⊃left) '),'⍵.{',(dyadic/'⍺ '),fn,'⍵} next⊃right'
+[69]   cancelled←0
+[70]   :If 1=≢iss ⍝ Only one: do it in main thread
+[71]   z←1 run1iso⊃iss
+[72]   :Else
+[73]   z←⎕TSYNC(⍳ni)run1iso&¨iss
+[74]   :EndIf
+[75]   ⎕SIGNAL cancelled/6
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ r←ll.PEACHForm(caption nprocs nitems);p;labels;pos;pb;n
+[1]   ⍝ Make a progress form with a progress bar per process and one for the total
+[2]   
+[3]   :Trap 0
+[4]   r←1⊣'PF'⎕WC'Form'caption('Coord' 'Pixel')('Size'((40+25×nprocs)800))('Border' 3)
+[5]   :Else ⋄ →r←0 ⍝ Unable to create a form
+[6]   :EndTrap
+[7]   PF.texts←PF.bars←(1+nprocs)⍴PF
+[8]   labels←({'Iso #',⍕⍵}¨⍳nprocs),⊂'Total'
+[9]   
+[10]   :For p :In ⍳1+nprocs
+[11]   pos←10+25×p-1
+[12]   ('PF.L',⍕p)⎕WC'Label'(p⊃labels)(pos 20)(⍬ 60)
+[13]   (n←'PF.T',⍕p)⎕WC'Label' '0'(pos 70)(⍬ 30)('justify' 'right')
+[14]   PF.texts[p]←⍎n
+[15]   (n←'PF.PB',⍕p)⎕WC'ProgressBar'((pos+3)110)(⍬ 655)('Limits'(0 nitems))
+[16]   PF.bars[p]←⍎n
+[17]   :EndFor
+[18]   2 ⎕NQ'.' 'Flush'
+     ∇
+
+jenkins  2018/08/13 17:24:48
+
+     ∇ {abort}←cap ll.PEACHUpdate arg
+[1]   :Trap abort←0
+[2]   PF.texts.Caption←⍕¨arg
+[3]   PF.bars.Thumb←arg
+[4]   :Else
+[5]   abort←1 ⍝ User killed the GUI
+[6]   :EndTrap
+     ∇
+

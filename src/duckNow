@@ -1,0 +1,39 @@
+#
+cd /Users/petermsiegel/MyDyalogLibrary/pmsLibrary/src
+
+echo Running from `pwd`
+# $duck: The <ps> pattern we'll look for...
+duck="/Dyalog-20"
+
+# Include:
+#    a) anyone's procs b) keep those w/ $duck c) discard those w/ grep d) return only the pid
+procs=`ps -Ax | grep $duck | grep -v grep | egrep -e '^\s*\d+\s' -o`
+
+   echo '+++++++++++++++++'
+   echo "   $duck    " 
+   echo '+++++++++++++++++'
+
+   clean
+   
+if [ -n "$procs" ]   # We have >= 1 pid
+then
+   echo '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+   echo '++ Active Dyalog processes found!                             ++'
+   echo '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+   echo '++ '$procs
+   echo '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+   echo '++ Warning: Ready to terminate all dyalog processes.          ++'
+   echo '++          To abort, type ^C and press ENTER.                ++'
+   echo '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+   echo -n 'To terminate dyalog processes, press ENTER now...'
+   read ok
+   echo '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+   kill -9 $procs 
+   echo '++ Dyalog processes have been terminated.                     ++'
+   echo '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+else
+  echo '++++++++++++++++++++++++++++++++'
+  echo '++ No active Dyalog processes ++'
+  echo '++++++++++++++++++++++++++++++++'
+fi
+            

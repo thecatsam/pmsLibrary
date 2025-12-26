@@ -1,0 +1,362 @@
+∆FIX  is now obsolete.  See ∆PRE (preprocessor).
+
+∆FIX command: ∆FIX is a preprocessor for Dyalog APL files following the formal
+specifications of the `2∘⎕FIX` command. Normally specified as .dyalog files,
+these files contain one or more:
+∘ namespace-like objects (namespaces, classes, and interfaces),
+∘ traditional functions (marked with `∇...∇`, unless the sole object in the file), and
+∘ direct fns (dfns).
+
+Call Format
+     result ←  [outSpec [comSpec [DEBUG]]] ∆FIX fileName
+
+ Description
+Takes an input file <fileName> in 2 ⎕FIX format, preprocesses the file, then
+2∘⎕FIX's it, and returns the objects found or ⎕FIX error messages.
+Like Dyalog's ⎕FIX, accepts either a mix of namespace-like objects (namespaces,
+classes, interfaces)and functions (marked with ∇) or a single function (whose
+first line must be its header, with a ∇-prefix and suffix optional).
+
+fileName: the full file identifier; if no type is indicated, .dyalog is appended.
+
+outSpec:  ∊0 1 2 (0=default). Indicates the format of the return value∘.
+
+   On success, rc (return code) is 0.
+   0 - returns∘: rc names             -- names: the list of objects created by a ⎕FIX.
+   1 - returns∘: rc names code        -- code:  output (vec of strings) from the preprocessor.
+   2 - returns∘: rc code              -- rc:    0 on success
+   ∘ If an error occurs, returns:
+               signalNum signalMsg            -- signal...: APL ⎕SIGNAL number and message string
+
+comSpec:  ∊0 1 2 (0=default). Indicates how to handle preprocessor statements in output.
+   0: Keep all preprocessor statements, identified as comments with ⍝🅿️ (path taken), ⍝❌ (not taken)
+   1: Omit (⍝❌) paths not taken
+   2: Omit also (⍝🅿️) paths taken (leave other user comments)
+
+DEBUG:    ∊0 1 (0=default).
+   0: not debug mode (default).
+   1: debug mode. ⎕SIGNALs will not be trapped.
+
+-----------------------
+Preprocessor Directives
+
+Directives are of the form
+  ::DIRECTIVE name ← value
+or
+  ::DIRECTIVE (cond) action.
+
+Directives are always the first item on any line of input (leading spaces are ignored).
+
+Special commands are of the form:
+      #COMMAND{argument}
+or
+      name..COMMAND
+
+Directive Descriptions
+--------- ------------
+
+  ::DEF[INE] name ← string
+  Set APL-style name <name> to the (unevaluated) string in the right argument. The <string>
+  is not evaluated, but it will replace <name> verbatim, wherever it appears,
+  except that a simple value outside parentheses or braces will be placed in parentheses.
+    ::DEF next ← {⍵+1}
+
+  ::UNDEF name
+  Remove the definition of <name>, whether defined via DEF, DEFINE, LET or EVAL.
+
+  ::LET name ← value
+  ::EVAL name ← value
+  Set APL-style name <name> to the (APL-evaluated) value of the right argument. The item is
+  evaluated just once.  Wherever <name> appears in the user code, this value
+  replaces it verbatim (as for ::DEFINE, adds parentheses to values outside parentheses
+  or braces).
+    E.g.   ::LET now ← ⎕TS
+  Note: names (e.g. <now>) are evaluated within a private namespace established during each ∆FIX call, so
+  setting names will not impact the external environment unless they contain ⎕SE, # or ##. We recommend
+  NOT using ∆FIX Macros to set external variables during preprocessing.
+  Names relative to this private namespace are safe (e.g. ::LET a.b.c←⎕TS) and intermediate
+  namespaces will be generated (here, a.b), unless the names refer to non-namespace objects.
+  The following sequence is an error, because variable <a> first denotes a simple value, not a namespace.
+       ::LET a←⎕TS
+       ::LET a.ai←⎕AI
+  This however is valid, as long as a.b and a are either undefined or denote namespaces:
+       ::LET a.b.ts←⎕TS
+       ::LET a.b.ai←⎕AI
+
+  ::IFDEF name / ::IFNDEF name
+    …
+  ::ELSE
+    …
+  ::ENDIF[DEF]
+  When an IFDEF or IFNDEF is seen, the name (which may be defined via DEF/INE, LET/EVAL)
+  is replaced by its value. If that value is defined, the IF path is taken, else the
+  ELSE path is taken. An ELSEIF path is also valid, but no ELSEIFDEF is not.
+  Use ::ELSEIF name..DEF instead.
+  Note: names are evaluated within a private namespace. Absolute names, using ⎕SE, # or ##
+  (e.g. #.myItem or ##.##.myItem), should be avoided or used with care. See ::LET above.
+
+  ::IF cond
+  ::ELSEIF cond
+  ::ELSE
+  ::ENDIF
+  When an IF (or ELSEIF) is seen, the argument <cond> is evaluated. The first "true"
+  path is taken. True is defined as (a) not (,0) and not null. Thus, these are TRUE:
+         1      0 1 2      'abc'   '0'
+  These are FALSE:
+         0      ''   ⍬   0⍴1 2 3
+  See ::IF and ::LET for details on names used in ::IF and ::ELSEIF expressions.
+
+  ::INCLUDE  fileID
+  Insert file specified in current file location, replacing the include statement,
+  and preprocess it.
+      fileID: (currently) a file identifier; if no filetype is indicated, .dyalog is assumed.
+  NOTE: A quoted string should be allowed to deal with fileIDs with spaces.
+
+  ::CINCLUDE fileID
+  Include the file right here, as for ::INCLUDE, but only if not already included
+  via ::INCLUDE or ::CINCLUDE.
+     fileID: see ::INCLUDE.
+
+  ::COND cond statement
+  Like ::IF, but used for debugging statements. If <cond> is TRUE, executes <statement>.
+  Else, does nothing.
+  See ::IF and ::LET for details on APL variable names used in ::COND expressions.
+
+  ::MSG any text
+  Places the message on the screen during preprocessing. Execution continues.
+
+  ::ERROR [errcode] any text
+  Signals the associated errcode (if any) and error text when executed. Execution is halted.
+
+  NAME ATTRIBUTES
+  name..CMD
+  Items of this form first undergo macro substitution (if applicable), then
+  are quoted and transformed depending on the CMD.
+       Note: Ordinary quoted strings are ignored during macro substitution.
+  name..DEF                 → (0≠⎕NC ‘name’)
+  name1.name2.name3..DEF    → (0≠⎕NC ‘name1.name2.name3’)
+
+  name..UNDEF               → (0=⎕NC ‘name’)
+  name1.name2.name3..UNDEF  → (0=⎕NC ‘name1.name2.name3’)
+
+  name..Q                   → 'name'
+  name1.name2.name3..Q      → 'name1.name2.name3'
+  Used to pass the name of an object AFTER macro substitution (where applicable)
+  to any user or system variable.
+
+  name..ENV                  → value of environment variable 'name'
+  Shortcut to getting value of named environment variable (null, if not defined).
+
+  Other Attributes
+  name..DR                     returns ⎕DR name if name is in ⎕NC 2,9;
+                               0 if undefined; ¯1 if defined in another class.
+  name..NC                     returns the full nameclass of 'name', as if
+                               ⎕NC⊂'name' (for single-letter names: ⎕NC⊂,'n')
+  name..SIZE                   ⎕SIZE 'name'
+
+APL STRINGS
+APL strings in single quotes are handled as in APL. Strings may appear in double
+quotes (“...”), may contain unduplicated single quotes, and may extend over multiple
+lines.  Double quoted strings are converted to single-quoted strings, after:
+∘ Doubling internal single quotes
+∘ Processing doubled internal double quotes.
+∘ Converting newlines to ⎕UCS 10, in this way ( ⏎ used to show newline):
+
+    “String1⏎string2”     →   (‘String’,(⎕UCS 10),’string2’)
+
+ Blanks at the beginning of each continuation line are removed (the symbol · shows where the leading blanks are).
+ BEFORE:
+       	“This is line 1. ⏎
+·········This is line 2.”
+ AFTER:
+         (‘This is line 1.’,(⎕UCS 10),’This is line 2.’)
+
+Simple Macros
+  1. All names defined by ::DEF or ::LET (or synonym, ::EVAL) are replaced anywhere in APL text outside of quoted strings. If those objects contain non-text, they are converted to text; if they appear on multiple lines, it must make sense in the APL context.
+  2. Automatic (predefined) macros:
+      a.  ⎕LET.__
+       1. ⎕LET.UC (all upper-case letters valid as 1st letter of Dyalog vars); also ⎕LET.uc.
+       2. ⎕LET.LC (all lower-case letters...); also ⎕LET.lc.
+       3. ⎕LET.ALPH (all letters...); also ⎕LET.alph.
+      b.  ⎕MY
+          For each APL function <fun> tagged via ∇...∇ (or the only one, if no ∇...∇ is used),
+          specifies a namespace ⍙⍙.∆MY.fun for containing local variables.
+          Includes ⎕FIRST (i.e. ⍙⍙.∆MY.fun.∆FIRST) or ⎕MY.∆FIRST, which is 1 the first time it is
+          called, and 0 afterwards, and ⎕RESET or ⎕MY.∆RESET, which resets ∆FIRST to return 1
+          on its next call.
+      c.  ⎕HERE
+          Where ⎕FIX was called from. If you want to set options as ∆FIX "compile" time in that namespace,
+          ⎕HERE provides a constant reference to that location.
+
+Special Case for Semicolons
+  1. A semicolon is treated specially when outside parentheses and brackets [ ], but possibly within a dfn { }.
+     See Where Expressions below.
+  2. A semicolon is treated specially when within parentheses.
+     See Lists below.
+  3. A semicolon at the end of a line (ignoring blanks and comments) tells the preprocessor to join
+     that line to the next, keeping the semicolon (for later processing).
+     This affects ANY semicolon, even those in brackets (which otherwise follow standard APL).
+     Thus, a trailing semicolon can be used to continue a line within an index expression, keeping
+     its standard definition:
+         A[ ⍳5;
+            ⌽⍳3]
+     is equivalent to:
+         A[ ⍳5; ⌽⍳3]
+  4. A semicolon at the beginning of a line (ignoring blanks) tells the preprocessor to join
+     that line to the PREVIOUS, keeping the semicolon (for later processing).
+     This affects ANY semicolon, even those in brackets (which otherwise follow standard APL).
+     Thus, a leading semicolon can be used to continue a line within an index expression, keeping
+     its standard definition:
+         A[ ⍳5
+            ;⌽⍳3]
+     is equivalent to:
+         A[ ⍳5; ⌽⍳3]
+
+Where Expressions
+  Semicolons outside of parentheses (see Lists below) or Brackets (APL standard) are treated as dyadic ⊣,
+functioning as a "where" expression (a la John Scholes from Dyalog). This is assisted by the Special Case
+for Semicolons rule above.
+  Example:
+    S← (A×x*2)+(B×x)+C
+       ; A←10
+       ; B←¯5
+       ; C←○1
+       ; x←⍳100
+  is translated to
+    S← (A×x*2)+(B×x)+C ⊣ A←10 ⊣  B←¯5 ⊣ C←○1 ⊣ x←⍳100
+
+Atoms
+  Atoms are used to define parameters or arguments; while quoted strings are allowed, unquoted strings
+are placed in quotes automatically.
+
+A. AtomsI  Expressions of the form
+         atom1 [atom2 [atom3...]] → values
+  where atomN is
+         an APL name
+         a string (no CR or LF allowed)
+         an APL number
+  are converted to a list of quoted strings followed by an enclosed set of values,
+  such that
+        a b ← atom1 ... → values
+  will put the list of atoms in a and the values in b.
+  Here's an example of passing parameters to a function <FUN>:
+
+       res ← FUN (x → ⍳10)(y → ○⍳10)(plot xy → 1)
+
+  The dyadic right arrow → is called the PARAMETER pseudo-operator (it is formally "punctuation,"
+  rather than an operator or function).
+B. Atoms II  Expressions of the form
+         ` atom1 [atom2 [atom3...]]
+   where atomN is defined as above are treated as if the LEFT-side of
+   an A. AtomsI expression. This can be useful for passing specifications to a function <FUN>:
+
+       res ← FUN (copies → 3)(`black_and_white high-res hold_job)(notify → 'John Jones')
+
+   or even:
+
+       res ← FUN (options → `b_and_w hi_res hold_job)(notify → 'John Jones')
+
+      ⍝ File FUN.dyalog
+       ∇FUN
+        ` names ages serial one ...     ⍝ Continuation lines...
+          two three four five ...
+          six seven
+       ∇
+       ∆FIX 'FUN'
+       ⎕VR 'FUN'
+   [0]   FUN
+   [1]   (⊂'names' 'ages' 'serial' 'one' 'two' 'three' 'four' 'five' 'six' 'seven')
+
+   The monadic back-tick `... is called the ATOM pseudo-operator (it is formally "punctuation,"
+   rather than an operator or function).
+
+Lists
+* ∆FIX supports an extension to APL vectors, called lists. Lists consist of one or more
+  APL code sequence in parentheses, each terminated by a semicolon:
+        (⍳5; 'item 2'; 0 1 2;)
+* Here, we have a list of three items (⍳5) ('item2') and (0 1 2).
+  Sublists are allowed:
+        (⍳5; ('item2a'; 'item2b';); ⍳3;)
+  As long as there is at least one semicolon, the last semicolon may be omitted:
+        (⍳5;); ('item2a'; 'item2b'); ⍳3)
+* Lists may also be combined with atoms and parameters:
+        (x → ⍳5; legend→`item2a item2b; options → ⍳3)
+  This is equivalent to:
+        ((⊂⊂,'x'),⊂⍳5)((⊂⊂'legend'),⊂('item2a' 'item2b'))((⊂⊂'options'),⊂⍳3)
+  or in "boxed" format:
+        ┌───────────────┬──────────────────────────┬─────────────────┐
+        │┌───┬─────────┐│┌────────┬───────────────┐│┌─────────┬─────┐│
+        ││┌─┐│0 1 2 3 4│││┌──────┐│┌──────┬──────┐│││┌───────┐│0 1 2││
+        │││x││         ││││legend│││item2a│item2b│││││options││     ││
+        ││└─┘│         │││└──────┘│└──────┴──────┘│││└───────┘│     ││
+        │└───┴─────────┘│└────────┴───────────────┘│└─────────┴─────┘│
+        └───────────────┴──────────────────────────┴─────────────────┘
+* If a semicolon appears, but is not preceded by APL code, a zilde ⍬ is assumed.
+  Thus, missing positional parameters may be encoded:
+        (name → ⍳5;; phone number→'313 000-1234';)
+  This is equivalent to:
+        (name → ⍳5; ⍬; phone number→'313 000-1234';)
+  Notice that one or more trailing parameters may be indicated via semicolons with no
+  code preceding. This statement
+        (⍳5;;;)
+  is the same as  (⍳5; ⍬; ⍬; ). This could equally have been written:
+        (⍳5;;⍬) or (⍳5;;⍬;).
+* An empty list, equivalent to ⍬ consists of a pair of balanced parentheses with
+  only whitespace in between: () or (  ).
+Note: Why have semicolons end list elements, rather than separate them? Because,
+otherwise, lists would be confused with standard APL code sequences.
+        Standard:  ((⍳5)(1 2 3))     (⍳5)        ((⍳5) ⍬)
+        List:      (⍳5; 1 2 3)       (⍳5;)    (⍳5;;) or (⍳5;⍬)
+Use lists, atoms (`xxx), and parameters (a→b) for complex function calls,
+e.g. with named unordered arguments, etc.
+
+Continuation lines in APL code
+   You may continue any APL line by placing two or more dots .. or the "ellipses" unicode symbol
+   as the last symbol on that line before any optional comments.  Such continuation lines
+   are unnecessary when another continuation method is active, but acceptable.
+   Here are all the ways a line may be continued; in all cases, trailing comments and blanks are ignored.
+   1. Placing two or more dots or the ellipses as the last item on a line.
+      a←1 + 2 + ..         <==>    a←1 + 2 + 3 + 4
+        3..
+        + 4
+   2. Having an open parenthesis begun somewhere before the end of the line (possibly on a previous line):
+      a←(1 2 3 4 5 ⍳       <==> a←(1 2 3 4 5 ⍳ 2 3)
+         2
+         3)
+      See Lists (above).
+   3. Having a semicolon at the end of a line or at the beginning of a line (the next line).
+      A×B;                 <==> A×B ⊣ A←1 2 3 ⊣ B←4 5 6
+        A←1 2 3
+       ;B←4 5 6
+      The interpretation of the semicolon depends on whether it is within brackets, parentheses, or otherwise.
+      See Special Cases for Semicolons, Where Expressions, and Lists (all above).
+   4. With quoted expressions, there are three options:
+      a. A Single-quoted expression across multiple lines is converted to a single quoted string,
+         where leading and trailing blanks AND the newline are treated as a single blank.
+         'abc     <==> 'abc def'
+          def'
+      b. A double-quoted expression  across multiple lines is converted to a single-quoted string,
+         where leading and trailing blanks AND the newline are treated as a single CARRIAGE RETURN
+         (so they appear properly in APL). Internal double and single quotes are converted automatically.
+           "This is line1           <==>  'This is line1             <==>  This is line1
+            and this 'is' line2            and this ''is'' line2           and this 'is' line2
+              and this ""is"" line3!"      and this "is" line3!'           and this "is" line3!
+         This is actually encoded as the following APL sequence:
+           ('This is line1',(⎕UCS 10),'and this ''is'' line2',(⎕UCS 10),'and this "is" line3!')
+         which appears as shown on the right.
+      c. Diereses or multiple dots (..) at the right-hand side of an unterminated string are handled differently.
+         All spaces BEFORE the dots are preserved, but those spaces between the dots and the first non-space
+         on the next line are ignored.
+           'Name,   ..            <==>  'Name,  Addressing Scheme,  and more.'
+            Address..
+            ing Scheme,  ..
+            and more.'
+         or with relevant blanks shown as underscores:
+            ==> 'Name,__Addressing Scheme,__and more.'
+
+ Bugs
+   In this version, trailing (right-hand) comments are omitted from the preprocessor
+   output. Lines containing nothing but comments (possibly with leading blanks)
+   are maintained as is. This may cause problems for those using comments as “here text”
+   or otherwise manipulating the comments in the (preprocessed) source file.
+   Since most such uses depend on full comment lines, this should in most cases not be a problem.

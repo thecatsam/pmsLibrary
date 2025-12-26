@@ -1,0 +1,16 @@
+#
+echo 'Removing (1) aplcore files,  (2) files prefixed with #, (3) files suffixed with ~'
+
+
+pfx=$HOME/MyDyalogLibrary/pmsLibrary
+
+for dir in . $pfx  $pfx/src  $pfx/docs $pfx/usercmds $pfx/bin
+  do
+     echo ">>         dir: $dir"
+
+     rm 2>/dev/null -v $dir/aplcore
+     rm 2>/dev/null -v $dir/*~ 
+     rm 2>/dev/null -v $dir/\#*		
+
+done 
+
