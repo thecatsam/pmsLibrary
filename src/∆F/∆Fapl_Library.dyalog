@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-⍝ ∆Fapl_LibSC.dyalog      (UPDATE_TIME: '2025-12-25') 
-=======
-⍝ ∆Fapl_LibSC.dyalog      (UPDATE_TIME: '2025-12-21') 
->>>>>>> parent of 815df5b (2025-12-24 Revised option  handling in ∆F)
-=======
-⍝ ∆Fapl_LibSC.dyalog      (UPDATE_TIME: '2025-12-21') 
->>>>>>> parent of 815df5b (2025-12-24 Revised option  handling in ∆F)
+⍝ ∆Fapl_LibSC.dyalog      (UPDATE_TIME: '2025-12-26') 
 :Namespace libUtil 
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading...
 ⍝ ∘ See ⍙Fapl for fn ⍙LoadLibAuto, which loads this library.
