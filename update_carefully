@@ -1,7 +1,7 @@
 # Step 1: Check out to a temporary branch
 
 echo 'To use, comment out exit statement'
-#exit
+exit
 
 
 git checkout --orphan temp_branch
