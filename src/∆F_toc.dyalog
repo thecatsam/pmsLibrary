@@ -1,7 +1,10 @@
 ﻿ :namespace ∆F_toc 
  
+ tocIn← '∆F_table_of_contents/∆F_toc.in'
+ tocUt← '∆F_table_of_contents/∆F_toc.in'
+
  ∇ ok←Load
-   (section target keyword)← ⎕CSV ⍠('Separator' '⋄')('Invert' 2)⊢ '∆F_toc.in' ⍬
+   (section target keyword)← ⎕CSV ⍠('Separator' '⋄')('Invert' 2)⊢ tocIn ⍬
    ok← 'Loaded...'
 ∇
 
@@ -49,7 +52,7 @@
 ∇
 
 ∇ ok← Show 
-  _← (⊂edited) ⎕NPUT '∆F_toc.out' 1
+  _← (⊂edited) ⎕NPUT tocUt 1
   _← ⎕ED 'edited'
   ok←'Shown...'
 ∇
@@ -60,7 +63,7 @@
 
   nl← ⎕UCS 10 
   fi← '∆F/∆F_Help.md' 
-  ⎕SH 'cp ∆F/∆F_Help.md ∆F_Help_tmp.md'
+  ⎕SH 'cp ∆F/∆F_Help.md TEMP/∆F_Help_tmp.md'
   fo← '∆F/∆F_Help.md'
 
   data← ∊ edited,¨nl 
