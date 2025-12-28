@@ -6,7 +6,7 @@
 
  'cmpx'⎕CY'dfns'
 
- UCMD']load ∆Fapl'
+ ⎕SE.UCMD']load ∆F -t=⎕SE'
  C←11 30 60
 
 ⍝ Here's our ∆F String t
@@ -29,9 +29,8 @@
      ⎕←'  ∆F t → 1.7E¯4 |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕'
      ⎕←'   T ⍬ → 1.0E¯5 | -94% ⎕⎕'
 
-     SRC∘←'^\h*⍝.*' '''[^'']*''' '⍝.*$'⎕R'' '&' ''⊣⎕SRC ⍙Fapl
+     SRC∘←'^\h*⍝.*' '''[^'']*''' '⍝.*$'⎕R'' '&' ''⊣⎕SRC ⎕SE.⍙Fapl
      SRC←(0≠≢¨SRC)/SRC
-     ⎕FIX SRC
+     ⎕SE.⎕FIX SRC
      msg←(⎕UCS 13),'Without comments'
  :EndFor
-
