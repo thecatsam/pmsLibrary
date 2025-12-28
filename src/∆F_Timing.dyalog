@@ -35,6 +35,10 @@ Say't3← ''ab`⋄cd`⋄ef{ { ({10⍴`⍵1}⍵)⍳`⍵1}10⍴`⍵1}ab`⋄cd`⋄e
 T3←1 ∆F t3
 'T3'Time'∆F t3 10' 'T3 ⊂10'
 
+Say't4← ''abc { "one`⋄twin`⋄elephant" } { "one``abc""def"} abc{ "one`⋄twin`⋄elephant" } { "one``abc""def"} '''
+T4←1 ∆F t4
+'T4'Time'∆F t4' 'T4⍬'
+
 ok←⎕C⍞↓⍨≢⍞←'Do you want to update the log file? [yes]'
 :If ~'n'∊ok
      ⎕←'*** Updating log file'
