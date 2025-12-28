@@ -184,7 +184,7 @@
     CFQS← {   
         qtL w← ⍵ ⋄ qtR← (qtsL⍳ qtL)⌷ qtsR               
         CFSBrk← ⌊/⍳∘(esc qtR)    
-        ∆len← 1+ -≢w                                   ⍝ ∆len: -(length of w outside quoted str).
+        ∆len← 1                                       ⍝ ∆len: count the initial quote.
         StrScan← {   ⍝ Recursive CF Quoted-String Scan. ∆len converges on true length.
           0= ≢⍵: ⍺ 
             p← CFSBrk ⍵  
@@ -201,8 +201,7 @@
             ⍺, ⍵↑⍨ ∆len+← p                            ⍝ Done... Return
         }
         qS← AplQt '' StrScan w                         ⍝ Update ∆len via StrScan, then update w.
-        ê.cfL+← ∆len+ ≢w
-        qS (∆len↑ w)                                   ⍝ w is returned sans CF quoted string 
+        qS (w↓⍨ ê.cfL+← ∆len)                          ⍝ w is returned sans CF quoted string 
     } ⍝ End CF Quoted-String Scan
 
 ⍝ ===========================================================================
