@@ -1,7 +1,11 @@
-﻿  r←∆F_Examples; cmpx; timings; line; LINE 
+﻿  r←∆F_Examples 
+  ; all; cmpx; code; line; pline; skip; slow; timings                  
+  ; C; Code; Dmd; E; FI; LINE; NoBL; S; Select; Show; Skip; Split; ToFn
+                                                                       
+  
   LINE← 40⍴'🔴'
   line pline← 70⍴¨'¨' '+'  
-  :IF 'n'∊⎕C ⍞↓⍨ ≢⍞←'Include timings? [yes|no] '
+  :IF 'n'∊⎕C ⊃⍞↓⍨ ≢⍞←'Include timings? [yes|no] '
       timings←0 
       ⎕←'--- Skipping performance timings'
       cmpx← { 
@@ -16,6 +20,7 @@
       pline 
       timings← 1 
   :EndIf 
+   slow← 's'∊⎕C ⊃⍞↓⍨ ≢⍞←'Execute/display Fast (F) or Slow (S)? [FAST] '
 
   :With ⎕NS ⍬    ⍝ Hide names to prevent exfiltration from examples executed...
     ⎕IO ⎕ML ⎕PW←0 1 120
@@ -23,8 +28,9 @@
     S←{'⎕←',''''',',∆Q ⍵}  ⍝ Show
     C←{'⎕←','''  '',',∆Q ⍵}  ⍝ Com
     E←{'∆T ',∆Q ⍵}       ⍝ Eval
+    
     ⍝ 2: object not defined. 6: syntax error (printing fn assignments. )
-    ∆T←{ 2::_←'' ⋄ 6:: _←''⊣ ⎕DL 5⊣⎕←'>>> ',⎕EM ⎕EN ⋄ ⎕←'⍎ ',⍵ ⋄ ⎕FMT⍎⍵ }     
+    ∆T←{ 1000:: '' ⋄ _← ⎕DL slow/1 ⋄ 2::_←'' ⋄ 6:: _←''⊣ ⎕DL 5⊣⎕←'>>> ',⎕EM ⎕EN ⋄ ⎕←'⍎ ',⍵ ⋄ ⎕FMT⍎⍵ }     
 
     :IF {0:: 0 ⋄ 1⊣(cat:1)} ⍬                      ⍝ Dyalog20.
         ⎕←'Skipping examples marked skip' ⋄ ⎕DL 1 

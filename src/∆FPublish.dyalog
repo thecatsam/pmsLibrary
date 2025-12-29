@@ -1,4 +1,4 @@
-﻿∆F_Publish parms
+﻿∆FPublish parms
   ; anyUpdts; copyright; docDep; force; hdr; html; libDir; libra; loader 
   ; md; mdTmp; ns; pandocBin; pdf; pgm; pgmDep; priv; privF; privFdir    
   ; privdir; productionCode; pub; pubF; pubFdir; pubdir; quiet; readme   
@@ -8,7 +8,7 @@
   ; Temp; Tp; UpdatePgm                                                  
   ; _OptsC; _OptsM     
 
-⍝ ∆F_Publish: Update and Synchronize ∆F-related files,
+⍝ ∆FPublish: Update and Synchronize ∆F-related files,
 ⍝             resolving Html and Javascript macros into native forms.
 ⍝ parms:
 ⍝     Update*   [Noquiet* | Quiet]  [^]   update only what's necessary (q: quietly).
@@ -61,15 +61,15 @@
   pubdir←   libDir,'Delta.F-f.string.utility/'
 
 ⍝ Our files (sans directory names)
-  pgm←       '∆Fapl.dyalog'          ⍝ ∆F lib
-  html←      '∆F_Help.html'          ⍝ html
-  md←        '∆F_Help.md'            ⍝ markdown
+  pgm←       '∆FUtils.dyalog'          ⍝ ∆F lib
+  html←      '∆FHelp.html'          ⍝ html
+  md←        '∆FHelp.md'            ⍝ markdown
   mdTmp←     'tmp_README.md'         ⍝ A temporary file!
   readme←    'README.md'             ⍝ Git README file
-  hdr←       '∆F_Help_Hdr.html'      ⍝ local header file.
-  loader←    '∆F.dyalog'             ⍝ ∆F ]load utility
-  libra←     '∆Fapl_Library.dyalog'  ⍝ £ library
-  pdf←       '∆F_Help.pdf'           ⍝ PDF 
+  hdr←       '∆FHelp_Hdr.html'      ⍝ local header file.
+  loader←    '∆F.dyalog'             ⍝ ∆F bootstrap utility
+  libra←     '∆FUtils_Library.dyalog'  ⍝ £ library
+  pdf←       '∆FHelp.pdf'           ⍝ PDF 
 
 ⍝ File specs 
   privF pubF priv pub temp← 0 1 2 3 9

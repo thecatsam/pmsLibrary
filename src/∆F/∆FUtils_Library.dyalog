@@ -1,11 +1,11 @@
-⍝ ∆Fapl_LibSC.dyalog      (UPDATE_TIME: '2025-12-28') 
+⍝ ∆Fapl_LibSC.dyalog      (UPDATE_TIME: '2025-12-29') 
 :Namespace libUtil 
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading...
-⍝ ∘ See ⍙Fapl for fn ⍙LoadLibAuto, which loads this library.
+⍝ ∘ See ⍙FUtils for fn ⍙LoadLibAuto, which loads this library.
 ⍝ ∘ See "Executive" at bottom of file, which calls
 ⍝   LibUserFull and LoadParms  
 ⍝ ∘ Local and External variables pointing to the "user" library.
-⍝   - libUser  -  the namespace ref itself, by default ⍙Fapl.library (##.library)
+⍝   - libUser  -  the namespace ref itself, by default ⍙FUtils.library (##.library)
 ⍝   - libUserNm-  the name of libUser
 ⍝ ===================================================================================
 ⍝ LibAuto: libStr← ê ∇ str 
@@ -24,20 +24,18 @@
 ⍝ Note: A name may be in the library w/o having been loaded, e.g. if it's
 ⍝   in a file with multiple objects (all may be loaded). So we add ANY valid 
 ⍝   name to the cache, once we see it. (We don't cache invalid names).
-
   LibAuto←{           
-        lib← libUserNmP                               ⍝ Return libUserNmP no matter what!
-    ~⍺.auto: lib                                      ⍝ Not auto: return.
+    ~⍺.auto: libUserNmP                               ⍝ Not auto: return.
         w← (+/∧\' '= ⍵)↓ ⍵                            ⍝     Skip blanks
-    '.'≠ ⊃w: lib                                      ⍝ No initial '.':   return.
+    '.'≠ ⊃w: libUserNmP                               ⍝ No initial '.':   return.
         w← (+/∧\' '=w)↓ w← 1↓w                        ⍝     Skip some more blanks,
         nm← (p← ⌊/ w⍳ '←∘ ')↑ w                       ⍝     Get the name. 
-    (⊂nm)∊ ⍺.acache: lib                              ⍝ Saw it before:    return.
-    ¯1=nc← libUser.⎕NC nm: lib                        ⍝ Invalid name:     return.
+    (⊂nm)∊ ⍺.acache: libUserNmP                       ⍝ Saw it before:    return.
+    ¯1=nc← libUser.⎕NC nm: libUserNmP                 ⍝ Invalid name:     return.
         ⍺.acache,← ⊂nm                                ⍝     Mark as seen in autocache global.
-    0≠ nc: lib                                        ⍝ In libuser:       return. 
-    '←'= ⊃(p↓w)~'∘ ': lib                             ⍝ Name to be set:   return.
-        lib⊣ libUser ⍺ parms LoadObj nm              ⍝     Try to load obj def, then return.                                       
+    0≠ nc: libUserNmP                                 ⍝ In libuser:       return. 
+    '←'= ⊃'∘ '~⍨p↓w: libUserNmP                       ⍝ Name to be set:   return.
+        libUserNmP⊣ libUser ⍺ parms LoadObj nm        ⍝     Try to load obj def, then return.                                       
   }
   
   ⍝ ======================================================================================
@@ -147,13 +145,15 @@
 
       errSig← ⍬    ⍝ Used in Cleanup only...
       errFi←''     ⍝ Used in Cleanup only...
-
+    ⍝ ===========================================================================
     ⍝ Executive for LoadObj 
-      libUser ê parms←⍺ 
-    ⍝ extern: nm                    ⍝ Used in routines ScanPath & descendants and Cleanup.
-      nm← ⍵                         
-      ⍝ rcEN: The file loaded ok, but nm wasn't in the loaded file.
-      rcOK rcNF rcER rcEN← 1 0 ¯1 ¯2    ⍝ Return codes: OK, Not Found, Error
+    ⍝ ===========================================================================
+      ⍝ nm: used in routines ScanPath (and descendants) and Cleanup.
+      libUser ê parms←⍺ ⋄ nm← ⍵                         
+      ⍝ Return codes: 
+      ⍝   rcOK, rcNF (not found), rcER (gen'l error), 
+      ⍝   rcEN (file loaded fine, but <nm> wasn't one of the top-level objects) 
+      rcOK rcNF rcER rcEN← 1 0 ¯1 ¯2     
       rc where← ScanPath parms._fullPath 
     1: _← rc (ê.verbose ∨ parms.verbose) ##.LIB_ERRORS Cleanup where libUser  
   } ⍝ End LoadObj 
@@ -161,12 +161,14 @@
 ⍝ ============================================================================
 ⍝ LoadParmDefaults: Load-time routine
 ⍝   Sets parameters 
-⍝        ⍵.load, ⍵.auto, ⍵.verbose, ⍵.path, ⍵.prefix, ⍵.suffix, etc.
+⍝       ⍵.load, ⍵.auto, ⍵.verbose, ⍵.path, ⍵.prefix, ⍵.suffix, etc.
 ⍝   ⍵.load defaults to ##.AUTOLOAD (which must be 1 or 0).
 ⍝   If ⍵.load is set to 1 in the .∆F file, then the .∆F file is loaded.
 ⍝   If not,
 ⍝       then no more processing is done and Auto does nothing except return libUserNm (lib ns name).
-⍝   If ⍵.path←⍬, no files or workspaces are checked. If ⍵.suffix←⍬, only w/ss might be checked.  
+⍝   If ⍵.path←⍬, 
+⍝       no files or workspaces are checked. 
+⍝   If ⍵.suffix←⍬, we will only check workspaces.
   LoadParmDefaults← { 
     ⍝ These are the default APL Array Notation settings: format ok whether Dyalog 20 or earlier.
     ⍝ User can override in ./.∆F, also in APLAN format. 
@@ -220,10 +222,12 @@
           ⍝     ==> ('∆F_mydfn.aplf'  'MyLib/mydfn.aplf')   
             prefix: ⍬ 
                                       
-          ⍝ suffix: at least one suffix is required. The '.' is prepended for you!  
-          ⍝    Not applicable to workspaces. See documentation for definitions.
-          ⍝    By default, unknown filetypes are not enabled. 
-          ⍝    Generally, place most used definitions first.
+          ⍝ suffix: at least one suffix is required for files to be checked.
+          ⍝ ∘  Note: The '.' is prepended for you!  
+          ⍝ ∘  Suffixes don't apply to workspaces. See documentation for definitions.
+          ⍝ ∘  By default, unknown filetypes are not enabled. 
+          ⍝    If they are enabled, they work the same as 'dyalog'.
+          ⍝ ∘  If possible, place most used suffixes first.
             suffix: ('aplf' ⋄ 'apla' ⋄ 'aplo' ⋄ 'apln' ⋄ 'json'⋄ 'txt' ⋄'dyalog')    
                           
           ⍝  Internal Runtime (hidden) Parameters                                               
@@ -261,7 +265,7 @@
     ⍝ =========================================================================
     ⍝ LoadParmFi main ...
       _← ReadParmFi parmFi  
-    ⍝ Handle special-case parameters (⊃¨scp): verbose, load, ..., suffix 
+    ⍝ Handle special-case parameters: verbose, load, ..., suffix 
       sc←  ('verbose' ##.VERBOSE) ('load' ##.LIB_AUTO) ('prefix'(,⊂'')) 
       sc,← ('auto' 0)             ('path' ⍬)           ('suffix' ⍬)
     ⍝ If any parm in (⊃¨sc) has value ⎕NULL or ⍬, 
@@ -269,12 +273,13 @@
         Val←    parms.⎕OR∘⊃
         IsNull← ⍬∘≡∨⎕NULL∘≡
       _← parms ##.∆VSET sc/⍨ IsNull∘Val¨ sc
+    ⍝ If ~parms.load, Auto just returns the library sans "auto" function.
     ~parms.load: _← 0⊣ ⎕FX ,⊂'Auto←{libUserNm}'⊣ parms.auto←0  ⍝ auto=0: Auto => nop.
       parms._fullPath← GenFullPath parms.path 
       
     ⍝ If parms._fullPath is not empty, we're done!
     0< ≢parms._fullPath: _← 1 
-    ⍝ If parms._fullPath is empty, then turn auto off, since there's nothing to load.
+    ⍝ If parms._fullPath is empty, then turn auto off, since there's nothing to search..
       nolibW← '!!! Warning:  (load: 1) but the search path is empty!'
       _← 0⊣ ⎕FX ,⊂'Auto←{libUserNm}'⊣ parms.auto← 0⊣ (⎕∘←)⍣parms.verbose⊣nolibW       
   } 

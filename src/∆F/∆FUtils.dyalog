@@ -1,4 +1,4 @@
-:Namespace ⍙Fapl   
+:Namespace ⍙FUtils   
 ⍝:Section CORE 
   VERSION←     '0.1.1'          ⍝ Set/updated by ∆F_Publish.dyalog...
   ⎕IO ⎕ML ⎕PP ⎕PW←0 1 34 256    ⍝ Namespace scope. User code is executed in CALLER space (⊃⎕RSI) 
@@ -9,7 +9,8 @@
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F
   TRAP_ERRORS← 1                
 ⍝ VERBOSE: Compile-time and run-time verbosity flag
-⍝ (verbose: 1) is ∆F-settable (user) run-time verbosity flag.
+⍝ (verbose: 1) is ∆F-settable (user) run-time verbosity flag-- which
+⍝ also changes `⋄ to ␤ instead of an actual new line (⎕UCS 13, here).
   VERBOSE←     0                
 ⍝ LIB_ERRORS:  
 ⍝ - If 0, only report library autoload errors (as messages) if (verbose: 1). 
@@ -33,18 +34,18 @@
 ⍝ =======================================================================
 ⍝ SESSION LIBRARY (£ or `L) VARIABLES
 ⍝ =======================================================================
-⍝                Do we want to use the SESSION LIBRARY autoload feature?
-⍝ LIB_AUTO:  1   Yes.
-⍝            0   No.
+⍝ Var     Setting  Do we want to use the SESSION LIBRARY autoload feature?
+⍝ LIB_AUTO:  1     Yes.
+⍝            0     No.
   LIB_AUTO←  1     
-  LIB_SRC_FI←   '∆F/∆Fapl_Library.dyalog'        ⍝ Library shortcuts (£,  `L) utilities.
+  LIB_SRC_FI←   '∆F/∆FUtils_Library.dyalog'        ⍝ Library shortcuts (£,  `L) utilities.
 ⍝ HELP-related globals             
-  HELP_HTML_FI← '∆F/∆F_Help.html'                ⍝ Called from 'help' option. Globally set here              
+  HELP_HTML_FI← '∆F/∆FHelp.html'                ⍝ Called from 'help' option. Globally set here              
 ⍝ ==================================================================================
 ⍝ VARIABLES FOR ∆F OPTIONS: Positional and keyword 
 ⍝ =======================================================================
-  OPTS_KW←  ↑'dfn' 'verbose' 'box' 'auto' 'inline'          ⍝ In order 
-  OPTS_DEFarr←    0       0       0     1       0         
+  OPTS_KW←      ↑'dfn' 'verbose' 'box' 'auto' 'inline'          ⍝ In order 
+  OPTS_DEFarr←    0     0         0     1       0         
   OPTS_N←    ≢OPTS_DEFarr 
 ⍝ OPTS_DEFns: The defaults in namespace form. Treat as a read-only object.
 ⍝ OPTS_DEFns is defined below, after calling ⍙Gen_LegacyAplAN.
@@ -63,44 +64,43 @@
 ⍝ NB. Modify header names or constants __THIS__ or __OUTER__ at your peril.
 ⍝ 
   ∇ result← {opts} ∆F_Src args 
-    :If 9≠⎕NC '__THIS__' ⋄ '⍙Fapl library "__THIS__" does not exist' ⎕SIGNAL 6 ⋄ :EndIf                              
-    :With __THIS__                                       
-      :Trap 0/⍨ TRAP_ERRORS    
-    ⍝ Phase I: Set options!  Be sure to copy OPTS_DEFns and change ONLY the copy.
-      ⍝ Default options              
-        :If  900⌶0                                          
-          opts← ⎕NS OPTS_DEFns                     
-        :ElseIf 9=__OUTER__.⎕NC 'opts'    
-          opts← ∆NS OPTS_DEFns __OUTER__.opts                ⍝ v19: Emulate v.20 ⎕NS
-      ⍝ Positional options-- integers/booleans         
-        :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts 
-          opts← (⎕NS OPTS_DEFns) ∆VSET (OPTS_KW↑⍨≢opts)opts  ⍝ v19: Emulate ⎕VSET
-      ⍝ Special options (like help and invalid options)
-        :Else                                           
-          result← Special opts ⋄ :Return                     
-        :EndIf 
-    ⍝ Phase II: Execute!
-      ⍝ Flatten multiline f-string, if present.
-        (⊃args)← ∊⊃args← ,⊆args                              
-      ⍝ Determine output mode based on opts.dfn and execute.
-        :Select opts.dfn  
-      ⍝ 0: Execute F-string    
-        :Case  0        
-          result← opts ((⊃⎕RSI){ ⍺⍺⍎ ⍺ FmtScan ⊃⍵⊣ ⎕EX 'opts' 'args'}) args    
-      ⍝ 1: Generate dfn code 
-        :Case  1       
-          result← (⊃⎕RSI)⍎ opts FmtScan ⊃args
-      ⍝ ¯1: Generate source code for dfn
-        :Case ¯1                                    
-          result← opts FmtScan ⊃args  
-      ⍝ Else: Run help or other special code           
-        :Else          ⍝ 'help', etc. => Give help, etc.      
-          result← Special opts 
-        :EndSelect   
-      :Else 
+    :Trap __TRAP_ERRORS__
+      :With __THIS__                                          
+      ⍝ Phase I: Set options!  Be sure to copy OPTS_DEFns and change ONLY the copy.
+        ⍝ Default options              
+          :If  900⌶0                                          
+            opts← ⎕NS OPTS_DEFns                     
+          :ElseIf 9=__OUTER__.⎕NC 'opts'    
+            opts← ∆NS OPTS_DEFns __OUTER__.opts                ⍝ v19: Emulate v.20 ⎕NS
+        ⍝ Positional options-- integers/booleans         
+          :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts 
+            opts← (⎕NS OPTS_DEFns) ∆VSET (OPTS_KW↑⍨≢opts)opts  ⍝ v19: Emulate ⎕VSET
+        ⍝ Special options (like help and invalid options)
+          :Else                                           
+            result← Special opts ⋄ :Return                     
+          :EndIf 
+      ⍝ Phase II: Execute!
+        ⍝ Flatten multiline f-string, if present.
+          (⊃args)← ∊⊃args← ,⊆args                              
+        ⍝ Determine output mode based on opts.dfn and execute.
+          :Select opts.dfn  
+        ⍝ 0: Execute F-string    
+          :Case  0        
+            result← opts ((⊃⎕RSI){ ⍺⍺⍎ ⍺ FmtScan ⊃⍵⊣ ⎕EX 'opts' 'args'}) args    
+        ⍝ 1: Generate dfn code 
+          :Case  1       
+            result← (⊃⎕RSI)⍎ opts FmtScan ⊃args
+        ⍝ ¯1: Generate source code for dfn
+          :Case ¯1                                    
+            result← opts FmtScan ⊃args  
+        ⍝ Else: Run help or other special code           
+          :Else          ⍝ 'help', etc. => Give help, etc.      
+            result← Special opts 
+          :EndSelect   
+      :EndWith 
+    :Else 
         ⎕SIGNAL ⊂⎕DMX.('EM' 'EN' 'Message' ,⍥⊂¨('∆F ',EM) EN Message) 
-      :EndTrap 
-   :EndWith 
+    :EndTrap 
   ∇
 ⍝ END ====================   ∆F (User Function)   ==============================  
 
@@ -233,7 +233,7 @@
 ⍝ ===========================================================================  
 ⍝ Simple char constants
   om← '⍵'                                              ⍝ ⍵ not in cfBrklist, since not special. (See `⍵).
-  nl nlVis← ⎕UCS 13 9252                               ⍝ 9252 (␤), 9229 (␍)   
+  nl nlVis← ⎕UCS 13 9252                               ⍝ 9229 (␍), 9252 (␤)
 ⍝ esc: Set default value and installation-wide user alternative.
 ⍝ If global ESCAPE_CHAR is not present, '`' is used.
   esc← '`' {0=⎕NC ⍵: ⍺ ⋄ ⍬⍴⎕OR ⍵ } 'ESCAPE_CHAR' 
@@ -242,8 +242,8 @@
 ⍝ Other basic characters
   sp lb rb lp rp dol omUs ra da pct libra← ' {}()$⍹→↓%£' 
 ⍝ Seq. `⋄ OR `◇ map onto ⎕UCS 13.
-⍝ dia2[0]: Dyalog stmt separator 
-⍝ dia2[1]: Alternative character that is easier to read in some web browsers. 
+⍝ dia2[0]: Dyalog stmt separator (⋄) 
+⍝ dia2[1]: Alternative character (◇) that is easier to read in some web browsers. 
   dia2← ⎕UCS 8900 9671   
 ⍝ qtsL qtsR:
 ⍝    Generate left and right quote pairs... Double-quote first for efficiency.
@@ -270,7 +270,7 @@
 ⍝ Utilities (fns/ops) for FmtScan above.
 ⍝ ∘ These must have zero side effects, except those reflected in ê objects.
 ⍝ =========================================================================
-⍝ See also CFSBrk
+⍝ See also CFSBrk.  
   TFBrk← ⌊/⍳∘tfBrkList
   CFBrk← ⌊/⍳∘cfBrkList
 ⍝ 
@@ -304,7 +304,7 @@
       p← MapSC c                                     ⍝ Look for other shortcuts
     nSC> p: (⍺.inline p⊃ scCodeTbl) w                ⍝ Found? return code string.
     c∊⍥⎕C ⎕A: ⎕SIGNAL scBadÊ c                       ⍝ Nope: Unknown shortcut!
-      ⎕SIGNAL EscÊ c                                 ⍝ Esc-c has no mng in CF for non-Alph char c.
+      ⎕SIGNAL EscÊ c                                 ⍝ Nope: An escape foll. by non-alphabetic.
   } ⍝ End CFEsc 
 
  ⍝ CFQS: CF Quoted String scan
@@ -338,7 +338,7 @@
       ⍝   ∘ Now see if the NEXT char, c2, such that c2= qtR.
       ⍝     If so, it's a string-internal qtR. Only qtR need be doubled (i.e. '»»' => '»').
         c2= qtR:  (a, ⍵↑⍨ p+1) lW ∇ ⍵↓⍨ lW+← p+2      ⍝ Use APL rules for doubled ', ", or »
-          (AplQt a, p↑⍵) (lW+p)                       ⍝ Done... Return
+          (AplQt a, p↑⍵) (lW+ p)                      ⍝ Done... Return
       }
       qS lW← '' 1 Scan w          
       qS (w↓⍨ ê.cfL+← lW )                            ⍝ w is returned sans CF quoted string 
@@ -368,10 +368,11 @@
 ⍝    w:      ⍵, just past the matched omega expression digits.
 ⍝ IntOpt: See IntOpt, just below.
   CFOm← { 
-           oLen oVal w← IntOpt ⍵
-    ×oLen: ('(⍵⊃⍨',')',⍨ '⎕IO+', ⍕⍺.omC← oVal ) w⊣ ⍺.cfL+← oLen 
-           ('(⍵⊃⍨',')',⍨ '⎕IO+', ⍕⍺.omC       ) w⊣ ⍺.omC+← 1
+          oLen oVal w← IntOpt ⍵
+  ×oLen: ('(⍵⊃⍨',')',⍨ '⎕IO+', ⍕⍺.omC← oVal ) w⊣ ⍺.cfL+← oLen 
+          ('(⍵⊃⍨',')',⍨ '⎕IO+', ⍕⍺.omC       ) w⊣ ⍺.omC+← 1
   }
+
 ⍝ IntOpt: Does ⍵ start with a valid sequence of digits (a non-neg integer)? 
 ⍝ Returns oLen oVal w:
 ⍝   oLen:  len of sequence of digits (pos integer) or 0, 
@@ -450,11 +451,11 @@
 ⍝ Utilities for "library" shortcut (£, `L) 
 ⍝ See ⍙Load_LibAuto 
 :Namespace libUtil
-⍝⍝⍝⍝⍝ This is a local stub, pending (optional, but expected) load of ∆Fapl_Library below.
+⍝⍝⍝⍝⍝ This is a local stub, pending (optional, but expected) load of ∆FUtils_Library below.
   ∇ {libNs}←  LibUserSimple libNs 
     ⍝ external in the stub... 
     ⍝   libUser, Auto, ShowPath, LoadParms
-    ⍝ external loaded from ∆Fapl_Library.dyalog:
+    ⍝ external loaded from ∆FUtils_Library.dyalog:
     ⍝   libUser, Auto, parms, ShowPath, LoadParms 
       ⎕THIS.libUser← libNs
       libNs.⎕DF ⎕NULL 
@@ -503,33 +504,39 @@
     Apl2AN←  ⎕SE.Dyalog.Array.Serialise             ⍝ Apl2AN: Same for both versions
   ∇  
 
-⍝ ⍙Export_∆F : rc← ∇ destNs keepCm
+⍝ ⍙Export_∆F : rc← ∇ destNs keepCm lockFn 
 ⍝ Used internally only at FIX-time:
 ⍝ On execution (default mode), ⍙Export_∆F creates ∆F in location specified as <destNs>.
 ⍝ If keepCm, maintains comments in ∆F at destination.
 ⍝ If destNs is not namespace ⎕THIS, then we "promote the fn to target namespace,
 ⍝    ∘ obscure (mangle) local vars: ¨result¨ ¨opts¨ and ¨args¨
 ⍝    ∘ sets __OUTER__. to ##.
-⍝    ∘ sets __THIS__ to refer to this namespace (i.e. ...⍙Fapl)
+⍝    ∘ sets __THIS__ to refer to this namespace (i.e. ...⍙FUtils)
 ⍝ If destNs is the namespace ⎕THIS, then we:
 ⍝    ∘ set '__OUTER__.' to  ''
 ⍝ In both cases, if keepCm=0,
 ⍝    ∘ we remove comments and comment lines.
-  ∇ fixedOk← ⍙Export_∆F (destNs keepCm) ; src; snk; Apply2; Cm ; CpyR; NoBL 
-    s←   ('∆F_Src' '∆F')   ('__THIS__' ∆THIS)  
-    s,← ⊂'__OUTER__\.' ('##.' ''⊃⍨ destNs=⎕THIS) 
-    s,←  ('result' 'rësûlt∆F')('opts' 'öôpts∆F') ('args' 'äârgs∆F')
+  ∇ fixedOk← ⍙Export_∆F (destNs keepCm lockFn) 
+    ; nm; s; src; snk; t; Apply2; Cm ; CpyR; NoBL  
+    s←  ⊂'∆F_Src'             '∆F'   
+    s,← ⊂'__THIS__'           ∆THIS  
+    s,← ⊂'__OUTER__\.'        ('##.' ''⊃⍨ destNs=⎕THIS) 
+      t← ¯40↑ '⍝ TRAP_ERRORS='
+    s,← ⊂'__TRAP_ERRORS__'    ( ('⍬0'⊃⍨ TRAP_ERRORS), t, ⍕TRAP_ERRORS)
+    s,← ⊂'result'             'rësûlt∆F'
+    s,← ⊂'opts'               'öôpts∆F'
+    s,← ⊂'args'               'äârgs∆F'
   ⍝ 
     Apply2← { src snk← ↓⍉↑⍺ ⋄ src ⎕R snk⍠ 'UCP' 1 ⊢ ⍵} 
     Cm←     {⍺: ⍵ ⋄ '''[^'']*''' '(^\s*)?⍝.*$' ⎕R '\0' ''⊢ ⍵ }    
     CpyR←   ,∘(⊂'⍝ (C) 2025 Sam the Cat Foundation.  Version: ',VERSION)
     NoEL←   {⍵/⍨ 0≠≢¨⍵}    ⍝ Delete empty lines.
 
-    fixedOk← 0≠1↑0⍴ destNs.⎕FX CpyR NoEL keepCm∘Cm s∘Apply2 ⎕NR '∆F_Src' 
-    :If fixedOk  
-      (⎕∘←)⍣VERBOSE⊢ '>>> Created function ',(⍕destNs),'.∆F' 
+    nm← destNs.⎕FX CpyR NoEL s∘Apply2 keepCm∘Cm ⎕NR '∆F_Src' 
+    :If fixedOk← 0≠1↑0⍴ nm 
+      (⎕∘←)⍣VERBOSE⊢ '>>> Created function ',(⍕destNs),'.',nm 
     :Else 
-      ⎕←'>>> LOGIC ERROR ON LOAD: There was an error applying ⍙Export_∆F.' 
+      ⎕←'>>> There was an error applying ⍙Export_∆F. Could not create "',(⍕destNs),'.∆F"' 
     :EndIf 
   ∇
 
@@ -565,8 +572,8 @@
 ⍝ (Localize them where needed)
 ⍝ NOTE: We are creating multiline objects using the old method for compatibility with Dyalog 19 etc.
   ∇ {ok}← ⍙Load_Shortcuts 
-    ; XR ;HT 
     ; scUser; scA2; scB2; scC2; scD2; scÐ2; scF2; scJ2; scM2; scQ2; scS2; scT2; scW2 
+    ; XR ;HT 
     XR← ⎕THIS.⍎⊃∘⌽                                   ⍝ XR: Execute the right-hand expression
     HT← '⎕THIS' ⎕R ∆THIS                             ⍝ HT: "Hardwire" absolute ⎕THIS. 
     A← XR scA2← HT   ' ⎕THIS.A ' '{⎕ML←1⋄⍺←⍬⋄⊃⍪/(⌈2÷⍨w-m)⌽¨f↑⍤1⍨¨m←⌈/w←⊃∘⌽⍤⍴¨f←⎕FMT¨⍺⍵}' 
@@ -674,7 +681,7 @@
 ⍝ ====================================================================================
     ⍙Gen_LegacyAplAN  DYALOG_VERSION                   ⍝ ∆NS, ∆VGET, ∆VSET, AN2Apl, Apl2AN 
     OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFarr   ⍝ Generate default opts NS
-    ⍙Export_∆F ##  0  
+    ⍙Export_∆F ##  0 1  
     ⍙Load_Shortcuts
     ⍙Load_Help HELP_HTML_FI
     ⍙Load_LibAuto LIB_SRC_FI LIB_AUTO
