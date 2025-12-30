@@ -1,4 +1,4 @@
-﻿  r←∆F_Examples 
+﻿  r←∆FExamples 
   ; all; cmpx; code; line; pline; skip; slow; timings                  
   ; C; Code; Dmd; E; FI; LINE; NoBL; S; Select; Show; Skip; Split; ToFn
                                                                        
@@ -30,7 +30,7 @@
     E←{'∆T ',∆Q ⍵}       ⍝ Eval
     
     ⍝ 2: object not defined. 6: syntax error (printing fn assignments. )
-    ∆T←{ 1000:: '' ⋄ _← ⎕DL slow/1 ⋄ 2::_←'' ⋄ 6:: _←''⊣ ⎕DL 5⊣⎕←'>>> ',⎕EM ⎕EN ⋄ ⎕←'⍎ ',⍵ ⋄ ⎕FMT⍎⍵ }     
+    ∆T←{ 1000:: '' ⋄ _← ⎕DL slow×1 ⋄ 2::_←'' ⋄ 6:: _←''⊣ ⎕DL 5⊣⎕←'>>> ',⎕EM ⎕EN ⋄ ⎕←'⍎ ',⍵ ⋄ ⎕FMT⍎⍵ }     
 
     :IF {0:: 0 ⋄ 1⊣(cat:1)} ⍬                      ⍝ Dyalog20.
         ⎕←'Skipping examples marked skip' ⋄ ⎕DL 1 
@@ -69,7 +69,7 @@
     ⎕←'Loading...'
     ⎕DL 1
 
-    :If 0=⊃0⍴⎕FX ToFn NoBL Select¨ #.FI←Split Dmd Code Skip ⊃⎕NGET'∆F/∆F_Help.md'
+    :If 0=⊃0⍴⎕FX ToFn NoBL Select¨ #.FI←Split Dmd Code Skip ⊃⎕NGET'∆F/∆FHelp.md'
         'Unable to ⎕FX ''∆FE'''
         :Return
     :EndIf
