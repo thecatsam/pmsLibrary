@@ -1,9 +1,9 @@
-﻿∆F_Timing
+﻿∆FTiming
 ;cmpx;cv;d;data;in;logfile;ok;t1;t2;T1;T2
 
 
 DYALOG_VERSION←⊃⊃⌽'.'⎕VFI 1⊃'.'⎕WG'APLVersion'
-logfile←'∆F_Timing.data'
+logfile←'∆FTiming.data'
 ⎕←'Logfile is ',logfile
 
 'cmpx'⎕CY'dfns'
