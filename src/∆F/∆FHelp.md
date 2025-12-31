@@ -63,10 +63,11 @@ _dfns_ and other familiar tools.
 ## Loading and Running **∆F**
 
 1. Confirm that your current directory remains as before.
-2. From your Dyalog session<∆N><br>**_⎕SE:_** Or any _target_ namespace you desire.</∆N>, enter: <br>&emsp;`]load ∆F -target=⎕SE`
-3. **∆F/∆FHelp.html** is, by default, available at `]load` time and will be copied into **⍙FUtils**. If missing, a message will note the absence of _help_ information.
-4. Namespace <code>_⎕SE_.**⍙FUtils**</code> now contains utilities used by **∆F** and, once `]load`ed, **_should not_** be moved: **∆F** always refers to **⍙FUtils** in its _original_ location.
-5. By default, the target namespace (<code>_⎕SE_</code>) will be added to the end of `⎕PATH`, if not already defined in ⎕PATH. You may always choose to relocate or assign **∆F** anywhere you want so that it is available.
+2. From your Dyalog session<∆N><br>**_⎕SE:_** Or any _target_ namespace you desire.</∆N>, enter: <br>&emsp;`]load ∆F -target=⎕SE`<br>
+   Now, the target directory (`⎕SE`) will contain the function `∆F` and namespace `⍙FUtils`.
+3. By default, the ***help*** file, **∆F/∆FHelp.html** is available at `]load` time. If so, it will be copied into **⍙FUtils**. If not available, a message will note the absence of _help_ information.
+4. Namespace <code>_⎕SE_.**⍙FUtils**</code> contains utilities used by **∆F** and, once `]load`ed, **_should not_** be moved, as **∆F** always refers to **⍙FUtils** in its _original_ location.
+5. By default, the target namespace (<code>_⎕SE_</code>) will be added to the end of `⎕PATH`, if not already defined there. You may always choose to relocate or assign **∆F** anywhere you want so that it is available.
 
 &RHAND;You may now call `∆F` with the desired [arguments](#f-call-syntax-overview) and [options](#f-option-details).<br>
 &RHAND;**∆F** is `⎕IO`- and `⎕ML`-independent.<br>

@@ -218,9 +218,10 @@ help← (
         }⍵
     }
     S2CV←  '\A' ⎕R ''                       ⍝ Split into APL Char Vec
-    ⍝ Remove extra trailing blank lines
-    NoXBL← ((-1+opts.blanks)∘↓)⍣(opts.sort=êSort.group) 
-    NoXBL S2CV Fmt1¨⍵          
+    lists← S2CV Fmt1¨ ⍵ 
+  opts.sort≠êSort.group: lists 
+   ⍝  Disabled: NoXBL← ((-1+opts.blanks)∘↓) 
+    lists           
   }
 
 ⍝⍝⍝ ----------------------------------------------------------

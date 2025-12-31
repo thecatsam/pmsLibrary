@@ -68,7 +68,7 @@
   readme←    'README.md'             ⍝ Git README file
   hdr←       '∆FHelp_Hdr.html'      ⍝ local header file.
   loader←    '∆F.dyalog'             ⍝ ∆F bootstrap utility
-  libra←     '∆FUtils_Library.dyalog'  ⍝ £ library
+  libra←     '∆FLibUtils.dyalog'  ⍝ £ library
   pdf←       '∆FHelp.pdf'           ⍝ PDF 
 
 ⍝ File specs 
