@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2025-12-31') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-01-04') 
 :Namespace libUtils
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading...
 ⍝ ∘ See ⍙FUtils for fn ⍙LoadLibAuto, which loads this library.
@@ -17,19 +17,22 @@
 ⍝   ∘ In turn calls fn LoadObj when a library name, nm, is being referenced 
 ⍝     (not set) for the first time.
 ⍝ Task:
-⍝ ∘ find the name string nm in £.nm...[[∘]←] and, if valid and not seen before,
+⍝ ∘ find the name nm in £.nm...[[∘]←] (first token in a qua.lif.ied name)
+⍝   and, if valid and not seen before,
+⍝   ∘ If £. is followed by a dotted name nm1.nm2[...], then nm←nm1, the first one;
+⍝     That entire namespace is loaded, if found.
 ⍝   ∘ (via LoadObj) get source code for it from a file or workspace in our path.
 ⍝ ∘ Does NOT affect the string ⍵ being scanned. 
 ⍝ ∘ Is only used for its ⎕CY or ⎕FIX side effect via LoadObj. 
 ⍝ Note: A name may be in the userLibrary w/o having been loaded, e.g. if it's
 ⍝   in a file with multiple objects (all may be loaded). So we add ANY valid 
 ⍝   name to the cache, once we see it. (We don't cache invalid names).
-  LibAuto←{           
+  LibAuto←{          
     ~⍺.auto: userLibNmP                               ⍝ Not auto: return.
         w← (+/∧\' '= ⍵)↓ ⍵                            ⍝     Skip blanks
     '.'≠ ⊃w: userLibNmP                               ⍝ No initial '.':   return.
         w← (+/∧\' '=w)↓ w← 1↓w                        ⍝     Skip some more blanks,
-        nm← (p← ⌊/ w⍳ '←∘ ')↑ w                       ⍝     Get the name. 
+        nm← w↑⍨ p← w(⌊/⍳) ' .←∘('                     ⍝     Get the name  
     (⊂nm)∊ ⍺.acache: userLibNmP                       ⍝ Saw it before:    return.
     ¯1=nc← userLib.⎕NC nm: userLibNmP                 ⍝ Invalid name:     return.
         ⍺.acache,← ⊂nm                                ⍝     Mark as seen in autocache global.
@@ -149,7 +152,7 @@
     ⍝ Executive for LoadObj 
     ⍝ ===========================================================================
       ⍝ nm: used in routines ScanPath (and descendants) and EndScan.
-      userLib ê parms←⍺ ⋄ nm← ⍵                         
+      userLib ê parms←⍺ ⋄ nm← ⍵                          
       ⍝ Return codes: 
       ⍝   rcOK, rcNF (not found), rcER (gen'l error), 
       ⍝   rcEN (file loaded fine, but <nm> wasn't one of the top-level objects) 
@@ -160,7 +163,7 @@
   
 ⍝ ============================================================================
 ⍝ LoadParmDefaults: Load-time routine
-⍝   Sets parameters 
+⍝   If successful, sets parameters 
 ⍝       ⍵.load, ⍵.auto, ⍵.verbose, ⍵.path, ⍵.prefix, ⍵.suffix, etc.
 ⍝   ⍵.load defaults to ##.AUTOLOAD (which must be 1 or 0).
 ⍝   If ⍵.load is set to 1 in the .∆F file, then the .∆F file is loaded.
@@ -169,75 +172,17 @@
 ⍝   If ⍵.path←⍬, 
 ⍝       no files or workspaces are checked. 
 ⍝   If ⍵.suffix←⍬, we will only check workspaces.
-  LoadParmDefaults← { 
-    ⍝ These are the default APL Array Notation settings: format ok whether Dyalog 20 or earlier.
-    ⍝ User can override in ./.∆F, also in APLAN format. 
-      ParmDefaults← { 
-         (
-          ⍝ Default .∆F Parameter File  (APL Array Notation)                          
-          ⍝ Items not to be (re)set by user may be omitted/commented out.              
-          ⍝ If (load: ⎕NULL), then LIB_AUTO [note 1] is used for load.
-          ⍝ If (verbose: ⎕NULL), then VERBOSE [note 1] is used for verbose.
-          ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: '' ⋄)     
-          ⍝ [note 1] 
-          ⍝   ∆F global variables LIB_AUTO and VERBOSE are set in ∆Fapl.dyalog.
-          ⍝    Their usual values are LIB_AUTO← 1 ⋄ VERBOSE← 0
-          ⍝    See load: and verbose: below for significance.
-  
-          ⍝ load:
-          ⍝   1:     Load the runtime path to search for Session Library £ and `L.
-          ⍝   0:     Don't load...
-          ⍝   ⎕NULL: Grab value from LIB_AUTO above.
-            load: ⎕NULL 
-
-          ⍝ auto:
-          ⍝   0: user must load own objects; nothing is automatic.                 
-          ⍝   1: dfns and files (if any) searched in sequence set by dfnsOrder.
-          ⍝      See path for directory search sequence. 
-          ⍝ Note: If (load: 0) or if there are no files in the search path,
-          ⍝       auto is set to 0, since nothing will ever match.                     
-            auto: 1
-              
-          ⍝ verbose: 
-          ⍝    If 0 (quiet), 
-          ⍝    If 1 (verbose).  
-          ⍝    If ⎕NULL, value is set from VERBOSE (see above).
-            verbose: ⎕NULL  
-                                                                 
-          ⍝ path: The file dirs and/or workspaces to search IN ORDER left to right:
-          ⍝    e.g. path: [ 'fd1', 'fd2', ['ws1', 'wsdir/ws2'], 'fd3', ['ws3']]
-          ⍝    For a file directory, the item must be a simple char vector
-          ⍝        'MyDyalogLib'
-          ⍝    For workspaces, the item must be a vector of one or more char vectors
-          ⍝        (⊂'dfns') or (⊂'MyDyalogLib/mathfns') or ('dfns', 'myDfns')
-          ⍝  To indicate we don't want to search ANY files, 
-          ⍝     best: (load: 0)
-          ⍝     ok:   (path: ⎕NULL)
-            path:  ( 'MyDyalogLib' ⋄ ('dfns'⋄) ⋄ '.' ⋄ )  
-                          
-          ⍝ prefix: literal string to prefix to each name, when searching directories.
-          ⍝     Ignored for workspaces.
-          ⍝     ⍬ is equiv. to  ''. 
-          ⍝     Example given name 'mydfn' and (prefix: '∆F_' 'MyLib/' ⋄ suffix: ⊂'aplf')  
-          ⍝     ==> ('∆F_mydfn.aplf'  'MyLib/mydfn.aplf')   
-            prefix: ⍬ 
-                                      
-          ⍝ suffix: at least one suffix is required for files to be checked.
-          ⍝ ∘  Note: The '.' is prepended for you!  
-          ⍝ ∘  Suffixes don't apply to workspaces. See documentation for definitions.
-          ⍝ ∘  By default, unknown filetypes are not enabled. 
-          ⍝    If they are enabled, they work the same as 'dyalog'.
-          ⍝ ∘  If possible, place most used suffixes first.
-            suffix: ('aplf' ⋄ 'apla' ⋄ 'aplo' ⋄ 'apln' ⋄ 'json'⋄ 'txt' ⋄'dyalog')    
-                          
-          ⍝  Internal Runtime (hidden) Parameters                                               
-            _readParmFi: 0                      ⍝ 0 Zero: Haven't read .∆F yet. 1 afterwards.     
-            _fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
-            _debug:      0                      ⍝ Synonym for verbose (internally)
-         )                                                                               
-      }
-    0::   ##.AN2Apl 1↓¯1↓ ⎕NR'ParmDefaults'         ⍝ Dyalog ≤19
-      ParmDefaults ⍬                                ⍝ Dyalog ≥20
+⍝ These are the default APL Array Notation settings: format ok whether Dyalog 20 or earlier.
+⍝ User can override in ./.∆F, also in APLAN format. 
+  LoadParmDefaults← { fi← ⍵ 
+    LoadErr← {
+      _← 'parms' ⎕NS ⍬   
+      _← LibLoadFailure 'DEFAULT PARAMETER FILE "',fi,'" DOES NOT EXIST OR IS INVALID. AUTOLOAD IS NOT AVAILABLE!' 
+      parms 
+    }
+  2:: LoadErr ⍬ ⋄ ~⎕NEXISTS fi:  LoadErr ⍬ 
+    _← 'parms' ⎕NS ##.AN2Apl ⊃⎕NGET fi 1  
+    parms⊣ parms._readParmFi← 0 
   }
 
 ⍝ LoadParmFi: Loadtime routine
@@ -247,15 +192,14 @@
       parmFi← ⍵  
     ⍝ ReadParmFi: Update parameters from parm file.
       ReadParmFi← { 
-        ~⎕NEXISTS ⍵: ⍬ ⋄ 11:: 0⊣ 11 ⎕SIGNAL⍨ ⎕← ParseÊ ⍵ 
+        ~⎕NEXISTS ⍵: ⍬ 
+        11 2:: {  
+            ⎕← '>>> ∆F LOAD ERROR:   Unable to parse parameter file "',⍵,'".'
+            ⎕← '>>> ∆F ',⎕DMX.EM,': ',⎕DMX.Message ⋄ ⍬ 
+          } ⍵  
           _← 'parms' ⎕NS ##.AN2Apl ⊃⎕NGET ⍵ 1      ⍝ Merge parm file into internal defaults
           0⊣ parms._readParmFi← 1 
       } 
-      ParseÊ← {  
-         e1← '∆F: ∆F Load Error: Unable to parse parameter file "',⍵,'".'
-         e2← '∆F: ∆F Load Error: Array Notation or parameters may be invalid.'
-         e1, (⎕UCS 13), e2     
-      }  
     ⍝ GenFullPath:   _parms._fullPath← ∇ parms.path 
       GenFullPath← {
           ⍺←⍬ ⋄ 0=≢⍵: ⍺ ⋄ p← ⊂⊃⍵ 
@@ -264,6 +208,7 @@
       } 
     ⍝ =========================================================================
     ⍝ LoadParmFi main ...
+      parms._readParmFi≡¯1:  _← 0⊢⎕← 'here'
       _← ReadParmFi parmFi  
     ⍝ Handle special-case parameters: verbose, load, ..., suffix 
       sc←  ('verbose' ##.VERBOSE) ('load' ##.LIB_AUTO) ('prefix'(,⊂'')) 
@@ -274,14 +219,13 @@
         IsNull← ⍬∘≡∨⎕NULL∘≡
       _← parms ##.∆VSET sc/⍨ IsNull∘Val¨ sc
     ⍝ If ~parms.load, Auto just returns the user userLibrary sans "auto" function.
-    ~parms.load: _← 0⊣ ⎕FX ,⊂'Auto←{userLibNm}'⊣ parms.auto←0  ⍝ auto=0: Auto => nop.
+    ~parms.load: _← 0⊣ LibLoadFailure ⍬
       parms._fullPath← GenFullPath parms.path 
       
     ⍝ If parms._fullPath is not empty, we're done!
     0< ≢parms._fullPath: _← 1 
     ⍝ If parms._fullPath is empty, then turn auto off, since there's nothing to search..
-      nolibW← '!!! Warning:  (load: 1) but the search path is empty!'
-      _← 0⊣ ⎕FX ,⊂'Auto←{userLibNm}'⊣ parms.auto← 0⊣ (⎕∘←)⍣parms.verbose⊣nolibW       
+      _← 0⊣ LibLoadFailure parms.verbose/'Parameter file specifies (load: 1) but  the search path is empty!'
   } 
   ⍝ _CShow: 
   ⍝ ∘ Cond'lly show all APLAN parameters in 'parms' in alph order 
@@ -298,20 +242,33 @@
 ⍝ ShowPath:  Called via 'path' call in ##.Special. 
   ShowPath← { ⊃1 ##.Apl2AN parms._fullPath } 
 
+⍝ What to do if loading defaults or user parms fails.
+⍝    ⍺ LibLoadFailure warning
+⍝ Issues warning ⍵ if non-null a total of ⍺ times.
+⍝ Sets LibAuto to a nop and sets auto and _readParmFi to ¯1.
+  LibLoadFailure← { ⍺← 3 
+      _← (⎕∘←)⍣(⍺×0≠≢⍵)⊣'>>> LIBRARY WARNING: ',⍵ 
+      parms.(auto _readParmFi← 0 ¯1) ⋄ ⎕THIS.⎕FX ,⊂'LibAuto←{userLibNm}'
+  }
+
 ⍝ Load user parms
 ⍝     Load builtin parms? If loadDefaults=1 or 'parms' doesn't yet exist.
 ⍝     Load user parms?    If loadUserFi=1.
 ⍝     Show parms?         If isVerbose=1 or if parms.verbose=1
 ⍝     Show compactly?     If isCompact=1;
 ⍝ Used at EXECUTIVE below and via 'parms' call in ##.Special.
-  ∇ {rc}← LoadParms (loadDefaults loadUserFi isVerbose isCompact)   
+  ∇ {rc}← LoadParms ( loadDefaults loadUserFi isVerbose isCompact )   
+    ; parmFi 
     :If  0=⎕NC 'parms'  
     :OrIf loadDefaults 
-        'parms' ⎕NS LoadParmDefaults ⍬  
+        parmFi← LoadParmDefaults ##.LIB_PARM_FI 
+        :If 0> rc← parmFi._readParmFi 
+            :Return 
+        :EndIf 
     :EndIf 
     :If loadUserFi 
-        LoadParmFi './.∆F'  
-    :EndIf               
+        LoadParmFi '.∆F'  
+    :EndIf         
     rc← isVerbose (isCompact _CShow) parms 
   ∇
 ⍝   SetLibFull: Point to (empty, but named) user library at load-time.

@@ -1,8 +1,7 @@
 :Namespace ⍙FUtils   
 ⍝:Section CORE 
   VERSION←     '0.1.1'          ⍝ Set/updated by ∆F_Publish.dyalog...
-  ⎕IO ⎕ML ⎕PP ⎕PW←0 1 34 256    ⍝ Namespace scope. User code is executed in CALLER space (⊃⎕RSI) 
-  DYALOG_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'  
+  ⎕IO ⎕ML ⎕PP ⎕PW←0 1 34 256    ⍝ Namespace scope. User code is executed in CALLER space (⊃⎕RSI)  
 ⍝ =======================================================================
 ⍝ GENERAL GLOBAL VARIABLES (for debugging and exploration) 
 ⍝ =======================================================================
@@ -38,7 +37,8 @@
 ⍝ LIB_AUTO:  1     Yes.
 ⍝            0     No.
   LIB_AUTO←  1     
-  LIB_SRC_FI←   '∆F/∆FLibUtils.dyalog'        ⍝ Library shortcuts (£,  `L) utilities.
+  LIB_PARM_FI←  '∆F/∆FParmDefs.apla' 
+  LIB_SRC_FI←   '∆F/∆FLibUtils.dyalog'          ⍝ Library shortcuts (£,  `L) utilities.
 ⍝ HELP-related globals             
   HELP_HTML_FI← '∆F/∆FHelp.html'                ⍝ Called from 'help' option. Globally set here              
 ⍝ ==================================================================================
@@ -357,7 +357,7 @@
     c2∊ dia2: ⍺ 2          ⍝ esc-⋄          newline     2 
     c2= qtR: esc 1         ⍝ escape-quote   escape      1   caller handles qtR next cycle.
     c2= esc: c2 2          ⍝ esc-esc        escape      2   
-    (esc, c2) 2            ⍝ esc <any>      esc <any>   2    
+      (esc, c2) 2          ⍝ esc <any>      esc <any>   2    
   } 
 
 ⍝ CFOm:   (omCode w)← ê ∇ ⍵ 
@@ -368,9 +368,9 @@
 ⍝    w:      ⍵, just past the matched omega expression digits.
 ⍝ IntOpt: See IntOpt, just below.
   CFOm← { 
-          oLen oVal w← IntOpt ⍵
+      oLen oVal w← IntOpt ⍵
   ×oLen: ('(⍵⊃⍨',')',⍨ '⎕IO+', ⍕⍺.omC← oVal ) w⊣ ⍺.cfL+← oLen 
-          ('(⍵⊃⍨',')',⍨ '⎕IO+', ⍕⍺.omC       ) w⊣ ⍺.omC+← 1
+      ('(⍵⊃⍨',')',⍨ '⎕IO+', ⍕⍺.omC       ) w⊣ ⍺.omC+← 1
   }
 
 ⍝ IntOpt: Does ⍵ start with a valid sequence of digits (a non-neg integer)? 
@@ -413,8 +413,8 @@
   ⍝        Returns display of default and user parms (as mx) in alph order.
     2≠ ⎕NC 'val': ⎕SIGNAL optÊ  
   ⍝ LoadParms (loadDefaults loadUserFi isVerbose isCompact)   
-    'parms-c'≡ 7↑val: _← libUtils.LoadParms 1 1 1 1 
-    'parms'  ≡   val: _← libUtils.LoadParms 1 1 1 0 
+    'parms-c'≡ 7↑val: _← libUtils.LoadParms 1 1 1 1  
+    'parms'  ≡   val: _← libUtils.LoadParms 1 1 1 0  
     'path'   ≡   val: _← libUtils.ShowPath ⍬ 
     'help'   ≢ 4↑val: ⎕SIGNAL optÊ 
   ⍝ help, help-wide, or help-narrow?
@@ -443,8 +443,9 @@
 ⍝ See libUtils.LinkUserLib
 ⍝ userLibrary is the user library.
 :Namespace userLibrary
-    ⍝⍝⍝⍝⍝ Minimal contents, pending ⍙Load_LibAuto.
+  ⍝ Minimal contents, pending ⍙Load_LibAuto.
   ⍝ Inherit key sys vars from the # namespace.
+    libOk← 0 
     ⎕IO ⎕ML ⎕PW ⎕PP ⎕CT ⎕DCT ⎕FR← #.(⎕IO ⎕ML ⎕PW ⎕PP ⎕CT ⎕DCT ⎕FR)     
 :EndNamespace
 
@@ -453,15 +454,16 @@
 :Namespace libUtils
 ⍝⍝⍝⍝⍝ This is a local stub, pending (optional, but expected) load of ∆FLibUtils below.
   ∇ {libNs}←  SetLibSimple libNs 
+    ; _readParmFi 
     ⍝ external in the stub... 
     ⍝   libUser, Auto, ShowPath, LoadParms
     ⍝ external loaded from ∆FLibUtils.dyalog:
     ⍝   libUser, Auto, parms, ShowPath, LoadParms 
       ⎕THIS.libUser← libNs
-      libNs.⎕DF ⎕NULL 
-      libNs.⎕DF '£=[',(⍕libNs),' ⋄ auto:0]'
+      libNs.⎕DF ⎕NULL                                     ⍝ Clear any prior ⎕DF.
+      libNs.⎕DF '£=[',(⍕libNs),' ⋄ auto:0]'               ⍝ Now, set ours.
       Auto← (⍕libNs)⍨  
-      parms← ⎕NS ⍬ 
+      parms← ⎕NS '_readParmFi'⊣ _readParmFi← ¯1 
       ShowPath← '⍬'⍨        
       LoadParms← ⍬⍨       
   ∇
@@ -476,11 +478,11 @@
 ⍝ ===================================================================================
 
 ⍝⍝⍝ Code for emulating Dyalog 20 services in Dyalog 19...
-⍝⍝⍝ These do what we need internally, not the entire service.
-⍝⍝⍝ If we are on version 20, we just use those, of course.
+⍝⍝⍝ WARNING! These do only what we need internally, not the entire service domain.
+⍝⍝⍝ If we are on Dyalog version 20, we just use those, of course.
 ⍝ ∆VGET, ∆VSET, AN2Apl, (same for both so far:) Apl2AN
-  ∇ {version}← ⍙Gen_LegacyAplAN version  
-    :IF version< 20                         ⍝ Are we on version 20 or later?
+  ∇ {aplVersion}← ⍙Gen_LegacyAplAN aplVersion  
+    :IF aplVersion< 20                         ⍝ Are we on Dyalog version 20 or later?
       ∆VGET← { (↓⊃⍵) ⍺.{ 0≠⎕NC ⍺: ⎕OR ⍺ ⋄ ⍵ }¨ ⊃⌽⍵ }
       ∆VSET←{ 
         ⍺←⊃⎕RSI ⋄ Ê← ⍺.{ ⍎⍺,'←⍵' } 
@@ -679,7 +681,8 @@
 ⍝ ====================================================================================
 ⍝ Execute the FIX-TIME Routines
 ⍝ ====================================================================================
-    ⍙Gen_LegacyAplAN  DYALOG_VERSION                   ⍝ ∆NS, ∆VGET, ∆VSET, AN2Apl, Apl2AN 
+  ⍝ ∆NS, ∆VGET, ∆VSET, AN2Apl, Apl2AN are version-aware.
+    ⍙Gen_LegacyAplAN  ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'  
     OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFarr   ⍝ Generate default opts NS
     ⍙Export_∆F ##  0 1  
     ⍙Load_Shortcuts

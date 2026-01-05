@@ -1,0 +1,62 @@
+(
+  ⍝ Default .∆F Parameter File  (APL Array Notation)                          
+  ⍝ Items not to be (re)set by user may be omitted/commented out.              
+  ⍝ If (load: ⎕NULL), then LIB_AUTO [note 1] is used for load.
+  ⍝ If (verbose: ⎕NULL), then VERBOSE [note 1] is used for verbose.
+  ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: '' ⋄)     
+  ⍝ [note 1] 
+  ⍝   ∆F global variables LIB_AUTO and VERBOSE are set in ∆Fapl.dyalog.
+  ⍝    Their usual values are LIB_AUTO← 1 ⋄ VERBOSE← 0
+  ⍝    See load: and verbose: below for significance.
+
+  ⍝ load:
+  ⍝   1:     Load the runtime path to search for Session Library £ and `L.
+  ⍝   0:     Don't load...
+  ⍝   ⎕NULL: Grab value from LIB_AUTO above.
+    load: ⎕NULL 
+
+  ⍝ auto:
+  ⍝   0: user must load own objects; nothing is automatic.                 
+  ⍝   1: dfns and files (if any) searched in sequence set by dfnsOrder.
+  ⍝      See path for directory search sequence. 
+  ⍝ Note: If (load: 0) or if there are no files in the search path,
+  ⍝       auto is set to 0, since nothing will ever match.                     
+    auto: 1
+      
+  ⍝ verbose: 
+  ⍝    If 0 (quiet), 
+  ⍝    If 1 (verbose).  
+  ⍝    If ⎕NULL, value is set from VERBOSE (see above).
+    verbose: ⎕NULL  
+                                                          
+  ⍝ path: The file dirs and/or workspaces to search IN ORDER left to right:
+  ⍝    e.g. path: [ 'fd1', 'fd2', ['ws1', 'wsdir/ws2'], 'fd3', ['ws3']]
+  ⍝    For a file directory, the item must be a simple char vector
+  ⍝        'MyDyalogLib'
+  ⍝    For workspaces, the item must be a vector of one or more char vectors
+  ⍝        (⊂'dfns') or (⊂'MyDyalogLib/mathfns') or ('dfns', 'myDfns')
+  ⍝  To indicate we don't want to search ANY files, 
+  ⍝     best: (load: 0)
+  ⍝     ok:   (path: ⎕NULL)
+    path:  ( 'MyDyalogLib' ⋄ ('dfns'⋄) ⋄ '.' ⋄ )  
+                  
+  ⍝ prefix: literal string to prefix to each name, when searching directories.
+  ⍝     Ignored for workspaces.
+  ⍝     ⍬ is equiv. to  ''. 
+  ⍝     Example given name 'mydfn' and (prefix: '∆F_' 'MyLib/' ⋄ suffix: ⊂'aplf')  
+  ⍝     ==> ('∆F_mydfn.aplf'  'MyLib/mydfn.aplf')   
+    prefix: ⍬ 
+                              
+  ⍝ suffix: at least one suffix is required for files to be checked.
+  ⍝ ∘  Note: The '.' is prepended for you!  
+  ⍝ ∘  Suffixes don't apply to workspaces. See documentation for definitions.
+  ⍝ ∘  By default, unknown filetypes are not enabled. 
+  ⍝    If they are enabled, they work the same as 'dyalog'.
+  ⍝ ∘  If possible, place most used suffixes first.
+    suffix: ('aplf' ⋄ 'apla' ⋄ 'aplo' ⋄ 'apln' ⋄ 'json'⋄ 'txt' ⋄'dyalog')    
+                  
+  ⍝  Internal Runtime (hidden) Parameters                                               
+    _readParmFi: 0                      ⍝ 0 Zero: Haven't read .∆F yet. 1 afterwards. ¯1: defaults failed!   
+    _fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
+    _debug:      0                      ⍝ Synonym for verbose (internally)
+)                                                                               
