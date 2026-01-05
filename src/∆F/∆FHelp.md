@@ -5,10 +5,10 @@ toc: true
 
 <!-- GIT_ONLY ### ∆F Formatted String Literals (v.0.1.1) -->
 
-### 0. Introduction {.unnumbered}
+## 0 Introduction {.unnumbered}
 
 <div class="right-margin-bar"> 
-<∆N><br>Short for "**format&shy;ted string lit&shy;er&shy;als**, _f‑strings_ were introduced in Python in 2016. **∆F** _f‑strings_ and Python's are **not** compatible.</∆N>
+<∆N>Short for "**format&shy;ted string lit&shy;er&shy;als**, _f‑strings_ were introduced in Python in 2016. **∆F** _f‑strings_ and Python's are **not** compatible.</∆N>
 
 <∆Targ intro>
 
@@ -69,10 +69,11 @@ _dfns_ and other familiar tools.
 4. Namespace <code>_⎕SE_.**⍙FUtils**</code> contains utilities used by **∆F** and, once `]load`ed, **_should not_** be moved, as **∆F** always refers to **⍙FUtils** in its _original_ location.
 5. By default, the target namespace (<code>_⎕SE_</code>) will be added to the end of `⎕PATH`, if not already defined there. You may always choose to relocate or assign **∆F** anywhere you want so that it is available.
 
-&RHAND;You may now call `∆F` with the desired [arguments](#f-call-syntax-overview) and [options](#f-option-details).<br>
-&RHAND;**∆F** is `⎕IO`- and `⎕ML`-independent.<br>
-&RHAND;**∆F**'s "help" system uses Dyalog's **_HtmlRenderer_** service to display its documentation. As a fallback, you can access less robust
-help information in the file _readme.md_ on Github.
+&RHAND;<small>You may now call `∆F` with the desired [arguments](#f-call-syntax-overview) and [options](#f-option-details).</small><br>
+&RHAND;<small>**∆F** is `⎕IO`- and `⎕ML`-independent.<br></small>
+&RHAND;<small>**∆F**'s "help" system uses Dyalog's **_HtmlRenderer_** service to display its documentation or, if unavailable, the ***Ride*** 
+development environment.  A less robust version of this 
+help information is also available in the file _readme.md_ on Github.</small>
 
 ## Displaying ∆F **Help** in _APL_
 
@@ -199,7 +200,7 @@ For n=1, n×Pi=3.141592653589793
       3       9.42477796076938 
 ```
 
-**3.3: Enter multiple lines with `` `◇ `` separated by space fields {&ensp;}**  
+**3.3: Build multiline text fields and code fields**  
 
 ```
 ⍝      <----  text field  ---->   <- text field ->    <- code field str ->
@@ -270,7 +271,14 @@ For n=┌─┐, n×Pi=┌───────┐
                          dog:2   
                          mouse:3 
                        )          
-``` 
+```  
+
+**3.9: Grab utility automagically from** ___dfns___ **workspace (or from a file)**
+
+```
+   ∆F'{ £.hex 57005 48879 51966}'   ⍝ Get hex fn to convert dec to hexadecimal!
+ dead  beef  cafe 
+```
 
 ### <∆Blue>That's 80% of what you need. Read on for more...</∆Blue> {.unnumbered}
 </details>
@@ -1479,7 +1487,7 @@ which contains one or more **Text** fields, **Code** fields, and **Space** field
 | **\`D**                                |                            Date-Time                             | `` [⍺]`D ⍵ ``|Synonym for **\`T**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | **\`F**, **$**                         |                               ⎕FMT                               | `[⍺] $ ⍵`| Short for `[⍺] ⎕FMT ⍵`. (See _APL_ doc&shy;ument&shy;ation).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | **\`J**                                |                             Justify                              | `` [⍺]`J ⍵ ``| Justify each row of object `⍵` as text:<br>&emsp;&emsp;_left_: ⍺="L"; _center_: ⍺="C"; _right_ ⍺="R".<br>You may use `¯1`\|`0`\|`1` in place of `"L"`\|`"C"`\|`"R"`. If omitted, `⍺←'L'`. <small>_Displays numbers with the maximum precision available._</small>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **\`L**, **£**                         | Session Library                                                  | `£.nm`| `£` denotes a private library (namespace) local to the **∆F** runtime environ&shy;ment into which functions or objects (including name&shy;spaces) may be placed (e.g. via `⎕CY`) for the duration of the _APL_ session.<br>**Autoload:** Outside of simple assignments, **∆F** will attempt to copy an undefined object `obj` in the expression `£.obj` from, _in order:_<br>&emsp;<small><small><∆Blue>DIRECTORY:</∆Blue></small></small>&thinsp;**./MyDyalogLib/** &nbsp;\>&nbsp; <small><small><∆Blue>_APL_ WS:</∆Blue></small></small>&thinsp;**dfns** &nbsp;\>&nbsp;<small><small><∆Blue>DIRECTORY:</∆Blue></small></small>&thinsp;**./**<br><small>Other `£` expressions like `£.(hex dec)` are valid, but no autoload takes place.<br>_For filetypes and customisation, see [Session Library Shortcut: Details](#session-library-shortcut-details) below._</small> |
+| **\`L**, **£**                         | Session Library                                                  | `£.nm`<br><code>£.nm<∆grey>.nm2</∆grey></code>| `£` denotes a private library (namespace) local to the **∆F** runtime environ&shy;ment into which functions or objects (including name&shy;spaces) may be placed (e.g. via `⎕CY`) for the duration of the _APL_ session.<br>**Autoload:** Outside of simple assignments, **∆F** will attempt to copy an undefined object named `nm` in the expression `£.nm`, <code>£.nm<∆grey>.nm2</∆grey></code>, *etc.*, from, _in order:_<br>&emsp;<small><small><∆Blue>DIRECTORY:</∆Blue></small></small>&thinsp;**./MyDyalogLib/** &nbsp;\>&nbsp; <small><small><∆Blue>_APL_ WS:</∆Blue></small></small>&thinsp;**dfns** &nbsp;\>&nbsp;<small><small><∆Blue>DIRECTORY:</∆Blue></small></small>&thinsp;**./**<br><small>Other `£` expressions like `£.(hex dec)` are valid, but no autoload takes place.<br>_For filetypes and customisation, see [Session Library Shortcut: Details](#session-library-shortcut-details) below._</small> |
 | **\`Q**                                |                              Quote                               | `` [⍺]`Q ⍵ ``| Recursively scans `⍵`, putting char. vectors, scalars, and rows of higher-dimensional strings in APL quotes, leaving other elements as is. If omitted, `⍺←''''`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | **\`S**                                |                            Serialise                             | `` [⍺]`S ⍵ ``| Serialise an _APL_ array (via ⎕SE.Dyalog.Array.Serialise), i.e. show in _APL_ Array Notation (APLAN), either (`⍺=0`, the default) in _tabular_ (multiline) form or (`⍺=1`) compactly with statement separators `◇` in place of newlines. If omitted, `⍺←0`. <small>_See details below._</small>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **\`T**                                |                            Date-Time                             | `` [⍺]`T ⍵ ``| Displays timestamp(s) `⍵` according to date-time template `⍺`. `⍵` is one or more APL timestamps `⎕TS`. `⍺` is a date-time template in `1200⌶` format. If omitted, `⍺← '%ISO%'`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -1592,6 +1600,11 @@ with `]APLAN.output on`. (See Dyalog documentation for details).
 1. If <∆N>The search **path** depends on settings. Here, we assume the default `auto` option and `]load`-time par&shy;a&shy;meters. See [Lib&shy;rary Parameters](#session-library-shortcut-parameters) and [File&shy;types of Lib&shy;rary Source Files](#session-library-shortcut-filetypes-of-source-files) below.</∆N>
    an object `£.name` is referenced, but not yet defined in `£`, an attempt is made&mdash; during **∆F**'s left-to-right _scanning_ phase&mdash; to copy it to `£` from (in order) directory **./MyDyalogLib**, workspace **dfns**, and the current directory **./**,
    _unless_ it is being assigned (via a simple `←`) or has <∆N>Once a name is seen, no attempt will be made to load it.</∆N>already been seen in this **∆F** call. It will be available for the duration of the *APL* session.
+
+1. If a name is a *qualified* name, i.e. if it is of the form `£.nm1.nm2`, `£.nm1.nm2.nm3`, etc., 
+then **∆F** attempts to load the name ***nm1***, presumed to be a namespace (or a 
+function returning a namespace). If a namespace, the *entire* namespace is loaded, not just the object
+specified.
 
 1. While objects of the form `£.name` will be automatically retrieved (if not defined), names in other `£` expressions, like 
    `£.(name1 name2)` or `£.⎕NC "name3"`, will be ignored during the scanning phase;
@@ -1771,7 +1784,7 @@ For more information on Python f-strings, _see_:
 <∆N><big><big>&emsp;<strong>KEY</strong></big><br><strong><big><∆Red><big>■</big> Major topic</∆Red></big><br><∆Green><big>■</big> Topic in table or figure</∆Green><br><big>■</big> Regular entry</strong></big></∆N>
 
 <div class="multi-column-text" style="font-size:85%;">
-<!-- INDEX_BEGIN --><!-- Generated by ∆F_toc: 2025-12-29T16:09:44 -->
+<!-- INDEX_BEGIN --><!-- Generated by ∆F_toc: 2025-12-31T14:15:45 -->
 <a href="#the-above-shortcut"                            > <strong>\`A (above)</strong>&emsp;<big><span class="blue">4.12</span></big></a><br>
 <a href="#the-above-shortcut"                            > <strong>Above shortcut</strong>&emsp;<big><span class="blue">4.12</span></big></a><br>
 <a href="#inside-appendices"                             > <span class="red"><big><strong>Appendices</strong></big></span>&emsp;<big><span class="blue">6.</span></big></a><br>
@@ -1824,6 +1837,7 @@ For more information on Python f-strings, _see_:
 <a href="#the-session-library-shortcut"                  > <strong>\`L (library)</strong>&emsp;<big><span class="blue">4.21</span></big></a><br>
 <a href="#table-library-filetypes"                       > <span class="green"><strong>Library Filetypes: see \`L and £</strong></span>&emsp;<big><span class="blue"><small><em>Table</em></small> 5g.</span></big></a><br>
 <a href="#table-library-parameters"                      > <span class="green"><strong>Library parameters, file of (.∆F)</strong></span>&emsp;<big><span class="blue"><small><em>Fig.</em></small> 4.21</span></big></a><br>
+<a href="#session-library-shortcut-details"              > <strong>Library shortcut, details</strong>&emsp;<big><span class="blue">5.11</span></big></a><br>
 <a href="#the-session-library-shortcut"                  > <strong>Library shortcut, session</strong>&emsp;<big><span class="blue">4.21</span></big></a><br>
 <a href="#loading-and-running-f"                         > <strong>Loading ∆F</strong>&emsp;<big><span class="blue">1.2</span></big></a><br>
 <a href="#multiline-F-strings-in-dyalog-20"              > <strong>Multiline f-strings, Dyalog 20</strong>&emsp;<big><span class="blue">4.23</span></big></a><br>
