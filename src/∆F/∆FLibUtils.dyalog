@@ -40,6 +40,7 @@
     '←'= ⊃'∘ '~⍨p↓w: userLibNmP                       ⍝ Name to be set:   return.
         userLibNmP⊣ userLib ⍺ parms LoadObj nm        ⍝     Try to load obj def, then return.                                       
   }
+  LibAutoMin← {userLibNm}
   
   ⍝ ======================================================================================
   ⍝ LoadObj: Find nm in £.nm or `L.nm and try to load its definition into userLib from path.
@@ -162,7 +163,7 @@
   } ⍝ End LoadObj 
   
 ⍝ ============================================================================
-⍝ LoadParmDefaults: Load-time routine
+⍝ LoadDefaultParms: Load-time routine
 ⍝   If successful, sets parameters 
 ⍝       ⍵.load, ⍵.auto, ⍵.verbose, ⍵.path, ⍵.prefix, ⍵.suffix, etc.
 ⍝   ⍵.load defaults to ##.AUTOLOAD (which must be 1 or 0).
@@ -174,15 +175,17 @@
 ⍝   If ⍵.suffix←⍬, we will only check workspaces.
 ⍝ These are the default APL Array Notation settings: format ok whether Dyalog 20 or earlier.
 ⍝ User can override in ./.∆F, also in APLAN format. 
-  LoadParmDefaults← { fi← ⍵ 
-    LoadErr← {
-      _← 'parms' ⎕NS ⍬   
-      _← LibLoadFailure 'DEFAULT PARAMETER FILE "',fi,'" DOES NOT EXIST OR IS INVALID. AUTOLOAD IS NOT AVAILABLE!' 
+  LoadDefaultParms← { fi← ⍵ 
+    _readParms← 0 0 
+    _← 'parms' ⎕NS '_readParms'
+    LoadErr← {  
+      _← LibLoadFailure ⍵
       parms 
     }
-  2:: LoadErr ⍬ ⋄ ~⎕NEXISTS fi:  LoadErr ⍬ 
-    _← 'parms' ⎕NS ##.AN2Apl ⊃⎕NGET fi 1  
-    parms⊣ parms._readUserParms← 0 
+  2:: LoadErr'Default parameter file "',fi,'" has errors'
+   ~⎕NEXISTS fi:  LoadErr 'Default parameter file "',fi,'" does not exist.'
+    ⎕THIS.parms← ##.AN2Apl ⊃⎕NGET fi 1  
+    parms⊣ parms._readParms← 1 0 
   }
 
 ⍝ LoadUserParms: Loadtime routine
@@ -193,12 +196,9 @@
     ⍝ ReadUserParms: Update parameters from parm file.
       ReadUserParms← { 
         ~⎕NEXISTS ⍵: ⍬ 
-        11 2/⍨ ~runtime:: {   
-            ⎕← '>>> ∆F LOAD ERROR:   Unable to parse parameter file "',⍵,'".'
-            ⎕← '>>> ∆F ',⎕DMX.EM,': ',⎕DMX.Message ⋄ ⍬ 
-          } ⍵  
+        11 2/⍨ ~runtime:: 0 LibLoadFailure 'User parameter file ".∆F" has errors'
           _← 'parms' ⎕NS ##.AN2Apl ⊃⎕NGET ⍵ 1      ⍝ Merge parm file into internal defaults
-          0⊣ parms._readUserParms← 1 
+          0⊣ parms._readParms[1]← 1 
       } 
     ⍝ GenFullPath:   _parms._fullPath← ∇ parms.path 
       GenFullPath← {
@@ -208,7 +208,7 @@
       } 
     ⍝ =========================================================================
     ⍝ LoadUserParms main ...
-      parms._readUserParms≡¯1:  _← 0⊢⎕← 'here'
+    ~parms._readParms[0]:  _← 0 
       _← ReadUserParms parmFi  
     ⍝ Handle special-case parameters: verbose, load, ..., suffix 
       sc←  ('verbose' ##.VERBOSE) ('load' ##.LIB_AUTO) ('prefix'(,⊂'')) 
@@ -219,13 +219,12 @@
         IsNull← ⍬∘≡∨⎕NULL∘≡
       _← parms ##.∆VSET sc/⍨ IsNull∘Val¨ sc
     ⍝ If ~parms.load, Auto just returns the user userLibrary sans "auto" function.
-    ~parms.load: _← 0⊣ LibLoadFailure ⍬
+    ~parms.load: LibLoadFailure 'User parameter file ".∆F" does not exist or has errors'
       parms._fullPath← GenFullPath parms.path 
-      
     ⍝ If parms._fullPath is not empty, we're done!
     0< ≢parms._fullPath: _← 1 
     ⍝ If parms._fullPath is empty, then turn auto off, since there's nothing to search..
-      _← 0⊣ LibLoadFailure parms.verbose/'Parameter file specifies (load: 1) but  the search path is empty!'
+      LibLoadFailure 'User parameter file specifies (load: 1) but  the search path is empty!'
   } 
   ⍝ _CShow: 
   ⍝ ∘ Cond'lly show all APLAN parameters in 'parms' in alph order 
@@ -244,11 +243,15 @@
 
 ⍝ What to do if loading defaults or user parms fails.
 ⍝    ⍺ LibLoadFailure warning
-⍝ Issues warning ⍵ if non-null a total of ⍺ times.
-⍝ Sets LibAuto to a nop and sets auto and _readUserParms to ¯1.
-  LibLoadFailure← { ⍺← 3 
-      _← (⎕∘←)⍣(⍺×0≠≢⍵)⊣'>>> LIBRARY WARNING: ',⍵ 
-      parms.(auto _readUserParms← 0 ¯1) ⋄ ⎕THIS.⎕FX ,⊂'LibAuto←{userLibNm}'
+⍝ Issues warning ⍵ if non-null  
+⍝ Sets LibAuto to a nop and sets auto and _readParms to ¯1.
+  LibLoadFailure← { ⍺←1 
+      lW← '>>> LIBRARY WARNING: ' 
+      noA← 'Library Autoload is not available' 'Library Autoload is available- user parameters ignored'
+      M← (⎕∘←)⍣(0≠≢⍵) 
+      _← M¨(lW, ⍵)(lW,⎕DMX.Message)(lW,noA⊃⍨ ~⍺)   
+      LibAuto← LibAutoMin 
+      0⊣ parms.(auto _readParms← 0 (0 0))  
   }
 
 ⍝ Load user parms
@@ -259,10 +262,9 @@
 ⍝ Used at EXECUTIVE below and via 'parms' call in ##.Special.
   ∇ {rc}← LoadParms ( loadDefaults loadUserFi isVerbose isCompact runtime  )   
     ; parmFi 
-    :If  0=⎕NC 'parms'  
-    :OrIf loadDefaults 
-        parmFi← LoadParmDefaults ##.LIB_PARM_FI 
-        :If 0> rc← parmFi._readUserParms 
+    :If loadDefaults 
+        parmFi← LoadDefaultParms ##.LIB_PARM_FI 
+        :If ~rc← parmFi._readParms[0] 
             :Return 
         :EndIf 
     :EndIf 

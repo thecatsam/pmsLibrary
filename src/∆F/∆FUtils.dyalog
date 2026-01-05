@@ -463,7 +463,7 @@
       libNs.⎕DF ⎕NULL                                     ⍝ Clear any prior ⎕DF.
       libNs.⎕DF '£=[',(⍕libNs),' ⋄ auto:0]'               ⍝ Now, set ours.
       Auto← (⍕libNs)⍨  
-      parms← ⎕NS '_readParmFi'⊣ _readParmFi← ¯1 
+      parms← ⎕NS '_readParms'⊣ _readParms← 0 0
       ShowPath← '⍬'⍨        
       LoadParms← ⍬⍨       
   ∇

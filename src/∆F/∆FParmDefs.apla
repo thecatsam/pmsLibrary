@@ -14,7 +14,7 @@
   ⍝   0:     Don't load...
   ⍝   ⎕NULL: Grab value from LIB_AUTO above.
     load: ⎕NULL 
-
+  
   ⍝ auto:
   ⍝   0: user must load own objects; nothing is automatic.                 
   ⍝   1: dfns and files (if any) searched in sequence set by dfnsOrder.
@@ -56,7 +56,6 @@
     suffix: ('aplf' ⋄ 'apla' ⋄ 'aplo' ⋄ 'apln' ⋄ 'json'⋄ 'txt' ⋄'dyalog')    
                   
   ⍝  Internal Runtime (hidden) Parameters                                               
-    _readUserParms: 0                   ⍝ 0 Zero: Haven't read .∆F yet. 1 afterwards. ¯1: Don't read-- defaults failed  
+    _readParms:  0 0                    ⍝ 0 Zero: Haven't read .∆F yet. 1 afterwards.  
     _fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
-    _debug:      0                      ⍝ Synonym for verbose (internally)
 )                                                                               
