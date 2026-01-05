@@ -84,6 +84,10 @@
       color: green;
     }
 
+    .grey {
+      color: grey;
+    }
+
     .blue {
       color: rgb(7, 40, 208);
     }
@@ -94,8 +98,9 @@
     }
 
     @keyframes blinker {
-      75% {
-        opacity: 20%;
+      50% {
+        opacity: 50%;
+        color: red;
       }
     }
 
@@ -508,9 +513,9 @@
 
 </nav>
 <!-- GIT_ONLY ### ∆F Formatted String Literals (v.0.1.1) -->
-<h3 class="unnumbered" id="introduction">0. Introduction</h3>
+<h2 class="unnumbered" id="introduction">0 Introduction</h2>
 <div class="right-margin-bar">
-<p><span class="margin-note"><br>Short for “<strong>format­ted string
+<p><span class="margin-note">Short for “<strong>format­ted string
 lit­er­als</strong>, <em>f‑strings</em> were introduced in Python in 2016.
 <strong>∆F</strong> <em>f‑strings</em> and Python’s are
 <strong>not</strong> compatible.</span></p>
@@ -603,14 +608,16 @@ added to the end of <code>⎕PATH</code>, if not already defined there.
 You may always choose to relocate or assign <strong>∆F</strong> anywhere
 you want so that it is available.</li>
 </ol>
-<p><big>👉</big> You may now call <code>∆F</code> with the desired <a
-href="#f-call-syntax-overview">arguments</a> and <a
-href="#f-option-details">options</a>.<br>
-<big>👉</big> <strong>∆F</strong> is <code>⎕IO</code>- and
-<code>⎕ML</code>-independent.<br> <big>👉</big> <strong>∆F</strong>’s
-“help” system uses Dyalog’s <strong><em>HtmlRenderer</em></strong>
-service to display its documentation. As a fallback, you can access less
-robust help information in the file <em>readme.md</em> on Github.</p>
+<p><big>👉</big> <small>You may now call <code>∆F</code> with the
+desired <a href="#f-call-syntax-overview">arguments</a> and <a
+href="#f-option-details">options</a>.</small><br>
+<big>👉</big> <small><strong>∆F</strong> is <code>⎕IO</code>- and
+<code>⎕ML</code>-independent.<br></small>
+<big>👉</big> <small><strong>∆F</strong>’s “help” system uses Dyalog’s
+<strong><em>HtmlRenderer</em></strong> service to display its
+documentation or, if unavailable, the <strong><em>Ride</em></strong>
+development environment. A less robust version of this help information
+is also available in the file <em>readme.md</em> on Github.</small></p>
 <h2 data-number="1.3" id="displaying-f-help-in-apl"><span
 class="header-section-number">1.3</span> Displaying ∆F
 <strong>Help</strong> in <em>APL</em></h2>
@@ -833,8 +840,7 @@ For n=1, n×Pi=3.141592653589793
 For n=1, n×Pi=3.141592653589793
       2       6.283185307179586
       3       9.42477796076938 </code></pre>
-<p><strong>3.3: Enter multiple lines with <code>`◇</code> separated by
-space fields { }</strong></p>
+<p><strong>3.3: Build multiline text fields and code fields</strong></p>
 <pre><code>⍝      &lt;----  text field  ----&gt;   &lt;- text field -&gt;    &lt;- code field str -&gt;
    ∆F &#39;Cats`◇Elephants`◇Monkeys{ }like`◇enjoy`◇eat{ }{&quot;toys.`◇tv.`◇fruit.&quot;}&#39;
 Cats      like  toys. 
@@ -885,6 +891,11 @@ option</strong></p>
                          dog:2   
                          mouse:3 
                        )          </code></pre>
+<p><strong>3.9: Grab utility automagically from</strong>
+<strong><em>dfns</em></strong> <strong>workspace (or from a
+file)</strong></p>
+<pre><code>   ∆F&#39;{ £.hex 57005 48879 51966}&#39;   ⍝ Get hex fn to convert dec to hexadecimal!
+ dead  beef  cafe </code></pre>
 <h3 class="unnumbered"
 id="thats-80-of-what-you-need.-read-on-for-more"><span
 class="blue"><strong>That’s 80% of what you need. Read on for
@@ -2426,15 +2437,17 @@ precision available.</em></small></td>
 <td style="text-align: justify;"><strong>`L</strong>,
 <strong>£</strong></td>
 <td style="text-align: center;">Session Library</td>
-<td style="text-align: center;"><code>£.nm</code></td>
+<td style="text-align: center;"><code>£.nm</code><br><code>£.nm<span
+class="grey"><strong>.nm2</strong></span></code></td>
 <td style="text-align: justify;"><code>£</code> denotes a private library
 (namespace) local to the <strong>∆F</strong> runtime environ­ment into
 which functions or objects (including name­spaces) may be placed
 (e.g. via <code>⎕CY</code>) for the duration of the <em>APL</em>
 session.<br><strong>Autoload:</strong> Outside of simple assignments,
-<strong>∆F</strong> will attempt to copy an undefined object
-<code>obj</code> in the expression <code>£.obj</code> from, <em>in
-order:</em><br> <small><small><span
+<strong>∆F</strong> will attempt to copy an undefined object named
+<code>nm</code> in the expression <code>£.nm</code>, <code>£.nm<span
+class="grey"><strong>.nm2</strong></span></code>, <em>etc.</em>, from,
+<em>in order:</em><br> <small><small><span
 class="blue"><strong>DIRECTORY:</strong></span></small></small> <strong>./MyDyalogLib/</strong>
  &gt;  <small><small><span class="blue"><strong><em>APL</em>
 WS:</strong></span></small></small> <strong>dfns</strong>
@@ -2733,6 +2746,12 @@ assigned (via a simple <code>←</code>) or has <span
 class="margin-note">Once a name is seen, no attempt will be made to load
 it.</span>already been seen in this <strong>∆F</strong> call. It will be
 available for the duration of the <em>APL</em> session.</p></li>
+<li><p>If a name is a <em>qualified</em> name, i.e. if it is of the form
+<code>£.nm1.nm2</code>, <code>£.nm1.nm2.nm3</code>, etc., then
+<strong>∆F</strong> attempts to load the name
+<strong><em>nm1</em></strong>, presumed to be a namespace (or a function
+returning a namespace). If a namespace, the <em>entire</em> namespace is
+loaded, not just the object specified.</p></li>
 <li><p>While objects of the form <code>£.name</code> will be
 automatically retrieved (if not defined), names in other <code>£</code>
 expressions, like <code>£.(name1 name2)</code> or
@@ -3024,7 +3043,7 @@ Topic in table or figure</strong></span><br><big>■</big> Regular
 entry</strong></big></span></p>
 <div class="multi-column-text" style="font-size:85%;">
 <!-- INDEX_BEGIN -->
-<!-- Generated by ∆F_toc: 2025-12-29T16:09:44 -->
+<!-- Generated by ∆F_toc: 2025-12-31T14:15:45 -->
 <p><a href="#the-above-shortcut"                            > <strong>`A
 (above)</strong> <big><span class="blue">4.12</span></big></a><br>
 <a href="#the-above-shortcut"                            > <strong>Above
@@ -3180,6 +3199,9 @@ class="green"><strong>Library Filetypes: see `L and
 class="green"><strong>Library parameters, file of
 (.∆F)</strong></span> <big><span
 class="blue"><small><em>Fig.</em></small> 4.21</span></big></a><br>
+<a href="#session-library-shortcut-details"              >
+<strong>Library shortcut, details</strong> <big><span
+class="blue">5.11</span></big></a><br>
 <a href="#the-session-library-shortcut"                  >
 <strong>Library shortcut, session</strong> <big><span
 class="blue">4.21</span></big></a><br>
@@ -3378,7 +3400,7 @@ Window</button></p>
 </div>
 <hr />
 <p><br> <span id="copyright" style="font-family:cursive;"> Copyright
-<big>©</big> 2025 Sam the Cat Foundation. [Version 0.1.1: 2025-12-29]
+<big>©</big> 2025 Sam the Cat Foundation. [Version 0.1.1: 2026-01-03]
 </span> <br></p>
 </div>
 <p><!-- End div for right-margin-bar --></p>
