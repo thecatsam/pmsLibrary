@@ -61,15 +61,16 @@
   pubdir←   libDir,'Delta.F-f.string.utility/'
 
 ⍝ Our files (sans directory names)
-  pgm←       '∆FUtils.dyalog'          ⍝ ∆F lib
-  html←      '∆FHelp.html'          ⍝ html
-  md←        '∆FHelp.md'            ⍝ markdown
+  pgm←       '∆FUtils.dyalog'        ⍝ ∆F lib
+  html←      '∆FHelp.html'           ⍝ html
+  md←        '∆FHelp.md'             ⍝ markdown
   mdTmp←     'tmp_README.md'         ⍝ A temporary file!
   readme←    'README.md'             ⍝ Git README file
-  hdr←       '∆FHelp_Hdr.html'      ⍝ local header file.
+  hdr←       '∆FHelp_Hdr.html'       ⍝ local header file.
   loader←    '∆F.dyalog'             ⍝ ∆F bootstrap utility
-  libra←     '∆FLibUtils.dyalog'  ⍝ £ library
-  pdf←       '∆FHelp.pdf'           ⍝ PDF 
+  libra←     '∆FLibUtils.dyalog'     ⍝ £ library
+  parmFi←    '∆FParmDefs.apla'       ⍝ 
+  pdf←       '∆FHelp.pdf'            ⍝ PDF 
 
 ⍝ File specs 
   privF pubF priv pub temp← 0 1 2 3 9
@@ -183,6 +184,8 @@
         ml,←⊂   '</∆Blue>'        '</strong></span>'
         ml,←⊂ '<∆Green>'        '<span class="green"><strong>'
         ml,←⊂   '</∆Green>'       '</strong></span>'
+        ml,←⊂ '<∆Gr[ea]y>'         '<span class="grey"><strong>'
+        ml,←⊂   '</∆Gr[ea]y>'       '</strong></span>'
         ml,←⊂ '<∆Sum>'          '<summary class="summary">'
         ml,←⊂   '</∆Sum>'         '</summary>'
         ml,←⊂ '<∆Fade>'         '<span style="opacity:0.6;">'
@@ -309,7 +312,7 @@ Say'    PUBF:  ', HomeDir Fi PubF ⍬
 Say'    TEMP:  ', HomeDir Fi Temp ⍬
 Hr
 
-pgmDep← ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) ((Priv loader)(Pub loader))
+pgmDep← ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) ((Priv loader)(Pub loader))((PrivF parmFi)(PubF parmFi))
 :If force
 :OrIf '∆F Program' NeedsUpdate pgmDep
     Hr
@@ -321,6 +324,7 @@ pgmDep← ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) ((Priv loader)(Pu
     UpdatePgm Priv loader 
     CopyFi(Priv loader)(Pub loader)
     CopyFi(PrivF libra)(PubF libra)
+    CopyFi(PrivF parmFi)(PubF parmFi)
     force CopyFi(PrivF pgm)(PubF pgm)                    ⍝ Make ∆F library public
 :EndIf
 
