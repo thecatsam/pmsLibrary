@@ -56,7 +56,7 @@
     suffix: ('aplf' ⋄ 'apla' ⋄ 'aplo' ⋄ 'apln' ⋄ 'json'⋄ 'txt' ⋄'dyalog')    
                   
   ⍝  Internal Runtime (hidden) Parameters                                               
-    _readParmFi: 0                      ⍝ 0 Zero: Haven't read .∆F yet. 1 afterwards. ¯1: defaults failed!   
+    _readUserParms: 0                   ⍝ 0 Zero: Haven't read .∆F yet. 1 afterwards. ¯1: Don't read-- defaults failed  
     _fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
     _debug:      0                      ⍝ Synonym for verbose (internally)
 )                                                                               

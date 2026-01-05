@@ -413,8 +413,8 @@
   ⍝        Returns display of default and user parms (as mx) in alph order.
     2≠ ⎕NC 'val': ⎕SIGNAL optÊ  
   ⍝ LoadParms (loadDefaults loadUserFi isVerbose isCompact)   
-    'parms-c'≡ 7↑val: _← libUtils.LoadParms 1 1 1 1  
-    'parms'  ≡   val: _← libUtils.LoadParms 1 1 1 0  
+    'parms-c'≡ 7↑val: _← libUtils.LoadParms 1 1 1 1 1 
+    'parms'  ≡   val: _← libUtils.LoadParms 1 1 1 0 1  
     'path'   ≡   val: _← libUtils.ShowPath ⍬ 
     'help'   ≢ 4↑val: ⎕SIGNAL optÊ 
   ⍝ help, help-wide, or help-narrow?

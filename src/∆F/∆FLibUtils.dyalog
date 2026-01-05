@@ -182,23 +182,23 @@
     }
   2:: LoadErr ⍬ ⋄ ~⎕NEXISTS fi:  LoadErr ⍬ 
     _← 'parms' ⎕NS ##.AN2Apl ⊃⎕NGET fi 1  
-    parms⊣ parms._readParmFi← 0 
+    parms⊣ parms._readUserParms← 0 
   }
 
-⍝ LoadParmFi: Loadtime routine
+⍝ LoadUserParms: Loadtime routine
 ⍝ Loads parameter file ⍵ (if it exists) into namespace ⍺
 ⍝ Note default parameters for special cases (sc) below
-  LoadParmFi← { 
-      parmFi← ⍵  
-    ⍝ ReadParmFi: Update parameters from parm file.
-      ReadParmFi← { 
+  LoadUserParms← {   
+      runtime parmFi← ⍺ ⍵  
+    ⍝ ReadUserParms: Update parameters from parm file.
+      ReadUserParms← { 
         ~⎕NEXISTS ⍵: ⍬ 
-        11 2:: {  
+        11 2/⍨ ~runtime:: {   
             ⎕← '>>> ∆F LOAD ERROR:   Unable to parse parameter file "',⍵,'".'
             ⎕← '>>> ∆F ',⎕DMX.EM,': ',⎕DMX.Message ⋄ ⍬ 
           } ⍵  
           _← 'parms' ⎕NS ##.AN2Apl ⊃⎕NGET ⍵ 1      ⍝ Merge parm file into internal defaults
-          0⊣ parms._readParmFi← 1 
+          0⊣ parms._readUserParms← 1 
       } 
     ⍝ GenFullPath:   _parms._fullPath← ∇ parms.path 
       GenFullPath← {
@@ -207,9 +207,9 @@
           (⍺, ,p∘., '/'∘.,parms.prefix) ∇ 1↓⍵                       ⍝ file 
       } 
     ⍝ =========================================================================
-    ⍝ LoadParmFi main ...
-      parms._readParmFi≡¯1:  _← 0⊢⎕← 'here'
-      _← ReadParmFi parmFi  
+    ⍝ LoadUserParms main ...
+      parms._readUserParms≡¯1:  _← 0⊢⎕← 'here'
+      _← ReadUserParms parmFi  
     ⍝ Handle special-case parameters: verbose, load, ..., suffix 
       sc←  ('verbose' ##.VERBOSE) ('load' ##.LIB_AUTO) ('prefix'(,⊂'')) 
       sc,← ('auto' 0)             ('path' ⍬)           ('suffix' ⍬)
@@ -245,10 +245,10 @@
 ⍝ What to do if loading defaults or user parms fails.
 ⍝    ⍺ LibLoadFailure warning
 ⍝ Issues warning ⍵ if non-null a total of ⍺ times.
-⍝ Sets LibAuto to a nop and sets auto and _readParmFi to ¯1.
+⍝ Sets LibAuto to a nop and sets auto and _readUserParms to ¯1.
   LibLoadFailure← { ⍺← 3 
       _← (⎕∘←)⍣(⍺×0≠≢⍵)⊣'>>> LIBRARY WARNING: ',⍵ 
-      parms.(auto _readParmFi← 0 ¯1) ⋄ ⎕THIS.⎕FX ,⊂'LibAuto←{userLibNm}'
+      parms.(auto _readUserParms← 0 ¯1) ⋄ ⎕THIS.⎕FX ,⊂'LibAuto←{userLibNm}'
   }
 
 ⍝ Load user parms
@@ -257,17 +257,17 @@
 ⍝     Show parms?         If isVerbose=1 or if parms.verbose=1
 ⍝     Show compactly?     If isCompact=1;
 ⍝ Used at EXECUTIVE below and via 'parms' call in ##.Special.
-  ∇ {rc}← LoadParms ( loadDefaults loadUserFi isVerbose isCompact )   
+  ∇ {rc}← LoadParms ( loadDefaults loadUserFi isVerbose isCompact runtime  )   
     ; parmFi 
     :If  0=⎕NC 'parms'  
     :OrIf loadDefaults 
         parmFi← LoadParmDefaults ##.LIB_PARM_FI 
-        :If 0> rc← parmFi._readParmFi 
+        :If 0> rc← parmFi._readUserParms 
             :Return 
         :EndIf 
     :EndIf 
     :If loadUserFi 
-        LoadParmFi '.∆F'  
+        runtime LoadUserParms '.∆F'  
     :EndIf         
     rc← isVerbose (isCompact _CShow) parms 
   ∇
@@ -285,5 +285,5 @@
 ⍝ =========================================================================
 ⍝ EXECUTIVE
   SetLibFull ##.userLibrary
-  LoadParms 1 1 0 0 
+  LoadParms 1 1 0 0 0 
 :EndNamespace   ⍝ libUtils
