@@ -22,9 +22,9 @@
  ⎕←'To update, do:'
  ⎕←'⍝    ]file.edit /Users/petermsiegel/MyDyalogLibrary/pmsLibrary/userCmds/Setup.dyalog'
  ⎕←'⍝    ⎕SH ''/Users/petermsiegel/MyDyalogLibrary/pmsLibrary/userCmds/updateMyUcmds'''
- ⎕←'To update ∆F_Publish'
- ⎕←'⍝    ]load ∆F_Publish'
- ⎕←'⍝    ∆F_Publish ''q''    ⍝ or Use ''fq'''
+ ⎕←'To update ∆FPublish'
+ ⎕←'⍝    ]load ∆FPublish'
+ ⎕←'⍝    ∆FPublish ''q''    ⍝ or Use ''fq'''
  ⎕←'Then go to Github Desktop and push to Github site'
  ⎕←50⍴'-'
 
