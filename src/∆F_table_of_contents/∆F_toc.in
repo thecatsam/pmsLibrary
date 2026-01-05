@@ -105,9 +105,10 @@ Fig. 4.21 ⋄ table-library-parameters     ⋄ File, of library parameters (.∆
 5.9 ⋄ serialise-shortcut-expressions-details  ⋄ Serialise shortcut, details
 5.10 ⋄ wrap-shortcut-details             ⋄ Wrap shortcut, details
 5.11 ⋄ session-library-shortcut-details  ⋄ Session library shortcut, details
-6.  ⋄ inside-appendices                  ⋄ Appendices
-6.1 ⋄ appendix-i-underdocumented-features⋄ Underdocumented features  
-6.1 ⋄ appendix-i-underdocumented-features⋄ Undocumented features  
-6.2 ⋄ appendix-ii-python-fstrings        ⋄ Python f‑strings 
-0.  ⋄ intro                              ⋄ F-strings, definition  
-6.2 ⋄ appendix-ii-python-fstrings        ⋄ F-strings, Python
+5.11 ⋄ session-library-shortcut-details  ⋄ Library shortcut, details
+6.   ⋄ inside-appendices                 ⋄ Appendices
+6.1  ⋄ appendix-i-underdocumented-features⋄ Underdocumented features  
+6.1  ⋄ appendix-i-underdocumented-features⋄ Undocumented features  
+6.2  ⋄ appendix-ii-python-fstrings       ⋄ Python f‑strings 
+0.   ⋄ intro                             ⋄ F-strings, definition  
+6.2  ⋄ appendix-ii-python-fstrings       ⋄ F-strings, Python
