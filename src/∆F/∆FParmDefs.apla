@@ -1,26 +1,30 @@
 (
-  ⍝ Default .∆F Parameter File  (APL Array Notation)                          
-  ⍝ Items not to be (re)set by user may be omitted/commented out.              
-  ⍝ If (load: ⎕NULL), then LIB_AUTO [note 1] is used for load.
+  ⍝ Default (Internal) Library Parameter File  (in APL Array Notation) 
+  ⍝ Default file:           ∆F/∆FParmDefs.apla
+  ⍝ User parameter file:   ./.∆F (no filetype)  
+  ⍝ Global settings that impact the two parameter files:
+  ⍝    LIB_ACTIVE, VERBOSE 
+  ⍝ LIB_ACTIVE: 
+  ⍝           Setting  Do we want to use the SESSION LIBRARY autoload feature?
+  ⍝ LIB_ACTIVE:  2     Yes. Load default and user parameters
+  ⍝              1     Yes. Load default parameters ONLY.
+  ⍝              0     No.  No autoload features should be available.
+  ⍝ VERBOSE: Compile-time and run-time verbosity flag
+  ⍝                
+  ⍝ Items not to be (re)set by user may be omitted in user .∆F file.           
   ⍝ If (verbose: ⎕NULL), then VERBOSE [note 1] is used for verbose.
   ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: '' ⋄)     
   ⍝ [note 1] 
-  ⍝   ∆F global variables LIB_AUTO and VERBOSE are set in ∆Fapl.dyalog.
-  ⍝    Their usual values are LIB_AUTO← 1 ⋄ VERBOSE← 0
-  ⍝    See load: and verbose: below for significance.
-
-  ⍝ load:
-  ⍝   1:     Load the runtime path to search for Session Library £ and `L.
-  ⍝   0:     Don't load...
-  ⍝   ⎕NULL: Grab value from LIB_AUTO above.
-    load: ⎕NULL 
-  
-  ⍝ auto:
-  ⍝   0: user must load own objects; nothing is automatic.                 
+   
+  ⍝ Parameter auto:
+  ⍝   0: user must load own objects; nothing is automatic.                
   ⍝   1: dfns and files (if any) searched in sequence set by dfnsOrder.
   ⍝      See path for directory search sequence. 
-  ⍝ Note: If (load: 0) or if there are no files in the search path,
-  ⍝       auto is set to 0, since nothing will ever match.                     
+  ⍝ If the user sets (auto: 0) as a ∆F option, then objects already loaded will
+  ⍝ be found and used normally, but no new objects will be autoloaded. New objects
+  ⍝ may be created explicitly (e.g. via 'obj' ⎕CY 'ws' or £.obj←val), as expected.
+  ⍝ Note: If LIB_ACTIVE=0 or if there are no files or workspaces in the search path,
+  ⍝       auto is set to 0, since no objects will ever be found.                    
     auto: 1
       
   ⍝ verbose: 
@@ -38,11 +42,12 @@
   ⍝  To indicate we don't want to search ANY files, 
   ⍝     best: (load: 0)
   ⍝     ok:   (path: ⎕NULL)
-    path:  ( 'MyDyalogLib' ⋄ ('dfns'⋄) ⋄ '.' ⋄ )  
+  ⍝           directory      workspace    directory
+    path:  ( 'MyDyalogLib' ⋄ ('dfns'⋄)  ⋄  '.'     ⋄ )  
                   
   ⍝ prefix: literal string to prefix to each name, when searching directories.
   ⍝     Ignored for workspaces.
-  ⍝     ⍬ is equiv. to  ''. 
+  ⍝     Default is ⍬ or (equivalently) ''
   ⍝     Example given name 'mydfn' and (prefix: '∆F_' 'MyLib/' ⋄ suffix: ⊂'aplf')  
   ⍝     ==> ('∆F_mydfn.aplf'  'MyLib/mydfn.aplf')   
     prefix: ⍬ 
@@ -56,6 +61,6 @@
     suffix: ('aplf' ⋄ 'apla' ⋄ 'aplo' ⋄ 'apln' ⋄ 'json'⋄ 'txt' ⋄'dyalog')    
                   
   ⍝  Internal Runtime (hidden) Parameters                                               
-    _readParms:  0 0                    ⍝ 0 Zero: Haven't read .∆F yet. 1 afterwards.  
+    _readParms:  0 0                    ⍝ Have we read (default parms, user .∆F parms)
     _fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
-)                                                                               
+)  

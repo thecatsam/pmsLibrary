@@ -21,6 +21,7 @@
       timings← 1 
   :EndIf 
    slow← 's'∊⎕C ⊃⍞↓⍨ ≢⍞←'Execute/display Fast (F) or Slow (S)? [FAST] '
+   ⎕←''
 
   :With ⎕NS ⍬    ⍝ Hide names to prevent exfiltration from examples executed...
     ⎕IO ⎕ML ⎕PW←0 1 120

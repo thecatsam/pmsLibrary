@@ -2776,15 +2776,15 @@ Encoded using <em>APL</em> Array Notation (Dyalog
 20).<br><br><br><strong>txt:</strong> Each line of file is converted to
 a Unicode char. vector.</span></p>
 <p><a id="table-library-filetypes" class="scroll-target"></a></p>
-<table style="width:100%;">
+<table>
 <caption>5g. <strong>Library Filetypes: Meaning</strong></caption>
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 26%" />
-<col style="width: 10%" />
-<col style="width: 12%" />
 <col style="width: 16%" />
 <col style="width: 23%" />
+<col style="width: 16%" />
+<col style="width: 10%" />
+<col style="width: 14%" />
+<col style="width: 19%" />
 </colgroup>
 <thead>
 <tr>
@@ -2847,7 +2847,16 @@ notation)</td>
 <td style="text-align: center;">✔</td>
 </tr>
 <tr>
-<td style="text-align: center;">dyalog, <em>other</em></td>
+<td style="text-align: center;">dyalog</td>
+<td style="text-align: center;">Fixes object</td>
+<td style="text-align: center;">3, 4, 9</td>
+<td style="text-align: center;">⎕FIX</td>
+<td style="text-align: center;">✔</td>
+<td style="text-align: center;"><span class="red"><strong>✘<small>
+NEVER</small></strong></span></td>
+</tr>
+<tr>
+<td style="text-align: center;">user-specified</td>
 <td style="text-align: center;">Fixes object</td>
 <td style="text-align: center;">3, 4, 9</td>
 <td style="text-align: center;">⎕FIX</td>
@@ -2872,16 +2881,19 @@ to support it is a tad complex. The complex components run only when
 <code>0</code>, the runtime impact of the feature is more modest
 still.</p>
 <p>To support the Session Library auto-load process, there are
-parameters that the user may <em>optionally</em> tailor via an
-<em>APL</em> Array Notation parameter file <strong>. ∆F</strong> placed
-in the current file directory. Parameters include:</p>
+parameters that may <em>optionally</em> be tailored:</p>
 <ul>
-<li><strong>load:</strong> the ability, when <strong>∆F</strong> is
-being loaded, to define <span class="margin-note">If
-<strong>load</strong> is set to <code>0</code>, the definition process
-is not executed and <strong>auto</strong> is ignored. </span> where— in
-which files or workspaces— to find Session Library objects, based on
-default or user parameters;</li>
+<li><strong>LIB_ACTIVE</strong>: A global variable set in
+∆FUtils.dyalog.
+<ul>
+<li>2: Load default and user parameters (default);</li>
+<li>1: Load default parameters ONLY;</li>
+<li>0: No autoload features should be available.</li>
+</ul></li>
+</ul>
+<p>In addition, there are user parameters settable in the file
+<strong>.∆F</strong> in the user’s home directory:</p>
+<ul>
 <li><strong>auto:</strong> allowing <strong>∆F</strong> to automatically
 load undefined objects of the form <code>£.obj</code> or
 <code>`L.obj</code> into the Session Library from workspaces or files on
@@ -2906,64 +2918,71 @@ Parameter File</em> <big><strong>. ∆F</strong></big>
 </summary>
 <p><a id="table-library-parameters" class="scroll-target"></a></p>
 <pre class="skip"><code>(
- ⍝ Default .∆F Library Parameter File (APL Array Notation)
- ⍝ Items not to be (re)set by user may be omitted/commented out.
- ⍝ If (load: ⎕NULL), then LIB_AUTO [note 1] is used for load.
- ⍝ If (verbose: ⎕NULL), then VERBOSE [note 1] is used for verbose.
- ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: &#39;&#39; ◇)
- ⍝ [note 1]
- ⍝   ∆F global variables LIB_AUTO and VERBOSE are set in ∆FUtils.dyalog.
- ⍝    Their usual values are LIB_AUTO← 1 ◇ VERBOSE← 0
- ⍝    See load: and verbose: below for significance.
-
- ⍝ load:
- ⍝   1:     Load the runtime path to search for Session Library £ and `L.
- ⍝   0:     Don&#39;t load...
- ⍝   ⎕NULL: Grab value from LIB_AUTO above.
-   load: ⎕NULL
-
- ⍝ auto:
- ⍝   0: user must load own objects; nothing is automatic.
- ⍝   1: dfns and files (if any) searched in sequence set by dfnsOrder.
- ⍝      See path for directory search sequence.
- ⍝ Note: If (load: 0) or if there are no files in the search path,
- ⍝       auto is set to 0, since nothing will ever match.
-   auto: 1
-
- ⍝ verbose:
- ⍝    If 0 (quiet),
- ⍝    If 1 (verbose).
- ⍝    If ⎕NULL, value is set from VERBOSE (see above).
-   verbose: ⎕NULL
-
- ⍝ path: The file dirs and/or workspaces to search IN ORDER left to right:
- ⍝    e.g. path: [ &#39;fd1&#39;, &#39;fd2&#39;, [&#39;ws1&#39;, &#39;wsdir/ws2&#39;], &#39;fd3&#39;, [&#39;ws3&#39;]]
- ⍝    For a file directory, the item must be a simple char vector
- ⍝        &#39;MyDyalogLib&#39;
- ⍝    For workspaces, the item must be a vector of one or more char vectors
- ⍝        (⊂&#39;dfns&#39;) or (⊂&#39;MyDyalogLib/mathfns&#39;) or (&#39;dfns&#39;, &#39;myDfns&#39;)
- ⍝  To indicate we don&#39;t want to search ANY files,
- ⍝     best: (load: 0)
- ⍝     ok:   (path: ⎕NULL)
-   path:  ( &#39;./MyDyalogLib&#39; ◇ (&#39;dfns&#39;◇) ◇ &#39;.&#39; ◇ )
-
- ⍝ prefix: literal string to prefix to each name, when searching directories.
- ⍝     Ignored for workspaces.
- ⍝     ⍬ is equiv. to  &#39;&#39;.
- ⍝     Example given name &#39;mydfn&#39; and (prefix: &#39;∆F_&#39; &#39;MyLib/&#39; ◇ suffix: ⊂&#39;aplf&#39;)
- ⍝     ==&gt; (&#39;∆F_mydfn.aplf&#39;  &#39;MyLib/mydfn.aplf&#39;)
-   prefix: ⍬
-
- ⍝ suffix: at least one suffix is required. The &#39;.&#39; is prepended for you!
- ⍝    Not applicable to workspaces. See documentation for definitions.
- ⍝    By default, non-standard filetypes are not enabled.
- ⍝    Generally, place most used definitions first.
-   suffix: (&#39;aplf&#39;  &#39;apla&#39;  &#39;aplo&#39;  &#39;apln&#39;  &#39;json&#39; &#39;txt&#39; &#39;dyalog&#39;)
-
- ⍝  Internal Runtime (hidden) Parameters
-   _readParmFi: 0                      ⍝ 0 Zero: Haven&#39;t read .∆F yet. 1 afterwards.
-   _fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
-)</code></pre>
+  ⍝ Default (Internal) Library Parameter File  (in APL Array Notation) 
+  ⍝ Default file:           ∆F/∆FParmDefs.apla
+  ⍝ User parameter file:   ./.∆F (no filetype)  
+  ⍝ Global settings that impact the two parameter files:
+  ⍝    LIB_ACTIVE, VERBOSE 
+  ⍝ LIB_ACTIVE: 
+  ⍝           Setting  Do we want to use the SESSION LIBRARY autoload feature?
+  ⍝ LIB_ACTIVE:  2     Yes. Load default and user parameters
+  ⍝              1     Yes. Load default parameters ONLY.
+  ⍝              0     No.  No autoload features should be available.
+  ⍝ VERBOSE: Compile-time and run-time verbosity flag
+  ⍝                
+  ⍝ Items not to be (re)set by user may be omitted in user .∆F file.           
+  ⍝ If (verbose: ⎕NULL), then VERBOSE [note 1] is used for verbose.
+  ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: &#39;&#39; ⋄)     
+  ⍝ [note 1] 
+   
+  ⍝ Parameter auto:
+  ⍝   0: user must load own objects; nothing is automatic.                
+  ⍝   1: dfns and files (if any) searched in sequence set by dfnsOrder.
+  ⍝      See path for directory search sequence. 
+  ⍝ If the user sets (auto: 0) as a ∆F option, then objects already loaded will
+  ⍝ be found and used normally, but no new objects will be autoloaded. New objects
+  ⍝ may be created explicitly (e.g. via &#39;obj&#39; ⎕CY &#39;ws&#39; or £.obj←val), as expected.
+  ⍝ Note: If (load: 0) or if there are no files or workspaces in the search path,
+  ⍝       auto is set to 0, since no objects will ever be found.                    
+    auto: 1
+      
+  ⍝ verbose: 
+  ⍝    If 0 (quiet), 
+  ⍝    If 1 (verbose).  
+  ⍝    If ⎕NULL, value is set from VERBOSE (see above).
+    verbose: ⎕NULL  
+                                                          
+  ⍝ path: The file dirs and/or workspaces to search IN ORDER left to right:
+  ⍝    e.g. path: [ &#39;fd1&#39;, &#39;fd2&#39;, [&#39;ws1&#39;, &#39;wsdir/ws2&#39;], &#39;fd3&#39;, [&#39;ws3&#39;]]
+  ⍝    For a file directory, the item must be a simple char vector
+  ⍝        &#39;MyDyalogLib&#39;
+  ⍝    For workspaces, the item must be a vector of one or more char vectors
+  ⍝        (⊂&#39;dfns&#39;) or (⊂&#39;MyDyalogLib/mathfns&#39;) or (&#39;dfns&#39;, &#39;myDfns&#39;)
+  ⍝  To indicate we don&#39;t want to search ANY files, 
+  ⍝     best: (load: 0)
+  ⍝     ok:   (path: ⎕NULL)
+  ⍝           directory      workspace    directory
+    path:  ( &#39;MyDyalogLib&#39; ⋄ (&#39;dfns&#39;⋄)  ⋄  &#39;.&#39;     ⋄ )  
+                  
+  ⍝ prefix: literal string to prefix to each name, when searching directories.
+  ⍝     Ignored for workspaces.
+  ⍝     Default is ⍬ or (equivalently) &#39;&#39;
+  ⍝     Example given name &#39;mydfn&#39; and (prefix: &#39;∆F_&#39; &#39;MyLib/&#39; ⋄ suffix: ⊂&#39;aplf&#39;)  
+  ⍝     ==&gt; (&#39;∆F_mydfn.aplf&#39;  &#39;MyLib/mydfn.aplf&#39;)   
+    prefix: ⍬ 
+                              
+  ⍝ suffix: at least one suffix is required for files to be checked.
+  ⍝ ∘  Note: The &#39;.&#39; is prepended for you!  
+  ⍝ ∘  Suffixes don&#39;t apply to workspaces. See documentation for definitions.
+  ⍝ ∘  By default, unknown filetypes are not enabled. 
+  ⍝    If they are enabled, they work the same as &#39;dyalog&#39;.
+  ⍝ ∘  If possible, place most used suffixes first.
+    suffix: (&#39;aplf&#39; ⋄ &#39;apla&#39; ⋄ &#39;aplo&#39; ⋄ &#39;apln&#39; ⋄ &#39;json&#39;⋄ &#39;txt&#39; ⋄&#39;dyalog&#39;)    
+                  
+  ⍝  Internal Runtime (hidden) Parameters                                               
+    _readParms:  0 0                    ⍝ Have we read (default parms, user .∆F parms)
+    _fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
+)    </code></pre>
 </details>
 <hr />
 </div>
@@ -3400,7 +3419,7 @@ Window</button></p>
 </div>
 <hr />
 <p><br> <span id="copyright" style="font-family:cursive;"> Copyright
-<big>©</big> 2025 Sam the Cat Foundation. [Version 0.1.1: 2026-01-03]
+<big>©</big> 2025 Sam the Cat Foundation. [Version 0.1.1: 2026-01-09]
 </span> <br></p>
 </div>
 <p><!-- End div for right-margin-bar --></p>

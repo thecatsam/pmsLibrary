@@ -5,21 +5,25 @@
 ⍝ =======================================================================
 ⍝ GENERAL GLOBAL VARIABLES (for debugging and exploration) 
 ⍝ =======================================================================
+⍝
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F
-  TRAP_ERRORS← 1                
+  TRAP_ERRORS← 0               
+⍝
 ⍝ VERBOSE: Compile-time and run-time verbosity flag
 ⍝ (verbose: 1) is ∆F-settable (user) run-time verbosity flag-- which
 ⍝ also changes `⋄ to ␤ instead of an actual new line (⎕UCS 13, here).
-  VERBOSE←     0                
-⍝ LIB_ERRORS:  
+  VERBOSE←     0 
+⍝              
+⍝ SHOW_LIB_ERRS:  
 ⍝ - If 0, only report library autoload errors (as messages) if (verbose: 1). 
-⍝   Let APL handle the resulting missing object. 
-⍝ - If 1, ⎕SIGNAL them, no matter what.                             
-  LIB_ERRORS←  0 
+⍝   Let APL handle the resulting missing object (typically as a VALUE ERROR).
+⍝ - If 1, always ⎕SIGNAL the actual internal error (e.g. OBJECT NOT FOUND ON SEARCH PATH).                             
+  SHOW_LIB_ERRS←  1 
 ⍝
-⍝ ESCAPE_CHAR: Allows an installation to use a non-standard SCALAR "escape".
+⍝ ESCAPE_CHAR: Allows an installation to use a non-standard "escape" char.
+⍝ ESCAPE_CHAR must be a scalar.
 ⍝ If ESCAPE_CHAR is omitted, the default will be '`'.
-⍝ Note ESCAPE_CHAR is a load-time variable, to take advantage of optimizations.
+⍝ Note ESCAPE_CHAR is a load-time variable, to take advantage of minor optimizations.
   ESCAPE_CHAR← '`'
 ⍝
 ⍝ Quote pairs, i.e. beyond double quotes and single quotes.
@@ -29,14 +33,16 @@
   ⍝ QS_JP1 QS_JP2← '「」' '『』' 
   ⍝ QS_DE1 QS_DE2 QS_DE3← '»«' '„“' '‚‘'
   ⍝ QS_CH1 QS_CH2← '《》' '「」'
-  QUOTES_SUPPLEMENTAL← QS_FR1                 
+  QUOTES_SUPPLEMENTAL← QS_FR1     
+⍝            
 ⍝ =======================================================================
 ⍝ SESSION LIBRARY (£ or `L) VARIABLES
 ⍝ =======================================================================
 ⍝ Var     Setting  Do we want to use the SESSION LIBRARY autoload feature?
-⍝ LIB_AUTO:  1     Yes.
-⍝            0     No.
-  LIB_AUTO←  1     
+⍝ LIB_ACTIVE:  2     Yes. Load default and user parameters
+⍝              1     Yes. Load default parameters ONLY.
+⍝              0     No.  No autoload features should be available.
+  LIB_ACTIVE←  2     
   LIB_PARM_FI←  '∆F/∆FParmDefs.apla' 
   LIB_SRC_FI←   '∆F/∆FLibUtils.dyalog'          ⍝ Library shortcuts (£,  `L) utilities.
 ⍝ HELP-related globals             
@@ -45,10 +51,12 @@
 ⍝ VARIABLES FOR ∆F OPTIONS: Positional and keyword 
 ⍝ =======================================================================
   OPTS_KW←      ↑'dfn' 'verbose' 'box' 'auto' 'inline'          ⍝ In order 
-  OPTS_DEFarr←    0     0         0     1       0         
-  OPTS_N←    ≢OPTS_DEFarr 
+  OPTS_DEFval←    0     0         0     1      0                ⍝ In order
+  OPTS_N←       ≢OPTS_DEFval 
 ⍝ OPTS_DEFns: The defaults in namespace form. Treat as a read-only object.
-⍝ OPTS_DEFns is defined below, after calling ⍙Gen_LegacyAplAN.
+⍝ Requires ⍙Gen_LegacyAplAN to define ∆VSET, so is defined after it.
+⍝     OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval   
+⍝ after calling ⍙Gen_LegacyAplAN.
 ⍝ Set char. rendering of ⎕THIS. We may set ⎕THIS.⎕DF later, but ∆THIS will remain as is.
   ∆THIS← ⍕⎕THIS                
 
@@ -203,8 +211,8 @@
 ⍝   brC       -   running count of braces '{' lb, '}' rb. Set in dfn TF_SF.
 ⍝   cfL       -   code field running length (for SDCFs). Set in dfn TF_SF.
     ê fstr← ⍺ ⍵                                 
-  ⍝ Validate options passed in ê (⍺).
-  0∊ 0 1∊⍨ ê.((|dfn),verbose box auto inline): ⎕SIGNAL optÊ   
+  ⍝ Validate options passed in ê (⍺). dfn in (¯1 0 1), others in (0 1).
+  ê.((|dfn),verbose box auto inline)(0∊∊)0 1: ⎕SIGNAL optÊ   
     VMsg← (⎕∘←)⍣(ê.(verbose∧¯1≠dfn))                      ⍝ Verbose option message 
   ⍝ Shortcuts: 
   ⍝    See ⍙Load_Shortcuts.
@@ -214,6 +222,7 @@
     ê.nl← ê.verbose⊃ nl nlVis                          ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
     ê.flds← ⍬                                          ⍝ zilde
     ê.omC←  0                                          ⍝ initialise omega counter to 0.
+    ê.auto∧← libUtils.parms.auto                       ⍝ auto can be usefully be 1 only if parms.auto is 1. 
                                 
   ⍝ ê.brC ê.cfL are initialised in CF_SF.    
   ⍝ Start the scan                                     ⍝ We start with a (possibly null) text field, 
@@ -232,8 +241,8 @@
 ⍝ Constants
 ⍝ ===========================================================================  
 ⍝ Simple char constants
-  om← '⍵'                                              ⍝ ⍵ not in cfBrklist, since not special. (See `⍵).
-  nl nlVis← ⎕UCS 13 9252                               ⍝ 9229 (␍), 9252 (␤)
+  om← '⍵'                                              ⍝ ⍵ not in cfBrklist, since it is not special. (See `⍵).
+  nl nlVis← ⎕UCS 13 9252                               ⍝ We use 13 (CR) for nl; 9252 (␤) for nlVis.
 ⍝ esc: Set default value and installation-wide user alternative.
 ⍝ If global ESCAPE_CHAR is not present, '`' is used.
   esc← '`' {0=⎕NC ⍵: ⍺ ⋄ ⍬⍴⎕OR ⍵ } 'ESCAPE_CHAR' 
@@ -300,7 +309,7 @@
     0= ≢⍵: esc 
       c w← (0⌷⍵) (1↓⍵) ⋄ ⍺.cfL+← 1   
     c∊ om_omUs: ⍺ CFOm w                             ⍝ Permissively allows `⍹ as equiv to `⍵ OR ⍹ 
-    c='L': (⍺ libUtils.LibAuto w) w                   ⍝ Library shortcut: special case
+    c='L': (⍺ libUtils.LibAuto w) w                  ⍝ Library shortcut: special case
       p← MapSC c                                     ⍝ Look for other shortcuts
     nSC> p: (⍺.inline p⊃ scCodeTbl) w                ⍝ Found? return code string.
     c∊⍥⎕C ⎕A: ⎕SIGNAL scBadÊ c                       ⍝ Nope: Unknown shortcut!
@@ -412,10 +421,11 @@
   ⍝ parms: Load any new parms without a ]load. 
   ⍝        Returns display of default and user parms (as mx) in alph order.
     2≠ ⎕NC 'val': ⎕SIGNAL optÊ  
-  ⍝ LoadParms (loadDefaults loadUserFi isVerbose isCompact)   
-    'parms-c'≡ 7↑val: _← libUtils.LoadParms 1 1 1 1 1 
-    'parms'  ≡   val: _← libUtils.LoadParms 1 1 1 0 1  
+  ⍝ LoadParms (isVerbose isCompact isRuntime)   
+    'parms-c'≡ 7↑val: _← libUtils.LoadParms '-v -c -r'
+    'parms'  ≡   val: _← libUtils.LoadParms '-v    -r'
     'path'   ≡   val: _← libUtils.ShowPath ⍬ 
+    'globals'≡   val: _← ⍙ShowGlobalsIf 1 
     'help'   ≢ 4↑val: ⎕SIGNAL optÊ 
   ⍝ help, help-wide, or help-narrow?
       LoadHtml← {  
@@ -463,7 +473,7 @@
       libNs.⎕DF ⎕NULL                                     ⍝ Clear any prior ⎕DF.
       libNs.⎕DF '£=[',(⍕libNs),' ⋄ auto:0]'               ⍝ Now, set ours.
       Auto← (⍕libNs)⍨  
-      parms← ⎕NS '_readParms'⊣ _readParms← 0 0
+      parms← ⎕NS '_readParms' 'auto'⊣ _readParms auto← (0 0) 0 
       ShowPath← '⍬'⍨        
       LoadParms← ⍬⍨       
   ∇
@@ -494,7 +504,7 @@
       AN2Apl← ⎕SE.Dyalog.Array.Deserialise   
       :IF VERBOSE
           ⎕←59⍴'+'
-          ⎕←'+ ∆F: Emulating ⎕VSET, ⎕VGET, and related on Dyalog v.','. +',⍨⍕version 
+          ⎕←'+ ∆F: Emulating ⎕VSET, ⎕VGET, and related on Dyalog v.','. +',⍨⍕aplVersion 
           ⎕←59⍴'+'
       :EndIf 
     :ELSE 
@@ -649,12 +659,13 @@
         ok← 0 
     :EndTrap 
   ∇
-  ∇ {load}← ⍙Load_LibAuto ( fi load )
+  ∇ {loadLib}← ⍙Load_LibAuto ( fi loadLib )
     ; how 
     how← ' from "',fi,'" into "','"',⍨∆THIS 
-    :If ~load 
-        ⎕←'>>> NOTE: Based on settings, Library autoload services were not loaded',how
-        ⎕←'>>> NOTE: £ and `L shortcuts are available without them (auto: 0).'
+    :If loadLib=0
+        ⎕←'>>> NOTE: Library autoload services were not loaded',how
+        ⎕←'>>> NOTE: LIB_ACTIVE is set to ',(⍕LIB_ACTIVE),' in ∆F/∆FUtils.dyalog'
+        ⎕←'>>> NOTE: £ and `L shortcuts are available without them, as if (auto: 0) is set.'
         :Return 
     :EndIf 
     :TRAP 22 
@@ -663,32 +674,35 @@
             ⎕←'>>> Loaded services for Library shortcut (£)',how  
         :EndIf 
     :Else
-        load← 0 
+        loadLib← 0 
         ⎕← ⎕PW⍴'='
         ⎕←'>>> WARNING: Unable to load Library autoload services',how 
         ⎕←'>>> NOTE:    £ and `L shortcuts are available without them (auto: 0).'
         ⎕← ⎕PW⍴'='
     :EndTrap
   ∇
-  ∇ {ok}← ⍙ShowGlobalsIfVerbose  ; hdr 
-  :If ok← VERBOSE 
-      hdr← '>>> ∆F Application-wide Globals: '
-      hdr,← '(', ')',⍨ ∊'TRAP_ERRORS:' TRAP_ERRORS 
-      hdr,← '⋄ VERBOSE:' VERBOSE '⋄ LIB_AUTO:' LIB_AUTO
-      ⎕← hdr
-  :EndIf 
-  ∇ 
+⍝ Show the following special globals in this namespace.
+  ⍙ShowGlobalsIf←{
+     These←  'ESCAPE_CHAR'  'HELP_HTML_FI' 'LIB_ACTIVE' 'SHOW_LIB_ERRS' 'LIB_PARM_FI' 'LIB_SRC_FI' 
+     These,← 'OPTS_KW' 'QUOTES_SUPPLEMENTAL' 'TRAP_ERRORS' 'VERBOSE' 'VERSION'
+    ~⍵: _←1 0⍴0 
+      Show← { '  ',(⍺↑⍵,':'),⍕1 ⎕SE.Dyalog.Array.Serialise  ⎕OR ⍵ }
+      r← ⊂,'('
+      r,← (1+⌈/≢¨kk) Show¨ kk← { ⍵/⍨ {∧/⍵∊⎕A,⎕D,'_': 1 ⋄ 0}¨⍵} These 
+      r,← ⊂,')' 
+    1: _← ↑r 
+  }
 ⍝ ====================================================================================
 ⍝ Execute the FIX-TIME Routines
 ⍝ ====================================================================================
   ⍝ ∆NS, ∆VGET, ∆VSET, AN2Apl, Apl2AN are version-aware.
     ⍙Gen_LegacyAplAN  ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'  
-    OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFarr   ⍝ Generate default opts NS
+    OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval   ⍝ Generate default opts NS
     ⍙Export_∆F ##  0 1  
     ⍙Load_Shortcuts
     ⍙Load_Help HELP_HTML_FI
-    ⍙Load_LibAuto LIB_SRC_FI LIB_AUTO
-    ⍙ShowGlobalsIfVerbose 
+    ⍙Load_LibAuto LIB_SRC_FI LIB_ACTIVE
+    ⍙ShowGlobalsIf VERBOSE
 ⍝:EndSection FIX_TIME_ROUTINES 
 ⍝ === END OF CODE ================================================================================
 :EndNamespace 
