@@ -2798,7 +2798,7 @@ a Unicode char. vector.</span></p>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: center;">aplf</td>
+<td style="text-align: center;">.aplf</td>
 <td style="text-align: center;">Fixes function</td>
 <td style="text-align: center;">3</td>
 <td style="text-align: center;">⎕FIX</td>
@@ -2806,7 +2806,7 @@ a Unicode char. vector.</span></p>
 <td style="text-align: center;">✔<small> FUTURE</small></td>
 </tr>
 <tr>
-<td style="text-align: center;">aplo</td>
+<td style="text-align: center;">.aplo</td>
 <td style="text-align: center;">Fixes operator</td>
 <td style="text-align: center;">4</td>
 <td style="text-align: center;">⎕FIX</td>
@@ -2814,7 +2814,7 @@ a Unicode char. vector.</span></p>
 <td style="text-align: center;">✔<small> FUTURE</small></td>
 </tr>
 <tr>
-<td style="text-align: center;">apln</td>
+<td style="text-align: center;">.apln</td>
 <td style="text-align: center;">Fixes ns script</td>
 <td style="text-align: center;">9</td>
 <td style="text-align: center;">⎕FIX</td>
@@ -2822,7 +2822,7 @@ a Unicode char. vector.</span></p>
 <td style="text-align: center;">✔<small> FUTURE</small></td>
 </tr>
 <tr>
-<td style="text-align: center;">apla</td>
+<td style="text-align: center;">.apla</td>
 <td style="text-align: center;">Assigns array or ns<br>(array
 notation)</td>
 <td style="text-align: center;">2, 9</td>
@@ -2831,7 +2831,7 @@ notation)</td>
 <td style="text-align: center;">✔</td>
 </tr>
 <tr>
-<td style="text-align: center;">json</td>
+<td style="text-align: center;">.json</td>
 <td style="text-align: center;">Fixes ns from JSON5</td>
 <td style="text-align: center;">9</td>
 <td style="text-align: center;">⎕JSON</td>
@@ -2839,7 +2839,7 @@ notation)</td>
 <td style="text-align: center;">✔</td>
 </tr>
 <tr>
-<td style="text-align: center;">txt</td>
+<td style="text-align: center;">.txt</td>
 <td style="text-align: center;">Assigns char. vectors</td>
 <td style="text-align: center;">2</td>
 <td style="text-align: center;"><em>assignment</em></td>
@@ -2847,7 +2847,7 @@ notation)</td>
 <td style="text-align: center;">✔</td>
 </tr>
 <tr>
-<td style="text-align: center;">dyalog</td>
+<td style="text-align: center;">.dyalog</td>
 <td style="text-align: center;">Fixes object</td>
 <td style="text-align: center;">3, 4, 9</td>
 <td style="text-align: center;">⎕FIX</td>
@@ -2905,8 +2905,9 @@ object definitions;</li>
 <li><strong>prefix:</strong> literal character vectors to prefix to each
 file name during the object search;</li>
 <li><strong>suffix:</strong> <span class="margin-note">More details
-appear below.</span>filetypes that indicate the types of objects in our
-“library,” along with any expected conversions;</li>
+appear below.<br>Don’t forget the ‘.’ prefix!</span>filetypes that
+indicate the types of objects in our “library,” along with any expected
+conversions;</li>
 </ul>
 <p>The built-in <em>(default)</em> parameter file <span
 class="margin-note">Additional doc­ument­ation is need­ed, should this go
@@ -2932,7 +2933,7 @@ Parameter File</em> <big><strong>. ∆F</strong></big>
   ⍝                
   ⍝ Items not to be (re)set by user may be omitted in user .∆F file.           
   ⍝ If (verbose: ⎕NULL), then VERBOSE [note 1] is used for verbose.
-  ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: &#39;&#39; ⋄)     
+  ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: &#39;&#39; ◇)     
   ⍝ [note 1] 
    
   ⍝ Parameter auto:
@@ -2962,22 +2963,22 @@ Parameter File</em> <big><strong>. ∆F</strong></big>
   ⍝     best: (load: 0)
   ⍝     ok:   (path: ⎕NULL)
   ⍝           directory      workspace    directory
-    path:  ( &#39;MyDyalogLib&#39; ⋄ (&#39;dfns&#39;⋄)  ⋄  &#39;.&#39;     ⋄ )  
+    path:  ( &#39;MyDyalogLib&#39; ◇ (&#39;dfns&#39;◇)  ◇  &#39;.&#39;     ◇ )  
                   
   ⍝ prefix: literal string to prefix to each name, when searching directories.
   ⍝     Ignored for workspaces.
   ⍝     Default is ⍬ or (equivalently) &#39;&#39;
-  ⍝     Example given name &#39;mydfn&#39; and (prefix: &#39;∆F_&#39; &#39;MyLib/&#39; ⋄ suffix: ⊂&#39;aplf&#39;)  
+  ⍝     Example given name &#39;mydfn&#39; and (prefix: &#39;∆F_&#39; &#39;MyLib/&#39; ◇ suffix: ⊂&#39;.aplf&#39;)  
   ⍝     ==&gt; (&#39;∆F_mydfn.aplf&#39;  &#39;MyLib/mydfn.aplf&#39;)   
     prefix: ⍬ 
                               
   ⍝ suffix: at least one suffix is required for files to be checked.
-  ⍝ ∘  Note: The &#39;.&#39; is prepended for you!  
+  ⍝ ∘  Note: Don&#39;t forget the &#39;.&#39;.
   ⍝ ∘  Suffixes don&#39;t apply to workspaces. See documentation for definitions.
   ⍝ ∘  By default, unknown filetypes are not enabled. 
   ⍝    If they are enabled, they work the same as &#39;dyalog&#39;.
   ⍝ ∘  If possible, place most used suffixes first.
-    suffix: (&#39;aplf&#39; ⋄ &#39;apla&#39; ⋄ &#39;aplo&#39; ⋄ &#39;apln&#39; ⋄ &#39;json&#39;⋄ &#39;txt&#39; ⋄&#39;dyalog&#39;)    
+    suffix: (&#39;.aplf&#39; ◇ &#39;.apla&#39; ◇ &#39;.aplo&#39; ◇ &#39;.apln&#39; ◇ &#39;.json&#39;◇ &#39;.txt&#39; ◇&#39;.dyalog&#39;)    
                   
   ⍝  Internal Runtime (hidden) Parameters                                               
     _readParms:  0 0                    ⍝ Have we read (default parms, user .∆F parms)
@@ -3419,7 +3420,7 @@ Window</button></p>
 </div>
 <hr />
 <p><br> <span id="copyright" style="font-family:cursive;"> Copyright
-<big>©</big> 2025 Sam the Cat Foundation. [Version 0.1.1: 2026-01-09]
+<big>©</big> 2025 Sam the Cat Foundation. [Version 0.1.1: 2026-01-11]
 </span> <br></p>
 </div>
 <p><!-- End div for right-margin-bar --></p>

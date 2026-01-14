@@ -43,7 +43,7 @@
   ⍝     best: (load: 0)
   ⍝     ok:   (path: ⎕NULL)
   ⍝           directory      workspace    directory
-    path:  ( 'MyDyalogLib' ⋄ ('dfns'⋄)  ⋄  '.'     ⋄ )  
+    path:  ( 'MyDyalogLib' ⋄ ('dfns'⋄) ⋄ '.' ⋄ )  
                   
   ⍝ prefix: literal string to prefix to each name, when searching directories.
   ⍝     Ignored for workspaces.
@@ -53,12 +53,12 @@
     prefix: ⍬ 
                               
   ⍝ suffix: at least one suffix is required for files to be checked.
-  ⍝ ∘  Note: The '.' is prepended for you!  
+  ⍝ ∘  Note: Add the '.' prefix! 
   ⍝ ∘  Suffixes don't apply to workspaces. See documentation for definitions.
   ⍝ ∘  By default, unknown filetypes are not enabled. 
-  ⍝    If they are enabled, they work the same as 'dyalog'.
+  ⍝    If they are enabled, they work the same as '.dyalog'.
   ⍝ ∘  If possible, place most used suffixes first.
-    suffix: ('aplf' ⋄ 'apla' ⋄ 'aplo' ⋄ 'apln' ⋄ 'json'⋄ 'txt' ⋄'dyalog')    
+    suffix: ('.aplf' ⋄ '.apla' ⋄ '.aplo' ⋄ '.apln' ⋄ '.json' ⋄ '.txt' ⋄ '.dyalog')    
                   
   ⍝  Internal Runtime (hidden) Parameters                                               
     _readParms:  0 0                    ⍝ Have we read (default parms, user .∆F parms)

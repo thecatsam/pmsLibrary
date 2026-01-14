@@ -1624,13 +1624,13 @@ specified.
 
 |  <br>Filetype               |               <br>Action                | _APL_ Class ⎕NC | Key APL<br>Service | Available<br>by Default? |         Type <br>Enforced?          |
 | :-------------------------: | :-------------------------------------: | :-------------------------: | :----------------: | :----------------------: | :------------------------------: |
-|      aplf                   |             Fixes function              |        3        |        ⎕FIX        |            ✔             |       ✔<small> FUTURE</small>       |
-|      aplo                   |             Fixes operator              |        4        |        ⎕FIX        |            ✔             |       ✔<small> FUTURE</small>       |
-|      apln                   |             Fixes ns script             |        9        |        ⎕FIX        |            ✔             |       ✔<small> FUTURE</small>       |
-|      apla                   | Assigns array or ns<br>(array notation) |      2, 9       |    _assignment_    |            ✔             |                  ✔                  |
-|      json                   |           Fixes ns from JSON5           |        9        |       ⎕JSON        |            ✔             |                  ✔                  |
-|       txt                   |          Assigns char. vectors          |        2        |    _assignment_    |            ✔             |                  ✔                  |
-|     dyalog                  |              Fixes object               |     3, 4, 9     |        ⎕FIX        |            ✔             | <∆Red>✘<small> NEVER</small></∆Red> |
+|     .aplf                   |             Fixes function              |        3        |        ⎕FIX        |            ✔             |       ✔<small> FUTURE</small>       |
+|     .aplo                   |             Fixes operator              |        4        |        ⎕FIX        |            ✔             |       ✔<small> FUTURE</small>       |
+|     .apln                   |             Fixes ns script             |        9        |        ⎕FIX        |            ✔             |       ✔<small> FUTURE</small>       |
+|     .apla                   | Assigns array or ns<br>(array notation) |      2, 9       |    _assignment_    |            ✔             |                  ✔                  |
+|     .json                   |           Fixes ns from JSON5           |        9        |       ⎕JSON        |            ✔             |                  ✔                  |
+|      .txt                   |          Assigns char. vectors          |        2        |    _assignment_    |            ✔             |                  ✔                  |
+|   .dyalog                   |              Fixes object               |     3, 4, 9     |        ⎕FIX        |            ✔             | <∆Red>✘<small> NEVER</small></∆Red> |
 | user-specified              |              Fixes object               |     3, 4, 9     |        ⎕FIX        |      <∆Red>✘</∆Red>      | <∆Red>✘<small> NEVER</small></∆Red> |
 
 Table: 5g. <strong>Library Filetypes: Meaning</strong>
@@ -1659,7 +1659,7 @@ In addition, there are user parameters settable in the file **.∆F** in the use
 - **verbose:** providing limited information on parameters, object loading, _etc._;
 - **path:** listing what directories to search for the object definitions;
 - **prefix:** literal character vectors to prefix to each file name during the object search;
-- **suffix:** <∆N>More details appear below.</∆N>filetypes that indicate the types of objects in our "library," along with any expected conversions;
+- **suffix:** <∆N>More details appear below.<br>Don't forget the '.' prefix!</∆N>filetypes that indicate the types of objects in our "library," along with any expected conversions;
 
 The built-in _(default)_ parameter file <∆N>Additional doc&shy;ument&shy;ation
 is need&shy;ed, should this go forward.</∆N>
@@ -1685,7 +1685,7 @@ is documented _below_.
   ⍝                
   ⍝ Items not to be (re)set by user may be omitted in user .∆F file.           
   ⍝ If (verbose: ⎕NULL), then VERBOSE [note 1] is used for verbose.
-  ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: '' ⋄)     
+  ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: '' ◇)     
   ⍝ [note 1] 
    
   ⍝ Parameter auto:
@@ -1715,22 +1715,22 @@ is documented _below_.
   ⍝     best: (load: 0)
   ⍝     ok:   (path: ⎕NULL)
   ⍝           directory      workspace    directory
-    path:  ( 'MyDyalogLib' ⋄ ('dfns'⋄)  ⋄  '.'     ⋄ )  
+    path:  ( 'MyDyalogLib' ◇ ('dfns'◇)  ◇  '.'     ◇ )  
                   
   ⍝ prefix: literal string to prefix to each name, when searching directories.
   ⍝     Ignored for workspaces.
   ⍝     Default is ⍬ or (equivalently) ''
-  ⍝     Example given name 'mydfn' and (prefix: '∆F_' 'MyLib/' ⋄ suffix: ⊂'aplf')  
+  ⍝     Example given name 'mydfn' and (prefix: '∆F_' 'MyLib/' ◇ suffix: ⊂'.aplf')  
   ⍝     ==> ('∆F_mydfn.aplf'  'MyLib/mydfn.aplf')   
     prefix: ⍬ 
                               
   ⍝ suffix: at least one suffix is required for files to be checked.
-  ⍝ ∘  Note: The '.' is prepended for you!  
+  ⍝ ∘  Note: Don't forget the '.'.
   ⍝ ∘  Suffixes don't apply to workspaces. See documentation for definitions.
   ⍝ ∘  By default, unknown filetypes are not enabled. 
   ⍝    If they are enabled, they work the same as 'dyalog'.
   ⍝ ∘  If possible, place most used suffixes first.
-    suffix: ('aplf' ⋄ 'apla' ⋄ 'aplo' ⋄ 'apln' ⋄ 'json'⋄ 'txt' ⋄'dyalog')    
+    suffix: ('.aplf' ◇ '.apla' ◇ '.aplo' ◇ '.apln' ◇ '.json'◇ '.txt' ◇'.dyalog')    
                   
   ⍝  Internal Runtime (hidden) Parameters                                               
     _readParms:  0 0                    ⍝ Have we read (default parms, user .∆F parms)

@@ -7,16 +7,16 @@
 ⍝ =======================================================================
 ⍝
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F
-  TRAP_ERRORS← 0               
+  TRAP_ERRORS← 1              
 ⍝
 ⍝ VERBOSE: Compile-time and run-time verbosity flag
 ⍝ (verbose: 1) is ∆F-settable (user) run-time verbosity flag-- which
 ⍝ also changes `⋄ to ␤ instead of an actual new line (⎕UCS 13, here).
-  VERBOSE←     0 
+  VERBOSE←     0
 ⍝              
 ⍝ SHOW_LIB_ERRS:  
-⍝ - If 0, only report library autoload errors (as messages) if (verbose: 1). 
-⍝   Let APL handle the resulting missing object (typically as a VALUE ERROR).
+⍝ - If 0, only report library autoload errors (as messages) if (VERBOSE: 1) when searching. 
+⍝   Let APL handle the resulting missing object (typically as a VALUE ERROR) when user code is executed.
 ⍝ - If 1, always ⎕SIGNAL the actual internal error (e.g. OBJECT NOT FOUND ON SEARCH PATH).                             
   SHOW_LIB_ERRS←  1 
 ⍝
@@ -39,11 +39,12 @@
 ⍝ SESSION LIBRARY (£ or `L) VARIABLES
 ⍝ =======================================================================
 ⍝ Var     Setting  Do we want to use the SESSION LIBRARY autoload feature?
-⍝ LIB_ACTIVE:  2     Yes. Load default and user parameters
+⍝ LIB_ACTIVE:  2     Yes. Load default (LIB_PARM_FI below) and user parameters (LIB_USER_FI below)
 ⍝              1     Yes. Load default parameters ONLY.
 ⍝              0     No.  No autoload features should be available.
   LIB_ACTIVE←  2     
   LIB_PARM_FI←  '∆F/∆FParmDefs.apla' 
+  LIB_USER_FI←  '.∆F' 
   LIB_SRC_FI←   '∆F/∆FLibUtils.dyalog'          ⍝ Library shortcuts (£,  `L) utilities.
 ⍝ HELP-related globals             
   HELP_HTML_FI← '∆F/∆FHelp.html'                ⍝ Called from 'help' option. Globally set here              
@@ -143,7 +144,7 @@
         _← ê TFProc ⍺, pfx                             ⍝ Update fields
   ⍝  Choose between Space Field and Code Field. Handle space fields here.
   ⍝ =======================================================================   
-         ê.cfBeg← w                                    ⍝ Mark start of (code) field in case SDCF.              
+         ê.cfBeg← w                                    ⍝ Mark start of possible code field in case SDCF.              
       rb= ⊃w: '' ∇ 1↓ w                                ⍝ Null SF? Do nothing => Continue
         nSp← w↓⍨← +/∧\' '= w                           ⍝ Non-null SF?                         
       rb= ⊃w: '' ∇ 1↓ w ⊣ ê.flds,← ⊂SFCode nSp         ⍝ Yes. Proc SF => Continue
@@ -156,14 +157,14 @@
   ⍝      outStr remStr ← accum ∇ str
   ⍝ Modifies ê.cfL, ê.brC; calls CFQS and CFOm; modifies ê.omC and ê.cfL.  
   ⍝ Returns the output from the code field plus more string to scan (if any)
-    CF← {                                             
-        ê.cfL+← 1+ p← CFBrk ⍵                          ⍝ ê.cfL is set in TF_SF above. 
+  ⍝ CF will delete runs of leading and trailing blanks from output code; internal runs will remain.
+    CF← {     
+        ê.cfL+← 1+ p← CFBrk ⍵                          ⍝ ê.cfL is set in TF_SF above.  1: '{'
       p= ≢⍵:  ⎕SIGNAL brÊ                              ⍝ Missing "}" => Error. 
         pfx← ⍺, p↑⍵ 
         c←   p⌷⍵
-        w←   ⍵↓⍨ p+1
-      c= sp:    (pfx, sp) ∇ w↓⍨ ê.cfL+← p← +/∧\' '=w   ⍝ Runs of blanks.
-     (c= rb)∧ ê.brC≤ 1: (CFDfn TrimR pfx) w            ⍝ Closing brace? ==> RETURN!!!
+        w←   ⍵↓⍨ p+1 
+     (c= rb)∧ ê.brC≤ 1: (CFDfn TrimR pfx) w            ⍝ Closing brace? ==> Trim and RETURN!!!
       c∊ lb_rb: (pfx, c) ∇ w⊣ ê.brC+← -/c= lb_rb       ⍝ Inc/dec ê.brC as appropriate
       c∊ qtsL:  (pfx, a) ∇ w⊣ a w← ê CFQS c w          ⍝ Process quoted string.
       c= dol:   (pfx, scF) ∇ w                         ⍝ $ => ⎕FMT 
@@ -171,7 +172,7 @@
       c= omUs:  (pfx, a) ∇ w⊣ a w← ê CFOm w            ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ê libUtils.LibAuto w) ∇ w         ⍝ £ library.
       ~c∊sdcfCh: ⎕SIGNAL cfLogicÊ                      ⍝ CFBrk leaked unknown char.
-    ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field        
+    ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
       ê.brC>1:    (pfx, c scA⊃⍨ c= pct) ∇ w            ⍝ internal dfn => not SDCF
         p← +/∧\' '=w
       rb≠ ⊃p↓w:  (pfx, c scA⊃⍨ c= pct) ∇ w             ⍝ not CF-final '}' => not SDCF
@@ -258,9 +259,9 @@
 ⍝    Generate left and right quote pairs... Double-quote first for efficiency.
 ⍝    See QUOTES_SUPPLEMENTAL
   qtsL qtsR← (dq,¨2⍴sq) { 0=⎕NC ⍵: ⍺ ⋄ 0=≢v← ⎕OR ⍵: ⍺ ⋄ ⍺,¨ ↓⍉↑,⊆v } 'QUOTES_SUPPLEMENTAL'
-⍝ Order brklist chars roughly by frequency, high to low.       
-  cfBrkList← sp dq sq esc lb rb dol omUs ra da pct libra, ∊qtsL 
-  tfBrkList←  esc lb                 
+⍝ Order brklist chars roughly by frequency, high to low. 
+  cfBrkList← dq sq esc lb rb dol omUs ra da pct libra, ∊qtsL 
+  tfBrkList← esc lb                 
   lb_rb← lb rb ⋄ om_omUs← om omUs ⋄ sp_sq← sp sq ⋄   esc_lb_rb← esc lb rb  
   sdcfCh← ra da pct                                    ⍝ self-doc code field chars
 
@@ -473,7 +474,7 @@
       libNs.⎕DF ⎕NULL                                     ⍝ Clear any prior ⎕DF.
       libNs.⎕DF '£=[',(⍕libNs),' ⋄ auto:0]'               ⍝ Now, set ours.
       Auto← (⍕libNs)⍨  
-      parms← ⎕NS '_readParms' 'auto'⊣ _readParms auto← (0 0) 0 
+      'parms' ⎕NS '_readParms' 'auto'⊣ _readParms auto← (0 0) 0 
       ShowPath← '⍬'⍨        
       LoadParms← ⍬⍨       
   ∇
@@ -491,7 +492,7 @@
 ⍝⍝⍝ WARNING! These do only what we need internally, not the entire service domain.
 ⍝⍝⍝ If we are on Dyalog version 20, we just use those, of course.
 ⍝ ∆VGET, ∆VSET, AN2Apl, (same for both so far:) Apl2AN
-  ∇ {aplVersion}← ⍙Gen_LegacyAplAN aplVersion  
+  ∇ {aplVersion}← ⍙Gen_LegacyAplAN aplVersion ; whoops  
     :IF aplVersion< 20                         ⍝ Are we on Dyalog version 20 or later?
       ∆VGET← { (↓⊃⍵) ⍺.{ 0≠⎕NC ⍺: ⎕OR ⍺ ⋄ ⍵ }¨ ⊃⌽⍵ }
       ∆VSET←{ 
@@ -501,7 +502,6 @@
       ∆NS← { n1 n2← ⍵ ⋄ nl← n2.⎕NL ¯2    
         (⎕NS n1) ∆VSET (↑nl) (n2.⎕OR¨nl)
       }
-      AN2Apl← ⎕SE.Dyalog.Array.Deserialise   
       :IF VERBOSE
           ⎕←59⍴'+'
           ⎕←'+ ∆F: Emulating ⎕VSET, ⎕VGET, and related on Dyalog v.','. +',⍨⍕aplVersion 
@@ -511,9 +511,9 @@
        ∆VGET← ⎕VGET
        ∆VSET← ⎕VSET
        ∆NS←   ⎕NS 
-       AN2Apl← { Dfn⊢ ⎕FX 'Dfn←{'⊂⍛, ⍵, ⊂'} ' }⊆    ⍝ More efficient than Deserialise
     :EndIf 
-    Apl2AN←  ⎕SE.Dyalog.Array.Serialise             ⍝ Apl2AN: Same for both versions
+    AN2Apl← ⎕SE.Dyalog.Array.Deserialise   
+    Apl2AN← ⎕SE.Dyalog.Array.Serialise             ⍝ Apl2AN: Same for both versions
   ∇  
 
 ⍝ ⍙Export_∆F : rc← ∇ destNs keepCm lockFn 
@@ -683,8 +683,8 @@
   ∇
 ⍝ Show the following special globals in this namespace.
   ⍙ShowGlobalsIf←{
-     These←  'ESCAPE_CHAR'  'HELP_HTML_FI' 'LIB_ACTIVE' 'SHOW_LIB_ERRS' 'LIB_PARM_FI' 'LIB_SRC_FI' 
-     These,← 'OPTS_KW' 'QUOTES_SUPPLEMENTAL' 'TRAP_ERRORS' 'VERBOSE' 'VERSION'
+     These←  'ESCAPE_CHAR'  'HELP_HTML_FI' 'LIB_ACTIVE' 'SHOW_LIB_ERRS' 'LIB_PARM_FI'  
+     These,← 'LIB_USER_FI' 'LIB_SRC_FI' 'OPTS_KW' 'QUOTES_SUPPLEMENTAL' 'TRAP_ERRORS' 'VERBOSE' 'VERSION'
     ~⍵: _←1 0⍴0 
       Show← { '  ',(⍺↑⍵,':'),⍕1 ⎕SE.Dyalog.Array.Serialise  ⎕OR ⍵ }
       r← ⊂,'('

@@ -18,6 +18,7 @@
     PathAdd← {s←' ' ⋄ (1∊⍷)/ s,¨s,⍨¨⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ s, ⍵ }⍥∆SE
     CGood←   {⍺: ⎕←'>>> Created namespace "',⍵,'.⍙FUtils"' ⋄ 1: _←0 }
 
+    ⎕SIGNAL 0 ⍝ Clear ⎕DMX 
   ⍝ ⎕DF value is returned by ⎕FIX or ]LOAD
     w← ⍕destNs 
     ⎕DF w,'.∆F (library: ''',w,'.⍙FUtils'' ⋄ version: ''', codeVersion,''')'

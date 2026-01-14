@@ -39,7 +39,9 @@ Say't4← ''abc { "one`⋄twin`⋄elephant" } { "one``abc""def"} abc{ "one`⋄tw
 T4←1 ∆F t4
 'T4'Time'∆F t4' 'T4⍬'
 
-ok←⎕C⍞↓⍨≢⍞←'Do you want to update the log file? [yes]'
+⎕←'To update the log file, be sure the battery is not in LOW POWER MODE'
+ok←⎕C⍞↓⍨≢⍞←'Do you want to update the log file? [yes] '
+⎕←''
 :If ~'n'∊ok
      ⎕←'*** Updating log file'
     (⊂data)⎕NPUT logfile 2
@@ -47,3 +49,5 @@ ok←⎕C⍞↓⍨≢⍞←'Do you want to update the log file? [yes]'
 
 in←⎕NGET logfile 2
 ⎕ED'in'
+⎕←'To make any changes to the log file, execute the statement below.'
+⎕←'   ]file.edit ',logfile
