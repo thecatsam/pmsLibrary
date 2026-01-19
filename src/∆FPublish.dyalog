@@ -29,8 +29,8 @@
 
 ⍝ Key settable parameters...
   productionCode← 1
-  copyright←     '2025'
-  version←       '0.1.1'
+  copyright←     '2026'
+  version←       '0.1.2'
 
 ⍝ Constants
   timestamp←     ∊∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
@@ -133,8 +133,8 @@
         in←'<button.*?</button>' '<details +id="TOC">' '<details>'         '\n(<pTbr>\s*\n)+'
         out←'⍠⍠⍠'                '&'                   '<details open>'    ''
       ⍝ <!-- gittitle ### ∆F Formatted String Literals (v.0.1.1) -->
-        in,← ⊂'<!--\s*GIT_ONLY\s(.*?)\s*-->'
-        out,←⊂'\1'
+        in,← '<!--\s*GIT_ONLY\s(.*?)\s*-->'  '<NOGIT\h*>.*?</NOGIT\h*>' 
+        out,←'\1'                            '<!--GIT ONLY REMOVED-->'
         Miscellany←in ⎕R out _OptsM 
         ⍝ SideN2Null: Remove sidenotes.
         SideN2Null←⍺⍺{
