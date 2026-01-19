@@ -1,9 +1,9 @@
 ﻿objOut← {userOpts} Intern obj     
   ; bN; bT; bad; badÊ; cr; ed; fnIn; hN; hT; help; lN; opts; p; padTxt     
-  ; sortFldLen; sysVars; userOpts; xN; êSort                                                                                                     
+  ; sortFldLen; sysVars; userOpts; xN; êSort                               
   ; CatGrps; Clean; DTB; F; Format; InsertPhase1; InsertPhase2; MinBL; NoBL
-  ; Scan4Nms; Sort; Tokenise                                                                                                                    
-  ; _RMulti   
+  ; Scan4Nms; Sort; Tokenise                                               
+  ; _RMulti           
 
 help← (
 ' Overview'
@@ -154,11 +154,13 @@ help← (
     ⍝ Ignore Dyalog control words and dfns; find names (but ignore anything after first in first.second.third etc.)
       cntrlP← ':\pL\w*' 
       dfnP←   '(?x) \{ ( (?: [^{}]+ | (?R) )* ) \}' 
+    ⍝ myNm.(anything)
+      parP←   '\.(?<BAL>\((?:[^()]++|(?&BAL))*\))'
     ⍝ \h*: is used to grab and then skip things like name in (name: val)
       nameP←  '(?x) ( ⎕? [\pL_∆⍙] [\w∆⍙]* (\h*:)?) ( (?: \. ⎕? [\w∆⍙]+ )* )'
-      cntrlI dfnI nameI← ⍳≢catsP← cntrlP dfnP nameP 
+      cntrlI dfnI parI nameI← ⍳≢catsP← cntrlP dfnP  parP nameP 
       bN⊣ catsP ⎕R{
-        ⍵.PatternNum∊ cntrlI dfnI:''  
+        ⍵.PatternNum∊ cntrlI dfnI parI:''  
           var← ⍵ F 1 
           ':'∊var: ''                  ⍝ Skip name in (name: val)
         '⎕'≠⊃var:''⊣ bN,← ⊂var         ⍝ Not a system var.
@@ -178,10 +180,20 @@ help← (
     ⍝             D _DyadOp_  E ∆Pseudo-sys F ⎕Sys
       LC← 'abcdefghijklmnopqrstuvwxyzþãìðòõßàáâäåæçèéêëíîïñ∇óôöøùúûü'
       UC← 'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÂÃÇÈÊËÌÍÎÏÐÒÓÔÕÙÚÛÝÀÄÅÆÉÑÖØÜ'
+      ⍝ Does it look like a constant array
+      ⍝ Any # of all caps with internal underscores only
+      ⍝ Yes: THIS,  T_O, YE_S
+      ⍝ No:  TH, THI, ThiSABC, _ANY, ANY_, NO_WAY_  
+      LET← LC,UC 
+      IsArrayConst←{
+        '∆⍙'∊⍨ ⊃⍵: 0   ⋄ '_'∊(⊃,⊃∘⌽)⍵: 0      
+        ∨/~UC∊⍨ ⍵/⍨ ⍵∊LET:0 ⋄ '_'∊1↓¯1↓⍵  
+      }
       P← { ⍵,⍨ sortFldLen↑⍺}
       0=≢⍵:⍵                                          ⍝ Nothing to sort
-      w←{ f←⊃⍵                                        ⍝ Sort into categories and within categories
-        f='⎕':'F' P ⍵                                 ⍝ F:  True system var         
+      w←{ f←⊃⍵                                        ⍝ Sort into categories and within categories 
+        f='⎕':'F' P ⍵                                 ⍝ F:  True system var   
+        IsArrayConst ⍵: 'A0' P ⍵       
         f∊ LC:'A' P ⍵                                 ⍝ A:  aa, i.e. an array
         f∊ UC:'B' P ⍵                                 ⍝ B:  Aa, i.e. a fn   
         s←⊃1↓⍵      
