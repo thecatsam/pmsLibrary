@@ -30,7 +30,7 @@
 ⍝ Key settable parameters...
   productionCode← 1
   copyright←     '2026'
-  version←       '0.1.2'
+  version←       'v.0.1.1'
 
 ⍝ Constants
   timestamp←     ∊∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
@@ -133,8 +133,8 @@
         in←'<button.*?</button>' '<details +id="TOC">' '<details>'         '\n(<pTbr>\s*\n)+'
         out←'⍠⍠⍠'                '&'                   '<details open>'    ''
       ⍝ <!-- gittitle ### ∆F Formatted String Literals (v.0.1.1) -->
-        in,← '<!--\s*GIT_ONLY\s(.*?)\s*-->'  '<NOGIT\h*>.*?</NOGIT\h*>' 
-        out,←'\1'                            '<!--GIT ONLY REMOVED-->'
+        in,← '<GIT\h*>(.*?)</GIT\h*>'        '<NOGIT\h*>.*?</NOGIT\h*>' 
+        out,←'\1'                             '' 
         Miscellany←in ⎕R out _OptsM 
         ⍝ SideN2Null: Remove sidenotes.
         SideN2Null←⍺⍺{
@@ -177,7 +177,10 @@
         ml,←⊂ '___TIMESTAMP___' timestamp 
         ml,←⊂ '___COPYRIGHT___' copyright 
         ml,←⊂ '___VERSION___'   version 
+        ml,←⊂ 'v(\.\d+){3,5}'    version     ⍝ v.0.1.2
         ml,←⊂ 'VERSION\h*←\h*''.*?'''  ('VERSION← ','''',version,'''')
+        ml,←⊂ '<GIT\h*>(.*?)</GIT\h*>'   ''
+        ml,←⊂ '</?NOGIT\h*>'    ''
         ml,←⊂ '<∆Red>'          '<span class="red"><strong>'
         ml,←⊂   '</∆Red>'         '</strong></span>'
         ml,←⊂ '<∆Blue>'         '<span class="blue"><strong>'
@@ -200,13 +203,20 @@
         ml
     }0
     ⍝ Common: Common macros
-    Common←ml { src snk←↓⍉↑⍺⍺ ⋄ src ⎕R snk _OptsC ⍵ }
+    Common←ml { src snk←↓⍉↑⍺⍺ ⋄ src ⎕R snk _OptsM ⍵ }
 
     ⍝ Apply Common and Git Readme-specific macros based on type
     txt← Common GitReadmeOnly ⊃⎕NGET Fi io
     _←Say(⍕≢ml),' macros applied to  ',Tp io
     ⍝ Write the result out
   1:_←(Fi io)1 ⎕NPUT⍨⊂txt
+  }
+
+  MacrosInSrc←{
+      io← ⍵
+      txt← ⊃⎕NGET (Fi io)
+      txt← 'v(\.\d+){3,5}' ⎕R  (version)⊣ txt
+    1: _← (Fi io)1 ⎕NPUT⍨⊂txt
   }
 ⍝ Convert diamonds from (⍺=1) Apl to Html-friendly forms and (⍺=0) vice versa
 ⍝    [forward←1] Diamonds io.   
@@ -338,6 +348,7 @@ docDep,← ((PrivF html)(PubF html)) ((PrivF md)(PubF readme))
     force CopyFi(PrivF md)(PubF md)                ⍝ Copy private md to public md. Force if force=1.
   ⍝ We use pandoc-format markdown, but need to have README.md in github-format markdown.
     Hr 
+      MacrosInSrc PrivF md 
       CopyFi (PrivF md)(Temp mdTmp)
       Macros Temp mdTmp                            ⍝ Expand macros in Git    README.md
       MdPandoc2Git (Temp mdTmp)(Pub readme) 
