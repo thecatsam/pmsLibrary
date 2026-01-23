@@ -130,17 +130,17 @@ help← (
   InsertPhase2←{  ⍝ ⍺: CVV, ⍵: CVV
      (⊂⊃⍺),⍵, 1↓⍺              
   }
-  Tokenise←(';←() ')∘((~∊⍨)⊆⊢)                                  ⍝ Separator is any of: ';←() '
+  Tokenise←(';←() ')∘((~∊⍨)⊆⊢)                         ⍝ Separator is any of: ';←() '
   F←{⍵≥≢⍺.Lengths:'' ⋄ ⊢⍺.(Lengths[⍵]↑Offsets[⍵]↓Block)}
-  NoBL←{⍵/⍨0≠≢¨⍵~¨' '}             ⍝ Remove any blank lines
-  MinBL←{ ⍵/⍨ t∨1⌽t← 0≠≢¨⍵~¨' '}   ⍝ Convert mult. blank lines to 1
+  NoBL←{⍵/⍨0≠≢¨⍵~¨' '}                                 ⍝ Remove any blank lines
+  MinBL←{ ⍵/⍨ t∨1⌽t← 0≠≢¨⍵~¨' '}                       ⍝ Convert mult. blank lines to 1
   Clean←{
     src← ,(
-      '''[^'']*'''                               ⍝ quoted strings
-      '(?i)^((?:\h*⍝)?)\h*:extern\h+([^⍝'']*)'   ⍝ :EXTERN stmt
-      '(?i)^((?:\h*⍝)?)\h*:intern\h+([^⍝'']*)'   ⍝ :INTERN stmt
-      '^\h*;.$'                                  ⍝ local "headers"
-      '⍝.*'                                      ⍝ comments
+      '''[^'']*'''                                     ⍝ quoted strings
+      '(?i)^((?:\h*⍝)?)\h*:extern\h+([^⍝'']*)'         ⍝ :EXTERN stmt
+      '(?i)^((?:\h*⍝)?)\h*:intern\h+([^⍝'']*)'         ⍝ :INTERN stmt
+      '^\h*;.$'                                        ⍝ local "headers"
+      '⍝.*'                                            ⍝ comments
     )
     ⍙Clean← {
       ~⍵.PatternNum∊ 1 2: ''
@@ -162,11 +162,11 @@ help← (
       bN⊣ catsP ⎕R{
         ⍵.PatternNum∊ cntrlI dfnI parI:''  
           var← ⍵ F 1 
-          ':'∊var: ''                  ⍝ Skip name in (name: val)
-        '⎕'≠⊃var:''⊣ bN,← ⊂var         ⍝ Not a system var.
+          ':'∊var: ''                                  ⍝ Skip name in (name: val)
+        '⎕'≠⊃var:''⊣ bN,← ⊂var                         ⍝ Not a system var.
           var←1 ⎕C var
-        var⊂⍛∊ sysVars:''⊣ bN,← ⊂var   ⍝ Is a localisble system var.
-          ''                           ⍝ Isn't-- don't keep.
+        var⊂⍛∊ sysVars:''⊣ bN,← ⊂var                   ⍝ Is a localisble system var.
+          ''                                           ⍝ Isn't-- don't keep.
       }_RMulti ⍵
   }
   sortFldLen← 4 
@@ -190,21 +190,21 @@ help← (
         ∨/~UC∊⍨ ⍵/⍨ ⍵∊LET:0 ⋄ '_'∊1↓¯1↓⍵  
       }
       P← { ⍵,⍨ sortFldLen↑⍺}
-      0=≢⍵:⍵                                          ⍝ Nothing to sort
-      w←{ f←⊃⍵                                        ⍝ Sort into categories and within categories 
-        f='⎕':'F' P ⍵                                 ⍝ F:  True system var   
+      0=≢⍵:⍵                                           ⍝ Nothing to sort
+      w←{ f←⊃⍵                                         ⍝ Sort into categories and within categories 
+        f='⎕':'F' P ⍵                                  ⍝ F:  True system var   
         IsArrayConst ⍵: 'A0' P ⍵       
-        f∊ LC:'A' P ⍵                                 ⍝ A:  aa, i.e. an array
-        f∊ UC:'B' P ⍵                                 ⍝ B:  Aa, i.e. a fn   
+        f∊ LC:'A' P ⍵                                  ⍝ A:  aa, i.e. an array
+        f∊ UC:'B' P ⍵                                  ⍝ B:  Aa, i.e. a fn   
         s←⊃1↓⍵      
-        0=≢⍵~'_':'A' P ⍵                             ⍝ A: "temporary" array: _, __, sorted at end () of cat A.
-        grp← 'E' 'A'⊃⍨ s= ⎕C s                        ⍝ E:  ∆Aa, ⍙Aa a pseudo-sys var 
-        f∊'∆⍙': (grp,1↓⍵) P ⍵                         ⍝ A:  ∆aa, ⍙aa  - sort just after aa.  
-        grp← ⊃'ACD'/⍨ (s= ⎕C s)('_'≠ ⊃⌽⍵) 1           ⍝ A:  _aa       - sort just after aa.
-        f='_': (grp,1↓⍵) P ⍵                          ⍝ C: _Aa  (Monadic Op)
-                                                      ⍝ D: _Aa_ (Dyadic Op)  
+        0=≢⍵~'_':'A' P ⍵                              ⍝ A: "temporary" array: _, __, sorted at end () of cat A.
+        grp← 'E' 'A'⊃⍨ s= ⎕C s                         ⍝ E:  ∆Aa, ⍙Aa a pseudo-sys var 
+        f∊'∆⍙': (grp,1↓⍵) P ⍵                          ⍝ A:  ∆aa, ⍙aa  - sort just after aa.  
+        grp← ⊃'ACD'/⍨ (s= ⎕C s)('_'≠ ⊃⌽⍵) 1            ⍝ A:  _aa       - sort just after aa.
+        f='_': (grp,1↓⍵) P ⍵                           ⍝ C: _Aa  (Monadic Op)
+                                                       ⍝ D: _Aa_ (Dyadic Op)  
       11 ⎕SIGNAL⍨'Unable to categorise name: ',⍵
-        '?' P ⍵⊣⎕←'Error: "'⍵,'"'                     ⍝ Uncategorised!
+        '?' P ⍵⊣⎕←'Error: "'⍵,'"'                      ⍝ Uncategorised!
       }¨⍵
       w[⍋w] 
   }
@@ -218,8 +218,8 @@ help← (
       (A MC B) , (C MC D) , (E MC F ) , Err           
   }
   Format← {
-    Fmt1←{                                            ⍝ Format list of local vars 
-        0=≢⍵: ''                                      ⍝ If no objects, return ''
+    Fmt1←{                                             ⍝ Format list of local vars 
+        0=≢⍵: ''                                       ⍝ If no objects, return ''
         { ⍺← '' ''
               buf tmp← ⍺
             0=≢⍵: padTxt, buf, tmp, cr⍴⍨ opts.blanks 
@@ -229,7 +229,7 @@ help← (
               buf (tmp, txt) ∇ 1↓⍵
         }⍵
     }
-    S2CV←  '\A' ⎕R ''                       ⍝ Split into APL Char Vec
+    S2CV←  '\A' ⎕R ''                                  ⍝ Split into APL Char Vec
     lists← S2CV Fmt1¨ ⍵ 
   opts.sort≠êSort.group: lists 
    ⍝  Disabled: NoXBL← ((-1+opts.blanks)∘↓) 
@@ -239,7 +239,7 @@ help← (
 ⍝⍝⍝ ----------------------------------------------------------
 ⍝⍝⍝ MAIN STARTS HERE
 ⍝⍝⍝ ----------------------------------------------------------
-  :IF ~900⌶0                                   ⍝ Non-default...
+  :IF ~900⌶0                                           ⍝ Non-default...
       :If 'help'≡ ⎕C userOpts 
            ed← ↑help
            objOut← ⎕ED⍠'ReadOnly' 1⊢ 'ed'
