@@ -19,7 +19,7 @@ a concise, yet powerful way to display multiline *APL* text, arbitrary
 _dfns_ and other familiar tools.
 </center></div>
 
-
+<NOGIT>
 
 ### Major Headings {.unnumbered}
 
@@ -40,7 +40,8 @@ _dfns_ and other familiar tools.
 <br  >7.  <a href="#inside-index"             >Index of Topics</a>
 </big>
 
-</div> 
+</div> </NOGIT>
+
 ---
 
 </details>
@@ -286,7 +287,7 @@ For n=┌─┐, n×Pi=┌───────┐
 </details>
 
 <div class="page-break"></div> 
-
+<NOGIT>
 
 # ∆F Examples: A Primer
 
@@ -1383,7 +1384,7 @@ Below, we summarize key information you've already gleaned from the examples.
 
 </details>
 <div class="page-break"></div> 
-
+</NOGIT>
 
 # ∆F Reference 
 
@@ -1394,9 +1395,11 @@ Below, we summarize key information you've already gleaned from the examples.
 
 ## ∆F Call Syntax Overview
 
+<NOGIT>
 <span class="margin-note"><br><br><br><br><br><br><br><br>See the example of [multiline _f-strings_ in Dy&shy;a&shy;log 20](#multiline-f-strings-in-dyalog-20).</span>
 <span class="margin-note"><br><br><br><br><br>**_Options_** may be either _positional_
 or&mdash; starting in Dyalog v. 20&mdash; _keyword_-based. We show the posi&shy;tion&shy;al forms through&shy;out the ex&shy;amples, but doc&shy;ument the key&shy;words as well below.</span>
+</NOGIT>
 
 <a id="table-call-syntax" class="scroll-target"></a>
 
@@ -1742,9 +1745,8 @@ is documented _below_.
   ⍝ ∘  If possible, place most used suffixes first.
     suffix: ('.aplf' ◇ '.apla' ◇ '.aplo' ◇ '.apln' ◇ '.json'◇ '.txt' ◇'.dyalog')    
                   
-  ⍝  Internal Runtime (hidden) Parameters                                               
-    _readParms:  0 0                    ⍝ Have we read (default parms, user .∆F parms)
-    _fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
+  ⍝  Internal Runtime (hidden) Parameters (not shown). Do not modify or delete. 
+  ⍝     ⍙readParms,⍙fullPath                                          
 )    
 ```
 
