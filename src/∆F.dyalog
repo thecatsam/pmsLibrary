@@ -7,7 +7,7 @@
   SRC_FI←         '∆F/∆FUtils.dyalog'
   DEST_NS←         ⎕THIS.##
   ADD_∆F_TO_PATH← 1                                    ⍝ If 1, adds ∆F to ⎕PATH.
-  VERSION←        '0.1.2'
+  VERSION← 'v.0.1.1'
 
   ∇ {rc}← ⍙Load (srcFi destNs codeVersion add∆F2Path) 
     ; rc; w; CGood; Err22; ErrAll; ErrApl; PathAdd; ∆SE 

@@ -1,12 +1,33 @@
 ﻿∆FTiming
-  ; cmpx; cv; d; data; in; logfile; ok; t1; t2; t3; t4; DYALOG_VERSION
-  ; Cmpx; Say; T1; T2; T3; T4; Time  
+ ;logfile 
   
+logfile←'∆FTiming.data'
+⎕←'Logfile is ',logfile
+
+:Select ⊃⎕C ⍞↓⍨ ≢⍞←'T(ime or P(lot? [Time] '
+  :Case 'p' 
+     ⎕SHADOW 'lines; f1; t; V'~';'
+      V← {⊃⌽⎕VFI ⍵}¨
+      ⎕←'plotting'
+      OUT←⍬
+      lines← ⊃⎕NGET logfile 1 
+      :FOR t :in 't1' 't2 cv' 't3 10' 't4'
+          OUT,← ⊂V ('∆F\s+',t,'\s+→\s+([\d\.E¯]+)') ⎕S '\1'⊣lines 
+      :ENdFor
+       OUT←OUT[¯1+1 2 4 3] 
+       ⎕←']plot OUT -type=tower'
+      :RETURN
+  :Caselist 't '
+      ⋄
+  :Else  
+      ⎕←'Invalid!'
+      :REturn 
+:EndSelect 
 
 :Trap 1000
+  ⎕SHADOW '; cmpx; cv; d; data; in; logfile; ok; t1; t2; t3; t4; DYALOG_VERSION'~';'
+  ⎕SHADOW '; Cmpx; Say; T1; T2; T3; T4; Time'⍨';'  
     DYALOG_VERSION←⊃⊃⌽'.'⎕VFI 1⊃'.'⎕WG'APLVersion'
-    logfile←'∆FTiming.data'
-    ⎕←'Logfile is ',logfile
 
     'cmpx'⎕CY'dfns' ⋄ Cmpx← cmpx 
 

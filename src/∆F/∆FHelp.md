@@ -28,7 +28,7 @@ _dfns_ and other familiar tools.
 
 <∆N><br><br><br>
 **Quick Start:** If you want the minimum before diving in.
-</span>
+</∆N>
 <div class="multi-column-text" style="font-size:80%;">
 
 <big >1.  <a href="#inside-preparing"         >Preparing to Run **∆F**</a> 
@@ -103,7 +103,7 @@ function arguments, or both.
 - The abstraction of 2-dimensional character **_fields_**, generated one-by-one from the user's specifications and data, then aligned and catenated into a single overall character matrix result;
 
 <∆N>`` `◇ ``: back&shy;tick + state&shy;ment sep&shy;ar&shy;ator (`⎕UCS 96 8900`).
-</span>
+</∆N>
 
 - **Text** fields,
   each allowing [multiline Unicode text](#text-fields-and-space-fields), with the sequence `` `◇ `` generating a **new line**;
@@ -311,7 +311,7 @@ First, let's set some context for the examples. (You can set these however you w
 Here are **Code** fields with simple variables.
 
 <∆N>So far, this is like everybody else's _f‑strings_.
-</span>
+</∆N>
 
 ```
    name← 'Fred' ◇ age← 43
@@ -337,7 +337,7 @@ The temperature is 35°C or  95°F.
 Here, we assign the _f‑string_ to an _APL_ variable, then call **∆F** twice!
 
 <∆N>Setting `⎕RL` ensures our random numbers aren't random!
-</span>
+</∆N>
 
 ```
    ⎕RL← 2342342
@@ -620,7 +620,7 @@ Our string «Our string {bL, `⍵0, bR} has {≢`⍵0} characters» has 47 chara
 ## The Format Shortcut
 
 <∆N>The **Format** shortcut `$`, or `` `F `` (short for `⎕FMT`), can also be used monadically, but let **∆F** handle that for you in most cases.
-</span>
+</∆N>
 
 > Let's add commas to some very large numbers using the **⎕FMT** shortcut `$`.
 
@@ -645,7 +645,7 @@ The shortcut for _Numeric_ **Commas** `` `C `` adds commas every 3 digits (from 
 Let's use the `` `C `` shortcut to add the commas to the temperatures!
 
 <∆N><br>Cool! OK, not literally.
-</span>
+</∆N>
 
 ```
    sun_core← 15E6               ⍝ 15000000 is a bit hard to parse!
@@ -739,13 +739,13 @@ each field&mdash;using the **Box** [option](#f-option-details), _namespace_ styl
 
 <∆N>`%` can be used monadically. In that case, a left argument of `''`
 (an empty string) is assumed.
-</span>
+</∆N>
 Here's a useful feature. Let's use the shortcut `%` to display one
 expression centered above another;
 it's called **Above** and can _also_ be expressed as `` `A ``.
 
 <∆N>Remember, `` `⍵1 `` designates the **_first_** argument after the _f‑string_ itself, and `` `⍵2 `` the **_second_**.
-</span>
+</∆N>
 
 ```
    ∆F '{"Employee" % ⍪`⍵1} {"Age" % ⍪`⍵2}' ('John Smith' 'Mary Jones')(29 23)
@@ -868,7 +868,7 @@ concise <∆N>**concise:** somewhat hard to read.
 ## A Shortcut for Dates and Times (Part I)
 
 <∆N>The syntax for the Date-Time specifications in the left argument to `` `T `` can be found in the Dyalog doc&shy;ument&shy;ation under **1200⌶**. See [below](#code-field-shortcuts), for more info.
-</span>
+</∆N>
 **∆F** supports a simple **Date-Time** shortcut `` `T `` built from **1200⌶** and **⎕DT**. It takes one or more Dyalog `⎕TS`-format timestamps as the right argument and a date-time specification as the <∆N>The default left arg&shy;ument is `⍺← '%ISO%'`, _i.e._ an ISO date-time.</∆N> (optional) left argument. Trailing elements of a timestamp may be omitted (they will each be treated as `0` in the specification string).
 
 Let's look at the use of the `` `T `` shortcut to show the current time (now).
@@ -1149,7 +1149,7 @@ On subsequent calls, `sieve` and `to` are already available, as we can see here:
 > But, **∆F** can handle this all for you!
 
 If <∆N>Here, we only show examples of objects from the **_dfns_** workspace. _See [Code Field Shortcuts](#code-field-shortcuts) below._
-</span>
+</∆N>
 the user references a simple name of the form
 `£.name` that
 has not (yet) been defined in the library,
@@ -1315,7 +1315,7 @@ The precomputed version is at least an <mark>order of magnitude</mark> faster.
 
 Before we get to syntax and other information, we want to show you
 that <∆N>The _dfn_ returned includes the original _f‑string_ text used to generate it,
-available as `` `⍵0 ``.</span>
+available as `` `⍵0 ``.</∆N>
 the _dfn_ returned when the _dfn_ option is set to `1` can retrieve one or more arguments passed on the right side of **∆F**, using the very same omega shortcut expressions (like `` `⍵1 ``) we've
 discussed above.
 
@@ -1515,13 +1515,13 @@ Table: 5d. <strong>Code Field Shortcuts</strong>
 
 <∆N>See [Quoted Strings in Code Fields](#quoted-strings-in-code-fields)
 below on displaying quote characters like `"` in a string.
-</span>
+</∆N>
 **∆F** **Text** fields and **Quoted strings** in **Code** fields may include
 a small number of escape sequences, beginning with the backtick `` ` ``.
 Some sequences are valid in **Text** fields _only_, but not in Quoted strings:
 
 <∆N><br><br><br><br><br>**Quoted Strings** appear ***only*** in **Code** fields.
-</span>
+</∆N>
 
 <a id="table-escapes" class="scroll-target"></a>
 
@@ -1652,7 +1652,7 @@ Table: 5g. <strong>Library Filetypes: Meaning</strong>
 ### Session Library Shortcut: Parameters
 
 The <∆N>If the automatic search feature is enabled&mdash; the default&mdash;, the _first_ time each name is used there is the potential for substantial overhead in searching for, loading, and fixing it
-in the session library.</span>
+in the session library.</∆N>
 Session Library shortcut (`£` or `` `L ``) is deceptively simple, but
 the code to support it is a tad complex.
 The complex components run only when **∆F** is loaded. If the **auto** parameter is `1`, there is a modest
@@ -1770,7 +1770,7 @@ is documented _below_.
 
 If the [**_dfn_** option](#f-option-details) is `¯1`, _equivalently_ `(dfn: ¯1)`<∆N>In simple terms, this option returns the character representation of the
 _dfn_ returned via the **_dfn_** option.
-</span>, then **∆F** returns a character vector that contains the source code for the _dfn_ returned via `(dfn: 1)`.
+</∆N>, then **∆F** returns a character vector that contains the source code for the _dfn_ returned via `(dfn: 1)`.
 If **_verbose_** is also set, newlines from `` `◇ `` are shown as visible `␤`. However, since this option _returns_ the code string, the **_verbose_** option won't also _display_ the code string.
 
 ### ∆F Help's Secret Variant
@@ -1807,7 +1807,7 @@ For more information on Python f-strings, _see_:
 <a id="inside-index" class="scroll-target"></a>
 
 
-<∆N><big><big>&emsp;<strong>KEY</strong></big><br><strong><big><span class="red"><strong><big>■</big> Major topic</strong></∆N></big><br><span class="green"><strong><big>■</big> Topic in table or figure</strong></span><br><big>■</big> Regular entry</strong></big></span>
+<∆N><big><big>&emsp;<strong>KEY</strong></big><br><strong><big><span class="red"><strong><big>■</big> Major topic</strong></∆N></big><br><span class="green"><strong><big>■</big> Topic in table or figure</strong></span><br><big>■</big> Regular entry</strong></big></∆N>
 
 <div class="multi-column-text" style="font-size:85%;">
 <!-- INDEX_BEGIN --><!-- Generated by ∆F_toc: 2025-12-31T14:15:45 -->

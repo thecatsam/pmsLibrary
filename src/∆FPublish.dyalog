@@ -1,12 +1,13 @@
 ﻿∆FPublish parms
-  ; anyUpdts; copyright; docDep; force; hdr; html; libDir; libra; loader 
-  ; md; mdTmp; ns; pandocBin; pdf; pgm; pgmDep; priv; privF; privFdir    
-  ; privdir; productionCode; pub; pubF; pubFdir; pubdir; quiet; readme   
-  ; sideN2FN; temp; tempdir; timestamp; title; version; _                
-  ; CSay; CopyFi; Delete; Diamonds; Fi; HomeDir; Hr; HtmlMacro; Macros   
-  ; Md2Html; MdPandoc2Git; NeedsUpdate; Parm; Priv; PrivF; Pub; PubF; Say
-  ; Temp; Tp; UpdatePgm                                                  
-  ; _OptsC; _OptsM     
+  ; anyUpdts; copyright; docDep; force; hdr; html; libDir; libra; loader   
+  ; md; mdTmp; ns; pandocBin; parmFi; pdf; pgm; pgmDep; priv; privF        
+  ; privFdir; privdir; productionCode; pub; pubF; pubFdir; pubdir; quiet   
+  ; readme; sideN2FN; temp; tempdir; timestamp; title; version; _          
+  ; CSay; CopyFi; Delete; Diamonds; Fi; HomeDir; Hr; HtmlMacro; Macros     
+  ; MacrosInSrc; Md2Html; MdPandoc2Git; NeedsUpdate; Parm; Priv; PrivF; Pub
+  ; PubF; Say; Temp; Tp; UpdatePgm                                         
+  ; _OptsC; _OptsM                                                         
+  ; ∆F    
 
 ⍝ ∆FPublish: Update and Synchronize ∆F-related files,
 ⍝             resolving Html and Javascript macros into native forms.
@@ -215,7 +216,7 @@
   MacrosInSrc←{
       io← ⍵
       txt← ⊃⎕NGET (Fi io)
-      txt← 'v(\.\d+){3,5}' ⎕R  (version)⊣ txt
+      txt← 'v(\.\d+){2,5}' ⎕R  version⊣ txt
     1: _← (Fi io)1 ⎕NPUT⍨⊂txt
   }
 ⍝ Convert diamonds from (⍺=1) Apl to Html-friendly forms and (⍺=0) vice versa
@@ -230,7 +231,7 @@
   }
   UpdatePgm←{
       io← Fi ⍵ ⋄ q← ''''
-      src←   'VERSION\h*←\h''.*?'''       'UPDATE_TIME\h*:\h*''.*?'''
+      src←   'VERSION\h*←\h*''.*?'''      'UPDATE_TIME\h*:\h*''.*?'''
       snk←  ('VERSION← ',q,version,q)    ('UPDATE_TIME: ',q,timestamp,q) 
       txt←  src ⎕R snk ⊃⎕NGET io
     1: _← io 1 ⎕NPUT⍨ ⊂txt 
