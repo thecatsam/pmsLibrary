@@ -210,6 +210,7 @@
       c= esc:   (pfx, a) ∇ w⊣ a w← ûsr CFEsc w         ⍝ `⍵, `⋄, `A, `B, etc.
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
+      c= cdCh:  (pfx, scCD) ∇ w                        ⍝ Adam B's CircleDiaeresis
       ~c∊sdcfCh: ⎕SIGNAL cfLogicÊ                      ⍝ CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
       ûsr.brC>1:    (pfx, c scA⊃⍨ c= pct) ∇ w          ⍝ internal dfn => not SDCF
@@ -263,7 +264,7 @@
   ⍝ Shortcuts: 
   ⍝    See ⍙Load_Shortcuts.
   ⍝ This must follow the ordering specified there EXACTLY.  
-    (scA scB scC scD scF scJ scQ scS scT scW scÐ scM)← ûsr.inline⊃ scCodeTbl   
+    (scA scB scC scD scF scJ scQ scS scT scW scÐ scM scCD)← ûsr.inline⊃ scCodeTbl   
     ûsr.acache← ⍬                                      ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
     ûsr.flds← ⍬                                        ⍝ output fields, each a CV (Char Vec)
@@ -300,12 +301,13 @@
   qtsL qtsR← (dq,¨2⍴sq) { 0=⎕NC ⍵: ⍺ ⋄ 0=≢v← ⎕OR ⍵: ⍺ ⋄ ⍺,¨ ↓⍉↑,⊆v } 'QUOTES_SUPPLEMENTAL'
 ⍝ Other basic characters
   sp lb rb lp rp dol omUs ra da pct libra← ' {}()$⍹→↓%£' 
+  cdCh← '⍥'                                         ⍝ Experimental. To exclude, set here to ''
 ⍝ Seq. `⋄ OR `◇ (see dia2[0, 1]) map onto ⎕UCS 13.
 ⍝ dia2[0]: Dyalog stmt separator (⋄) 
 ⍝ dia2[1]: Alternative character (◇) that is easier to read in some web browsers. 
   dia2← ⎕UCS 8900 9671   
 ⍝ Order brklist chars roughly by frequency, high to low. 
-  cfBrkList← dq sq esc lb rb dol omUs ra da pct libra, ∊qtsL 
+  cfBrkList← dq sq esc lb rb dol omUs ra da pct libra cdCh, ∊qtsL 
   tfBrkList← esc lb                 
   lb_rb← lb rb ⋄ om_omUs← om omUs ⋄ sp_sq← sp sq ⋄   esc_lb_rb← esc lb rb  
 ⍝ self-doc code field chars →↓%
@@ -641,7 +643,7 @@
 ⍝ Warning: Be sure these can run in user env with any ⎕IO and ⎕ML: Localize them where needed.
 ⍝ NOTE: We are creating multiline objects using the old method for compatibility with Dyalog 19 etc.
   ∇ {ok}← ⍙Load_Shortcuts 
-    ; scUser; scA2; scB2; scC2; scD2; scÐ2; scF2; scJ2; scM2; scQ2; scS2; scT2; scW2 
+    ; scUser; scA2; scB2; scC2; scD2; scÐ2; scF2; scJ2; scM2; scQ2; scS2; scT2; scW2; scCD2  
     ; XR ;HT 
     XR← ⎕THIS.⍎⊃∘⌽                                   ⍝ XR: Execute the right-hand expression
     HT← '⎕THIS' ⎕R ∆THIS                             ⍝ HT: "Hardwire" value of ⎕THIS. 
@@ -705,15 +707,93 @@
           scD2← scT2                            ⍝ D is alias to T.               
   ⍝ Wrap 
     W← XR scW2← HT   ' ⎕THIS.W ' '{⎕ML←1⋄⍺←⎕UCS 39⋄ 1<|≡⍵: ⍺∘∇¨⍵⋄L R←2⍴⍺⋄{L,R,⍨⍕⍵}⍤1⊢⍵}'
-
   ⍝ User-callable functions:          A  B  C  D  F  J  Q  S  T  W 
   ⍝                                   L (handled ad hoc); D (synonym to T)
   ⍝ ∆F-internal (non-user) funtions:  Ð  M
-    scCodeTbl← ↓⍉↑scA2 scB2 scC2 scD2 scF2 scJ2 scQ2 scS2 scT2  scW2   scÐ2 scM2
+  :Section CircleDiaeresis 
+    ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
+    ⍝ Call Import_CircleDiaeresis with 1
+      :If 0≠ ≢cdCh 
+      :Andif 0≠ ≢cdStr← Import_CircleDiaeresis 0 
+        ⍝ Adam B's "future"  ⍥ with depth operator extension. We call it 'CD' internally. 
+          ⍎'CD←',cdStr 
+          scCD2←  HT ' ⎕THIS.CD ' cdStr
+          {}⎕∘←⍣VERBOSE_LOADTIME⊢ '>>> CircleDiaeresis (⍥) Depth-Extension Enabled.'
+      :Else
+          scCD2←  cdCh cdCh 
+          {}⎕∘←⍣VERBOSE_LOADTIME⊢ '>>> CircleDiaeresis (⍥) Depth-Extension Disabled.'
+      :Endif 
+  :EndSection CircleDiaeresis 
+    scCodeTbl← ↓⍉↑scA2 scB2 scC2 scD2 scF2 scJ2 scQ2 scS2 scT2  scW2   scÐ2 scM2 scCD2 
     nSC← ≢scUser←  'A    B    C    D    F    J    Q    S    T     W'~' '                          
     MapSC← scUser∘⍳ 
     ok← 1 
   ∇
+
+:Section Adam_B_CircleDiaeresis
+⍝ Github: abrudz/dyalog_vision
+⍝ CircleDiaeresis function: Adam B's "future"  ⍥ with depth operator extension. 
+⍝ [License for CircleDiaeresis operator only]
+⍝ ------------- 
+⍝ MIT License
+⍝ Copyright (c) 2022 Adám Brudzewsky
+
+⍝ Permission is hereby granted, free of charge, to any person obtaining a copy
+⍝ of this software and associated documentation files (the "Software"), to deal
+⍝ in the Software without restriction, including without limitation the rights
+⍝ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+⍝ copies of the Software, and to permit persons to whom the Software is
+⍝ furnished to do so, subject to the following conditions:
+
+⍝ The above copyright notice and this permission notice shall be included in all
+⍝ copies or substantial portions of the Software.
+
+⍝ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+⍝ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+⍝ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+⍝ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+⍝ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+⍝ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+⍝ SOFTWARE. 
+∇ {cS}← Import_CircleDiaeresis flag; CircleDiaeresis  
+  cS← '' 
+  :If ~flag ⋄ :Return ⋄ :EndIf  
+    ⍝ See MIT License above for CircleDiaeresis.
+    CircleDiaeresis←{ 
+        0::⎕SIGNAL⊂⎕DMX.(('EN'EN)('EM'EM)('Message'(OSError{⍵,2⌽(×≢⊃⍬⍴2⌽⍺,⊂'')/'") ("',⊃⍬⍴2⌽⍺}Message)))
+        ncs←⎕NC⊃⍤0⊢'⍺' '⍵⍵'
+        0 3≡ncs:⍺⍺ ⍵⍵ ⍵         ⍝   f⍥g Y
+        2 3≡ncs:⍺ ⍺⍺⍥⍵⍵ ⍵       ⍝ X f⍥g Y
+        1<≢⍴⍵⍵:⎕SIGNAL 4        ⍝ non-vec/scal: RANK
+        ⎕IO≠1 4⍸≢⍵⍵:⎕SIGNAL 5   ⍝ not 1…3 elements: LENGTH
+        (c←⎕NS ⍬).⎕CT←1E¯14     ⍝ tolerant space
+        c.≢∘⌊⍨⍵⍵:⎕SIGNAL 11     ⍝ not ints: DOMAIN
+        0∊⎕NC'⍺':0⊢∘⍺⍺ ∇∇ ⍵⍵⊢⍵  ⍝ monadic: placeholder left arg
+        ⍺←{⍵ ⋄ ⍺⍺}              ⍝ monadic: pass-thorugh
+        a←⍺                     ⍝ [17941]
+        k←⌽3⍴⌽⍵⍵                ⍝ r → r r r    q r → r q r    p q r → p q r
+        n←k c.<0
+        d←|≡¨3⍴⍵ ⍺ ⍵ ⍵
+        (n/k)+←n/d
+        k⌊←d
+        b←1↓k<d
+        b∧←0≠1↓d                ⍝ bottomed out
+        r←⍵⍵<0
+        ww←r+⍵⍵
+        ww+←(⌈/d)×r∧0=ww
+        S←⍺⍺ ∇∇ ww
+        c.⍱/b:⍺ ⍺⍺ ⍵
+        c.</b:⍺∘S¨⍵
+        c.>/b:S∘⍵¨⍺
+        c.∧/b:⍺ S¨⍵
+    }
+    cS← {                       ⍝ Generate CircleDiaeresis code string.
+        '{','}',⍨ 1↓ ∊'⋄',¨ ⍵ '^\h*(⋄?)' '\h*⍝.*'  ⎕R '' '\1' '' ⊣1↓ ¯1↓ ⎕NR ⍵
+    }'CircleDiaeresis' 
+  ∇
+
+:EndSection Adam_B_CircleDiaeresis
+
   ∇ {ok}← ⍙Load_Help hfi;e1; e2 
   ⍝ Loading the help html file...
     :Trap 22 

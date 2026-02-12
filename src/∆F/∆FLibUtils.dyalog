@@ -1,12 +1,9 @@
 ⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-02-10') 
 :Namespace libUtils
-
-  :Section Runtime Routines 
 ⍝ ===================================================================================
-⍝ RUN TIME ROUTINES
-⍝ ===================================================================================
-
-⍝ This namespace handles Library (£ or `L) shortcut automatic loading...
+⍝ This namespace handles Library (£ or `L) shortcut automatic loading.
+⍝ It has RUNTIME routines (services used when an £ or `L is seen in the user's code field) and
+⍝ LOADTIME routines (setting up the active library services). 
 ⍝ ∘ See ⍙FUtils for fn ⍙Load_LibAuto, which loads this library.
 ⍝ ∘ See "Executive" at bottom of file, which calls
 ⍝   - LibFull, and 
@@ -14,6 +11,10 @@
 ⍝ ∘ Local and External variables pointing to the "user" library userLibrary.
 ⍝   - ûLib  -  the namespace ref itself, by default ⍙FUtils.userLibrary (##.userLibrary)
 ⍝   - ûLibNm-  the name of ûLib
+
+  :Section Runtime Routines 
+⍝ ===================================================================================
+⍝ RUN TIME ROUTINES
 ⍝ ===================================================================================
 ⍝ LibAuto: libStr← ûsr ∇ str 
 ⍝    str str starts 1 char after '£' or '`L'. 
@@ -24,11 +25,12 @@
 ⍝   ∘ In turn calls fn LoadObj when a library name, nm, is being referenced 
 ⍝     (not set) for the first time.
 ⍝ Task:
-⍝ ∘ find the name nm in £.nm...[[∘]←] (first token in a qua.lif.ied name)
-⍝   and, if valid and not seen before,
-⍝   - If £. is followed by a dotted name nm1.nm2[...], then nm←nm1, the first one;
-⍝     That entire namespace is loaded, if found. In this case, that's 'nm1'.
-⍝   - (via LoadObj) get source code for it from a file or workspace in our path.
+⍝ 1. find the name nm in £.nm...[[∘]←] (first token in a qua.lif.ied name), and
+⍝ 2. If valid and not seen before:
+⍝   - If £. is followed by a dotted name nm1.nm2[...], then nm←nm1, the first one.
+⍝     That entire namespace is loaded, if found. In this case, that's 'nm1'; then
+⍝   - (via LoadObj) get source code for 'nm1' from a file or workspace in the 
+⍝     path (pârms.⍙fullPath).
 ⍝ ∘ Does NOT affect the string ⍵ being scanned. 
 ⍝   - That's left to the scanner that called LibAuto.
 ⍝   - Is only used for its ⎕CY or ⎕FIX side effect via LoadObj. 
