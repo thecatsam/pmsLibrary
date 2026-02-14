@@ -1773,6 +1773,19 @@ _dfn_ returned via the **_dfn_** option.
 </∆N>, then **∆F** returns a character vector that contains the source code for the _dfn_ returned via `(dfn: 1)`.
 If **_verbose_** is also set, newlines from `` `◇ `` are shown as visible `␤`. However, since this option _returns_ the code string, the **_verbose_** option won't also _display_ the code string.
 
+### Future Behaviour of ⍥ (Circle Diaeresis) Here Today
+
+As a load-time option, **∆F** adds <∆N>See **abrudz
+dyalog-apl-extended /CircleDiaeresis.dyalog** on Github [retrieved 2026-02-13].</∆N>
+Adám Brudzewsky's depth operator 
+extension to circle diaeresis (⍥), which works similarly to rank (⍤), but selects
+array components based on depth rather than rank.  If the value of the load-time 
+parameter (global variable) `FUTURES` includes the 
+character scalar `'⍥'`, e.g. `FUTURES← '⍥'`,
+then this fun *future* feature will be 
+recognized within code fields, without impacting other capabilities of `⍥`. Right now,
+there are no further future features.
+
 ### ∆F Help's Secret Variant
 
 `∆F⍨'help'` has a secret variant: <∆N>_synonym:_ `∆F⍨'help-n'`.</∆N>`∆F⍨'help-narrow'`.

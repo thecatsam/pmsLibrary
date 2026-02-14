@@ -93,9 +93,10 @@
 ⍝ Set char. rendering of ⎕THIS. We may set ⎕THIS.⎕DF later, but ∆THIS will remain as is.
  
 ⍝ FUTURES: 
-⍝ - If it contains ⍥, enables extension to ⍥ that includes the Depth operation.
-⍝ - If not, only standard version 19 and 20 actions of ⍥ are enabled.
-⍝ See CircleDiaeresis.dyalog in directory ∆F.
+⍝ - If it contains ⍥, '⍥'∊FUTURES,  ⍥ is extended to include the Depth operation, i.e.
+⍝   to select subarrays based on depth (just as ⍤ selects subarrays based on Rank).
+⍝ - If not, only the standard behaviours of ⍥ (in versions 19 and 20) are enabled.
+⍝ See CircleDiaeresis.dyalog in directory ∆F for attribution and license.
   FUTURES← '⍥'
 
   ∆THIS← ⍕⎕THIS                
@@ -217,7 +218,7 @@
       c= esc:   (pfx, a) ∇ w⊣ a w← ûsr CFEsc w         ⍝ `⍵, `⋄, `A, `B, etc.
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
-    ⍝ This next will never be executed unless ('⍥'∊FUTURES).
+    ⍝ This next line will never be executed unless ('⍥'∊FUTURES).
       c= cdCh:  (pfx, scCD) ∇ w                        ⍝ Adam B's CircleDiaeresis (optional).
       ~c∊sdcfCh: ⎕SIGNAL cfLogicÊ                      ⍝ CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
@@ -315,6 +316,7 @@
   dia2← ⎕UCS 8900 9671   
 ⍝ Order brklist chars roughly by frequency, high to low. 
   cfBrkList←  dq sq esc lb rb dol omUs ra da pct libra  
+⍝ If (~'⍥'∊FUTURES), we will (correctly) never see '⍥' in Code Fields  
   cfBrkList,← (cdCh/⍨ '⍥'∊FUTURES), ∊qtsL 
   tfBrkList← esc lb                 
   lb_rb← lb rb ⋄ om_omUs← om omUs ⋄ sp_sq← sp sq ⋄   esc_lb_rb← esc lb rb  
@@ -719,12 +721,14 @@
   ⍝ User-callable functions:          A  B  C  D  F  J  Q  S  T  W 
   ⍝                                   L (handled ad hoc); D (synonym to T)
   ⍝ ∆F-internal (non-user) funtions:  Ð  M
+
   :Section CircleDiaeresis 
     ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
+    ⍝ See Section Future_CircleDiaeresis
       ⎕SHADOW 'cdFut' ⋄ cdFut← 0 
       :If '⍥'∊ FUTURES
       :Andif 0≠ ≢cdStr← Import_CircleDiaeresis 1
-          cdFut← 1 
+          cdFut← 1                ⍝ If we can't import, we just ignore ⍥.
         ⍝ Adam B's "future"  ⍥ with depth operator extension. We call it 'CD' internally. 
           ⍎'CD←',cdStr 
           scCD2←  HT ' ⎕THIS.CD ' cdStr
@@ -732,26 +736,33 @@
           scCD2←  cdCh cdCh 
       :Endif 
       cdFut { ~⍵: _← ⍬
-        ⎕← '>>> CircleDiaeresis (⍥) Depth-Extension Future ','abled',⍨ 'Dis' 'En'⊃⍨⍺ 
+        ⎕← '>>> CircleDiaeresis (⍥) Depth-Extension Future Feature ','abled',⍨ 'Dis' 'En'⊃⍨⍺ 
       } VERBOSE_LOADTIME
   :EndSection CircleDiaeresis 
+
     scCodeTbl← ↓⍉↑scA2 scB2 scC2 scD2 scF2 scJ2 scQ2 scS2 scT2  scW2   scÐ2 scM2 scCD2 
     nSC← ≢scUser←  'A    B    C    D    F    J    Q    S    T     W'~' '                          
     MapSC← scUser∘⍳ 
     ok← 1 
   ∇
 
-:Section CircleDiaeresis_Future
-∇ {cS}← Import_CircleDiaeresis flag; CircleDiaeresis  
-  cS← '' 
-  :If ~flag ⋄ :Return ⋄ :EndIf  
-⍝ See MIT License in file CircleDiaeresis.dyalog.
-  2 ⎕FIX 'file://CircleDiaeresis.dyalog'
-  cS← {                       ⍝ Generate CircleDiaeresis code string.
-      '{','}',⍨ 1↓ ∊'⋄',¨ ⍵ '''[^'']*''' '^\h*(⋄?)' '\h*⍝.*'  ⎕R '' '\0' '\1' '' ⊣1↓ ¯1↓ ⎕NR ⍵
-  }'CircleDiaeresis' 
+:Section Import CircleDiaeresis
+⍝ See Section CircleDiaeresis
+∇ {cdStr}← Import_CircleDiaeresis flag; cdNm 
+  cdNm← '∆F/CircleDiaeresis.dyalog'
+  :If flag   
+      ⎕SHADOW 1⊃⎕NPARTS cdNm 
+      2 ⎕FIX 'file://',cdNm                     ⍝ See MIT License in file CircleDiaeresis.dyalog.
+      cdStr← {                                  ⍝ Generate CircleDiaeresis code string.
+          bdy← 1↓ ¯1↓ ⎕NR ⍵                     ⍝ Remove first "nm←{" and last "}" lines.
+          bdy← '''[^'']*''' '^\h*(⋄?)' '\h*⍝.*'  ⎕R '\0' '\1' '' ⊣bdy 
+           '{','}',⍨ 1↓ ∊'⋄',¨ bdy 
+      } 1⊃ ⎕NPARTS cdNm 
+  :Else 
+      cS← '' 
+  :EndIf   
 ∇
-:EndSection CircleDiaeresis_Future
+:EndSection Import CircleDiaeresis
 
   ∇ {ok}← ⍙Load_Help hfi;e1; e2 
   ⍝ Loading the help html file...

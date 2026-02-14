@@ -3024,8 +3024,23 @@ code for the <em>dfn</em> returned via <code>(dfn: 1)</code>. If
 option <em>returns</em> the code string, the
 <strong><em>verbose</em></strong> option won’t also <em>display</em> the
 code string.</p>
-<h3 data-number="6.1.2" id="f-helps-secret-variant"><span
-class="header-section-number">6.1.2</span> ∆F Help’s Secret Variant</h3>
+<h3 data-number="6.1.2"
+id="future-behaviour-of-circle-diaeresis-here-today"><span
+class="header-section-number">6.1.2</span> Future Behaviour of ⍥ (Circle
+Diaeresis) Here Today</h3>
+<p>As a load-time option, <strong>∆F</strong> adds <span
+class="margin-note">See <strong>abrudz dyalog-apl-extended
+/CircleDiaeresis.dyalog</strong> on Github [retrieved
+2026-02-13].</span> Adám Brudzewsky’s depth operator extension to circle
+diaeresis (⍥), which works similarly to rank (⍤), but selects array
+components based on depth rather than rank. If the value of the
+load-time parameter (global variable) <code>FUTURES</code> includes the
+character scalar <code>'⍥'</code>, e.g. <code>FUTURES← '⍥'</code>, then
+this fun <em>future</em> feature will be recognized within code fields,
+without impacting other capabilities of <code>⍥</code>. Right now, there
+are no further future features.</p>
+<h3 data-number="6.1.3" id="f-helps-secret-variant"><span
+class="header-section-number">6.1.3</span> ∆F Help’s Secret Variant</h3>
 <p><code>∆F⍨'help'</code> has a secret variant: <span
 class="margin-note"><em>synonym:</em>
 <code>∆F⍨'help-n'</code>.</span><code>∆F⍨'help-narrow'</code>. With this
@@ -3034,8 +3049,8 @@ variant, the help session will start up in a narrower window
 notes will appear, as in the default case: <span
 class="margin-note"><em>synonym:</em>
 <code>∆F⍨'help-wide'</code>.</span><code>∆F⍨'help'</code>.</p>
-<h3 data-number="6.1.3" id="fs-library-parameter-option-parms"><span
-class="header-section-number">6.1.3</span> ∆F’s Library Parameter
+<h3 data-number="6.1.4" id="fs-library-parameter-option-parms"><span
+class="header-section-number">6.1.4</span> ∆F’s Library Parameter
 Option: ‘parms’</h3>
 <p>Normally, ∆F £ibrary parameters are established when
 <strong>∆F</strong> and associated libraries are loaded (<em>e.g.</em>

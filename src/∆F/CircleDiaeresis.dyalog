@@ -1,10 +1,5 @@
-⍝ CircleDiaeresis.dyalog
-⍝ Github: abrudz/dyalog_vision
-⍝ CircleDiaeresis function: Adam B's "future"  ⍥ with depth operator extension. 
-⍝ [License for CircleDiaeresis operator only]
-⍝ ------------- 
-⍝ MIT License
-⍝ Copyright (c) 2022 Adám Brudzewsky
+﻿⍝  MIT License
+⍝ Copyright (c) 2018 Adám Brudzewsky
 
 ⍝ Permission is hereby granted, free of charge, to any person obtaining a copy
 ⍝ of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +17,9 @@
 ⍝ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 ⍝ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ⍝ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-⍝ SOFTWARE. 
-CircleDiaeresis←{ 
+⍝ SOFTWARE.
+
+ CircleDiaeresis←{ 
     0::⎕SIGNAL⊂⎕DMX.(('EN'EN)('EM'EM)('Message'(OSError{⍵,2⌽(×≢⊃⍬⍴2⌽⍺,⊂'')/'") ("',⊃⍬⍴2⌽⍺}Message)))
     ncs←⎕NC⊃⍤0⊢'⍺' '⍵⍵'
     0 3≡ncs:⍺⍺ ⍵⍵ ⍵         ⍝   f⍥g Y
