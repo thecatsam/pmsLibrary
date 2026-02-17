@@ -3034,11 +3034,12 @@ class="margin-note">See <strong>abrudz dyalog-apl-extended
 2026-02-13].</span> Adám Brudzewsky’s depth operator extension to circle
 diaeresis (⍥), which works similarly to rank (⍤), but selects array
 components based on depth rather than rank. If the value of the
-load-time parameter (global variable) <code>FUTURES</code> includes the
-character scalar <code>'⍥'</code>, e.g. <code>FUTURES← '⍥'</code>, then
-this fun <em>future</em> feature will be recognized within code fields,
-without impacting other capabilities of <code>⍥</code>. Right now, there
-are no further future features.</p>
+load-time parameter <span class="margin-note">See
+<code>FUTURES_CD</code> global variable in ∆F/∆FUtils.dyalog.</span>
+<code>FUTURES_CD</code> is set to <code>1</code>, then this fun
+<em>future</em> feature will be recognized within code fields, without
+impacting other capabilities of <code>⍥</code>. Right now, there are no
+further future features.</p>
 <h3 data-number="6.1.3" id="f-helps-secret-variant"><span
 class="header-section-number">6.1.3</span> ∆F Help’s Secret Variant</h3>
 <p><code>∆F⍨'help'</code> has a secret variant: <span
@@ -3063,6 +3064,21 @@ update, use <strong>∆F</strong>’s <code>'parms'</code> option.</p>
 <strong>./.∆F,</strong> updates the <em>£ibrary</em> parameters,
 returning them in alphabetical order along with their values as a single
 character matrix. No current session objects are affected.</p>
+<h3 data-number="6.1.5" id="fs-library-parameter-option-globals"><span
+class="header-section-number">6.1.5</span> ∆F’s Library Parameter
+Option: ‘globals’</h3>
+<p><strong>∆F</strong> has a number of load-time parameters (global
+variables) that set its runtime behaviour for all users. You can view
+these parameters using the call: <code>∆F⍨ 'globals'</code>. The
+parameters include:</p>
+<pre><code>
+  TRAP_ERRORS      VERBOSE_RUNTIME      VERBOSE_LOADTIME  SIGNAL_LIB_ERRS
+  ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_UTILS      HELP_HTML_FI   
+  LIB_ACTIVE       LIB_PARM_FI          LIB_USER_FI       LIB_SRC_FI
+  OPTS_KW          OPTS_DEFval          OPTS_N
+  VERBOSE_RUNTIME  VERSION              FUTURES_CD</code></pre>
+<p>The meaning of each parameter and appropriate values are currently
+documented solely within the <strong>∆F</strong> code itself.</p>
 <h2 data-number="6.2" id="appendix-ii-python-fstrings"><span
 class="header-section-number">6.2</span> Appendix II: Python
 f‑strings</h2>

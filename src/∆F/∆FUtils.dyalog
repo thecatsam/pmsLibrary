@@ -10,7 +10,7 @@
 ⍝   ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_UTILS      HELP_HTML_FI   
 ⍝   LIB_ACTIVE       LIB_PARM_FI          LIB_USER_FI       LIB_SRC_FI
 ⍝   OPTS_KW          OPTS_DEFval          OPTS_N
-⍝   VERBOSE_RUNTIME  VERSION              FUTURES
+⍝   VERBOSE_RUNTIME  VERSION              FUTURES_CD
 ⍝ =======================================================================
 ⍝
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F.
@@ -25,7 +25,7 @@
 ⍝ VERBOSE_LOADTIME: Load (Fix)-Time verbosity flag
   VERBOSE_LOADTIME← 1
 ⍝              
-⍝ SIGNAL_LIB_ERRS:  
+⍝ SIGNAL_LIB_ERRS: Affects £.nm and `L.nm constructions. See ∆FLibUtils.dyalog.
 ⍝ - If SIGNAL_LIB_ERRS← 1
 ⍝   always ⎕SIGNAL any actual internal library search error (e.g. OBJECT NOT FOUND ON SEARCH PATH),
 ⍝   even if the ∆F code containing any missing or invalid object is not executed! 
@@ -48,56 +48,71 @@
  
 ⍝ ESCAPE_CHAR: Allows an installation to use a non-standard "escape" char.
 ⍝ ESCAPE_CHAR must be a scalar.
-⍝ If ESCAPE_CHAR is omitted, the default will be '`'.
+⍝ If ESCAPE_CHAR is omitted or null, the default will be '`'.
 ⍝ Note ESCAPE_CHAR is a load-time variable, to take advantage of minor optimizations.
   ESCAPE_CHAR← '`'
 ⍝
 ⍝ Quote pairs, i.e. beyond double quotes and single quotes.
 ⍝ QUOTES_SUPPLEMENTAL must consist of 0 or more PAIRS of left AND right quotes.
-⍝ Note: The code can support all of these at the same time.
-  QS_FR1← '«»'  
+⍝ You might consider any of these additions among others:
+    QS_FR1← '«»'                         ⍝ Help doc shows only these.
   ⍝ QS_FR2 QS_FR3← '“”'  '‘’'       
   ⍝ QS_JP1 QS_JP2← '「」' '『』' 
   ⍝ QS_DE1 QS_DE2 QS_DE3← '»«' '„“' '‚‘'
   ⍝ QS_CH1 QS_CH2← '《》' '「」'
+⍝ Note: The code can support all of these at the same time. 
   QUOTES_SUPPLEMENTAL← QS_FR1  
 
 ⍝ INLINE_UTILS. 
-⍝ If 1, puts full definitions of internal utilities (shortcuts etc.) into the result.
-⍝ If 0, refers to local copies of internal utilities in the result.
-  INLINE_UTILS← 0   
-⍝            
+⍝ If 1, by default,
+⍝     puts full definitions of internal utilities (shortcuts etc.) into the result.
+⍝ If 0, by default,
+⍝     refers to local copies of internal utilities in the result.
+⍝ May be overridden by (inline: ⍵), where ⍵ is either 1 or 0.
+⍝ There are occasions where INLINE_UTILS mode results in marginally faster code, but
+⍝ in general with (verbose: 1), the code is very long and rather unreadable.
+  INLINE_UTILS← 0  
+
+⍝ HELP FILE          
+⍝ File is loaded into ⍙FUtils at load-time for use by ∆F⍨'help'. 
+  HELP_HTML_FI← '∆F/∆FHelp.html'                       
+
+⍝ FUTURES_CD: 
+⍝ - If FUTURES_CD,  ⍥ (CD: Circle-Diaeresis) is extended to include the Depth operation,  
+⍝   i.e. to select subarrays based on depth (just as ⍤ selects subarrays based on Rank).
+⍝ - If not, only the standard behaviours of ⍥ (in versions 19 and 20) are enabled.
+⍝ See CircleDiaeresis.dyalog in directory ∆F for attribution and license.
+  FUTURES_CD← 1 
+     
 ⍝ =======================================================================
 ⍝ SESSION LIBRARY (£ or `L) VARIABLES
 ⍝ =======================================================================
-⍝ Var     Setting  Do we want to use the SESSION LIBRARY autoload feature?
-⍝ LIB_ACTIVE:  2     Yes. Load default (LIB_PARM_FI below) and user parameters (LIB_USER_FI below)
-⍝              1     Yes. Load default parameters ONLY. Good for a demo environment!
-⍝              0     No.  No autoload features should be available.
+⍝ Var     Setting  Do we want to use the SESSION LIBRARY (£, `L) autoload feature and
+⍝                         allow the user to change user parameters (see LIB_USER_FI).
+⍝ LIB_ACTIVE:  2   Yes.   No.  
+⍝                  Load default (see LIB_PARM_FI below) AND user parameters (see LIB_USER_FI)
+⍝              1   Yes.   Yes. 
+⍝                  Load default parameters ONLY, never user's. Good for a demo environment!
+⍝              0   No.    No.
+⍝                  No autoload features should be available.
   LIB_ACTIVE←  2     
-  LIB_PARM_FI←  '∆F/∆FParmDefs.apla' 
-  LIB_USER_FI←  '.∆F' 
-  LIB_SRC_FI←   '∆F/∆FLibUtils.dyalog'                 ⍝ Library shortcuts (£,  `L) utilities.
-⍝ HELP FILE          
-  HELP_HTML_FI← '∆F/∆FHelp.html'                       ⍝ Called from 'help' option. Globally set here              
+  LIB_PARM_FI← '∆F/∆FParmDefs.apla' 
+  LIB_USER_FI← '.∆F'                                   ⍝ Relative to the session current dir.
+  LIB_SRC_FI←  '∆F/∆FLibUtils.dyalog'                  ⍝ Library shortcuts (£,  `L) utilities.
+  
 ⍝ ==================================================================================
 ⍝ VARIABLES FOR ∆F OPTIONS: Positional and keyword 
 ⍝ =======================================================================
   OPTS_KW←      ↑'dfn' 'verbose'        'box' 'auto' 'inline'          ⍝ In order 
   OPTS_DEFval←    0    VERBOSE_RUNTIME   0     1      INLINE_UTILS     ⍝ In order
   OPTS_N←       ≢OPTS_DEFval 
+
 ⍝ OPTS_DEFns: The defaults in namespace form. Treat as a read-only object.
-⍝ Requires ⍙Gen_LegacyAplAN to define ∆VSET, so is defined after it.
-⍝     OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval   
+⍝ Requires ⍙Gen_LegacyAplAN to define ∆VSET, so is defined after it (see below).
+⍝ OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval      
+
 ⍝ after calling ⍙Gen_LegacyAplAN.
 ⍝ Set char. rendering of ⎕THIS. We may set ⎕THIS.⎕DF later, but ∆THIS will remain as is.
- 
-⍝ FUTURES: 
-⍝ - If it contains ⍥, '⍥'∊FUTURES,  ⍥ is extended to include the Depth operation, i.e.
-⍝   to select subarrays based on depth (just as ⍤ selects subarrays based on Rank).
-⍝ - If not, only the standard behaviours of ⍥ (in versions 19 and 20) are enabled.
-⍝ See CircleDiaeresis.dyalog in directory ∆F for attribution and license.
-  FUTURES← '⍥'
 
   ∆THIS← ⍕⎕THIS                
 
@@ -218,7 +233,7 @@
       c= esc:   (pfx, a) ∇ w⊣ a w← ûsr CFEsc w         ⍝ `⍵, `⋄, `A, `B, etc.
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
-    ⍝ This next line will never be executed unless ('⍥'∊FUTURES).
+    ⍝ This next line will never be executed unless FUTURES_CD=1.
       c= cdCh:  (pfx, scCD) ∇ w                        ⍝ Adam B's CircleDiaeresis (optional).
       ~c∊sdcfCh: ⎕SIGNAL cfLogicÊ                      ⍝ CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
@@ -300,8 +315,8 @@
   om← '⍵'                                              ⍝ ⍵ not in cfBrklist, since it is not special. (See `⍵).
   nl nlVis← ⎕UCS 13 9252                               ⍝ We use 13 (CR) for nl; 9252 (␤) for nlVis.
 ⍝ esc: Set value( always scalar) at LOAD time.
-⍝ If global ESCAPE_CHAR is not present, '`' is used.
-  esc← '`' {0=⎕NC ⍵: ⍺ ⋄ ⍬⍴⎕OR ⍵ } 'ESCAPE_CHAR' 
+⍝ If global ESCAPE_CHAR is not present or is null, '`' is used.
+  esc← '`' { 0=⎕NC ⍵: ⍺ ⋄ 0=≢e←⎕OR ⍵: ⍺ ⋄ ⍬⍴e } 'ESCAPE_CHAR' 
 ⍝ Basic quote chars
   dq sq← '"'''
 ⍝ qtsL qtsR:
@@ -316,8 +331,8 @@
   dia2← ⎕UCS 8900 9671   
 ⍝ Order brklist chars roughly by frequency, high to low. 
   cfBrkList←  dq sq esc lb rb dol omUs ra da pct libra  
-⍝ If (~'⍥'∊FUTURES), we will (correctly) never see '⍥' in Code Fields  
-  cfBrkList,← (cdCh/⍨ '⍥'∊FUTURES), ∊qtsL 
+⍝ If (~FUTURES_CD), we will (correctly) never see '⍥' in Code Fields  
+  cfBrkList,← (cdCh/⍨ FUTURES_CD), ∊qtsL 
   tfBrkList← esc lb                 
   lb_rb← lb rb ⋄ om_omUs← om omUs ⋄ sp_sq← sp sq ⋄   esc_lb_rb← esc lb rb  
 ⍝ self-doc code field chars →↓%
@@ -617,6 +632,7 @@
 
     nm← destNs.⎕FX CpyR NoEmpty s∘Apply2 keepCm∘Cm ⎕NR '∆FSrc' 
     :If fixedOk← 0≠1↑0⍴ nm 
+      {}destNs.⎕LOCK⍣lockFn⊣ nm 
       (⎕∘←)⍣VERBOSE_LOADTIME⊢ '>>> Created function ',(⍕destNs),'.',nm 
     :Else 
       ⎕←'>>> There was an error applying ⍙Export_∆F. Could not create "',(⍕destNs),'.∆F"' 
@@ -726,8 +742,7 @@
     ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
     ⍝ See Section Future_CircleDiaeresis
       ⎕SHADOW 'cdFut' ⋄ cdFut← 0 
-      :If '⍥'∊ FUTURES
-      :Andif 0≠ ≢cdStr← Import_CircleDiaeresis 1
+      :If FUTURES_CD ⋄ :Andif 0≠ ≢cdStr← Import_CircleDiaeresis 1
           cdFut← 1                ⍝ If we can't import, we just ignore ⍥.
         ⍝ Adam B's "future"  ⍥ with depth operator extension. We call it 'CD' internally. 
           ⍎'CD←',cdStr 
@@ -806,7 +821,7 @@
      These,← 'LIB_USER_FI'         'LIB_SRC_FI'      
      These,← 'OPTS_KW'             'OPTS_DEFval'      
      These,← 'QUOTES_SUPPLEMENTAL' 'TRAP_ERRORS'  
-     These,← 'VERBOSE_LOADTIME'    'VERBOSE_RUNTIME' 'VERSION' 'FUTURES'
+     These,← 'VERBOSE_LOADTIME'    'VERBOSE_RUNTIME' 'VERSION' 'FUTURES_CD'
     ~⍵: _←1 0⍴0  
       vv← 1∘⎕SE.Dyalog.Array.Serialise∘⎕OR¨ kk← These[⍋These]
     1: _← ↑  '(', ')',⍨ vv {'  ',⍵ , ⍺}¨ (1+⌈/≢¨ kk)↑¨kk,¨ ':'  
@@ -817,7 +832,7 @@
   ⍝ ∆NS, ∆VGET, ∆VSET, AN2Apl, Apl2AN are version-aware.
     ⍙Gen_LegacyAplAN  ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'  
     OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval        ⍝ Generate default opts NS
-    ⍙Export_∆F ##  0 1  
+    ⍙Export_∆F ##  0 0                                 ⍝ Keep comments? (0→NO); lock? (0→NO).
     ⍙Load_Shortcuts
     ⍙Load_Help HELP_HTML_FI
     ⍙Load_LibAuto LIB_SRC_FI LIB_ACTIVE

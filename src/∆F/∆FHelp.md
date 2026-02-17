@@ -1780,8 +1780,7 @@ dyalog-apl-extended /CircleDiaeresis.dyalog** on Github [retrieved 2026-02-13].<
 Adám Brudzewsky's depth operator 
 extension to circle diaeresis (⍥), which works similarly to rank (⍤), but selects
 array components based on depth rather than rank.  If the value of the load-time 
-parameter (global variable) `FUTURES` includes the 
-character scalar `'⍥'`, e.g. `FUTURES← '⍥'`,
+parameter <∆N>See `FUTURES_CD` global variable in ∆F/∆FUtils.dyalog.</∆N> `FUTURES_CD` is set to `1`,
 then this fun *future* feature will be 
 recognized within code fields, without impacting other capabilities of `⍥`. Right now,
 there are no further future features.
@@ -1801,6 +1800,22 @@ are loaded (_e.g._ via `]load ∆F -t=⎕SE`). After editing the parameter file 
 
 `∆F⍨ 'parms'` reads the user parameter file **./.∆F,**
 updates the _£ibrary_ parameters, returning them in alphabetical order along with their values as a single character matrix. No current session objects are affected.
+
+### ∆F's Library Parameter Option: 'globals'
+
+**∆F** has a number of load-time parameters (global variables) that set its runtime behaviour for 
+all users. You can view these parameters using the call: `∆F⍨ 'globals'`.  The parameters
+include:
+```
+
+  TRAP_ERRORS      VERBOSE_RUNTIME      VERBOSE_LOADTIME  SIGNAL_LIB_ERRS
+  ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_UTILS      HELP_HTML_FI   
+  LIB_ACTIVE       LIB_PARM_FI          LIB_USER_FI       LIB_SRC_FI
+  OPTS_KW          OPTS_DEFval          OPTS_N
+  VERBOSE_RUNTIME  VERSION              FUTURES_CD
+```
+
+The meaning of each parameter and appropriate values are currently documented solely within the **∆F** code itself.
 
 ## Appendix II: Python f‑strings
 
