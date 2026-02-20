@@ -2399,7 +2399,9 @@ line.</td>
 <td style="text-align: center;">Box</td>
 <td style="text-align: center;"><code>`B ⍵</code></td>
 <td style="text-align: justify;">Places <code>⍵</code> in a box.
-<code>⍵</code> is any array.</td>
+<code>⍵</code> is any array. <big>👉</big>In contrast with Dyalog
+<code>]box</code> mode, even simple scalars and vectors are boxed
+here.</td>
 </tr>
 <tr>
 <td style="text-align: justify;"><strong>`C</strong></td>
@@ -3031,17 +3033,26 @@ Diaeresis) Here Today</h3>
 <p>As a load-time option, <strong>∆F</strong> adds <span
 class="margin-note">See <strong>abrudz dyalog-apl-extended
 /CircleDiaeresis.dyalog</strong> on Github [retrieved
-2026-02-13].</span> Adám Brudzewsky’s depth operator extension to circle
-diaeresis (⍥), which works similarly to rank (⍤), but selects array
-components based on depth rather than rank. If the value of the
-load-time parameter <span class="margin-note">See
+2026-02-13].</span> Adám Brudzewsky’s <strong>Depth operator</strong>
+extension to circle diaeresis (⍥), which works similarly to rank (⍤),
+but selects array components based on depth rather than rank. If the
+value of the load-time parameter <span class="margin-note">See
 <code>FUTURES_CD</code> global variable in ∆F/∆FUtils.dyalog.</span>
 <code>FUTURES_CD</code> is set to <code>1</code>, then this fun
 <em>future</em> feature will be recognized within code fields, without
 impacting other capabilities of <code>⍥</code>. Right now, there are no
 further future features.</p>
-<h3 data-number="6.1.3" id="f-helps-secret-variant"><span
-class="header-section-number">6.1.3</span> ∆F Help’s Secret Variant</h3>
+<h3 data-number="6.1.3"
+id="future-behaviour-of-select-sane-indexing-here-today"><span
+class="header-section-number">6.1.3</span> Future Behaviour of ⊇ (Select
+/ Sane Indexing) Here Today</h3>
+<p>As a load-time option, <strong>∆F</strong> adds the “future”
+<strong>Select</strong> function (also known as <em>sane indexing</em>).
+For more information, see
+<a id="displayText" href="javascript:linkAlert();"><span
+class="linkNote">https://aplwiki.com/wiki/From</span></a>.</p>
+<h3 data-number="6.1.4" id="f-helps-secret-variant"><span
+class="header-section-number">6.1.4</span> ∆F Help’s Secret Variant</h3>
 <p><code>∆F⍨'help'</code> has a secret variant: <span
 class="margin-note"><em>synonym:</em>
 <code>∆F⍨'help-n'</code>.</span><code>∆F⍨'help-narrow'</code>. With this
@@ -3050,8 +3061,8 @@ variant, the help session will start up in a narrower window
 notes will appear, as in the default case: <span
 class="margin-note"><em>synonym:</em>
 <code>∆F⍨'help-wide'</code>.</span><code>∆F⍨'help'</code>.</p>
-<h3 data-number="6.1.4" id="fs-library-parameter-option-parms"><span
-class="header-section-number">6.1.4</span> ∆F’s Library Parameter
+<h3 data-number="6.1.5" id="fs-library-parameter-option-parms"><span
+class="header-section-number">6.1.5</span> ∆F’s Library Parameter
 Option: ‘parms’</h3>
 <p>Normally, ∆F £ibrary parameters are established when
 <strong>∆F</strong> and associated libraries are loaded (<em>e.g.</em>
@@ -3064,8 +3075,8 @@ update, use <strong>∆F</strong>’s <code>'parms'</code> option.</p>
 <strong>./.∆F,</strong> updates the <em>£ibrary</em> parameters,
 returning them in alphabetical order along with their values as a single
 character matrix. No current session objects are affected.</p>
-<h3 data-number="6.1.5" id="fs-library-parameter-option-globals"><span
-class="header-section-number">6.1.5</span> ∆F’s Library Parameter
+<h3 data-number="6.1.6" id="fs-library-parameter-option-globals"><span
+class="header-section-number">6.1.6</span> ∆F’s Library Parameter
 Option: ‘globals’</h3>
 <p><strong>∆F</strong> has a number of load-time parameters (global
 variables) that set its runtime behaviour for all users. You can view

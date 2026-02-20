@@ -83,6 +83,9 @@
 ⍝ - If not, only the standard behaviours of ⍥ (in versions 19 and 20) are enabled.
 ⍝ See CircleDiaeresis.dyalog in directory ∆F for attribution and license.
   FUTURES_CD← 1 
+⍝ FUTURES_RSU
+⍝ Future implementation (?) of right shoe underbar as select (aka "sane indexing")
+  FUTURES_RSU←1
      
 ⍝ =======================================================================
 ⍝ SESSION LIBRARY (£ or `L) VARIABLES
@@ -111,9 +114,9 @@
 ⍝ Requires ⍙Gen_LegacyAplAN to define ∆VSET, so is defined after it (see below).
 ⍝ OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval      
 
-⍝ after calling ⍙Gen_LegacyAplAN.
 ⍝ Set char. rendering of ⎕THIS. We may set ⎕THIS.⎕DF later, but ∆THIS will remain as is.
 
+  APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'   
   ∆THIS← ⍕⎕THIS                
 
    :EndSection   INITIALIZATION
@@ -234,7 +237,9 @@
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
     ⍝ This next line will never be executed unless FUTURES_CD=1.
-      c= cdCh:  (pfx, scCD) ∇ w                        ⍝ Adam B's CircleDiaeresis (optional).
+      c= cd:  (pfx, scCD) ∇ w                          ⍝ Adam B's CircleDiaeresis (optional).
+    ⍝ This next line will never be executed unless FUTURES_RSU=1.
+      c= rsu: (pfx, scSel) ∇ w                         ⍝ Select / Sane Indexing
       ~c∊sdcfCh: ⎕SIGNAL cfLogicÊ                      ⍝ CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
       ûsr.brC>1:    (pfx, c scA⊃⍨ c= pct) ∇ w          ⍝ internal dfn => not SDCF
@@ -288,7 +293,7 @@
   ⍝ Shortcuts: 
   ⍝    See ⍙Load_Shortcuts.
   ⍝ This must follow the ordering specified there EXACTLY.  
-    (scA scB scC scD scF scJ scQ scS scT scW scÐ scM scCD)← ûsr.inline⊃ scCodeTbl   
+    (scA scB scC scD scF scJ scQ scS scT scW scÐ scM scCD scSel)← ûsr.inline⊃ scCodeTbl   
     ûsr.acache← ⍬                                      ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
     ûsr.flds← ⍬                                        ⍝ output fields, each a CV (Char Vec)
@@ -324,15 +329,15 @@
 ⍝    See QUOTES_SUPPLEMENTAL
   qtsL qtsR← (dq,¨2⍴sq) { 0=⎕NC ⍵: ⍺ ⋄ 0=≢v← ⎕OR ⍵: ⍺ ⋄ ⍺,¨ ↓⍉↑,⊆v } 'QUOTES_SUPPLEMENTAL'
 ⍝ Other basic characters
-  sp lb rb lp rp dol omUs ra da pct libra cdCh← ' {}()$⍹→↓%£⍥' 
+  sp lb rb lp rp dol omUs ra da pct libra cd rsu← ' {}()$⍹→↓%£⍥⊇'  ⍝ rsu: right shoe underbar
 ⍝ Seq. `⋄ OR `◇ (see dia2[0, 1]) map onto ⎕UCS 13.
 ⍝ dia2[0]: Dyalog stmt separator (⋄) 
 ⍝ dia2[1]: Alternative character (◇) that is easier to read in some web browsers. 
   dia2← ⎕UCS 8900 9671   
 ⍝ Order brklist chars roughly by frequency, high to low. 
-  cfBrkList←  dq sq esc lb rb dol omUs ra da pct libra  
+  cfBrkList←  dq sq esc lb rb dol omUs ra da pct libra   
 ⍝ If (~FUTURES_CD), we will (correctly) never see '⍥' in Code Fields  
-  cfBrkList,← (cdCh/⍨ FUTURES_CD), ∊qtsL 
+  cfBrkList,← (cd/⍨ FUTURES_CD), (rsu/⍨ FUTURES_RSU), ∊qtsL 
   tfBrkList← esc lb                 
   lb_rb← lb rb ⋄ om_omUs← om omUs ⋄ sp_sq← sp sq ⋄   esc_lb_rb← esc lb rb  
 ⍝ self-doc code field chars →↓%
@@ -677,7 +682,7 @@
   ⍝ Above
     A← XR scA2← HT   ' ⎕THIS.A ' '{⎕ML←1⋄⍺←⍬⋄⊃⍪/(⌈2÷⍨w-m)⌽¨f↑⍤1⍨¨m←⌈/w←⊃∘⌽⍤⍴¨f←⎕FMT¨⍺⍵}' 
   ⍝ Box
-    B← XR scB2← HT   ' ⎕THIS.B ' '{⎕ML←1⋄⍺←0⋄⍺⎕SE.Dyalog.Utils.disp⊂⍣(1≥≡⍵),⍣(0=≡⍵)⊢⍵}' 
+    B← XR scB2← HT   ' ⎕THIS.B ' '{⎕ML←1⋄d←|≡⍵⋄⍺←0⋄⍺⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵}' 
   ⍝ Commas (Numeric ~)
       ⎕SHADOW 'cCod'  
       cCod←  '{'
@@ -738,24 +743,34 @@
   ⍝                                   L (handled ad hoc); D (synonym to T)
   ⍝ ∆F-internal (non-user) funtions:  Ð  M
 
-  :Section CircleDiaeresis 
+  :Section Futures
     ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
     ⍝ See Section Future_CircleDiaeresis
-      ⎕SHADOW 'cdFut' ⋄ cdFut← 0 
+      ⎕SHADOW 'cdFut' 'Note' ⋄ cdFut← 0 
+      Note← { ~⊃⌽⍵: _← ⍬
+        _← '>>>>> Future Feature ', ⍺,': '
+        _,'abled',⍨ 'Dis' 'En'⊃⍨ ⊃⍵
+      } 
       :If FUTURES_CD ⋄ :Andif 0≠ ≢cdStr← Import_CircleDiaeresis 1
           cdFut← 1                ⍝ If we can't import, we just ignore ⍥.
         ⍝ Adam B's "future"  ⍥ with depth operator extension. We call it 'CD' internally. 
           ⍎'CD←',cdStr 
           scCD2←  HT ' ⎕THIS.CD ' cdStr
       :Else
-          scCD2←  cdCh cdCh 
+          scCD2← 2⍴ cd 
       :Endif 
-      cdFut { ~⍵: _← ⍬
-        ⎕← '>>> CircleDiaeresis (⍥) Depth-Extension Future Feature ','abled',⍨ 'Dis' 'En'⊃⍨⍺ 
-      } VERBOSE_LOADTIME
-  :EndSection CircleDiaeresis 
+       'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
+      ⎕SHADOW 'rsuFut' ⋄ rsuFut← 0 
+      :If FUTURES_RSU 
+          rsuFut←1 
+          scSel2← (2⍴⊂ '(⊂⍛⌷)') (2⍴⊂ '(⌷⍤0 99)')⊃⍨ APL_VERSION< 20  ⍝ (⊂⍛⌷) seems faster.
+      :Else 
+          scSel2← 2⍴ rsu 
+      :EndIf 
+      'Right-Shoe Underscore (⊇) Select/Sane Indexing' Note rsuFut VERBOSE_LOADTIME
+  :EndSection Futures 
 
-    scCodeTbl← ↓⍉↑scA2 scB2 scC2 scD2 scF2 scJ2 scQ2 scS2 scT2  scW2   scÐ2 scM2 scCD2 
+    scCodeTbl← ↓⍉↑scA2 scB2 scC2 scD2 scF2 scJ2 scQ2 scS2 scT2  scW2   scÐ2 scM2 scCD2 scSel2 
     nSC← ≢scUser←  'A    B    C    D    F    J    Q    S    T     W'~' '                          
     MapSC← scUser∘⍳ 
     ok← 1 
@@ -830,7 +845,7 @@
 ⍝ Execute the FIX-TIME Routines
 ⍝ ====================================================================================
   ⍝ ∆NS, ∆VGET, ∆VSET, AN2Apl, Apl2AN are version-aware.
-    ⍙Gen_LegacyAplAN  ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'  
+    ⍙Gen_LegacyAplAN  APL_VERSION
     OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval        ⍝ Generate default opts NS
     ⍙Export_∆F ##  0 0                                 ⍝ Keep comments? (0→NO); lock? (0→NO).
     ⍙Load_Shortcuts
