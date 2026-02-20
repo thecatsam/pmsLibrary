@@ -3026,10 +3026,18 @@ code for the <em>dfn</em> returned via <code>(dfn: 1)</code>. If
 option <em>returns</em> the code string, the
 <strong><em>verbose</em></strong> option won’t also <em>display</em> the
 code string.</p>
-<h3 data-number="6.1.2"
+<h3 data-number="6.1.2" id="future-behaviours"><span
+class="header-section-number">6.1.2</span> Future Behaviours</h3>
+<p>There are two future behaviours of APL primitives optionally
+supported by <strong>∆F</strong>, an extension to circle diaeresis (⍥)
+and the availability of right shoe underscore (⊇). Each is available if
+included in the value of <span class="margin-note">See
+below</span>load-time parameter, <code>FUTURES</code>. By default,
+<code>FUTURES← '⍥⊇'</code>.</p>
+<h4 data-number="6.1.2.1"
 id="future-behaviour-of-circle-diaeresis-here-today"><span
-class="header-section-number">6.1.2</span> Future Behaviour of ⍥ (Circle
-Diaeresis) Here Today</h3>
+class="header-section-number">6.1.2.1</span> Future Behaviour of ⍥
+(Circle Diaeresis) Here Today</h4>
 <p>As a load-time option, <strong>∆F</strong> adds <span
 class="margin-note">See <strong>abrudz dyalog-apl-extended
 /CircleDiaeresis.dyalog</strong> on Github [retrieved
@@ -3037,22 +3045,24 @@ class="margin-note">See <strong>abrudz dyalog-apl-extended
 extension to circle diaeresis (⍥), which works similarly to rank (⍤),
 but selects array components based on depth rather than rank. If the
 value of the load-time parameter <span class="margin-note">See
-<code>FUTURES_CD</code> global variable in ∆F/∆FUtils.dyalog.</span>
-<code>FUTURES_CD</code> is set to <code>1</code>, then this fun
+<code>FUTURES</code> global variable in ∆F/∆FUtils.dyalog.</span>
+<code>FUTURES</code> includes <code>'⍥'</code>, then this fun
 <em>future</em> feature will be recognized within code fields, without
-impacting other capabilities of <code>⍥</code>. Right now, there are no
-further future features.</p>
-<h3 data-number="6.1.3"
+impacting other capabilities of <code>⍥</code>.</p>
+<h4 data-number="6.1.2.2"
 id="future-behaviour-of-select-sane-indexing-here-today"><span
-class="header-section-number">6.1.3</span> Future Behaviour of ⊇ (Select
-/ Sane Indexing) Here Today</h3>
+class="header-section-number">6.1.2.2</span> Future Behaviour of ⊇
+(Select / Sane Indexing) Here Today</h4>
 <p>As a load-time option, <strong>∆F</strong> adds the “future”
-<strong>Select</strong> function (also known as <em>sane indexing</em>).
-For more information, see
+<strong>Select</strong> function (also known as <strong>Sane
+indexing</strong>) if the value of the load-time parameter <span
+class="margin-note">See <code>FUTURES</code> global variable in
+∆F/∆FUtils.dyalog.</span> <code>FUTURES</code> includes
+<code>'⍥'</code>. For more information, see
 <a id="displayText" href="javascript:linkAlert();"><span
 class="linkNote">https://aplwiki.com/wiki/From</span></a>.</p>
-<h3 data-number="6.1.4" id="f-helps-secret-variant"><span
-class="header-section-number">6.1.4</span> ∆F Help’s Secret Variant</h3>
+<h3 data-number="6.1.3" id="f-helps-secret-variant"><span
+class="header-section-number">6.1.3</span> ∆F Help’s Secret Variant</h3>
 <p><code>∆F⍨'help'</code> has a secret variant: <span
 class="margin-note"><em>synonym:</em>
 <code>∆F⍨'help-n'</code>.</span><code>∆F⍨'help-narrow'</code>. With this
@@ -3061,8 +3071,8 @@ variant, the help session will start up in a narrower window
 notes will appear, as in the default case: <span
 class="margin-note"><em>synonym:</em>
 <code>∆F⍨'help-wide'</code>.</span><code>∆F⍨'help'</code>.</p>
-<h3 data-number="6.1.5" id="fs-library-parameter-option-parms"><span
-class="header-section-number">6.1.5</span> ∆F’s Library Parameter
+<h3 data-number="6.1.4" id="fs-library-parameter-option-parms"><span
+class="header-section-number">6.1.4</span> ∆F’s Library Parameter
 Option: ‘parms’</h3>
 <p>Normally, ∆F £ibrary parameters are established when
 <strong>∆F</strong> and associated libraries are loaded (<em>e.g.</em>
@@ -3075,8 +3085,8 @@ update, use <strong>∆F</strong>’s <code>'parms'</code> option.</p>
 <strong>./.∆F,</strong> updates the <em>£ibrary</em> parameters,
 returning them in alphabetical order along with their values as a single
 character matrix. No current session objects are affected.</p>
-<h3 data-number="6.1.6" id="fs-library-parameter-option-globals"><span
-class="header-section-number">6.1.6</span> ∆F’s Library Parameter
+<h3 data-number="6.1.5" id="fs-library-parameter-option-globals"><span
+class="header-section-number">6.1.5</span> ∆F’s Library Parameter
 Option: ‘globals’</h3>
 <p><strong>∆F</strong> has a number of load-time parameters (global
 variables) that set its runtime behaviour for all users. You can view
@@ -3087,7 +3097,7 @@ parameters include:</p>
   ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_UTILS      HELP_HTML_FI   
   LIB_ACTIVE       LIB_PARM_FI          LIB_USER_FI       LIB_SRC_FI
   OPTS_KW          OPTS_DEFval          OPTS_N
-  VERBOSE_RUNTIME  VERSION              FUTURES_CD</code></pre>
+  VERBOSE_RUNTIME  VERSION              FUTURES</code></pre>
 <p>The meaning of each parameter and appropriate values are currently
 documented solely within the <strong>∆F</strong> code itself.</p>
 <h2 data-number="6.2" id="appendix-ii-python-fstrings"><span

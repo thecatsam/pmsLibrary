@@ -4,17 +4,18 @@
   VERSION← 'v.0.1.1'          ⍝ Set/updated by ∆F_Publish.dyalog...
   ⎕IO ⎕ML ⎕PP ⎕PW←0 1 34 256    ⍝ Namespace scope. User code is executed in CALLER space (⊃⎕RSI)  
 ⍝ =======================================================================
-⍝ GENERAL GLOBAL VARIABLES (for debugging and exploration) 
+⍝ GENERAL GLOBAL VARIABLES: 
+⍝   SEE ALSO VARIABLE "GLOBALS" below...
 ⍝ ============
 ⍝   TRAP_ERRORS      VERBOSE_RUNTIME      VERBOSE_LOADTIME  SIGNAL_LIB_ERRS
 ⍝   ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_UTILS      HELP_HTML_FI   
 ⍝   LIB_ACTIVE       LIB_PARM_FI          LIB_USER_FI       LIB_SRC_FI
 ⍝   OPTS_KW          OPTS_DEFval          OPTS_N
-⍝   VERBOSE_RUNTIME  VERSION              FUTURES_CD
+⍝   VERBOSE_RUNTIME  VERSION              FUTURES
 ⍝ =======================================================================
 ⍝
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F.
-  TRAP_ERRORS← 1              
+  TRAP_ERRORS← 0             
 ⍝
 ⍝ VERBOSE_RUNTIME: Run-time verbosity flag
 ⍝ (verbose: 1) is ∆F-settable (user) run-time verbosity flag-- which
@@ -77,15 +78,17 @@
 ⍝ File is loaded into ⍙FUtils at load-time for use by ∆F⍨'help'. 
   HELP_HTML_FI← '∆F/∆FHelp.html'                       
 
-⍝ FUTURES_CD: 
-⍝ - If FUTURES_CD,  ⍥ (CD: Circle-Diaeresis) is extended to include the Depth operation,  
+⍝ FUTURES
+  FUTURES← '⍥⊇' 
+⍝ --------------------------------------------------------------------- 
+⍝ '⍥' ∊ FUTURES
+⍝ Potential future implementation of circle diaeresis (⍥) to include the Depth operation,  
 ⍝   i.e. to select subarrays based on depth (just as ⍤ selects subarrays based on Rank).
-⍝ - If not, only the standard behaviours of ⍥ (in versions 19 and 20) are enabled.
+⍝ - If not enabled, only the standard behaviours of ⍥ (in versions 19 and 20) are enabled.
 ⍝ See CircleDiaeresis.dyalog in directory ∆F for attribution and license.
-  FUTURES_CD← 1 
-⍝ FUTURES_RSU
-⍝ Future implementation (?) of right shoe underbar as select (aka "sane indexing")
-  FUTURES_RSU←1
+⍝ ----------------------------------------------------------------------
+⍝ '⊇' ∊ FUTURES
+⍝ Potential future implementation of right shoe underbar (⊇) as Select (aka "sane indexing").
      
 ⍝ =======================================================================
 ⍝ SESSION LIBRARY (£ or `L) VARIABLES
@@ -236,9 +239,9 @@
       c= esc:   (pfx, a) ∇ w⊣ a w← ûsr CFEsc w         ⍝ `⍵, `⋄, `A, `B, etc.
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
-    ⍝ This next line will never be executed unless FUTURES_CD=1.
+    ⍝ This next line will never be executed unless cd∊ FUTURES
       c= cd:  (pfx, scCD) ∇ w                          ⍝ Adam B's CircleDiaeresis (optional).
-    ⍝ This next line will never be executed unless FUTURES_RSU=1.
+    ⍝ This next line will never be executed unless rsu∊ FUTURES
       c= rsu: (pfx, scSel) ∇ w                         ⍝ Select / Sane Indexing
       ~c∊sdcfCh: ⎕SIGNAL cfLogicÊ                      ⍝ CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
@@ -334,10 +337,11 @@
 ⍝ dia2[0]: Dyalog stmt separator (⋄) 
 ⍝ dia2[1]: Alternative character (◇) that is easier to read in some web browsers. 
   dia2← ⎕UCS 8900 9671   
-⍝ Order brklist chars roughly by frequency, high to low. 
+⍝ Order "break" chars roughly by frequency, high to low. 
   cfBrkList←  dq sq esc lb rb dol omUs ra da pct libra   
-⍝ If (~FUTURES_CD), we will (correctly) never see '⍥' in Code Fields  
-  cfBrkList,← (cd/⍨ FUTURES_CD), (rsu/⍨ FUTURES_RSU), ∊qtsL 
+⍝ See defs of FUTURES, cd (⍥) and rsu (⊇) 
+  cfBrkList,← cd rsu/⍨ cd rsu ∊ FUTURES
+  cfBrkList,← ∊qtsL 
   tfBrkList← esc lb                 
   lb_rb← lb rb ⋄ om_omUs← om omUs ⋄ sp_sq← sp sq ⋄   esc_lb_rb← esc lb rb  
 ⍝ self-doc code field chars →↓%
@@ -745,23 +749,32 @@
 
   :Section Futures
     ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
-    ⍝ See Section Future_CircleDiaeresis
       ⎕SHADOW 'cdFut' 'Note' ⋄ cdFut← 0 
       Note← { ~⊃⌽⍵: _← ⍬
         _← '>>>>> Future Feature ', ⍺,': '
         _,'abled',⍨ 'Dis' 'En'⊃⍨ ⊃⍵
       } 
-      :If FUTURES_CD ⋄ :Andif 0≠ ≢cdStr← Import_CircleDiaeresis 1
+      :If cd∊ FUTURES 
+        Import_CircleDiaeresis←{ fiNm imp← ⍺ ⍵ 
+          ~imp: '' ⋄ 0:: ''⊣ ⎕←↑⎕DMX.DM  
+          fn← ⊃2 ⎕FIX 'file://',fiNm                 ⍝ Generate CircleDiaeresis code string.
+          bdy← 1↓ ¯1↓ ⎕NR fn                         ⍝ Remove first "nm←{" and last "}" lines.
+          bdy← '''[^'']*''' '^\h*(⋄?)' '\h*⍝.*'  ⎕R '\0' '\1' ''⊣ bdy 
+          _← ⎕EX fn  
+          '{','}',⍨ 1↓ ∊'⋄',¨ bdy 
+        }  
+        :If 0≠ ≢cdStr← '∆F/CircleDiaeresis.dyalog' Import_CircleDiaeresis 1
           cdFut← 1                ⍝ If we can't import, we just ignore ⍥.
         ⍝ Adam B's "future"  ⍥ with depth operator extension. We call it 'CD' internally. 
           ⍎'CD←',cdStr 
           scCD2←  HT ' ⎕THIS.CD ' cdStr
-      :Else
+        :Else
           scCD2← 2⍴ cd 
-      :Endif 
-       'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
+        :Endif 
+      :EndIf 
+      'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
       ⎕SHADOW 'rsuFut' ⋄ rsuFut← 0 
-      :If FUTURES_RSU 
+      :If rsu∊ FUTURES 
           rsuFut←1 
           scSel2← (2⍴⊂ '(⊂⍛⌷)') (2⍴⊂ '(⌷⍤0 99)')⊃⍨ APL_VERSION< 20  ⍝ (⊂⍛⌷) seems faster.
       :Else 
@@ -775,24 +788,6 @@
     MapSC← scUser∘⍳ 
     ok← 1 
   ∇
-
-:Section Import CircleDiaeresis
-⍝ See Section CircleDiaeresis
-∇ {cdStr}← Import_CircleDiaeresis flag; cdNm 
-  cdNm← '∆F/CircleDiaeresis.dyalog'
-  :If flag   
-      ⎕SHADOW 1⊃⎕NPARTS cdNm 
-      2 ⎕FIX 'file://',cdNm                     ⍝ See MIT License in file CircleDiaeresis.dyalog.
-      cdStr← {                                  ⍝ Generate CircleDiaeresis code string.
-          bdy← 1↓ ¯1↓ ⎕NR ⍵                     ⍝ Remove first "nm←{" and last "}" lines.
-          bdy← '''[^'']*''' '^\h*(⋄?)' '\h*⍝.*'  ⎕R '\0' '\1' '' ⊣bdy 
-           '{','}',⍨ 1↓ ∊'⋄',¨ bdy 
-      } 1⊃ ⎕NPARTS cdNm 
-  :Else 
-      cS← '' 
-  :EndIf   
-∇
-:EndSection Import CircleDiaeresis
 
   ∇ {ok}← ⍙Load_Help hfi;e1; e2 
   ⍝ Loading the help html file...
@@ -831,14 +826,14 @@
   ∇
 ⍝ Show the following special globals in this namespace.
   ⍙ShowGlobalsIf←{  ⍝ 
-     These←  'ESCAPE_CHAR'         'HELP_HTML_FI'    'INLINE_UTILS' 
-     These,← 'LIB_ACTIVE'          'SIGNAL_LIB_ERRS' 'LIB_PARM_FI'  
-     These,← 'LIB_USER_FI'         'LIB_SRC_FI'      
-     These,← 'OPTS_KW'             'OPTS_DEFval'      
-     These,← 'QUOTES_SUPPLEMENTAL' 'TRAP_ERRORS'  
-     These,← 'VERBOSE_LOADTIME'    'VERBOSE_RUNTIME' 'VERSION' 'FUTURES_CD'
+     GLOBALS←  'ESCAPE_CHAR'         'HELP_HTML_FI'    'INLINE_UTILS' 
+     GLOBALS,← 'LIB_ACTIVE'          'SIGNAL_LIB_ERRS' 'LIB_PARM_FI'  
+     GLOBALS,← 'LIB_USER_FI'         'LIB_SRC_FI'      
+     GLOBALS,← 'OPTS_KW'             'OPTS_DEFval'      
+     GLOBALS,← 'QUOTES_SUPPLEMENTAL' 'TRAP_ERRORS'  
+     GLOBALS,← 'VERBOSE_LOADTIME'    'VERBOSE_RUNTIME' 'VERSION' 'FUTURES'
     ~⍵: _←1 0⍴0  
-      vv← 1∘⎕SE.Dyalog.Array.Serialise∘⎕OR¨ kk← These[⍋These]
+      vv← 1∘⎕SE.Dyalog.Array.Serialise∘⎕OR¨ kk← GLOBALS[⍋GLOBALS]
     1: _← ↑  '(', ')',⍨ vv {'  ',⍵ , ⍺}¨ (1+⌈/≢¨ kk)↑¨kk,¨ ':'  
   }
 ⍝ ====================================================================================

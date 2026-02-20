@@ -1773,21 +1773,29 @@ _dfn_ returned via the **_dfn_** option.
 </∆N>, then **∆F** returns a character vector that contains the source code for the _dfn_ returned via `(dfn: 1)`.
 If **_verbose_** is also set, newlines from `` `◇ `` are shown as visible `␤`. However, since this option _returns_ the code string, the **_verbose_** option won't also _display_ the code string.
 
-### Future Behaviour of ⍥ (Circle Diaeresis) Here Today
+### Future Behaviours
+
+There are two future behaviours of APL primitives optionally supported by **∆F**, an extension to
+circle diaeresis (⍥) and the availability of right shoe underscore (⊇). Each is available
+if included in the value of <∆N>See below</∆N>load-time parameter, `FUTURES`. By default,
+`FUTURES← '⍥⊇'`.
+
+#### Future Behaviour of ⍥ (Circle Diaeresis) Here Today
 
 As a load-time option, **∆F** adds <∆N>See **abrudz
 dyalog-apl-extended /CircleDiaeresis.dyalog** on Github [retrieved 2026-02-13].</∆N>
 Adám Brudzewsky's **Depth operator** 
 extension to circle diaeresis (⍥), which works similarly to rank (⍤), but selects
 array components based on depth rather than rank.  If the value of the load-time 
-parameter <∆N>See `FUTURES_CD` global variable in ∆F/∆FUtils.dyalog.</∆N> `FUTURES_CD` is set to `1`,
+parameter <∆N>See `FUTURES` global variable in ∆F/∆FUtils.dyalog.</∆N> `FUTURES` includes `'⍥'`,
 then this fun *future* feature will be 
-recognized within code fields, without impacting other capabilities of `⍥`. Right now,
-there are no further future features.
+recognized within code fields, without impacting other capabilities of `⍥`. 
 
-### Future Behaviour of ⊇ (Select / Sane Indexing) Here Today
+#### Future Behaviour of ⊇ (Select / Sane Indexing) Here Today
 
-As a load-time option, **∆F** adds the "future" **Select** function (also known as *sane indexing*).
+As a load-time option, **∆F** adds the "future" **Select** function (also known as **Sane indexing**)
+if the value of the load-time 
+parameter <∆N>See `FUTURES` global variable in ∆F/∆FUtils.dyalog.</∆N> `FUTURES` includes `'⍥'`.
 For more information, see <a id="displayText" href="javascript:linkAlert();"><span class="linkNote">https:\/\/aplwiki.com\/wiki\/From</span></a>.
 
 ### ∆F Help's Secret Variant
@@ -1817,7 +1825,7 @@ include:
   ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_UTILS      HELP_HTML_FI   
   LIB_ACTIVE       LIB_PARM_FI          LIB_USER_FI       LIB_SRC_FI
   OPTS_KW          OPTS_DEFval          OPTS_N
-  VERBOSE_RUNTIME  VERSION              FUTURES_CD
+  VERBOSE_RUNTIME  VERSION              FUTURES
 ```
 
 The meaning of each parameter and appropriate values are currently documented solely within the **∆F** code itself.
