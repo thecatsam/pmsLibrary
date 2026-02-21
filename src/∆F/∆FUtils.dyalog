@@ -243,7 +243,7 @@
       c= cd:  (pfx, scCD) ∇ w                          ⍝ Adam B's CircleDiaeresis (optional).
     ⍝ This next line will never be executed unless rsu∊ FUTURES
       c= rsu: (pfx, scSel) ∇ w                         ⍝ Select / Sane Indexing
-      ~c∊sdcfCh: ⎕SIGNAL cfLogicÊ                      ⍝ CFBrk leaked unknown char.
+      ~c∊selfDoc: ⎕SIGNAL cfLogicÊ                     ⍝ CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
       ûsr.brC>1:    (pfx, c scA⊃⍨ c= pct) ∇ w          ⍝ internal dfn => not SDCF
         p← +/∧\' '=w
@@ -338,14 +338,15 @@
 ⍝ dia2[1]: Alternative character (◇) that is easier to read in some web browsers. 
   dia2← ⎕UCS 8900 9671   
 ⍝ Order "break" chars roughly by frequency, high to low. 
-  cfBrkList←  dq sq esc lb rb dol omUs ra da pct libra   
+⍝ We take dq to be high freq, but other quotes as low.
+⍝               "  `   {  }  $   ⍹    →  ↓  %   £      '« (default)
+  cfBrkList←  ∪ dq esc lb rb dol omUs ra da pct libra, qtsL    
 ⍝ See defs of FUTURES, cd (⍥) and rsu (⊇) 
   cfBrkList,← cd rsu/⍨ cd rsu ∊ FUTURES
-  cfBrkList,← ∊qtsL 
   tfBrkList← esc lb                 
   lb_rb← lb rb ⋄ om_omUs← om omUs ⋄ sp_sq← sp sq ⋄   esc_lb_rb← esc lb rb  
 ⍝ self-doc code field chars →↓%
-  sdcfCh← ra da pct                                    
+  selfDoc← ra da pct                                    
 
 ⍝ Error constants and fns  
     Ê← { ⍺←11 ⋄ ⊂'EN' ⍺,⍥⊂ 'Message' ⍵ }
@@ -755,22 +756,22 @@
         _,'abled',⍨ 'Dis' 'En'⊃⍨ ⊃⍵
       } 
       :If cd∊ FUTURES 
-        Import_CircleDiaeresis←{ fiNm imp← ⍺ ⍵ 
-          ~imp: '' ⋄ 0:: ''⊣ ⎕←↑⎕DMX.DM  
-          fn← ⊃2 ⎕FIX 'file://',fiNm                 ⍝ Generate CircleDiaeresis code string.
-          bdy← 1↓ ¯1↓ ⎕NR fn                         ⍝ Remove first "nm←{" and last "}" lines.
-          bdy← '''[^'']*''' '^\h*(⋄?)' '\h*⍝.*'  ⎕R '\0' '\1' ''⊣ bdy 
-          _← ⎕EX fn  
-          '{','}',⍨ 1↓ ∊'⋄',¨ bdy 
-        }  
-        :If 0≠ ≢cdStr← '∆F/CircleDiaeresis.dyalog' Import_CircleDiaeresis 1
-          cdFut← 1                ⍝ If we can't import, we just ignore ⍥.
-        ⍝ Adam B's "future"  ⍥ with depth operator extension. We call it 'CD' internally. 
-          ⍎'CD←',cdStr 
-          scCD2←  HT ' ⎕THIS.CD ' cdStr
-        :Else
-          scCD2← 2⍴ cd 
-        :Endif 
+          Import_CircleDiaeresis←{ fiNm imp← ⍺ ⍵ 
+            ~imp: '' ⋄ 0:: ''⊣ ⎕←↑⎕DMX.DM  
+            fn← ⊃2 ⎕FIX 'file://',fiNm                 ⍝ Generate CircleDiaeresis code string.
+            bdy← 1↓ ¯1↓ ⎕NR fn                         ⍝ Remove first "nm←{" and last "}" lines.
+            bdy← '''[^'']*''' '^\h*(⋄?)' '\h*⍝.*'  ⎕R '\0' '\1' ''⊣ bdy 
+            _← ⎕EX fn  
+            '{','}',⍨ 1↓ ∊'⋄',¨ bdy 
+          }  
+          :If 0≠ ≢cdStr← '∆F/CircleDiaeresis.dyalog' Import_CircleDiaeresis 1
+            cdFut← 1                ⍝ If we can't import, we just ignore ⍥.
+          ⍝ Adam B's "future"  ⍥ with depth operator extension. We call it 'CD' internally. 
+            ⍎'_CD_←',cdStr 
+            scCD2←  HT ' ⎕THIS._CD_ ' cdStr
+          :Else
+            scCD2← 2⍴ cd 
+          :Endif 
       :EndIf 
       'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
       ⎕SHADOW 'rsuFut' ⋄ rsuFut← 0 
