@@ -15,7 +15,7 @@
 ⍝ =======================================================================
 ⍝
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F.
-  TRAP_ERRORS← 0             
+  TRAP_ERRORS← 1             
 ⍝
 ⍝ VERBOSE_RUNTIME: Run-time verbosity flag
 ⍝ (verbose: 1) is ∆F-settable (user) run-time verbosity flag-- which
@@ -72,7 +72,7 @@
 ⍝ May be overridden by (inline: ⍵), where ⍵ is either 1 or 0.
 ⍝ There are occasions where INLINE_UTILS mode results in marginally faster code, but
 ⍝ in general with (verbose: 1), the code is very long and rather unreadable.
-  INLINE_UTILS← 0  
+  INLINE_UTILS← 0 
 
 ⍝ HELP FILE          
 ⍝ File is loaded into ⍙FUtils at load-time for use by ∆F⍨'help'. 
@@ -294,9 +294,10 @@
   ûsr.((|dfn),verbose box auto inline)(0∊∊)0 1: ⎕SIGNAL optÊ                             ⍝  
     VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message 
   ⍝ Shortcuts: 
-  ⍝    See ⍙Load_Shortcuts.
+  ⍝    See ⍙Load_Shortcuts 
   ⍝ This must follow the ordering specified there EXACTLY.  
     (scA scB scC scD scF scJ scQ scS scT scW scÐ scM scCD scSel)← ûsr.inline⊃ scCodeTbl   
+    
     ûsr.acache← ⍬                                      ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
     ûsr.flds← ⍬                                        ⍝ output fields, each a CV (Char Vec)
@@ -649,7 +650,75 @@
     :EndIf 
   ∇
 
-⍝ ⍙Load_Shortcuts:   ∇     (niladic) 
+:Section Shortcut functions
+⍝ Above
+    A← {
+      ⎕ML←1 ⋄ ⍺←⍬
+      ⊃⍪/(⌈2÷⍨w-m)⌽¨f↑⍤1⍨¨m←⌈/w←⊃∘⌽⍤⍴¨f←⎕FMT¨⍺⍵
+    } 
+  ⍝ Box
+    B← {⎕ML←1⋄d←|≡⍵⋄⍺←0⋄⍺⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵}  
+  ⍝ Commas (Numeric ~)
+    C←{ 
+      ⎕IO ⎕ML←0 1
+      d←3','⋄⍺←d⋄n s←⍺,d↑⍨0⌊2-⍨≢⍺   ⍝ d: defaults, n: ndigits, s: separator  
+      n←⍕n⋄s←{⍵≡⍥,'&':'\&'⋄⍵/⍨1+'\'=⍵}s 
+      src←'[.Ee]\d+' ('(?<=\d)(?=(\d{',n,'})+([-¯.Ee]|(?=\s|$)))')
+      snk←'&' (,s,'&')
+      1=≢w←{src ⎕R snk⊢⍵}⍤1⍕⍵: ⊃w⋄w
+    } 
+  ⍝ Date: See Time (below)
+  ⍝ Display
+    Ð←  0∘⎕SE.Dyalog.Utils.disp¯1∘↓
+  ⍝ Format        
+    F← ⎕FMT                 
+  ⍝ Justify
+    J← {
+        ⎕PP←34⋄⍺←'L'⋄B←{+/∧\' '=⍵}
+        w⌽⍨(1⎕C⍺){ o←⊂⍺                   ⍝ Treat ⍺ as a scalar.
+          o∊'L'¯1:B ⍵
+          o∊'R' 1:-B⌽⍵ 
+          ⌈0.5×⍵-⍥B⌽⍵                     ⍝ If invalid ⍺, assume 'C'.
+        }w←⎕FMT⍵
+    }
+  ⍝ Library
+  ⍝ £, `L: Not here-- handled ad hoc in code (it's niladic)...   
+  ⍝ Merge  
+    M←{
+      ⎕ML←1
+      ⍺←⊢⋄⊃,/((⌈/≢¨)↑¨⊢)⎕FMT¨⍺⍵
+    } 
+  ⍝ Quote                   
+    Q←  {
+      ⍺←⎕UCS 39            
+      1<|≡⍵:⍺∘∇¨⍵                              
+      (0=⍴⍴⍵)∧1=≡⍵:⍵                           
+      (0≠≡⍵)∧326=⎕DR⍵:⍺∘∇¨⍵                 
+      ⎕ML←1                                                                   
+      ⍺{0=80|⎕DR⍵:⍺,⍺,⍨⍵/⍨ 1+⍺=⍵⋄⍵}⍤1⊢⍵        
+    }
+  ⍝ Serialise
+    S← { 
+      ⎕ML←1⋄11 16 6::⍵⋄⍺←0⋄     
+      1=≢s←⍺⎕SE.Dyalog.Array.Serialise⍵:⊃s⋄
+      ⍪s
+    }
+  ⍝ Time / Date   
+    T← {
+      ⎕ML←1
+      ⍺←'%ISO%'
+      ∊⍣(1=≡⍵)⊢⍺(1200⌶)⊢1⎕DT⊆⍵
+    }
+  ⍝ Wrap 
+    W← {⎕ML←1⋄⍺←⎕UCS 39⋄ 1<|≡⍵: ⍺∘∇¨⍵⋄L R←2⍴⍺⋄{L,R,⍨⍕⍵}⍤1⊢⍵}
+  
+  ⍝ CircleDiaeresis
+  ⍝ Adam B's "future" ⍥ with depth operator extension 
+    cdNm← ⊃2 ⎕FIX 'file://∆F/CircleDiaeresis.dyalog' 
+
+:EndSection Shortcut functions 
+
+⍝ ⍙Load_Shortcut_Calls:   ∇     (niladic) 
 ⍝ At ⎕FIX time, load the run-time userLibrary names and code for user Shortcuts
 ⍝ and similar code (Ð, display, is used internally, so not a true user shortcut).
 ⍝ The userLibrary entries created in ∆Fapl are: 
@@ -679,116 +748,54 @@
 ⍝ At runtime, we'll generate shortcut code "pointers" scA, scB etc. based on flag ¨inline¨.
 ⍝ Warning: Be sure these can run in user env with any ⎕IO and ⎕ML: Localize them where needed.
 ⍝ NOTE: We are creating multiline objects using the old method for compatibility with Dyalog 19 etc.
-  ∇ {ok}← ⍙Load_Shortcuts 
-    ; scUser; scA2; scB2; scC2; scD2; scÐ2; scF2; scJ2; scM2; scQ2; scS2; scT2; scW2; scCD2  
-    ; XR ;HT 
-    XR← ⎕THIS.⍎⊃∘⌽                                   ⍝ XR: Execute the right-hand expression
-    HT← '⎕THIS' ⎕R ∆THIS                             ⍝ HT: "Hardwire" value of ⎕THIS. 
-  ⍝ Above
-    A← XR scA2← HT   ' ⎕THIS.A ' '{⎕ML←1⋄⍺←⍬⋄⊃⍪/(⌈2÷⍨w-m)⌽¨f↑⍤1⍨¨m←⌈/w←⊃∘⌽⍤⍴¨f←⎕FMT¨⍺⍵}' 
-  ⍝ Box
-    B← XR scB2← HT   ' ⎕THIS.B ' '{⎕ML←1⋄d←|≡⍵⋄⍺←0⋄⍺⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵}' 
-  ⍝ Commas (Numeric ~)
-      ⎕SHADOW 'cCod'  
-      cCod←  '{'
-      cCod,←   '⎕IO ⎕ML←0 1⋄'
-      cCod,←   'd←3'',''⋄⍺←d⋄n s←⍺,d↑⍨0⌊2-⍨≢⍺⋄'   ⍝ d: defaults, n: ndigits, s: separator  
-      cCod,←   'n←⍕n⋄s←{⍵≡⍥,''&'':''\&''⋄⍵/⍨1+''\''=⍵}s⋄' 
-      cCod,←   'src←''[.Ee]\d+'' (''(?<=\d)(?=(\d{'',n,''})+([-¯.Ee]|(?=\s|$)))'')⋄'
-      cCod,←   'snk←''&'' ('''',s,''&'')⋄'
-      cCod,←   '1=≢w←{src ⎕R snk⊢⍵}⍤1⍕⍵: ⊃w⋄w'
-      cCod,← '}'
-    C← XR scC2← HT   ' ⎕THIS.C ' cCod 
-  ⍝ Date: See Time (below)
-  ⍝ Display
-    Ð← XR scÐ2← HT   ' ⎕THIS.Ð ' ' 0∘⎕SE.Dyalog.Utils.disp¯1∘↓'    
-  ⍝ Format                       
-    F← XR scF2←      ' ⎕FMT '    ' ⎕FMT ' 
-  ⍝ Justify
-      ⎕SHADOW 'jCod' 
-      jCod← '{'
-      jCod,←   '⎕PP←34⋄⍺←''L''⋄B←{+/∧\'' ''=⍵}⋄'
-      jCod,←   'w⌽⍨(1⎕C⍺){o←⊂⍺⋄'                ⍝ Treat ⍺ as a scalar.
-      jCod,←         'o∊''L''¯1:B ⍵⋄'
-      jCod,←         'o∊''R'' 1:-B⌽⍵⋄'
-      jCod,←                   '⌈0.5×⍵-⍥B⌽⍵⋄'   ⍝ If invalid ⍺, assume 'C'.
-      jCod,←   '}w←⎕FMT⍵'
-      jCod,← '}' 
-    J← XR scJ2← HT   ' ⎕THIS.J '   jCod  
-  ⍝ Library
-  ⍝ £, `L: Not here-- handled ad hoc in code (it's niladic)...   
-  ⍝ Merge  
-    M← XR scM2← HT   ' ⎕THIS.M '   '{⎕ML←1⋄⍺←⊢⋄⊃,/((⌈/≢¨)↑¨⊢)⎕FMT¨⍺⍵}'  
-  ⍝ Quote                   
-      ⎕SHADOW 'qCod'
-      qCod←  '{'
-      qCod,←   '⍺←⎕UCS 39⋄'            
-      qCod,←   '1<|≡⍵:⍺∘∇¨⍵⋄'                              
-      qCod,←   '(0=⍴⍴⍵)∧1=≡⍵:⍵⋄'                           
-      qCod,←   '(0≠≡⍵)∧326=⎕DR⍵:⍺∘∇¨⍵⋄'                 
-      qCod,←   '⎕ML←1⋄'                                                                     
-      qCod,←   '⍺{0=80|⎕DR⍵:⍺,⍺,⍨⍵/⍨ 1+⍺=⍵⋄⍵}⍤1⊢⍵'        
-      qCod,← '}'
-    Q← XR scQ2← HT   ' ⎕THIS.Q ' qCod 
-  ⍝ Serialise
-      ⎕SHADOW 'sCod'
-      sCod←  '{'
-      sCod,←   '⎕ML←1⋄11 16 6::⍵⋄⍺←0⋄'     
-      sCod,←   '1=≢s←⍺⎕SE.Dyalog.Array.Serialise⍵:⊃s⋄'
-      sCod,←   '⍪s'
-      sCod,← '}'
-    S← XR scS2← HT   ' ⎕THIS.S '  sCod 
-  ⍝ Time  
-    T← XR scT2← HT   ' ⎕THIS.T ' '{⎕ML←1⋄⍺←''%ISO%''⋄∊⍣(1=≡⍵)⊢⍺(1200⌶)⊢1⎕DT⊆⍵}' 
-  ⍝ Date
-          scD2← scT2                            ⍝ D is alias to T.               
-  ⍝ Wrap 
-    W← XR scW2← HT   ' ⎕THIS.W ' '{⎕ML←1⋄⍺←⎕UCS 39⋄ 1<|≡⍵: ⍺∘∇¨⍵⋄L R←2⍴⍺⋄{L,R,⍨⍕⍵}⍤1⊢⍵}'
+  ∇ {ok}← ⍙Load_Shortcut_Calls 
+    ; scUser
+    ; scA2; scB2; scC2; scD2; scÐ2; scF2; scJ2
+    ; scM2; scQ2; scS2; scT2; scW2; scCD2; scSel2  
+    ; Inline; Publish 
+    Publish←{ ⍺← Inline ⍵    
+      1: _← (' ',' ',⍨ ∆THIS,'.',⍵) ⍺
+    }
+    Inline← {  
+      bdy←  (⊂f↓⍨ 2+'←'⍳⍨ f←⊃bdy), 1↓ bdy← ⎕NR ⍵ 
+      src← '''[^'']*''' '\h*⍝.*' '^\h*|\h*$' '\h*⋄\h*' '\h*(⍺{1,2}|⍵{1,2}])\h*(?!\1)'
+      snk← '\0'         ''       ''          '⋄'       '\1'
+      '{', '}',⍨ 2↓ ¯2↓ ∊'⋄',¨ src  ⎕R snk⊣ bdy 
+    } 
+    ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
+      ⎕SHADOW 'cdFut' 'rsuFut' 'Note' 
+      Note← { ~⊃⌽⍵: _← ⍬
+        _← '>>>>> Future Feature ', ⍺,': ' ⋄  _,'abled',⍨ 'Dis' 'En'⊃⍨ ⊃⍵
+      } 
+      cdFut←  (cd∊ FUTURES) ∧ 0≠≢cdNm 
+      rsuFut←  rsu∊ FUTURES 
+      'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
+      'Right-Shoe Underscore (⊇) Select/Sane Indexing' Note rsuFut VERBOSE_LOADTIME
+
   ⍝ User-callable functions:          A  B  C  D  F  J  Q  S  T  W 
   ⍝                                   L (handled ad hoc); D (synonym to T)
   ⍝ ∆F-internal (non-user) funtions:  Ð  M
+  ⍝ Others: CircleDiaeresis, Select -- called only via symbol ⍥, ⊇ (if enabled)
 
-  :Section Futures
-    ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
-      ⎕SHADOW 'cdFut' 'Note' ⋄ cdFut← 0 
-      Note← { ~⊃⌽⍵: _← ⍬
-        _← '>>>>> Future Feature ', ⍺,': '
-        _,'abled',⍨ 'Dis' 'En'⊃⍨ ⊃⍵
-      } 
-      :If cd∊ FUTURES 
-          Import_CircleDiaeresis←{ fiNm imp← ⍺ ⍵ 
-            ~imp: '' ⋄ 0:: ''⊣ ⎕←↑⎕DMX.DM  
-            fn← ⊃2 ⎕FIX 'file://',fiNm                 ⍝ Generate CircleDiaeresis code string.
-            bdy← 1↓ ¯1↓ ⎕NR fn                         ⍝ Remove first "nm←{" and last "}" lines.
-            bdy← '''[^'']*''' '^\h*(⋄?)' '\h*⍝.*'  ⎕R '\0' '\1' ''⊣ bdy 
-            _← ⎕EX fn  
-            '{','}',⍨ 1↓ ∊'⋄',¨ bdy 
-          }  
-          :If 0≠ ≢cdStr← '∆F/CircleDiaeresis.dyalog' Import_CircleDiaeresis 1
-            cdFut← 1                ⍝ If we can't import, we just ignore ⍥.
-          ⍝ Adam B's "future"  ⍥ with depth operator extension. We call it 'CD' internally. 
-            ⍎'_CD_←',cdStr 
-            scCD2←  HT ' ⎕THIS._CD_ ' cdStr
-          :Else
-            scCD2← 2⍴ cd 
-          :Endif 
-      :EndIf 
-      'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
-      ⎕SHADOW 'rsuFut' ⋄ rsuFut← 0 
-      :If rsu∊ FUTURES 
-          rsuFut←1 
-          scSel2← (2⍴⊂ '(⊂⍛⌷)') (2⍴⊂ '(⌷⍤0 99)')⊃⍨ APL_VERSION< 20  ⍝ (⊂⍛⌷) seems faster.
-      :Else 
-          scSel2← 2⍴ rsu 
-      :EndIf 
-      'Right-Shoe Underscore (⊇) Select/Sane Indexing' Note rsuFut VERBOSE_LOADTIME
-  :EndSection Futures 
-
-    scCodeTbl← ↓⍉↑scA2 scB2 scC2 scD2 scF2 scJ2 scQ2 scS2 scT2  scW2   scÐ2 scM2 scCD2 scSel2 
-    nSC← ≢scUser←  'A    B    C    D    F    J    Q    S    T     W'~' '                          
-    MapSC← scUser∘⍳ 
+    scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← Publish¨ 'A'  'B' 'C' 'J' 'M' 'Q' 'S'  'T'  'W' 
+    scÐ2← '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' Publish 'Ð'     
+    scF2← 2⍴⊂' ⎕FMT ' 
+    scCD2← { 
+      ⍵: Publish cdNm 
+        2⍴ cd 
+    } cdFut
+    scSel2← {   rsu20 rsu19← '(⊂⍛⌷)' '(⌷⍤0 99)'
+      ⍵: 2⍴ ⊂rsu20 rsu19⊃⍨ APL_VERSION< 20 
+        2⍴ rsu 
+    } rsuFut 
+  
+  ⍝ Do not change order without adjusting runtime code
+  ⍝    scA scB... ← ûsr.inline⊃ scCodeTbl   
+    scCodeTbl← ↓⍉↑scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scSel2 
+    nSC← ≢scUser←  'A    B    C    D    F    J    Q    S    T    W'~ ' '
+    MapSC← scUser∘⍳
     ok← 1 
-  ∇
+  ∇ 
 
   ∇ {ok}← ⍙Load_Help hfi;e1; e2 
   ⍝ Loading the help html file...
@@ -844,7 +851,7 @@
     ⍙Gen_LegacyAplAN  APL_VERSION
     OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval        ⍝ Generate default opts NS
     ⍙Export_∆F ##  0 0                                 ⍝ Keep comments? (0→NO); lock? (0→NO).
-    ⍙Load_Shortcuts
+    ⍙Load_Shortcut_Calls
     ⍙Load_Help HELP_HTML_FI
     ⍙Load_LibAuto LIB_SRC_FI LIB_ACTIVE
     ⍙ShowGlobalsIf VERBOSE_RUNTIME
