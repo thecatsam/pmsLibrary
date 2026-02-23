@@ -72,6 +72,7 @@
   libra←     '∆FLibUtils.dyalog'     ⍝ £ library
   parmFi←    '∆FParmDefs.apla'       ⍝ 
   pdf←       '∆FHelp.pdf'            ⍝ PDF 
+  cd←        'CircleDiaeresis.dyalog' ⍝ Adam B's ⍥ with depth emulation
 
 ⍝ File specs 
   privF pubF priv pub temp← 0 1 2 3 9
@@ -324,6 +325,7 @@ Say'    TEMP:  ', HomeDir Fi Temp ⍬
 Hr
 
 pgmDep← ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) ((Priv loader)(Pub loader))((PrivF parmFi)(PubF parmFi))
+pgmDep,← ⊂((PrivF cd)(PubF cd))
 :If force
 :OrIf '∆F Program' NeedsUpdate pgmDep
     Hr
@@ -333,6 +335,7 @@ pgmDep← ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) ((Priv loader)(Pu
     UpdatePgm PrivF pgm 
     UpdatePgm PrivF libra 
     UpdatePgm Priv loader 
+    CopyFi(PrivF cd)(PubF cd)
     CopyFi(Priv loader)(Pub loader)
     CopyFi(PrivF libra)(PubF libra)
     CopyFi(PrivF parmFi)(PubF parmFi)

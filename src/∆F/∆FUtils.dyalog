@@ -669,7 +669,7 @@
     } 
   ⍝ Date: See Time (below)
   ⍝ Display
-    Ð←  0∘⎕SE.Dyalog.Utils.disp¯1∘↓
+    Ð← 0∘⎕SE.Dyalog.Utils.disp¯1∘↓
   ⍝ Format        
     F← ⎕FMT                 
   ⍝ Justify
@@ -712,9 +712,12 @@
   ⍝ Wrap 
     W← {⎕ML←1⋄⍺←⎕UCS 39⋄ 1<|≡⍵: ⍺∘∇¨⍵⋄L R←2⍴⍺⋄{L,R,⍨⍕⍵}⍤1⊢⍵}
   
+  ⍝ Select (Sane Indexing):  ⊇
+    selCodeStr← '(⊂⍛⌷)' '(⌷⍤0 99)' ⊃⍨ APL_VERSION< 20 
+
   ⍝ CircleDiaeresis
   ⍝ Adam B's "future" ⍥ with depth operator extension 
-    cdNm← ⊃2 ⎕FIX 'file://∆F/CircleDiaeresis.dyalog' 
+    cdNm← { 22:: '' ⋄ ⊃2 ⎕FIX ⍵} 'file://∆F/CircleDiaeresis.dyalog'
 
 :EndSection Shortcut functions 
 
@@ -757,44 +760,38 @@
       1: _← (' ',' ',⍨ ∆THIS,'.',⍵) ⍺
     }
     Inline← {  
-      bdy←  (⊂f↓⍨ 2+'←'⍳⍨ f←⊃bdy), 1↓ bdy← ⎕NR ⍵ 
-      src← '''[^'']*''' '\h*⍝.*' '^\h*|\h*$' '\h*⋄\h*' '\h*(⍺{1,2}|⍵{1,2}])\h*(?!\1)'
-      snk← '\0'         ''       ''          '⋄'       '\1'
-      '{', '}',⍨ 2↓ ¯2↓ ∊'⋄',¨ src  ⎕R snk⊣ bdy 
+      bdy←  (⊂f↓⍨ 2+'←'⍳⍨ f←⊃bdy), 1↓ bdy← 62 ⎕ATX ⍵ 
+      i o← ↓⍉↑('''[^'']*''' '\0') ('\h*⍝.*' '')  ('^\h+|\h+$' '')  ('\h*([⋄⎕{}()])\h*' '\1')  
+    1= ≢bdy← i ⎕R o⊣ bdy: ⊃bdy  
+      '{','}',⍨ ¯1↓∊'⋄',⍨¨ 1↓¯1↓ bdy  
     } 
-    ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
-      ⎕SHADOW 'cdFut' 'rsuFut' 'Note' 
-      Note← { ~⊃⌽⍵: _← ⍬
-        _← '>>>>> Future Feature ', ⍺,': ' ⋄  _,'abled',⍨ 'Dis' 'En'⊃⍨ ⊃⍵
-      } 
-      cdFut←  (cd∊ FUTURES) ∧ 0≠≢cdNm 
-      rsuFut←  rsu∊ FUTURES 
-      'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
-      'Right-Shoe Underscore (⊇) Select/Sane Indexing' Note rsuFut VERBOSE_LOADTIME
+  ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
+    ⎕SHADOW 'cdFut' 'rsuFut' 'Note' 
+    Note← { ~⊃⌽⍵: _← ⍬
+      _← 70↑'>>>>> Future Feature ', ⍺,': ' ⋄  _,'abled',⍨ 'Dis' 'En'⊃⍨ ⊃⍵
+    } 
+    cdFut←  (cd∊ FUTURES) ∧ 0≠≢cdNm 
+    rsuFut← rsu∊ FUTURES 
+    'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
+    'Right-Shoe Underscore (⊇) Select/Sane Indexing' Note rsuFut VERBOSE_LOADTIME
 
   ⍝ User-callable functions:          A  B  C  D  F  J  Q  S  T  W 
   ⍝                                   L (handled ad hoc); D (synonym to T)
   ⍝ ∆F-internal (non-user) funtions:  Ð  M
   ⍝ Others: CircleDiaeresis, Select -- called only via symbol ⍥, ⊇ (if enabled)
 
-    scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← Publish¨ 'A'  'B' 'C' 'J' 'M' 'Q' 'S'  'T'  'W' 
-    scÐ2← '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' Publish 'Ð'     
-    scF2← 2⍴⊂' ⎕FMT ' 
-    scCD2← { 
-      ⍵: Publish cdNm 
-        2⍴ cd 
-    } cdFut
-    scSel2← {   rsu20 rsu19← '(⊂⍛⌷)' '(⌷⍤0 99)'
-      ⍵: 2⍴ ⊂rsu20 rsu19⊃⍨ APL_VERSION< 20 
-        2⍴ rsu 
-    } rsuFut 
+  scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← Publish¨ 'A'  'B' 'C' 'J' 'M' 'Q' 'S'  'T'  'W' 
+  scÐ2←   '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' Publish 'Ð'     
+  scF2←   2⍴⊂' ⎕FMT ' 
+  scCD2←  cdNm { ⍵: Publish ⍺ ⋄ 2⍴ cd } cdFut
+  scSel2← 2⍴ ⊂rsu selCodeStr⊃⍨ rsuFut 
   
   ⍝ Do not change order without adjusting runtime code
   ⍝    scA scB... ← ûsr.inline⊃ scCodeTbl   
-    scCodeTbl← ↓⍉↑scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scSel2 
-    nSC← ≢scUser←  'A    B    C    D    F    J    Q    S    T    W'~ ' '
-    MapSC← scUser∘⍳
-    ok← 1 
+  scCodeTbl← ↓⍉↑scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scSel2 
+  nSC← ≢scUser←  'A    B    C    D    F    J    Q    S    T    W'~ ' '
+  MapSC← scUser∘⍳
+  ok← 1 
   ∇ 
 
   ∇ {ok}← ⍙Load_Help hfi;e1; e2 
