@@ -114,8 +114,8 @@
   OPTS_N←       ≢OPTS_DEFval 
 
 ⍝ OPTS_DEFns: The defaults in namespace form. Treat as a read-only object.
-⍝ Requires ⍙Gen_LegacyAplAN to define ∆VSET, so is defined after it (see below).
-⍝ OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval      
+⍝    i.e. OPTS_DEFns← (⎕NS⍬)⎕VSET OPTS_KW OPTS_DEFval    ⍝ (Dyalog 20 or later)   
+  OPTS_DEFns←  (⎕NS⍬) {⍺⊣ ⍺.{⍎⍺,'←⍵'}⍤1 0/ ⍵} OPTS_KW OPTS_DEFval  
 
 ⍝ Set char. rendering of ⎕THIS. We may set ⎕THIS.⎕DF later, but ∆THIS will remain as is.
 
@@ -592,11 +592,12 @@
     :IF aplVersion< 20                         ⍝ Are we on Dyalog version 20 or later?
       ∆VGET← { (↓⊃⍵) ⍺.{ 0≠⎕NC ⍺: ⎕OR ⍺ ⋄ ⍵ }¨ ⊃⌽⍵ }
       ∆VSET←{ 
-        ⍺←⊃⎕RSI ⋄ ûsr← ⍺.{ ⍎⍺,'←⍵' } 
-        2=⍴⍴⊃⍵: ⍺⊣ ûsr⍤1 0/ ⍵ ⋄ ⍺⊣ ûsr/¨⍵
+          ⍺←⊃⎕RSI ⋄ Êx← ⍺.{ ⍎⍺,'←⍵' } 
+        2= ⍴⍴⊃⍵: ⍺⊣ Êx⍤1 0/ ⍵ ⋄ ⍺⊣ Êx/¨⍵
       }
-      ∆NS← { n1 n2← ⍵ ⋄ nl← n2.⎕NL ¯2    
-        (⎕NS n1) ∆VSET (↑nl) (n2.⎕OR¨nl)
+      ∆NS← { 
+          n1 n2← ⍵ ⋄ nl← n2.⎕NL ¯2    
+          (⎕NS n1) ∆VSET (↑nl) (n2.⎕OR¨nl)
       }
       :IF VERBOSE_LOADTIME
           ⎕←59⍴'+'
@@ -760,10 +761,10 @@
       1: _← (' ',' ',⍨ ∆THIS,'.',⍵) ⍺
     }
     Inline← {  
-      bdy←  (⊂f↓⍨ 2+'←'⍳⍨ f←⊃bdy), 1↓ bdy← 62 ⎕ATX ⍵ 
-      i o← ↓⍉↑('''[^'']*''' '\0') ('\h*⍝.*' '')  ('^\h+|\h+$' '')  ('\h*([⋄⎕{}()])\h*' '\1')  
-    1= ≢bdy← i ⎕R o⊣ bdy: ⊃bdy  
-      '{','}',⍨ ¯1↓∊'⋄',⍨¨ 1↓¯1↓ bdy  
+        bdy←  (⊂f↓⍨ 2+'←'⍳⍨ f←⊃bdy), 1↓ bdy← 62 ⎕ATX ⍵ 
+        i o← ↓⍉↑('''[^'']*''' '\0') ('\h*⍝.*' '')  ('^\h+|\h+$' '')  ('\h*([⋄⎕{}()])\h*' '\1')  
+      1= ≢bdy← i ⎕R o⊣ bdy: ⊃bdy  
+        '{','}',⍨ ¯1↓∊'⋄',⍨¨ 1↓¯1↓ bdy  
     } 
   ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
     ⎕SHADOW 'cdFut' 'rsuFut' 'Note' 
@@ -798,7 +799,7 @@
   ⍝ Loading the help html file...
     :Trap 22 
         ⎕THIS.helpHtml← ⊃⎕NGET hfi
-        :IF VERBOSE_LOADTIME ⋄ ⎕← '>>> Loaded Help Html File "',hfi,'"' ⋄ :EndIf  
+        :IF VERBOSE_LOADTIME ⋄ ⎕← '>>>>> Loaded Help Html File "',hfi,'"' ⋄ :EndIf  
         ok← 1 
     :Else 
         e1← '>>> WARNING: When loading ∆Fapl, the help file "',hfi,'" was not found in current directory.'
@@ -819,7 +820,7 @@
     :TRAP 22 
         ⎕FIX 'file://',fi
         :If VERBOSE_LOADTIME 
-            ⎕←'>>> Loaded services for Library shortcut (£)',how  
+            ⎕←'>>>>> Loaded services for Library shortcut (£)',how  
         :EndIf 
     :Else
         loadLib← 0 
@@ -846,7 +847,6 @@
 ⍝ ====================================================================================
   ⍝ ∆NS, ∆VGET, ∆VSET, AN2Apl, Apl2AN are version-aware.
     ⍙Gen_LegacyAplAN  APL_VERSION
-    OPTS_DEFns← (⎕NS⍬)∆VSET OPTS_KW OPTS_DEFval        ⍝ Generate default opts NS
     ⍙Export_∆F ##  0 0                                 ⍝ Keep comments? (0→NO); lock? (0→NO).
     ⍙Load_Shortcut_Calls
     ⍙Load_Help HELP_HTML_FI

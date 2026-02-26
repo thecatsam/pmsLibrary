@@ -19,8 +19,10 @@
 ⍝ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ⍝ SOFTWARE.
 
-⍝ CircleDiaeresis←{   ⍝ Original... Replaced by _CD_← {
-_CD_← {
+⍝ Original Op Name...
+⍝   CircleDiaeresis←{    
+⍝ Replaced by...
+Ö← {  
     0::⎕SIGNAL⊂⎕DMX.(('EN'EN)('EM'EM)('Message'(OSError{⍵,2⌽(×≢⊃⍬⍴2⌽⍺,⊂'')/'") ("',⊃⍬⍴2⌽⍺}Message)))
     ncs←⎕NC⊃⍤0⊢'⍺' '⍵⍵'
     0 3≡ncs:⍺⍺ ⍵⍵ ⍵         ⍝   f⍥g Y
@@ -43,8 +45,8 @@ _CD_← {
     ww←r+⍵⍵
     ww+←(⌈/d)×r∧0=ww
     S←⍺⍺ ∇∇ ww
-    c.⍱/b:⍺ ⍺⍺ ⍵
-    c.</b:⍺∘S¨⍵
-    c.>/b:S∘⍵¨⍺
-    c.∧/b:⍺ S¨⍵
+    c.⍱/b:⍺ ⍺⍺ ⍵  
+    c.</b:⍺∘S¨⍵   
+    c.>/b:S∘⍵¨⍺   
+    c.∧/b:⍺ S¨⍵   
 }

@@ -25,8 +25,8 @@ logfile←'∆FTiming.data'
 :EndSelect 
 
 :Trap 1000
-  ⎕SHADOW '; cmpx; cv; d; data; in; logfile; ok; t1; t2; t3; t4; DYALOG_VERSION'~';'
-  ⎕SHADOW '; Cmpx; Say; T1; T2; T3; T4; Time'⍨';'  
+  ⎕SHADOW '; cmpx; cv; d; data; in; ok; t1; t2; t3; t4; DYALOG_VERSION'~';'
+  ⎕SHADOW '; Cmpx; Say; T1; T2; T3; T4; Time'~';'  
     DYALOG_VERSION←⊃⊃⌽'.'⎕VFI 1⊃'.'⎕WG'APLVersion'
 
     'cmpx'⎕CY'dfns' ⋄ Cmpx← cmpx 

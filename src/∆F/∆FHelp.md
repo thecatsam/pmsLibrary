@@ -1790,6 +1790,7 @@ array components based on depth rather than rank.  If the value of the load-time
 parameter <∆N>See `FUTURES` global variable in ∆F/∆FUtils.dyalog.</∆N> `FUTURES` includes `'⍥'`,
 then this fun *future* feature will be 
 recognized within code fields, without impacting other capabilities of `⍥`. 
+For more information, see <a id="displayText" href="javascript:linkAlert();"><span class="linkNote">https:\/\/aplwiki.com\/wiki\/Depth_(operator)</span></a>.
 
 #### Future Behaviour of ⊇ (Select / Sane Indexing) Here Today
 
