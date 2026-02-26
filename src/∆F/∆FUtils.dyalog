@@ -140,40 +140,41 @@
     :Trap __TRAP_ERRORS__
       :With __THIS__                                          
       ⍝ Phase I: Set options!  Be sure to copy OPTS_DEFns and change ONLY the copy.
-        ⍝ Default options              
-          :If  900⌶0                                          
+      ⍝ Default options              
+        :If  900⌶0                                          
             opts← ⎕NS OPTS_DEFns                     
-          :ElseIf 9=__OUTER__.⎕NC 'opts'    
+        :ElseIf 9=__OUTER__.⎕NC 'opts'    
             opts← ∆NS OPTS_DEFns __OUTER__.opts                  ⍝ v19: Emulate v.20 ⎕NS
-        ⍝ Positional options-- integers/booleans         
-          :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts 
+      ⍝ Positional options-- integers/booleans         
+        :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts 
             opts← (⎕NS OPTS_DEFns) ∆VSET (OPTS_KW↑⍨≢opts)opts    ⍝ v19: Emulate ⎕VSET
-        ⍝ Special options (like help and invalid options)
-          :Else                                           
+      ⍝ Special options (like help and invalid options)
+        :Else                                           
             result← Special opts ⋄ :Return                     
-          :EndIf 
+        :EndIf 
       ⍝ Phase II: Execute!
-        ⍝ Flatten multiline f-string (v.20 VCV), if present.
-          (⊃args)← ∊⊃args← ,⊆args                              
-        ⍝ Determine output mode based on opts.dfn and execute.
-          :Select opts.dfn  
-        ⍝ 0: Execute F-string    
-          :Case  0        
+      ⍝ Flatten multiline f-string (v.20 VCV), if present.
+        (⊃args)← ∊⊃args← ,⊆args                              
+      ⍝ Determine output mode based on opts.dfn and execute.
+        :Select opts.dfn  
+      ⍝ 0: Execute F-string    
+        :Case  0        
             result← opts ((⊃⎕RSI){ ⍺⍺⍎ ⍺ ScanFStr ⊃⍵⊣ ⎕EX 'opts' 'args'}) args    
-        ⍝ 1: Generate dfn code 
-          :Case  1       
+      ⍝ 1: Generate dfn code 
+        :Case  1       
             result← (⊃⎕RSI)⍎ opts ScanFStr ⊃args
-        ⍝ ¯1: Generate source code for dfn
-          :Case ¯1                                    
+      ⍝ ¯1: Generate source code for dfn
+        :Case ¯1                                    
             result← opts ScanFStr ⊃args  
-        ⍝ Else: Run help or other special code           
-          :Else          ⍝ 'help', etc. => Give help, etc.      
+      ⍝ Else: Run help or other special code           
+        :Else          ⍝ 'help', etc. => Give help, etc.      
             result← Special opts 
-          :EndSelect   
+        :EndSelect   
       :EndWith 
     :Else 
         ⎕SIGNAL ⊂⎕DMX.('EM' 'EN' 'Message' ,⍥⊂¨('∆F ',EM) EN Message) 
     :EndTrap 
+  ⍝! (C) Copyright 2025, 2026 Sam the Cat Foundation
   ∇
    :EndSection   ∆F SOURCE
 ⍝ END ====================   ∆F (User Function)   ==============================  
@@ -638,11 +639,10 @@
     s,← ⊂'args'               'äârgs∆F'
   ⍝ 
     Apply2← { src snk← ↓⍉↑⍺ ⋄ src ⎕R snk⍠ 'UCP' 1 ⊢ ⍵} 
-    Cm←     {⍺: ⍵ ⋄ '''[^'']*''' '(^\s*)?⍝.*$' ⎕R '\0' ''⊢ ⍵ }    
-    CpyR←   ,∘(⊂'⍝ (C) 2025 Sam the Cat Foundation.  Version: ',VERSION)
-    NoEmpty←   {⍵/⍨ 0≠≢¨⍵}    ⍝ Delete empty lines.
+    Cm←     {⍺: ⍵ ⋄ '''[^'']*''' '(^\s*)?⍝(?!\!).*$' ⎕R '\0' ''⊢ ⍵ }    
+    NoEmpty←  {⍵/⍨ 0≠≢¨⍵}           ⍝ Delete empty lines.
 
-    nm← destNs.⎕FX CpyR NoEmpty s∘Apply2 keepCm∘Cm ⎕NR '∆FSrc' 
+    nm← ⊃2 destNs.⎕FIX NoEmpty s∘Apply2 keepCm∘Cm⊢ 62 ⎕ATX '∆FSrc' 
     :If fixedOk← 0≠1↑0⍴ nm 
       {}destNs.⎕LOCK⍣lockFn⊣ nm 
       (⎕∘←)⍣VERBOSE_LOADTIME⊢ '>>> Created function ',(⍕destNs),'.',nm 
