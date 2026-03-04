@@ -1,0 +1,479 @@
+<!-- 
+ ∆F Help function Header  -- PMS Style and Javascript 
+-->
+
+<style>
+  /* ======================================================== */
+  /* Special styles for PMS attributes */
+
+  /* A fancy text box class */
+  .marquee {
+    width: 100%;
+    /* ..% of the viewport width */
+    font-size: 105%;
+    text-align: center;
+    line-height: 1.2;
+    color: white;
+    background-color: #062f7c;
+    border: 1px solid white;
+    box-shadow: 0 0 0 2px #062f7c;
+    border-width: 3px;
+    padding: 0px 15px;
+    box-sizing: border-box;
+    /* Includes padding and border within the defined width/height */
+  }
+
+  typewriter {
+    font-family: "American Typewriter", "Courier New", monospace;
+  }
+
+  /* <details><pSummary>  */
+  details>summary {
+    list-style-type: '▶️';
+  }
+
+  details summary::marker {
+    color: darkgreen;
+    opacity: 1;
+  }
+
+  details[open]>summary {
+    color: darkgreen;
+    opacity: 0.3;
+    list-style-type: '🔽';
+  }
+
+  .summary {
+    margin: 0px;
+  }
+
+  /* For red things! */
+  .red {
+    color: red;
+  }
+
+  /* For red things! */
+  .green {
+    color: green;
+  }
+
+  .grey {
+    color: grey;
+  }
+
+  .blue {
+    color: rgb(7, 40, 208);
+  }
+
+  .blink {
+    color: black;
+    animation: blinker 3s ease-in-out 20;
+  }
+
+  @keyframes blinker {
+    50% {
+      opacity: 50%;
+      color: red;
+    }
+  }
+
+  /* for <pNote> margin notes (side notes  */
+  .margin-note {
+    font-family: 'Times New Roman', Tahoma, sans-serif;
+    float: right;
+    /* Aligns the note to the right */
+    width: 220px;
+    /*  The negative margin-right value should be at least equal to the width of the note */
+    margin-right: -300px;
+    /* Shifts the note out of the main content flow */
+    font-size: 0.70em;
+    /* Adjust font size for readability */
+    line-height: 1.2;
+    /* Adjust line height for readability */
+    margin-bottom: 10px;
+    text-align: justify;
+    clear: right;
+    /* Ensures the note doesn't overlap with other floated elements */
+  }
+
+  /* For the line separating main text from the margin notes */
+  .right-margin-bar {
+    border-right: 2px solid rgb(244, 230, 227);
+    /* Adjust color and thickness as needed */
+    padding-right: 55px;
+    /* Space between the bar and content */
+    margin-right: 55px;
+    /* Optional: Space from the right edge of the page */
+    height: auto;
+    /* Or set a fixed height, *e.g.*, 200px */
+    /* overflow: hidden; Do not use w/ margin notes. */
+  }
+
+  /* Suppress margin notes if screen is narrow (1000 px or less) */
+  @media screen and (max-width: 1000px) {
+    body {
+      width: 100%;
+    }
+
+    .margin-note {
+      width: 0px;
+      margin-right: 0px;
+      visibility: hidden;
+    }
+
+    .right-margin-bar {
+      overflow: hidden;
+    }
+  }
+
+  /* In your main CSS file or a dedicated print.css */
+  @media not screen {
+    .page-break {
+      /* Place in: <div class="page-break-after">...</div> */
+      break-after: page;
+    }
+
+    th {
+      color: black !important;
+      background-color: white !important;
+    }
+
+    details[open]>summary {
+      display: none !important;
+    }
+
+    .marquee {
+      color: black !important;
+      background-color: white !important;
+    }
+
+    .button-container {
+      display: none !important;
+    }
+  }
+
+  /* For links you don't want followed outside the Help html*-- a msg appears instead.
+     See <pLink>...</pLink>                         * bc you can't get back!
+  */
+  .linkNote {
+    font-size: 20px;
+  }
+
+  .multi-column-text {
+    margin-left: 0px;
+    margin-right: 0px;
+    column-count: 2;
+    /* Divides the content into two columns */
+    column-gap: 25px;
+    /* Adds space between the columns */
+    /* column-rule:  1px solid #ccc;  */
+  }
+
+  /* ======================================================== */
+  /* Regular markdown styles follow */
+
+  /* The main body style */
+  body {
+    background-color: #fffef4;
+    /* Off-white */
+    font-family: Georgia, serif;
+    font-size: 15pt;
+    text-align: justify;
+    padding: 1% 4%;
+    margin-left: 25px;
+    margin-right: 175px;
+    margin-bottom: 0.5in;
+    max-width: 1200px;
+    /* Sets a maximum width */
+  }
+
+  /* For document title, passed via pandoc */
+  .title {
+    text-align: center;
+    margin: 5px 10px;
+  }
+
+  /* Inline code */
+  code {
+    font-size: 88%;
+    background-color: #ddfafaff;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: "APL386 Unicode", APL386, "APL385 Unicode", APL385,
+      "Courier New", Courier, Lucida Console", " Consolas", monospace;
+
+  }
+
+  /* Code blocks */
+  pre {
+    background-color: #ddfafaff;
+    color: #0a0a0aff;
+    font-size: 13pt;
+    line-height: 110%;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-family: "APL386 Unicode", APL386, "APL385 Unicode", APL385,
+      "Courier New", Courier, "Lucida Console", "Consolas", monospace;
+  }
+
+  /* Tables */
+  table {
+    background-color: #ffffffff;
+    line-height: 1.2;
+    font-size: 90%;
+    /* 100%; */
+    border: 2px solid #210074ff;
+    vertical-align: top;
+    font-family: "APL386 Unicode", APL386, "APL385 Unicode", APL385,
+      "Courier New", Courier, "Lucida Console", "Consolas", monospace;
+  }
+
+  th {
+    /* Table header */
+    font-family: Georgia, "Courier New", Courier, "Lucida Console", "Consolas", monospace;
+    font-weight: 900;
+    line-height: 1.1;
+    padding: 7px 7px;
+    vertical-align: top;
+    background-color: #25027eff;
+    color: #ffffffff;
+    border: 1px solid black;
+  }
+
+  td {
+    /* Table data */
+    font-family: Georgia, "Courier New", Courier, "Lucida Console", "Consolas", monospace;
+    font-weight: 200;
+    padding: 5px 7px;
+    text-align: justify;
+    vertical-align: top;
+    border: 1px solid black;
+  }
+
+  tr:nth-child(odd) {
+    background-color: #ebebebff;
+    /* Light grey for odd rows */
+  }
+
+  tr:nth-child(even) {
+    background-color: #ffffffff;
+    /* White for even rows */
+  }
+
+  blockquote {
+    font-size: 110%;
+    background-color: #f4f5f5ff;
+  }
+
+  ul,
+  li {
+    font-size: 100%;
+    line-height: 130%;
+    /* Was 120%; */
+  }
+
+  /* # headers: Make h1 headers (#...) the same size as h2 (##...) */
+  h1 {
+    font-size: 1.5em;
+  }
+
+  /* scroll-target: Allow a target inside the scope of a <details>
+     that forces open the details, but scrolling to just above (1.3in above)
+  */
+  .scroll-target {
+    scroll-margin-top: 1.3in;
+  }
+
+  /* Optional: Add smooth scrolling to the whole page */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* links-- make them less obtrusive */
+  a:link {
+    /* link not visited */
+    color: black;
+    font-size: 100%;
+    text-decoration: underline darkred dotted;
+  }
+
+  a:visited {
+    /* visited link */
+    color: black;
+    text-decoration: underline darkred dashed;
+  }
+
+  a:hover {
+    color: red;
+    font-weight: 750;
+    text-decoration: underline red solid;
+    transition: color 0.5s, font-size 1s;
+    /* font-size 2.0s ease; /* Smooth transition */
+  }
+
+  /* For the fixed navigation footer we set up */
+  .doc-footer {
+    position: fixed;
+    font-size: 90%;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #e7e7e7ff;
+    color: black;
+    text-align: center;
+    padding: 0 0 0 0;
+  }
+
+  .button-container {
+    display: flex;
+    flex-wrap: wrap;
+    /* Allows items to wrap to the next line */
+  }
+
+  /* Fixed size white on green button in navig footer */
+  .happy-button {
+    font-size: 90%;
+    color: white;
+    background-color: rgb(43, 122, 61);
+  }
+
+  /* Fixed size white on red button in navig footer */
+  .warn-button {
+    /* width: 150px; */
+    font-size: 90%;
+    color: white;
+    background-color: red;
+  }
+
+  /* Fixed size white on blue button in navig footer */
+  .normal-button {
+    /* width: 175px; */
+    font-size: 90%;
+    color: white;
+    background-color: rgb(104, 98, 187);
+  }
+
+  /* For updating user on page resizing, etc. See JS code */
+  .pAlertMsg {
+    display: none;
+    position: fixed;
+    text-align: center;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: black;
+    background-color: #cecac4;
+    padding: 5px;
+    border: 10px double black;
+    white-space: pre-wrap;
+    /* honor \n */
+  }
+</style>
+
+<script>
+  //  Handle Expand/Collapse button at bottom of Help page 
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleButton = document.getElementById('toggleDetails');
+    toggleButton.addEventListener('click', () => {
+      // Select all <details> elements that do NOT have the pPeek id (id="pPeek").
+      const detailsToToggle = document.querySelectorAll('details:not(#pPeek)');
+      // Check if the button should expand or collapse - based on button text.
+      const expandNow = toggleButton.textContent.includes('Expand');
+
+      detailsToToggle.forEach(detail => {
+        if (expandNow) {
+          detail.setAttribute('open', '');  // Expand: add 'open' attr.
+        } else {
+          detail.removeAttribute('open');   // Collapse: remove 'open' attr.
+        }
+      });
+      if (expandNow) {
+        toggleButton.textContent = 'Collapse All';
+      } else {
+        toggleButton.textContent = 'Expand All';
+      }
+    });
+  });
+
+
+  // Close the Help window
+  // - for the Close Window button at bottom of Help page
+  function closeWindowNow() {
+    showAlert("Closing Window...", 1000, 1);
+    setTimeout(window.close, 1000);
+  }
+
+  function sleep(howLong) {
+    return new Promise(resolve => setTimeout(resolve, howLong));
+  }
+
+  function myPrint() {
+    const toggleButton = document.getElementById('toggleDetails');
+    const detailsToToggle = document.querySelectorAll('details');
+    const notOpen = toggleButton.textContent.includes('Expand');
+    const myPrintPause = 2000;
+
+    // Open all details (some may have been already), including pPeek details.
+    detailsToToggle.forEach(detail => {
+      detail.setAttribute('open', '');
+    });
+    showAlert("To print, set Scaling to ~62%", myPrintPause - 250, 0);
+    sleep(myPrintPause).then(() => {
+      window.print();    // Pause until window is printed or cancelled.
+      // if notOpen, simply close all details (some may have been open).
+      if (notOpen) {
+        detailsToToggle.forEach(detail => {
+          detail.removeAttribute('open');
+        })
+      };
+    });
+  }
+
+  // Informational Alert 
+  // showAlert( text, howLong in ms to show, urgent)
+  // urgent: 1= show ⚠️; 0= show ℹ️  
+  function showAlert(displayMe, howLong, urgent) {
+    var alertBox = document.getElementById("pAlertMsg");
+    var alertPfx = document.getElementById("pAlertPfx");
+    var alertTxt = document.getElementById("pAlertText");
+    alertBox.style.display = "block"; // Show the alert
+    if (urgent == 1) {
+      alertPfx.textContent = "⚠️ ";
+    } else {
+      alertPfx.textContent = "ℹ️ ";
+    }
+    alertTxt.textContent = displayMe;
+    sleep(howLong).then(() => {
+      alertBox.style.display = "none";  // Hide me
+    });
+  }
+  function linkAlert() {
+    showAlert("Use regular browser to explore link. Select link text and ctrl-click (right-click) to copy.", 2000, 1);
+  }
+
+  // Listener for narrow/wide text
+  // (triggered when text crosses width boundary specified) 
+  const mediaQuery = window.matchMedia("screen and (max-width: 1000px)");
+  mediaQuery.addEventListener('change', (event) => {
+    if (event.matches) {
+      showAlert("Omitting Margin Notes...", 2000, 1);
+    } else {
+      showAlert("Showing Margin Notes...", 2000, 0);
+    }
+  });
+
+  // Listener for copy: Cmd-C, Meta-C; quit: Cmd-Q, Meta-Q
+  document.addEventListener('keydown', (event) => {
+    // Check for a specific key combination, e.g., Ctrl + C (event.ctrlKey || 
+    if (event.ctrlKey || event.metaKey) {
+      if (event.key === 'c') { // We can't seem to copy onto clipboard directly
+        showAlert("To copy, ctrl-click (right-click) and select the copy option.", 1500, 1);
+      } else if (event.key === 'q') {
+        closeWindowNow();
+      }
+    }
+  });
+
+  // (C) 2025 Sam the Cat Foundation 
+</script>

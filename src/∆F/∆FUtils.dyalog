@@ -24,7 +24,7 @@
   VERBOSE_RUNTIME← 0
 
 ⍝ VERBOSE_LOADTIME: Load (Fix)-Time verbosity flag
-  VERBOSE_LOADTIME← 1
+  VERBOSE_LOADTIME← 0
 ⍝              
 ⍝ SIGNAL_LIB_ERRS: Affects £.nm and `L.nm constructions. See ∆FLibUtils.dyalog.
 ⍝ - If SIGNAL_LIB_ERRS← 1
@@ -114,12 +114,12 @@
   OPTS_N←       ≢OPTS_DEFval 
 
 ⍝ OPTS_DEFns: The defaults in namespace form. Treat as a read-only object.
-⍝    i.e. OPTS_DEFns← (⎕NS⍬)⎕VSET OPTS_KW OPTS_DEFval    ⍝ (Dyalog 20 or later)   
-  OPTS_DEFns←  (⎕NS⍬) {⍺⊣ ⍺.{⍎⍺,'←⍵'}⍤1 0/ ⍵} OPTS_KW OPTS_DEFval  
+⍝    i.e. OPTS_DEFns← ()⎕VSET OPTS_KW OPTS_DEFval    ⍝ (Dyalog 20 or later)  
+  OPTS_DEFns←  (⎕NS⍬) {⍺⊣ ⍺.{⍎⍺,'←⊃⍵'}⍤1 0/⍵} OPTS_KW OPTS_DEFval
 
-⍝ Set char. rendering of ⎕THIS. We may set ⎕THIS.⎕DF later, but ∆THIS will remain as is.
-
-  APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'   
+⍝ Returns 20 if Dyalog 20, 19 if 19.
+  APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'  
+⍝ Set char. rendering of ⎕THIS. We may set ⎕THIS.⎕DF later, but ∆THIS will remain as is. 
   ∆THIS← ⍕⎕THIS                
 
    :EndSection   INITIALIZATION
@@ -128,7 +128,7 @@
 ⍝ =======================================================================
 ⍝ ∆F USER FUNCTION Source - See ⍙Export_∆F
 ⍝ =======================================================================
-⍝ ∆FSrc:
+⍝ ∆FSrc:  ==>  ##.∆F
 ⍝    modified to become ##.∆F at ⍙Export_∆F.
 ⍝ ∆F: 
 ⍝    result← {opts←⍬} ∇ f-string [args]
@@ -153,8 +153,7 @@
             result← Special opts ⋄ :Return                     
         :EndIf 
       ⍝ Phase II: Execute!
-      ⍝ Flatten multiline f-string (v.20 VCV), if present.
-        (⊃args)← ∊⊃args← ,⊆args                              
+        args← ,⊆args                
       ⍝ Determine output mode based on opts.dfn and execute.
         :Select opts.dfn  
       ⍝ 0: Execute F-string    
@@ -290,8 +289,8 @@
 ⍝                 Local to the current ∆F instance.
 ⍝   brC       -   running count of braces '{' lb, '}' rb. Set in dfn ScanAll.
 ⍝   cfL       -   code field running length (for SDCFs). Set in dfn ScanAll.
-    ûsr fstr← ⍺ ⍵                                 
-  ⍝ Validate options passed in ûsr (⍺). dfn in (¯1 0 1), others in (0 1).
+    ûsr← ⍺                                
+  ⍝ Validate all options passed in ûsr (⍺). 
   ûsr.((|dfn),verbose box auto inline)(0∊∊)0 1: ⎕SIGNAL optÊ                             ⍝  
     VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message 
   ⍝ Shortcuts: 
@@ -305,7 +304,7 @@
     ûsr.omC←  0                                        ⍝ initialise omega counter to 0 (see `⍵)
     ûsr.auto∧← libUtils.pârms.auto                     ⍝ auto can usefully be 1 only if pârms.auto is 1.     
                                                        ⍝ Start the scan (recursive).                    
-    flds← '' ScanAll fstr                              ⍝ ...                          
+    flds← '' ScanAll⊢ fstr← ∊⍵                         ⍝    fstr: char vec of vecs => char vec                     
                                                        ⍝ Scan complete.                                        
   0= ≢flds: VMsg '(1 0⍴⍬)', '⍨'/⍨ ûsr.dfn≠0            ⍝ If there are no flds, return 1 by 0 matrix
     code← CFDfn (ûsr.box⊃ scM scÐ), OrderFlds flds     ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
@@ -338,7 +337,7 @@
 ⍝ Seq. `⋄ OR `◇ (see dia2[0, 1]) map onto ⎕UCS 13.
 ⍝ dia2[0]: Dyalog stmt separator (⋄) 
 ⍝ dia2[1]: Alternative character (◇) that is easier to read in some web browsers. 
-  dia2← ⎕UCS 8900 9671   
+  dia2← ⎕UCS 8900 9671           ⍝ '⋄◇' <-- hope that clears things up ;-) 
 ⍝ Order "break" chars roughly by frequency, high to low. 
 ⍝ We take dq to be high freq, but other quotes as low.
 ⍝               "  `   {  }  $   ⍹    →  ↓  %   £      '« (default)
@@ -594,17 +593,16 @@
       ∆VGET← { (↓⊃⍵) ⍺.{ 0≠⎕NC ⍺: ⎕OR ⍺ ⋄ ⍵ }¨ ⊃⌽⍵ }
       ∆VSET←{ 
           ⍺←⊃⎕RSI ⋄ Êx← ⍺.{ ⍎⍺,'←⍵' } 
-        2= ⍴⍴⊃⍵: ⍺⊣ Êx⍤1 0/ ⍵ ⋄ ⍺⊣ Êx/¨⍵
+        2= ⍴⍴k←⊃⍵: _← ⍺⊣ (↓k)Êx¨⊃⌽⍵ ⋄ 1: _← ⍺⊣ Êx/¨⍵
       }
       ∆NS← { 
           n1 n2← ⍵ ⋄ nl← n2.⎕NL ¯2    
           (⎕NS n1) ∆VSET (↑nl) (n2.⎕OR¨nl)
       }
-      :IF VERBOSE_LOADTIME
-          ⎕←59⍴'+'
-          ⎕←'+ ∆F: Emulating ⎕VSET, ⎕VGET, and related on Dyalog v.','. +',⍨⍕aplVersion 
-          ⎕←59⍴'+'
-      :EndIf 
+      VERBOSE_LOADTIME{
+        ⍺: '✅✅✅ ∆F: Emulating ⎕VSET, ⎕VGET, and related on Dyalog ',⍕⍵
+        1: _←''
+      }aplVersion 
     :ELSE 
        ∆VGET← ⎕VGET
        ∆VSET← ⎕VSET
@@ -612,10 +610,10 @@
     :EndIf 
   ⍝ Common to version 19 and 20
     AN2Apl← ⎕SE.Dyalog.Array.Deserialise   
-    Apl2AN← ⎕SE.Dyalog.Array.Serialise                  
+    Apl2AN← ⎕SE.Dyalog.Array.Serialise                 
   ∇  
 
-⍝ ⍙Export_∆F : rc← ∇ destNs keepCm lockFn 
+⍝ ⍙Export_∆F : rc← ∇ targNm destNs keepCm lockFn 
 ⍝ Used internally only at FIX-time:
 ⍝ On execution (default mode), ⍙Export_∆F creates ∆F in location specified as <destNs>.
 ⍝ If keepCm, maintains comments in ∆F at destination.
@@ -627,27 +625,29 @@
 ⍝    ∘ set '__OUTER__.' to  ''
 ⍝ In both cases, if keepCm=0,
 ⍝    ∘ we remove comments and comment lines.
-  ∇ fixedOk← ⍙Export_∆F (destNs keepCm lockFn) 
-    ; nm; s; src; snk; t; Apply2; Cm ; CpyR; NoBL  
-    s←  ⊂'∆FSrc'             '∆F'   
-    s,← ⊂'__THIS__'           ∆THIS  
-    s,← ⊂'__OUTER__\.'        ('##.' ''⊃⍨ destNs=⎕THIS) 
-      t← ¯40↑ '⍝ TRAP_ERRORS='
-    s,← ⊂'__TRAP_ERRORS__'    (('⍬0'⊃⍨ TRAP_ERRORS), t, ⍕TRAP_ERRORS)
-    s,← ⊂'result'             'rësûlt∆F'
-    s,← ⊂'opts'               'öôpts∆F'
-    s,← ⊂'args'               'äârgs∆F'
-  ⍝ 
-    Apply2← { src snk← ↓⍉↑⍺ ⋄ src ⎕R snk⍠ 'UCP' 1 ⊢ ⍵} 
-    Cm←     {⍺: ⍵ ⋄ '''[^'']*''' '(^\s*)?⍝(?!\!).*$' ⎕R '\0' ''⊢ ⍵ }    
-    NoEmpty←  {⍵/⍨ 0≠≢¨⍵}           ⍝ Delete empty lines.
+  ∇ {targNm}← ⍙Export_∆F (targNm destNs keepCm lockFn) 
+    ; nm; ss
+    ; Fix; Freeze; QCom; NoEL; QLock 
 
-    nm← ⊃2 destNs.⎕FIX NoEmpty s∘Apply2 keepCm∘Cm⊢ 62 ⎕ATX '∆FSrc' 
-    :If fixedOk← 0≠1↑0⍴ nm 
-      {}destNs.⎕LOCK⍣lockFn⊣ nm 
-      (⎕∘←)⍣VERBOSE_LOADTIME⊢ '>>> Created function ',(⍕destNs),'.',nm 
+    ss←  ⊂'∆FSrc'              targNm 
+    ss,← ⊂'__THIS__'           ∆THIS  
+    ss,← ⊂'__OUTER__\.'        ('##.' ''⊃⍨ destNs=⎕THIS) 
+    ss,← ⊂'__TRAP_ERRORS__'    (('⍬0'⊃⍨ TRAP_ERRORS), (¯40↑ '⍝ TRAP_ERRORS='), ⍕TRAP_ERRORS)
+    ss,← ⊂'result'             'rësûlt∆F'
+    ss,← ⊂'opts'               'öôpts∆F'
+    ss,← ⊂'args'               'äârgs∆F'
+   
+    QCom←   keepCm∘{ ⍺: ⍵ ⋄ '''[^'']*''' '(^\s*)?⍝(?!\!).*$' ⎕R '\0' ''⊢ ⍵ }    
+    Freeze← ss∘{ src snk← ↓⍉↑⍺ ⋄ src ⎕R snk⍠ 'UCP' 1 ⊢ ⍵ } 
+    NoEL←   { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
+    Fix←    destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
+    QLock←  destNs.⎕LOCK⍣lockFn
+
+    :If targNm≡ nm← Fix NoEL Freeze QCom⊢ 62 ⎕ATX '∆FSrc' 
+      {} QLock nm 
+      {}(⎕∘←)⍣VERBOSE_LOADTIME⊢ '✅✅✅ Created function ',(⍕destNs),'.',nm 
     :Else 
-      ⎕←'>>> There was an error applying ⍙Export_∆F. Could not create "',(⍕destNs),'.∆F"' 
+      11 ⎕SIGNAL⍨'❌❌❌ There was an error applying ⍙Export_∆F. Could not create "',(⍕destNs),'.∆F"' 
     :EndIf 
   ∇
 
@@ -768,8 +768,9 @@
     } 
   ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
     ⎕SHADOW 'cdFut' 'rsuFut' 'Note' 
-    Note← { ~⊃⌽⍵: _← ⍬
-      _← 70↑'>>>>> Future Feature ', ⍺,': ' ⋄  _,'abled',⍨ 'Dis' 'En'⊃⍨ ⊃⍵
+    Note← { f v←⍵ ⋄ ~v: _← ⍬ 
+      _←' Future Feature', (f⊃' not ' ' '), 'available: ', ⍺
+      ⎕← (f⊃ '❌❌❌' '✅✅✅'), _
     } 
     cdFut←  (cd∊ FUTURES) ∧ 0≠≢cdNm 
     rsuFut← rsu∊ FUTURES 
@@ -799,11 +800,11 @@
   ⍝ Loading the help html file...
     :Trap 22 
         ⎕THIS.helpHtml← ⊃⎕NGET hfi
-        :IF VERBOSE_LOADTIME ⋄ ⎕← '>>>>> Loaded Help Html File "',hfi,'"' ⋄ :EndIf  
+        :IF VERBOSE_LOADTIME ⋄ ⎕← '✅✅✅ Loaded Help Html File "',hfi,'"' ⋄ :EndIf  
         ok← 1 
     :Else 
-        e1← '>>> WARNING: When loading ∆Fapl, the help file "',hfi,'" was not found in current directory.'
-        e2← '>>> WARNING: ∆F help will not be available without user intervention.'
+        e1← '❗❗❗ WARNING: When loading ∆Fapl, the help file "',hfi,'" was not found in current directory.'
+        e2← '❗❗❗ WARNING: ∆F help will not be available without user intervention.'
         e1,(⎕UCS 13),e2
         ok← 0 
     :EndTrap 
@@ -812,30 +813,30 @@
     ; how 
     how← ' from "',fi,'" into "','"',⍨∆THIS 
     :If loadLib=0
-        ⎕←'>>> NOTE: Library autoload services were not loaded',how
-        ⎕←'>>> NOTE: LIB_ACTIVE is set to ',(⍕LIB_ACTIVE),' in ∆F/∆FUtils.dyalog'
-        ⎕←'>>> NOTE: £ and `L shortcuts are available without them, as if (auto: 0) is set.'
+        ⎕←'❗❗❗ WARNING: Library autoload services were not loaded',how
+        ⎕←'✅✅✅ LIB_ACTIVE is set to ',(⍕LIB_ACTIVE),' in ∆F/∆FUtils.dyalog'
+        ⎕←'✅✅✅ £ and `L shortcuts are available without them, as if (auto: 0) is set.'
         :Return 
     :EndIf 
     :TRAP 22 
         ⎕FIX 'file://',fi
         :If VERBOSE_LOADTIME 
-            ⎕←'>>>>> Loaded services for Library shortcut (£)',how  
+            ⎕←'✅✅✅ Loaded services for Library shortcut (£)',how  
         :EndIf 
     :Else
         loadLib← 0 
         ⎕← ⎕PW⍴'='
-        ⎕←'>>> WARNING: Unable to load Library autoload services',how 
-        ⎕←'>>> NOTE:    £ and `L shortcuts are available without them (auto: 0).'
+        ⎕←'❗❗❗ WARNING: Unable to load Library autoload services',how 
+        ⎕←'✅✅✅ £ and `L shortcuts are available without autoload (auto: 0).'
         ⎕← ⎕PW⍴'='
     :EndTrap
   ∇
 ⍝ Show the following special globals in this namespace.
-  ⍙ShowGlobalsIf←{  ⍝ 
+  ⍙ShowGlobalsIf←{   
      GLOBALS←  'ESCAPE_CHAR'         'HELP_HTML_FI'    'INLINE_UTILS' 
      GLOBALS,← 'LIB_ACTIVE'          'SIGNAL_LIB_ERRS' 'LIB_PARM_FI'  
      GLOBALS,← 'LIB_USER_FI'         'LIB_SRC_FI'      
-     GLOBALS,← 'OPTS_KW'             'OPTS_DEFval'      
+     GLOBALS,← 'OPTS_KW'             'OPTS_DEFval'        
      GLOBALS,← 'QUOTES_SUPPLEMENTAL' 'TRAP_ERRORS'  
      GLOBALS,← 'VERBOSE_LOADTIME'    'VERBOSE_RUNTIME' 'VERSION' 'FUTURES'
     ~⍵: _←1 0⍴0  
@@ -846,12 +847,20 @@
 ⍝ Execute the FIX-TIME Routines
 ⍝ ====================================================================================
   ⍝ ∆NS, ∆VGET, ∆VSET, AN2Apl, Apl2AN are version-aware.
-    ⍙Gen_LegacyAplAN  APL_VERSION
-    ⍙Export_∆F ##  0 0                                 ⍝ Keep comments? (0→NO); lock? (0→NO).
-    ⍙Load_Shortcut_Calls
-    ⍙Load_Help HELP_HTML_FI
-    ⍙Load_LibAuto LIB_SRC_FI LIB_ACTIVE
-    ⍙ShowGlobalsIf VERBOSE_RUNTIME
+  ∇ ok← Initialise 
+    :Trap ok← 0   
+        ⍙Gen_LegacyAplAN  APL_VERSION
+        ⍙Export_∆F '∆F' ##  0 0                       ⍝ Keep comments? (0→NO); lock? (0→NO).
+        ⍙Load_Shortcut_Calls
+        ⍙Load_Help HELP_HTML_FI
+        ⍙Load_LibAuto LIB_SRC_FI LIB_ACTIVE
+        ⍙ShowGlobalsIf VERBOSE_RUNTIME
+    :Else 
+        ⎕← ↑⎕DMX.DM ⋄  ⎕←'Stack: ' ⋄ ⎕← 4{⍺≥≢⍵: '   ',⍵ ⋄ ⍺ ∇ ⍺↓⍵⊣ ⎕← '   ',⍺↑⍵} ⎕XSI  
+        ⎕←↑3⍴⊂'❌❌❌ ∆F Initialisation has failed!'
+    :EndTrap 
+  ∇ 
+  Initialise 
 :EndSection FIX_TIME_ROUTINES 
 ⍝ === END OF CODE ================================================================================
 :EndNamespace 
