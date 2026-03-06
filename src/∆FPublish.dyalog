@@ -31,7 +31,7 @@
 ⍝ Key settable parameters...
   productionCode← 1
   copyright←     '2026'
-  version←       'v.0.1.1'
+  version←       'v.0.2.1'
 
 ⍝ Constants
   timestamp←     ∊∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 

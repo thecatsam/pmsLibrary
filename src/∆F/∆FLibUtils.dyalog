@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-03-03') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-03-06') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading
@@ -111,11 +111,11 @@
         FixByType← { 
           sfx← ⊂⊃⌽⎕NPARTS fi← ⍵  
           ⍝ When ⎕FIX is applied to ¨fi¨, ¨êNm¨ must be among the names listed as ⎕FIXed.  
-          IfF sfx:  rcEN rcOK⊃⍨ (⊂êNm)∊ êNms⊢← 2 ûLib.⎕FIX _FOpts êErrFi⊢←fi   ⍝ aplf/o/n, dyalog
-          IfA sfx:  rcOK⊣ ûLib ##.∆VSET ⊂êNm (##.AN2Apl ⊃⎕NGET fi 1)           ⍝ apla
-          IfJ sfx:  rcOK⊣ ûLib ##.∆VSET ⊂êNm (⎕JSON _JOpts ⊃⎕NGET fi 0)        ⍝ json
-          IfT sfx:  rcOK⊣ ûLib ##.∆VSET ⊂êNm ⊃⎕NGET fi (OptT sfx)              ⍝ aplv, txt, aplvv, aplm
-                    rcEN rcOK⊃⍨ (⊂êNm)∊ êNms⊢← êNm FixOrAssign fi              ⍝ Any other suffix                    
+          IfF sfx:  rcEN rcOK⊃⍨ êNm⊂⍛∊ êNms⊢← 2 ûLib.⎕FIX _FOpts êErrFi⊢←fi    ⍝ aplf/o/n, dyalog
+          IfA sfx:  rcOK⊣ ûLib ##.⎕VSET ⊂êNm (AN2Apl ⊃⎕NGET fi 1)              ⍝ apla
+          IfJ sfx:  rcOK⊣ ûLib ##.⎕VSET ⊂êNm (⎕JSON _JOpts ⊃⎕NGET fi 0)        ⍝ json
+          IfT sfx:  rcOK⊣ ûLib ##.⎕VSET ⊂êNm ⊃⎕NGET fi (OptT sfx)              ⍝ aplv, txt, aplvv, aplm
+                    rcEN rcOK⊃⍨ êNm⊂⍛∊ êNms⊢← êNm FixOrAssign fi               ⍝ Any other suffix                    
         }
         (FixByType fi) ('file:"',fi,'"')         
       } 
@@ -133,7 +133,7 @@
     ⍝ If it fails due to 19/11, try reading <fi> as an array notation object, assigning its value to <nm>.
       ⍝ 19: FILE ACCESS ERROR (⎕FIX/⎕NGET). 11: ERROR ⎕FIXING object contents.
       FixOrAssign← { 
-        19 11:: (⊂⍺)⊣ ûLib ##.∆VSET ⊂⍺ (##.AN2Apl ⊃⎕NGET ⍵ 1)    ⍝ Array Notation? Assign value to ⍺.
+        19 11:: (⊂⍺)⊣ ûLib ##.⎕VSET ⊂⍺ (AN2Apl ⊃⎕NGET ⍵ 1)    ⍝ Array Notation? Assign value to ⍺.
           2 ûLib.⎕FIX _FOpts êErrFi⊢← ⍵                         ⍝ Fixable object? Return what ⎕FIX returns.
       }
       
@@ -186,7 +186,7 @@
       ⍝ êDMX: An external diagnostic message set *ONLY* in SubScanFiles.
       EndScan←  { rc libE← ⍺ 
         (~êVerbose)∧ rc= rcOK: rc ⋄ (srcFi dest)← ⍵  
-          qNms← '"',⍨ 3↓∊((⊂êNm), êNms~ ⊂êNm),⍨¨⊂'", "' 
+          qNms← '"',⍨ 3↓ ∊(êNm⊂⍛, êNms~ ⊂êNm),⍨¨⊂'", "' 
         rc=rcOK: rc⊣ ⎕← '∆F: Copied ', qNms, ' into £ibrary',(0≠ ≢srcFi)/ ' from ',srcFi
           Ê← rc∘{  ⍝ Error msgs, either signaled or simply reported.
             en message← ⍵ 
@@ -294,7 +294,7 @@
     LoadDefaultParms← { fi← ⍵ 
       2 6 11:: _← pârms ⊣ 0 LoadErr 'Default parameter file "',fi,'" has errors'
       ~⎕NEXISTS fi: fi Err 'does not exist'
-          _← 'pârms' ⎕NS ##.AN2Apl ⊃⎕NGET fi 1  
+          _← 'pârms' ⎕NS AN2Apl ⊃⎕NGET fi 1  
           pârms.verbose← (⍬ ⎕NULL∊⍨ ⊂pârms.verbose)⊃ pârms.verbose ##.VERBOSE_RUNTIME 
       1: _← pârms⊣ pârms.⍙readParms← 1 0 
     }  
@@ -336,7 +336,7 @@
         ~⎕NEXISTS ⍵: ⍬ 
         0:: '∆F ReadUser Parms Failed, but error was not trapped' ⎕SIGNAL 911
         2 6 11/⍨ ~⍺:: _← 1 LoadErr 'User parameter file "', ⍵,'" has errors'
-          _← 'pârms' ⎕NS ##.AN2Apl ⊃⎕NGET ⍵ 1          ⍝ Merge parm file into internal defaults
+          _← 'pârms' ⎕NS AN2Apl ⊃⎕NGET ⍵ 1          ⍝ Merge parm file into internal defaults
           0⊣ pârms.⍙readParms[1]← 1 
       } 
     ⍝ Handle special-case values for  verbose, prefix, auto, path, suffix
@@ -344,7 +344,7 @@
     ⍝   it is replaced in ⍵ by its corresponding default in (⊃∘⌽¨⍺)
       ParmsSpecial←{ 
         ⍺← ('verbose' ##.VERBOSE_RUNTIME) ('prefix'(,⊂'')) ('auto' 0) ('path' ⍬) ('suffix' ⍬) 
-        ⍵ ##.∆VSET ⍺/⍨ (⍬∘≡∨⎕NULL∘≡)∘⍵.⎕OR∘⊃¨ ⍺
+        ⍵ ##.⎕VSET ⍺/⍨ (⍬∘≡∨⎕NULL∘≡)∘⍵.⎕OR∘⊃¨ ⍺
       }
     ⍝ GenFullPath:   pârms.⍙fullPath← ∇ pârms 
       GenFullPath←{
@@ -366,10 +366,13 @@
         0:: 1 0⍴⎕←'❌❌❌ ∆F Load: Error displaying runtime parameters'
         (~⍺)∧ ~⍵.verbose: _← 1 0⍴''  
         0= ≢nl← ⍵.⎕NL ¯2: _←1 0⍴'' 
-        1: _← ↑⍺⍺ ##.Apl2AN ⍵.{⎕NS {⍵/⍨ '_'≠⊃¨⍵}⍵} nl
+        1: _← ↑⍺⍺ Apl2AN ⍵.{⎕NS {⍵/⍨ '_'≠⊃¨⍵}⍵} nl
       } 
     ⍝ ShowPath:  Called via 'path' call in ##.Special. 
-      ShowPath← { ⊃1 ##.Apl2AN pârms.⍙fullPath } 
+      ShowPath← { ⊃1 Apl2AN pârms.⍙fullPath } 
+
+      AN2Apl← ⎕SE.Dyalog.Array.Deserialise   
+      Apl2AN← ⎕SE.Dyalog.Array.Serialise   
 
 ⍝ =========================================================================
 ⍝ EXECUTIVE

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>∆F Formatted String Literals (v.0.1.1)</title>
+  <title>∆F Formatted String Literals (v.0.2.1)</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -507,7 +507,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">∆F Formatted String Literals (v.0.1.1)</h1>
+<h1 class="title">∆F Formatted String Literals (v.0.2.1)</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 
@@ -636,16 +636,17 @@ class="header-section-number">2</span> Overview</h1>
  <span style="opacity:0.6;">Show/Hide</span> <em>Overview</em>
 </summary>
 <p><a id="inside-overview" class="scroll-target"></a></p>
-<p>Inspired by <a href="#appendix-ii-python-fstrings">Python
-f‑strings</a>, <strong>∆F</strong> includes a variety of capabilities to
-make it easy to evaluate, format, annotate, and display related
-multi­dimensional information. A <strong>∆F</strong> <em>f-string</em>
-<span class="margin-note">For <em>f-string</em> formats, see <a
+<p><span class="margin-note">The current version of <strong>∆F</strong>
+requires Dyalog version 20.</span> Inspired by <a
+href="#appendix-ii-python-fstrings">Python f‑strings</a>,
+<strong>∆F</strong> includes a variety of capabilities to make it easy
+to evaluate, format, annotate, and display related multi­dimensional
+information. A <strong>∆F</strong> <em>f-string</em> is (typically) a
+character vector, which may reference objects in the environment,
+additional function arguments, or both.</p>
+<p><span class="margin-note">For <em>f-string</em> formats, see <a
 href="#f-call-syntax-overview"><strong>∆F</strong> Call Syn­tax
-Over­view</a>.</span> is (typically) a character vector, which may
-reference objects in the environment, additional function arguments, or
-both.</p>
-<p><strong>∆F</strong> <em>f‑strings</em> include:</p>
+Over­view</a>.</span> <strong>∆F</strong> <em>f‑strings</em> include:</p>
 <ul>
 <li>The abstraction of 2-dimensional character
 <strong><em>fields</em></strong>, generated one-by-one from the user’s
@@ -880,10 +881,7 @@ option</strong></p>
 
 </div>
 <p><strong>3.8: Serialise an object in Array Notation</strong></p>
-<pre><code>⍝  Dyalog 20: anim←(cat: 1 ◇ dog: 2 ◇ mouse: 3)
-   cat dog mouse← 1 2 3 
-   anim←⎕NS &#39;cat&#39; &#39;dog&#39; &#39;mouse&#39; 
-⍝  Works in Dyalog 19 or 20!
+<pre><code>   anim←(cat: 1 ◇ dog: 2 ◇ mouse: 3)
    ∆F &#39;{`⍵1 `S anim ↓} { `⍵2 `S anim↓}&#39; 1 0    
   `⍵1 `S anim ↓        `⍵1 `S anim↓ 
 (cat:1◇dog:2◇mouse:3◇)  (        
@@ -1222,8 +1220,8 @@ href="#f-option-details"><strong>box</strong> mode</a> option, <span
 class="margin-note"><strong>box mode:</strong> <code>0 0 1</code>
 <em>or</em> <code>(box: 1)</code></span>to <code>1</code>:</p>
 <pre><code>   cv← 11.3 29.55 59.99
-       ↓¯¯¯ box mode,  or:  (box: 1)
-   0 0 1 ∆F &#39;`◇The temperature is {&quot;I2&quot; $ cv}`◇°C or {&quot;F5.1&quot; $ 32+9×cv÷5}`◇°F&#39;
+⍝   ↓¯¯¯ box mode,  or:  0 0 1
+   (box: 1) ∆F &#39;`◇The temperature is {&quot;I2&quot; $ cv}`◇°C or {&quot;F5.1&quot; $ 32+9×cv÷5}`◇°F&#39;
 ┌───────────────────┬──┬──────┬─────┬──┐
 │                   │11│      │ 52.3│  │
 │The temperature is │30│°C or │ 85.2│°F│
@@ -1235,14 +1233,13 @@ exception. Null <strong>Space</strong> fields <code>{}</code>,
 they’ve done their work of ensuring adjacent fields (typically,
 <strong>Text</strong> fields) are displayed in their own rectangular
 space.</p>
-<p>Try this expression on your own:</p>
-<pre><code>⍝ (box: 1) ∆F &#39;abc...mno&#39; in Dyalog 20.
-   0 0 1   ∆F &#39;abc{}def{}{}ghi{&quot;&quot;}jkl{ }mno&#39;</code></pre>
+<p>Try evaluating this expression on your own:</p>
+<pre><code>    (box: 1) ∆F &#39;abc{}def{}{}ghi{&quot;&quot;}jkl{ }mno&#39;   </code></pre>
 <details id="pPeek">
 <summary class="summary">
  Peek at answer
 </summary>
-<pre><code>   0 0 1 ∆F &#39;abc{}def{}{}ghi{&quot;&quot;}jkl{ }mno&#39;
+<pre><code>   (box: 1) ∆F &#39;abc{}def{}{}ghi{&quot;&quot;}jkl{ }mno&#39;
 ┌───┬───┬───┬┬───┬─┬───┐
 │abc│def│ghi││jkl│ │mno│
 └───┴───┴───┴┴───┴─┴───┘</code></pre>
@@ -1832,7 +1829,7 @@ copied into a £ibrary, and to see <em>where</em> it’s copied from, use
 <em>session.</em> Since subsequent uses will use the <code>£.pco</code>
 already copied into the library, they are
 <strong><em>quiet</em></strong>.</span></p>
-<pre><code>   0 1 ∆F &#39;{ ⍸ 1 £.pco ⍳100 }&#39;    ⍝ 0 1 &lt;==&gt; (verbose: 1)
+<pre><code>   (verbose: 1) ∆F &#39;{ ⍸ 1 £.pco ⍳100 }&#39;    ⍝ (verbose: 1) &lt;==&gt; 0 1 
 ∆F: Copied &quot;pco&quot; into £=[⎕SE.⍙FUtils.library] from &quot;ws:dfns&quot;
 { ⎕SE.⍙FUtils.M ⌽⍬({⍸ 1 (⎕SE.⍙FUtils.library).pco ⍳100}⍵)}⍵
 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97</code></pre>
@@ -1953,7 +1950,7 @@ The temperature is 11°C or  51.8°F
 <code>t</code>. <code>T</code> has everything needed to generate the
 output (given the same definition of the vector <code>cv</code>, when
 <code>T</code> is evaluated).</p>
-<pre><code>   T← 1 ∆F t</code></pre>
+<pre><code>   T← 1 ∆F t       ⍝ Or (dfn: 1) ∆F ...</code></pre>
 <details id="pPeek">
 <summary class="summary">
  Evaluate <code>T ⍬</code>
@@ -1984,7 +1981,7 @@ example, not as a <em>variable</em>, but as the <em>first argument</em>
 to <strong>∆F</strong>. We’ll access the value as <code>`⍵1</code>.</p>
 <pre><code>   cv←11 30 60
    t←&#39;The temperature is {&quot;I2&quot; $ `⍵1}°C or {&quot;F5.1&quot; $ 32+9×`⍵1÷5}°F&#39;
-   T← 1 ∆F t
+   T← 1 ∆F t       ⍝ Or  (dfn: 1)
 
    ∆F t cv
 The temperature is 11°C or  51.8°F

@@ -1,5 +1,5 @@
 ---
-title: "∆F Formatted String Literals (v.0.1.1)"
+title: "∆F Formatted String Literals (v.0.2.1)"
 toc: true
 ---
 
@@ -93,11 +93,13 @@ help information is also available in the file _readme.md_ on Github.</small>
 <details open><summary class="summary">&ensp;<span style="opacity:0.6;">Show/Hide</span> <em>Overview</em> 
 </summary><a id="inside-overview" class="scroll-target"></a>
 
+<∆N>The current version of **∆F** requires Dyalog version 20.</∆N>
 Inspired by [Python f‑strings](#appendix-ii-python-fstrings), **∆F** includes a variety of capabilities to make it easy to evaluate, format, annotate, and display related multi&shy;dimensional information.
-A **∆F** _f-string_ <∆N>For _f-string_ formats, see [**∆F** Call Syn&shy;tax Over&shy;view](#f-call-syntax-overview).</∆N>
+A **∆F** _f-string_
 is (typically) a character vector, which may reference objects in the environment, additional
 function arguments, or both.
 
+ <∆N>For *f-string* formats, see [**∆F** Call Syn&shy;tax Over&shy;view](#f-call-syntax-overview).</∆N>
 **∆F** _f‑strings_ include:
 
 - The abstraction of 2-dimensional character **_fields_**, generated one-by-one from the user's specifications and data, then aligned and catenated into a single overall character matrix result;
@@ -264,10 +266,7 @@ For n=┌─┐, n×Pi=┌───────┐
 **3.8: Serialise an object in Array Notation**
 
 ``` 
-⍝  Dyalog 20: anim←(cat: 1 ◇ dog: 2 ◇ mouse: 3)
-   cat dog mouse← 1 2 3 
-   anim←⎕NS 'cat' 'dog' 'mouse' 
-⍝  Works in Dyalog 19 or 20!
+   anim←(cat: 1 ◇ dog: 2 ◇ mouse: 3)
    ∆F '{`⍵1 `S anim ↓} { `⍵2 `S anim↓}' 1 0    
   `⍵1 `S anim ↓        `⍵1 `S anim↓ 
 (cat:1◇dog:2◇mouse:3◇)  (        
@@ -533,8 +532,8 @@ we can place a box around **_each_** field (_regardless_ of type) by setting **�
 
 ```
    cv← 11.3 29.55 59.99
-       ↓¯¯¯ box mode,  or:  (box: 1)
-   0 0 1 ∆F '`◇The temperature is {"I2" $ cv}`◇°C or {"F5.1" $ 32+9×cv÷5}`◇°F'
+⍝   ↓¯¯¯ box mode,  or:  0 0 1
+   (box: 1) ∆F '`◇The temperature is {"I2" $ cv}`◇°C or {"F5.1" $ 32+9×cv÷5}`◇°F'
 ┌───────────────────┬──┬──────┬─────┬──┐
 │                   │11│      │ 52.3│  │
 │The temperature is │30│°C or │ 85.2│°F│
@@ -545,17 +544,16 @@ we can place a box around **_each_** field (_regardless_ of type) by setting **�
 We said you could place a box around every field, but there's an exception.
 Null **Space** fields `{}`, _i.e._ 0-width **Space** fields, are discarded once they've done their work of ensuring adjacent fields (typically, **Text** fields) are displayed in their own rectangular space.
 
-Try this expression on your own:
+Try evaluating this expression on your own:
 
 ```
-⍝ (box: 1) ∆F 'abc...mno' in Dyalog 20.
-   0 0 1   ∆F 'abc{}def{}{}ghi{""}jkl{ }mno'
+    (box: 1) ∆F 'abc{}def{}{}ghi{""}jkl{ }mno'   
 ```
 
 <details id="pPeek"><summary class="summary">&ensp;Peek at answer</summary>
 
 ```
-   0 0 1 ∆F 'abc{}def{}{}ghi{""}jkl{ }mno'
+   (box: 1) ∆F 'abc{}def{}{}ghi{""}jkl{ }mno'
 ┌───┬───┬───┬┬───┬─┬───┐
 │abc│def│ghi││jkl│ │mno│
 └───┴───┴───┴┴───┴─┴───┘
@@ -1176,7 +1174,7 @@ and to see _where_ it's copied from, use **∆F**'s **_verbose_** option:
 <∆N><br>First use of `£.pco` this _session._ Since subsequent uses will use the `£.pco` already copied into the library, they are ***quiet***.</∆N>
 
 ```
-   0 1 ∆F '{ ⍸ 1 £.pco ⍳100 }'    ⍝ 0 1 <==> (verbose: 1)
+   (verbose: 1) ∆F '{ ⍸ 1 £.pco ⍳100 }'    ⍝ (verbose: 1) <==> 0 1 
 ∆F: Copied "pco" into £=[⎕SE.⍙FUtils.library] from "ws:dfns"
 { ⎕SE.⍙FUtils.M ⌽⍬({⍸ 1 (⎕SE.⍙FUtils.library).pco ⍳100}⍵)}⍵
 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97
@@ -1288,7 +1286,7 @@ The temperature is 11°C or  51.8°F
 Let's precompute a dfn `T`, given the string `t`.&ensp;`T` has everything needed to generate the output (given the same definition of the vector `cv`, when `T` is evaluated).
 
 ```
-   T← 1 ∆F t
+   T← 1 ∆F t       ⍝ Or (dfn: 1) ∆F ...
 ```
 
 <details id="pPeek"><summary class="summary">&ensp;Evaluate <code>T ⍬</code></summary>
@@ -1326,7 +1324,7 @@ We'll access the value as `` `⍵1 ``.
 ```
    cv←11 30 60
    t←'The temperature is {"I2" $ `⍵1}°C or {"F5.1" $ 32+9×`⍵1÷5}°F'
-   T← 1 ∆F t
+   T← 1 ∆F t       ⍝ Or  (dfn: 1)
 
    ∆F t cv
 The temperature is 11°C or  51.8°F
