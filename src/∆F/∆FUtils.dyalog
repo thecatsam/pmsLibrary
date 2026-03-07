@@ -21,17 +21,17 @@
 ⍝ NB. Modify header names or constants __THIS__ or __OUTER__ at your peril.
 ⍝ 
   ∇ result← {opts} ∆FSrc args 
-    :Trap __TRAP_ERRORS__
-      :With __THIS__                                          
+    :With __THIS__   
+      :TRAP TRAP_ERRORS/0                                       
       ⍝ Phase I: Set options!  Be sure to copy OPTS_DEFns and change ONLY the copy.
       ⍝ Default options              
         :If  900⌶0                                          
             opts← ⎕NS OPTS_DEFns                     
         :ElseIf 9=__OUTER__.⎕NC 'opts'    
-            opts← ⎕NS OPTS_DEFns __OUTER__.opts                  ⍝ v19: Emulate v.20 ⎕NS
+            opts← ⎕NS OPTS_DEFns __OUTER__.opts                    
       ⍝ Positional options-- integers/booleans         
         :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts 
-            opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts    ⍝ v19: Emulate ⎕VSET
+            opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts   
       ⍝ Special options (like help and invalid options)
         :Else                                           
             result← Special opts ⋄ :Return                     
@@ -53,10 +53,11 @@
         :Else          ⍝ 'help', etc. => Give help, etc.      
             result← Special opts 
         :EndSelect   
-      :EndWith 
     :Else 
         ⎕SIGNAL ⊂⎕DMX.('EM' 'EN' 'Message' ,⍥⊂¨('∆F ',EM) EN Message) 
     :EndTrap 
+  :EndWith 
+
   ⍝! (C) Copyright 2025, 2026 Sam the Cat Foundation
   ∇
    :EndSection   ∆F SOURCE
@@ -478,28 +479,20 @@
 ⍝ If destNs is the namespace ⎕THIS, then we:
 ⍝    ∘ set '__OUTER__.' to  ''
   ∇ {targNm}← ⍙Export_∆F (targNm destNs lockFn) 
-    ; nm; outr; src; snk; trap 
-    ; Fix; Freeze; QCom; NoEL; QLock 
+    ; in; out; outer 
+    ; Fix; Hardwire; QCom; NoEL; QLock 
 
-    ⋄   outr← '##.' ''⊃⍨ destNs=⎕THIS
-    ⋄   trap← ('⍬0'⊃⍨ TRAP_ERRORS), (¯40↑ '⍝! TRAP_ERRORS='), ⍕TRAP_ERRORS
-    src snk← ↓⍉↑(
-          '∆FSrc'              targNm 
-          '__THIS__'           ∆THIS  
-          '__OUTER__\.'        outr 
-          '__TRAP_ERRORS__'    trap 
-          'result'             'rësûlt∆F'
-          'opts'               'öôpts∆F'
-          'args'               'äârgs∆F'
-    ) 
+    outer← '##.' ''⊃⍨ destNs=⎕THIS
+    in← '∆FSrc' '__THIS__' '__OUTER__\.' '\b(args|opts|result)\b'
+    out← targNm ∆THIS      outer         '⍙F_\1'
 
-    Freeze← src ⎕R snk⍠ 'UCP' 1  
+    Hardwire← in ⎕R out ⍠ 'UCP' 1  
     NoEL←   { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
     Fix←    destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
     QLock←  destNs.⎕LOCK⍣lockFn
 
-    :If targNm≡ nm← Fix NoEL Freeze⊢ 62 ⎕ATX '∆FSrc' 
-      {} QLock nm 
+    :If targNm≡ Fix NoEL Hardwire⊢ 62 ⎕ATX '∆FSrc' 
+      {} QLock targNm
       {}(⎕∘←)⍣VERBOSE_LOADTIME⊢ '✅✅✅ Created function ',(⍕destNs),'.',targNm 
     :Else 
       11 ⎕SIGNAL⍨'❌❌❌ There was an error applying ⍙Export_∆F. Could not create "',(⍕destNs),'.',targNm  
