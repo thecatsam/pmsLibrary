@@ -129,15 +129,12 @@
 ⍝ Was: OPTS_DEFns←  (⎕NS⍬) {⍺⊣ ⍺.{⍎⍺,'←⊃⍵'}⍤1 0/⍵} OPTS_KW OPTS_DEFval
   OPTS_DEFns← ()⎕VSET OPTS_KW OPTS_DEFval
 
-⍝ KEEP_SRC_CM: See ∆F.dyalog. If ∆FUtils loaded directly, ←1.
-  KEEP_SRC_CM← 0 
+⍝ KEEP_SRC_CM: Are source comments maintained in runtime namespace ∆FUtils?
+  KEEP_SRC_CM← 1 
 
 ⍝ Returns 20 if Dyalog 20, 19 if 19. (This version requires Dyalog 20 or later)
   APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'  
 :EndNamespace ⍝ ⍙FGlobals
-
-⍝ Make globals visible to ∆FUtils...
-  ⎕SE.⍙FGlobals← ⍙FGlobals
 
   ∇ {rc}← ⍙Load (srcFi destNs codeVersion add∆F2Path keepCm) 
     ; le; rc; dNm; src; _  
@@ -162,25 +159,28 @@
         :If ~⎕NEXISTS srcFi
             Err22⍬ ⋄ ErrAll⍬ ⋄ :Return   
         :EndIf 
-        src← keepCm { ⍺: ⍵
-          { ⍵/⍨ 0≠≢¨⍵ }'''[^'']*''' '\h*⍝(?!\!).*$' ⎕R '&' '' ⊢⍵  ⍝ Delete comments unless "⍝!.*"
+        src← keepCm { ⍺: ⍵          ⍝ Delete comments unless "⍝!.*"
+          { ⍵/⍨ 0≠≢¨⍵ }'''[^'']*''' '\h*⍝(?!\!).*$' ⎕R '&' '' ⊢⍵  
         } ⊃⎕NGET srcFi 1 
-      ⍝ We pass options via ⎕SE.⍙FTemp
-        destNs.⎕FIX⍠ 'FixWithErrors' 0⊣ src    
+        ⎕SE.⍙FGlobals← ⍙FGlobals                        ⍝ Make globals visible to ∆FUtils...
+        destNs.⎕FIX⍠ 'FixWithErrors' 0⊣ src             ⍝ We pass options via ⎕SE.⍙FTemp
         :If 9 3∨.≠ destNs.⎕NC↑ '⍙FUtils' '∆F'           ⍝ Sanity check.  
-            ErrAll⍬ ⋄ :Return   
+            ErrAll⍬  
+        :Else 
+            destNs.⍙FUtils.VERBOSE_LOADTIME ReportQ ⍕destNs 
+            :If add∆F2Path
+                ⎕PATH,← ⎕PATH PathAdd ⍕destNs 
+            :EndIf 
+            rc← 1  
         :EndIf 
-        destNs.⍙FUtils.VERBOSE_LOADTIME ReportQ ⍕destNs 
-        :If add∆F2Path
-            ⎕PATH,← ⎕PATH PathAdd ⍕destNs 
-        :EndIf 
-        rc← 1  
     :Else
-        ErrApl ⎕DMX ⋄ ErrAll⍬ ⋄ :Return 
+        ErrApl ⎕DMX ⋄ ErrAll⍬  
     :EndTrap 
+    ⎕EX '⎕SE.⍙FGlobals'                                 ⍝ Clean up 
   ∇
 
-  ⍙Load ⍙FGlobals.(SRC_FI DEST_NS VERSION ADD_∆F_TO_PATH KEEP_SRC_CM)
-  ⎕EX '⎕SE.⍙FGlobals'                                     ⍝ Clean up 
+
+⍝ Load ∆FUtils, which will load other required libraries...
+  ⍙Load ⍙FGlobals.(SRC_FI DEST_NS VERSION ADD_∆F_TO_PATH KEEP_SRC_CM)                                   
 :EndNamespace ⍝ Unnamed
 

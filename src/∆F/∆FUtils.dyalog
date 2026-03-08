@@ -12,7 +12,7 @@
 ⍝ =======================================================================
 ⍝ ∆F USER FUNCTION Source - See ⍙Export_∆F
 ⍝ =======================================================================
-⍝ ∆FSrc:  ==>  ##.∆F
+⍝ ∆F_Template:  ==>  ##.∆F
 ⍝    modified to become ##.∆F at ⍙Export_∆F.
 ⍝ ∆F: 
 ⍝    result← {opts←⍬} ∇ f-string [args]
@@ -20,7 +20,7 @@
 ⍝ 
 ⍝ NB. Modify header names or constants __THIS__ or __OUTER__ at your peril.
 ⍝ 
-  ∇ result← {opts} ∆FSrc args 
+  ∇ result← {opts} ∆F_Template args 
     :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
       ⍝ Phase I: Set options!  Be sure to copy OPTS_DEFns and change ONLY the copy.
@@ -483,15 +483,15 @@
     ; Fix; Hardwire; QCom; NoEL; QLock 
 
     outer← '##.' ''⊃⍨ destNs=⎕THIS
-    in← '∆FSrc' '__THIS__' '__OUTER__\.' '\b(args|opts|result)\b'
-    out← targNm ∆THIS      outer         '⍙F_\1'
+    in←  '∆F_Template' '__THIS__' '__OUTER__\.' '\b(args|opts|result)\b'
+    out← targNm        ∆THIS      outer         '⍙F_\1'
 
     Hardwire← in ⎕R out ⍠ 'UCP' 1  
     NoEL←   { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
     Fix←    destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
     QLock←  destNs.⎕LOCK⍣lockFn
 
-    :If targNm≡ Fix NoEL Hardwire⊢ 62 ⎕ATX '∆FSrc' 
+    :If targNm≡ Fix NoEL Hardwire⊢ 62 ⎕ATX '∆F_Template' 
       {} QLock targNm
       {}(⎕∘←)⍣VERBOSE_LOADTIME⊢ '✅✅✅ Created function ',(⍕destNs),'.',targNm 
     :Else 
