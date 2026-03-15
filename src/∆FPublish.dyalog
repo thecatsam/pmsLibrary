@@ -71,6 +71,7 @@
   loader←    '∆F.dyalog'             ⍝ ∆F bootstrap utility
   libra←     '∆FLibUtils.dyalog'     ⍝ £ library
   parmFi←    '∆FParmDefs.apla'       ⍝ 
+  globFi←    '∆FGlobals.dyalog'
   pdf←       '∆FHelp.pdf'            ⍝ PDF 
   cd←        'CircleDiaeresis.dyalog' ⍝ Adam B's ⍥ with depth emulation
 
@@ -325,7 +326,7 @@ Say'    TEMP:  ', HomeDir Fi Temp ⍬
 Hr
 
 pgmDep← ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) ((Priv loader)(Pub loader))((PrivF parmFi)(PubF parmFi))
-pgmDep,← ⊂((PrivF cd)(PubF cd))
+pgmDep,← ⊂((PrivF cd)(PubF cd))((PrivF globFi)(PubF globFi))
 :If force
 :OrIf '∆F Program' NeedsUpdate pgmDep
     Hr
@@ -339,6 +340,7 @@ pgmDep,← ⊂((PrivF cd)(PubF cd))
     CopyFi(Priv loader)(Pub loader)
     CopyFi(PrivF libra)(PubF libra)
     CopyFi(PrivF parmFi)(PubF parmFi)
+    CopyFi(PrivF globFi)(PubF globFi)
     force CopyFi(PrivF pgm)(PubF pgm)                    ⍝ Make ∆F library public
 :EndIf
 

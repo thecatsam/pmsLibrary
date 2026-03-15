@@ -1,10 +1,11 @@
 :Namespace ⍙FUtils   
-⍝   ⍝ [*] Dyalog ≥20 Version!
+⍝  VERSION: Dyalog 20 and later!
 :Section CORE 
 ⍝ Sys vars for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
   ⎕IO ⎕ML ⎕PP← 0 1 34     
-⍝ Bringin "global" vars set via loader (∆F.dyalog)...
-  ⎕THIS ⎕NS ⎕SE.⍙FGlobals       
+⍝ Load "global" vars shared temporarily via top-level loader ∆F.dyalog...
+  ⎕THIS ⎕NS ⎕SE.⍙FGlobals 
+  GLOBALS← ⎕SE.⍙FGlobals.⎕NL ¯2       
 ⍝ Set char. rendering of ⎕THIS. We can set ⎕THIS.⎕DF later, but ∆THIS will remain as is. 
   ∆THIS← ⍕⎕THIS                
 
@@ -12,37 +13,35 @@
 ⍝ =======================================================================
 ⍝ ∆F USER FUNCTION Source - See ⍙Export_∆F
 ⍝ =======================================================================
-⍝ ∆F_Template:  ==>  ##.∆F
-⍝    modified to become ##.∆F at ⍙Export_∆F.
+⍝ ∆F_Template:  ==>  ##.∆F (typically)
+⍝    Actual name and destination set at ⍙Export_∆F.
 ⍝ ∆F: 
 ⍝    result← {opts←⍬} ∇ f-string [args]
 ⍝ See notes elsewhere on ∆F itself.
 ⍝ 
-⍝ NB. Modify header names or constants __THIS__ or __OUTER__ at your peril.
-⍝ 
+⍝ NB. Modify header names and constants __THIS__  and __UP__ 
+⍝ ∘ We need __UP__  (typically ##) to address the fact that header vars that are 
+⍝   namespaces aren't transferred automatically into :With blocks (per Dyalog doc).
   ∇ result← {opts} ∆F_Template args 
     :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
-      ⍝ Phase I: Set options!  Be sure to copy OPTS_DEFns and change ONLY the copy.
-      ⍝ Default options              
-        :If  900⌶0                                          
-            opts← ⎕NS OPTS_DEFns                     
-        :ElseIf 9=__OUTER__.⎕NC 'opts'    
-            opts← ⎕NS OPTS_DEFns __OUTER__.opts                    
-      ⍝ Positional options-- integers/booleans         
-        :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts 
-            opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts   
-      ⍝ Special options (like help and invalid options)
-        :Else                                           
-            result← Special opts ⋄ :Return                     
+      ⍝ Phase I: Set options and normalise args!  **************            
+        :If  900⌶0                                            ⍝ No opts
+            opts← ⎕NS OPTS_DEFns                              ⍝   Copy OPTS_DEFns                
+        :ElseIf 9=__UP__.⎕NC 'opts'                           ⍝ NS opt
+            opts← ⎕NS OPTS_DEFns __UP__.opts                  ⍝   Copy OPTS_DEFns and user opts                         
+        :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts      ⍝ Ints / booleans, none trailing
+            opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts ⍝   Copy OPTS_DEFns and user opts
+        :Else                                                 ⍝ Kitchen sink 
+            result← args Special opts ⋄ :Return               ⍝   Help / other special or error
         :EndIf 
-      ⍝ Phase II: Execute!
-        args← ,⊆args                
+        args← ,⊆args  
+      ⍝ Phase II: Execute!  **************                   
       ⍝ Determine output mode based on opts.dfn and execute.
         :Select opts.dfn  
       ⍝ 0: Execute F-string    
         :Case  0        
-            result← opts ((⊃⎕RSI){ ⍺⍺⍎ ⍺ ScanFStr ⊃⍵⊣ ⎕EX 'opts' 'args'}) args    
+            result← opts ((⊃⎕RSI){ ⍺⍺⍎ ⍺ ScanFStr ⊃⍵⊣ ⎕EX 'opts' 'args'}) args 
       ⍝ 1: Generate dfn code 
         :Case  1       
             result← (⊃⎕RSI)⍎ opts ScanFStr ⊃args
@@ -51,7 +50,7 @@
             result← opts ScanFStr ⊃args  
       ⍝ Else: Run help or other special code           
         :Else          ⍝ 'help', etc. => Give help, etc.      
-            result← Special opts 
+            result← Special opts  
         :EndSelect   
     :Else 
         ⎕SIGNAL ⊂⎕DMX.('EM' 'EN' 'Message' ,⍥⊂¨('∆F ',EM) EN Message) 
@@ -124,11 +123,10 @@
       c= esc:   (pfx, a) ∇ w⊣ a w← ûsr CFEsc w         ⍝ `⍵, `⋄, `A, `B, etc.
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
-    ⍝ This next line will never be executed unless cd∊ FUTURES
+    ⍝ These next two guards will be true only if cd rsu∊ FUTURES, respectively.
       c= cd:  (pfx, scCD) ∇ w                          ⍝ Adam B's CircleDiaeresis (optional).
-    ⍝ This next line will never be executed unless rsu∊ FUTURES
-      c= rsu: (pfx, scSel) ∇ w                         ⍝ Select / Sane Indexing
-      ~c∊selfDoc: ⎕SIGNAL cfLogicÊ                     ⍝ CFBrk leaked unknown char.
+      c= rsu: (pfx, scSel) ∇ w                         ⍝ Select / Sane Indexing.
+      ~c∊selfDoc: ⎕SIGNAL cfLogicÊ                     ⍝ If guard true, CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
       ûsr.brC>1:    (pfx, c scA⊃⍨ c= pct) ∇ w          ⍝ internal dfn => not SDCF
         p← +/∧\' '=w
@@ -175,9 +173,8 @@
 ⍝   brC       -   running count of braces '{' lb, '}' rb. Set in dfn ScanAll.
 ⍝   cfL       -   code field running length (for SDCFs). Set in dfn ScanAll.
     ûsr← ⍺                                
-  ⍝ Validate all options passed in ûsr (⍺). 
-  ûsr.((|dfn),verbose box auto inline)(0∊∊)0 1: ⎕SIGNAL optÊ                             ⍝  
-    VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message 
+  ⍝ Validate all options passed in ûsr (⍺).  dfn∊ ¯1 0 1; others ∊ 0 1.
+  0∊ ûsr.(verbose box auto inline (|dfn))∊ 0 1: ⎕SIGNAL optÊ    
   ⍝ Shortcuts: 
   ⍝    See ⍙Load_Shortcuts 
   ⍝ This must follow the ordering specified there EXACTLY.  
@@ -190,7 +187,8 @@
     ûsr.auto∧← libUtils.pârms.auto                     ⍝ auto can usefully be 1 only if pârms.auto is 1.     
                                                        ⍝ Start the scan (recursive).                    
     flds← '' ScanAll⊢ fstr← ∊⍵                         ⍝    fstr: char vec of vecs => char vec                     
-                                                       ⍝ Scan complete.                                        
+                                                       ⍝ Scan complete. 
+    VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message                                        
   0= ≢flds: VMsg '(1 0⍴⍬)', '⍨'/⍨ ûsr.dfn≠0            ⍝ If there are no flds, return 1 by 0 matrix
     code← CFDfn (ûsr.box⊃ scM scÐ), OrderFlds flds     ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
   0=ûsr.dfn: VMsg code                                 ⍝ Emit code ready to execute
@@ -390,16 +388,30 @@
 :Section HELP AND ERROR SERVICES
 ⍝===================================================================================
 ⍝ Special: Provides help info and other special info. 
-⍝ Called with this syntax, where ⍺ stands for the options listed below.
+⍝ ∆F called with this syntax, where ⍺ stands for the options listed below.
 ⍝       '⍺' ∆F anything  OR  ∆F⍨'⍺
-⍝ Special options (⍺):
-⍝       'help'  or variants 'help-n[arrow]', 'help-w[ide]'
-⍝       'parms'
-⍝ (1 0⍴⍬)← ∇ ⍵
-⍝ 1. If ⍵ is not special (any case, truncating after key letters), an error is signaled.
-⍝ 2. If helpHtml is not defined, HELP_HTML_FI will be read and copied into helpHtml. 
-⍝ 3. Displays helpHtml.
-  Special← { val← ⎕C⍵
+⍝ Special options (⍺).  
+⍝  Documented...
+⍝    ∘ ∇⍨'help' | ∇⍨'help-w[ide]'
+⍝      Displays the help information in standard (wide) format; returns (1 0⍴0).
+⍝    ∘ ∇⍨'help-n[arrow]'
+⍝      Displays the help information in narrow format; returns:  (1 0⍴⍬).
+⍝    ∘ ∇⍨'parms'
+⍝      Resets and returns parameters for £, `L shortcuts in multi-line form.
+⍝    ∘ ∇⍨'parms-c'
+⍝      Resets parameters and returns active parameters for £, `L options in compact form.
+⍝  Undocumented...
+⍝    ∘ ∇⍨'globals'
+⍝      Returns all the std global variables with their values.
+⍝    * ∇⍨'path'
+⍝      Returns all the files and workspace directories used for £, `L shortcuts.
+⍝    * 'get' ∇ 'parameter' value
+⍝      Returns the current value of the named parameter. The parameter must be valid.
+⍝    * 'set' ∇ 'parameter'  new_value
+⍝      Sets the named parameter to a new value.
+⍝      Returns the previous value. The parameter must be valid.
+⍝ 
+  Special← { val← ⎕C ⍵                                     ⍝ ⍺ is referenced for 'get' and 'set' only
   ⍝ pârms: Load any new pârms without a ]load. 
   ⍝        Returns display of default and user pârms (as mx) in alph order.
     2≠ ⎕NC 'val': ⎕SIGNAL optÊ  
@@ -407,7 +419,10 @@
     'parms-c'≡ 7↑val: _← libUtils.LoadParms '-v -c -r'
     'parms'  ≡   val: _← libUtils.LoadParms '-v    -r'
     'path'   ≡   val: _← libUtils.ShowPath ⍬ 
-    'globals'≡   val: _← ⍙ShowGlobalsIf 1 
+    'globals'≡   val: _← ⍙ShowGlobalsIf 1                 ⍝ list all "globals"
+  ⍝ Undocumented: 'get' 'set'. Use at own risk.
+    'get'    ≡   val: _← ⎕VGET ⊃⊆⍺                        ⍝ get one global ⍺ 
+    'set'    ≡   val: _← (⎕VSET ⊂⍺)⊢ ⎕VGET ⊃⍺             ⍝ set one global, return old val
     'help'   ≢ 4↑val: ⎕SIGNAL optÊ 
   ⍝ (Below) help, help-wide, or help-narrow?
       CLoadHtml← {   ⍝ Conditionally load help html file, i.e. if not already loaded...
@@ -469,29 +484,33 @@
 :Section FIX_TIME_ROUTINES 
 ⍝ ===================================================================================
 
-⍝ ⍙Export_∆F : rc← ∇ targNm destNs lockFn 
+⍝ ⍙Export_∆F : rc← ∇ (targNm: '∆F' ⋄ destNs: ## ⋄ lockFn: 0) 
+⍝   Args are optional (i.e. () is valid).
 ⍝ Used internally only at FIX-time:
 ⍝ On execution (default mode), ⍙Export_∆F creates ∆F in location specified as <destNs>.
 ⍝ If destNs is not namespace ⎕THIS, then we "promote the fn to target namespace,
 ⍝    ∘ obscure (mangle) local vars: ¨result¨ ¨opts¨ and ¨args¨
-⍝    ∘ sets __OUTER__. to ##.
+⍝    ∘ sets __⎕THIS__.##. to ##.
 ⍝    ∘ sets __THIS__ to refer to this namespace (i.e. ...⍙FUtils)
 ⍝ If destNs is the namespace ⎕THIS, then we:
-⍝    ∘ set '__OUTER__.' to  ''
-  ∇ {targNm}← ⍙Export_∆F (targNm destNs lockFn) 
-    ; in; out; outer 
-    ; Fix; Hardwire; QCom; NoEL; QLock 
+⍝    ∘ set '__UP__.'  to  ''
+  ∇ {targNm}← ⍙Export_∆F args 
+    ; targNm; destNs; lockFn; in; out; up 
+    ; Fix; Hardwire; QCom; NoEL; QLock; XR  
+  ⍝ ('targNm' '∆F') ('destNs' ##) ('lockFn' 0)
+    targNm destNs lockFn← args ⎕VGET  ('targNm' '∆F') ('destNs' ##) ('lockFn' 0) 
 
-    outer← '##.' ''⊃⍨ destNs=⎕THIS
-    in←  '∆F_Template' '__THIS__' '__OUTER__\.' '\b(args|opts|result)\b'
-    out← targNm        ∆THIS      outer         '⍙F_\1'
+    up← '##.' ''⊃⍨ destNs=⎕THIS
+    in←  '∆F_Template' '__UP__\.' '__THIS__'  '\b(args|opts|result)\b'
+    out← targNm         up          ∆THIS     '⍙F_\1'
 
+    XR←       62∘⎕ATX 
     Hardwire← in ⎕R out ⍠ 'UCP' 1  
-    NoEL←   { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
-    Fix←    destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
-    QLock←  destNs.⎕LOCK⍣lockFn
+    NoEL←     { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
+    Fix←      destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
+    QLock←    destNs.⎕LOCK⍣lockFn
 
-    :If targNm≡ Fix NoEL Hardwire⊢ 62 ⎕ATX '∆F_Template' 
+    :If targNm≡ Fix NoEL Hardwire XR '∆F_Template' 
       {} QLock targNm
       {}(⎕∘←)⍣VERBOSE_LOADTIME⊢ '✅✅✅ Created function ',(⍕destNs),'.',targNm 
     :Else 
@@ -684,15 +703,7 @@
 ⍝ Show the following special globals in this namespace.
   ⍙ShowGlobalsIf←{  
     ~⍵: _←1 0⍴0  
-      gg← ⊃,/(
-        'ESCAPE_CHAR'         'HELP_HTML_FI'    'INLINE_UTILS' 
-        'LIB_ACTIVE'          'SIGNAL_LIB_ERRS' 'LIB_PARM_FI'  
-        'LIB_USER_FI'         'LIB_SRC_FI'      
-        'OPTS_KW'             'OPTS_DEFval'        
-        'QUOTES_SUPPLEMENTAL' 'TRAP_ERRORS'     'KEEP_SRC_CM'  
-        'VERBOSE_LOADTIME'    'VERBOSE_RUNTIME' 'VERSION' 'FUTURES'
-      ) 
-      vv← 1∘⎕SE.Dyalog.Array.Serialise¨ ⎕VGET gg← ⊂∘⍋⍛⌷⍨gg  
+      vv← 1∘⎕SE.Dyalog.Array.Serialise¨ ⎕VGET gg← ⊂∘⍋⍛⌷⍨GLOBALS   
     1: _← ↑  '(', ')',⍨ vv {'  ',⍵ , ⍺}¨ (1+⌈/≢¨ gg)↑¨gg,¨ ':'  
   }
 ⍝ ====================================================================================
@@ -703,8 +714,8 @@
         :If APL_VERSION < 20
             ⎕←↑3⍴⊂'❌❌❌ This version of ∆F requires Dyalog 20 or later'
             ⎕SIGNAL 911 
-        :EndIf  
-        ⍙Export_∆F '∆F' ## 0          ⍝ Keep comments? (0→NO); lock? (0→NO).
+        :EndIf     
+        ⍙Export_∆F (targNm: '∆F' ⋄ destNs: ## ⋄ lockFn: 0)   
         ⍙Load_Shortcut_Calls
         ⍙Load_Help HELP_HTML_FI
         LIB_ACTIVE← ⍙Load_LibAuto LIB_SRC_FI LIB_ACTIVE KEEP_SRC_CM   

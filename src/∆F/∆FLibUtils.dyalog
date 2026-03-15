@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-03-06') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-03-15') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading
@@ -18,8 +18,8 @@
 ⍝ RUN TIME ROUTINES
 ⍝ ===================================================================================
 ⍝ LibAuto: libStr← ûsr ∇ str 
-⍝    str str starts 1 char after '£' or '`L'. 
-⍝    ê: namespace with (r/w:) ûsr.acache; (r/o:) êauto; (read in LoadObj:) êverbose 
+⍝    str: str starts 1 char after '£' or '`L'. 
+⍝    ûsr: namespace with (r/w:) ûsr.acache; (r/o:) êauto; (read in LoadObj:) êverbose 
 ⍝ Returns: ûLibNmP, the library name surrounded by parens, no matter what.
 ⍝ ∘ Used by ∆F's scan process when it sees £ or `L. 
 ⍝   ∘ Called from the main scan routines CF_SF and CF_Esc. 
@@ -45,13 +45,13 @@
     ~⍺.auto:                 ûLibNmP                ⍝ Not auto? →Return.
         w← NoLB ⍵                                   ⍝     Skip blanks
     '.'≠ ⊃w:                 ûLibNmP                ⍝ No initial period? →Return.
-        w← NoLB⊢ w← 1↓w                             ⍝     Skip more blanks,
+        w← NoLB 1↓w                                 ⍝     Skip more blanks,
         nm← w↑⍨ len← NmSpan w                       ⍝     Get the (apparent) simple name and length.  
-    ⍺.acache∊⍨ ⊂nm:          ûLibNmP                ⍝ Saw it before? →Return.
+    (⊂nm)∊ ⍺.acache:         ûLibNmP                ⍝ Saw it before? →Return.
         ⍺.acache,← ⊂nm                              ⍝     Mark as seen (even if invalid)
     0≠ ûLib.⎕NC nm:          ûLibNmP                ⍝ In libuser (>1) or invalid name (-1)? →Return. 
     '←'= ⊃'∘ '~⍨ len↓w:      ûLibNmP                ⍝ Setting name? →Return.
-        _← ûLib ⍺ pârms LoadObj nm                  ⍝ Try to load obj definition
+        _← ⍺ LoadObj nm                             ⍝ Try to load obj definition
                              ûLibNmP                ⍝ →Return.                                       
   }
   ⍝ Support Fns: NoLB, NmSpan
@@ -112,9 +112,9 @@
           sfx← ⊂⊃⌽⎕NPARTS fi← ⍵  
           ⍝ When ⎕FIX is applied to ¨fi¨, ¨êNm¨ must be among the names listed as ⎕FIXed.  
           IfF sfx:  rcEN rcOK⊃⍨ êNm⊂⍛∊ êNms⊢← 2 ûLib.⎕FIX _FOpts êErrFi⊢←fi    ⍝ aplf/o/n, dyalog
-          IfA sfx:  rcOK⊣ ûLib ##.⎕VSET ⊂êNm (AN2Apl ⊃⎕NGET fi 1)              ⍝ apla
-          IfJ sfx:  rcOK⊣ ûLib ##.⎕VSET ⊂êNm (⎕JSON _JOpts ⊃⎕NGET fi 0)        ⍝ json
-          IfT sfx:  rcOK⊣ ûLib ##.⎕VSET ⊂êNm ⊃⎕NGET fi (OptT sfx)              ⍝ aplv, txt, aplvv, aplm
+          IfA sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm (AN2Apl ⊃⎕NGET fi 1)                 ⍝ apla
+          IfJ sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm (⎕JSON _JOpts ⊃⎕NGET fi 0)           ⍝ json
+          IfT sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm ⊃⎕NGET fi (OptT sfx)                 ⍝ aplv, txt, aplvv, aplm
                     rcEN rcOK⊃⍨ êNm⊂⍛∊ êNms⊢← êNm FixOrAssign fi               ⍝ Any other suffix                    
         }
         (FixByType fi) ('file:"',fi,'"')         
@@ -133,7 +133,7 @@
     ⍝ If it fails due to 19/11, try reading <fi> as an array notation object, assigning its value to <nm>.
       ⍝ 19: FILE ACCESS ERROR (⎕FIX/⎕NGET). 11: ERROR ⎕FIXING object contents.
       FixOrAssign← { 
-        19 11:: (⊂⍺)⊣ ûLib ##.⎕VSET ⊂⍺ (AN2Apl ⊃⎕NGET ⍵ 1)    ⍝ Array Notation? Assign value to ⍺.
+        19 11:: (⊂⍺)⊣ ûLib ⎕VSET ⊂⍺ (AN2Apl ⊃⎕NGET ⍵ 1)         ⍝ Array Notation? Assign value to ⍺.
           2 ûLib.⎕FIX _FOpts êErrFi⊢← ⍵                         ⍝ Fixable object? Return what ⎕FIX returns.
       }
       
@@ -201,8 +201,8 @@
     ⍝   ===========================================================================
     ⍝   Executive for LoadObj 
     ⍝   ===========================================================================
-    ⍝ ûsr.. "External" objects that are used within various subfunctions that are initialised here.
-      ûLib ûsr pârms← ⍺      ⍝ ûsr - From the ∆F runtime code. => ns.  
+    ⍝ extern: ûLib, pârms.
+      ûsr← ⍺                  ⍝ ûsr - From the ∆F runtime code. => ns.  
       êNms← ,⊂êNm← ⍵          ⍝ êNm - always => CV. êNms - always => VCV, initialliy ,⊂êNm.  See ScanPath.
       êDMX← ⍬                 ⍝ Set in SubScanFiles; ref'd in EndScan only. => ⍬|ns
       êErrFi← ''              ⍝ Referenced in EndScan only...   => CV.
@@ -344,7 +344,7 @@
     ⍝   it is replaced in ⍵ by its corresponding default in (⊃∘⌽¨⍺)
       ParmsSpecial←{ 
         ⍺← ('verbose' ##.VERBOSE_RUNTIME) ('prefix'(,⊂'')) ('auto' 0) ('path' ⍬) ('suffix' ⍬) 
-        ⍵ ##.⎕VSET ⍺/⍨ (⍬∘≡∨⎕NULL∘≡)∘⍵.⎕OR∘⊃¨ ⍺
+        ⍵ ⎕VSET ⍺/⍨ (⍬∘≡∨⎕NULL∘≡)∘⍵.⎕OR∘⊃¨ ⍺
       }
     ⍝ GenFullPath:   pârms.⍙fullPath← ∇ pârms 
       GenFullPath←{

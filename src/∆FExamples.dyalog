@@ -2,7 +2,7 @@
   ;all;cmpx;code;line;pline;skip;slow;timings
   ;C;Code;Dmd;E;FI;LINE;NoBL;S;Select;Show;Skip;Split;ToFn
 
-
+ 
   LINE←40⍴'🔴'
   line pline←70⍴¨'¨' '+'
   :If 'n'∊⎕C⊃⍞↓⍨≢⍞←'Include timings? [yes|no] '
@@ -24,7 +24,7 @@
    ⎕←''
 
   :With ⎕NS ⍬    ⍝ Hide names to prevent exfiltration from examples executed...
-    ⎕IO ⎕ML ⎕PW←0 1 120
+    ⎕IO ⎕ML ⎕PW←0 1 999
     ∆Q←{q←'''' ⋄ q,q,⍨⍵/⍨1+⍵=q}
     S←{'⎕←',''''',',∆Q ⍵}  ⍝ Show
     C←{'⎕←','''  '',',∆Q ⍵}  ⍝ Com
