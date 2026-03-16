@@ -31,7 +31,7 @@
 ⍝ Key settable parameters...
   productionCode← 1
   copyright←     '2026'
-  version←       'v.0.2.1'
+  ⎕← version← { (0 ⎕FIX ⍵).VERSION } '∆F/∆FGlobals.dyalog'
 
 ⍝ Constants
   timestamp←     ∊∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
@@ -326,7 +326,10 @@ Say'    TEMP:  ', HomeDir Fi Temp ⍬
 Hr
 
 pgmDep← ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) ((Priv loader)(Pub loader))((PrivF parmFi)(PubF parmFi))
-pgmDep,← ⊂((PrivF cd)(PubF cd))((PrivF globFi)(PubF globFi))
+pgmDep,← ((PrivF cd)(PubF cd))((PrivF globFi)(PubF globFi))
+:IF 4< |≡pgmDep
+    11 ⎕SIGNAL⍨ 'DOMAIN ERROR: pgmDep improperly defined'
+ :EndIf 
 :If force
 :OrIf '∆F Program' NeedsUpdate pgmDep
     Hr

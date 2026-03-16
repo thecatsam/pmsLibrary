@@ -1,12 +1,13 @@
 :Namespace ⍙FUtils   
 ⍝  VERSION: Dyalog 20 and later!
 :Section CORE 
-⍝ Sys vars for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
+⍝ Env for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
   ⎕IO ⎕ML ⎕PP← 0 1 34     
 ⍝ Load "global" vars shared temporarily via top-level loader ∆F.dyalog...
-  ⎕THIS ⎕NS ⎕SE.⍙FGlobals 
-  GLOBALS← ⎕SE.⍙FGlobals.⎕NL ¯2       
-⍝ Set char. rendering of ⎕THIS. We can set ⎕THIS.⎕DF later, but ∆THIS will remain as is. 
+  ⎕THIS ⎕NS ⎕SE.⍙⍙FGlobals 
+⍝ Note the list of "globals"
+  GLOBALS← ⎕SE.⍙⍙FGlobals.⎕NL ¯2 ¯9       
+⍝ Set char. rendering of ⎕THIS, so we can set ⎕THIS.⎕DF to something arbitrary.
   ∆THIS← ⍕⎕THIS                
 
    :Section      ∆F SOURCE
@@ -680,7 +681,7 @@
     ; how 
     how← ' from "',libFi,'" into "','"',⍨∆THIS 
     :If libActive=0
-        ⎕←↑3⍴⊂'❗❗❗ WARNING: Library autoload services were not loaded',how
+        ⎕←↑1⍴⊂'❗❗❗ WARNING: Library autoload services were not loaded',how
         ⎕←'✅✅✅ LIB_ACTIVE is set to ',(⍕libActive),' in ∆F/∆FUtils.dyalog'
         ⎕←'✅✅✅ £ and `L shortcuts are available without them, as if (auto: 0) is set.'
         :Return 
@@ -696,14 +697,14 @@
         :EndIf 
     :Else
         libActive← 0 
-        ⎕←↑3⍴⊂'❗❗❗ WARNING: Unable to load Library autoload services',how 
+        ⎕←↑1⍴⊂'❗❗❗ WARNING: Unable to load Library autoload services',how 
         ⎕←'✅✅✅ £ and `L shortcuts are available without autoload (auto: 0).'
     :EndTrap
   ∇
 ⍝ Show the following special globals in this namespace.
   ⍙ShowGlobalsIf←{  
     ~⍵: _←1 0⍴0  
-      vv← 1∘⎕SE.Dyalog.Array.Serialise¨ ⎕VGET gg← ⊂∘⍋⍛⌷⍨GLOBALS   
+      vv← { 9= ⎕NC '⍵': ⊂⍕⍵ ⋄ 1∘⎕SE.Dyalog.Array.Serialise ⍵}¨ ⎕VGET gg← ⊂∘⍋⍛⌷⍨GLOBALS   
     1: _← ↑  '(', ')',⍨ vv {'  ',⍵ , ⍺}¨ (1+⌈/≢¨ gg)↑¨gg,¨ ':'  
   }
 ⍝ ====================================================================================
@@ -712,7 +713,7 @@
   ∇ ok← Initialise 
     :Trap ok← 0   
         :If APL_VERSION < 20
-            ⎕←↑3⍴⊂'❌❌❌ This version of ∆F requires Dyalog 20 or later'
+            ⎕←↑1⍴⊂'❌❌❌ This version of ∆F requires Dyalog 20 or later'
             ⎕SIGNAL 911 
         :EndIf     
         ⍙Export_∆F (targNm: '∆F' ⋄ destNs: ## ⋄ lockFn: 0)   
@@ -722,7 +723,7 @@
         ⍙ShowGlobalsIf VERBOSE_RUNTIME
     :Else 
         ⎕← ↑⎕DMX.DM ⋄  ⎕←'Stack: ' ⋄ ⎕← 4{⍺≥≢⍵: '   ',⍵ ⋄ ⍺ ∇ ⍺↓⍵⊣ ⎕← '   ',⍺↑⍵} ⎕XSI  
-        ⎕←↑3⍴⊂'❌❌❌ ∆F Initialisation has failed!'
+        ⎕←↑1⍴⊂'❌❌❌ ∆F Initialisation has failed!'
     :EndTrap 
   ∇ 
   Initialise 

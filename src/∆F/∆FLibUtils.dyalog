@@ -1,10 +1,13 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-03-15') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-03-16') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading
 ⍝ *** It handles NOTHING ELSE ***
-⍝ It has RUNTIME routines (services used when an £ or `L is seen in the user's code field) and
-⍝ LOADTIME routines (setting up the active library services). 
+⍝ See sections for...
+⍝ a. Runtime Routines 
+⍝    (services used when an £ or `L is seen in the user's code field), and
+⍝ b. LoadTime routines 
+⍝    (setting up the active library services). 
 ⍝ ∘ See ⍙FUtils for fn ⍙Load_LibAuto, which loads this library.
 ⍝ ∘ See "Executive" at bottom of file, which calls
 ⍝   - LibComplete 
@@ -15,7 +18,7 @@
 
   :Section  Runtime Routines 
 ⍝ ===================================================================================
-⍝ RUN TIME ROUTINES
+⍝ RUNTIME ROUTINES
 ⍝ ===================================================================================
 ⍝ LibAuto: libStr← ûsr ∇ str 
 ⍝    str: str starts 1 char after '£' or '`L'. 
@@ -223,11 +226,11 @@
 ⍝ ==========================================================================================================================
 :Section Loadtime Routines
 ⍝ ===================================================================================
-⍝ LOAD TIME ROUTINES
+⍝ LOADTIME ROUTINES
 ⍝ ===================================================================================
 
 ⍝   LibComplete: Point to (empty, but named) user library at load-time.
-⍝      actual ref: ##.userLibrary, local ref (alias): ûLib, local name: ûLibNm.
+⍝      actual ref is typically ##.userLibrary, local ref (alias): ûLib, local name: ûLibNm.
 ⍝ external: 
 ⍝      ûLib, ûLibNm, ûLibNmP
   ∇ {libRef}← LibComplete libRef

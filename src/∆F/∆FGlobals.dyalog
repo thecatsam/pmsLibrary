@@ -1,9 +1,10 @@
 :Namespace  
-⍝ ⍙FGlobals.dyalog (nameless namespace)
+⍝ ∆FGlobals.dyalog => nameless namespace
 ⍝ =======================================================================
 ⍝ GENERAL GLOBAL VARIABLES:  
 ⍝ Exported to ∆FUtils via temp ns ⎕SE.⍙FGlobals.
-⍝ ============                                                                      
+⍝ ============   
+⍝ DEST_NS                                                                    
 ⍝ ESCAPE_CHAR  FUTURES          HELP_HTML_FI    INLINE_UTILS        KEEP_SRC_CM 
 ⍝ LIB_ACTIVE   LIB_PARM_FI      LIB_SRC_FI      LIB_USER_FI         LIB_SRC_FI 
 ⍝ OPTS_DEFval  OPTS_KW          OPTS_N          QUOTES_SUPPLEMENTAL SIGNAL_LIB_ERRS    
@@ -13,7 +14,7 @@
   DEST_NS←         ⎕THIS.##.##                         ⍝ Typically, ⎕SE 
   ADD_∆F_TO_PATH← 1                                    ⍝ If 1, adds ∆F to Dyalog ⎕PATH.
  
-  VERSION← 'v.0.2.1'          ⍝ Set/updated by ∆F_Publish.dyalog...
+  VERSION← 'v.0.2.2'          ⍝ Set/updated by ∆F_Publish.dyalog...
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F.
   TRAP_ERRORS← 0             
 ⍝
@@ -101,7 +102,7 @@
 ⍝                  No autoload features should be available.
   LIB_ACTIVE←  2                                       ⍝ Full functionality
   LIB_PARM_FI← '∆F/∆FParmDefs.apla' 
-  LIB_USER_FI← '.∆F'                                   ⍝ Relative to the session current dir.
+  LIB_USER_FI← '.∆F'                                   ⍝ User parameters, rel. to Apl ]CD
   LIB_SRC_FI←  '∆F/∆FLibUtils.dyalog'                  ⍝ Library shortcuts (£,  `L) utilities.
   
 ⍝ ==================================================================================
@@ -120,5 +121,5 @@
   KEEP_SRC_CM← 0 
 
 ⍝ Returns 20 if Dyalog 20, 19 if 19. (This version requires Dyalog 20 or later)
-  APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion'  
+  APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion' 
 :EndNamespace ⍝ ⍙FGlobals
