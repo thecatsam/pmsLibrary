@@ -3,21 +3,21 @@
 :Section CORE 
 ⍝ Env for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
   ⎕IO ⎕ML ⎕PP← 0 1 34     
-⍝ Load "global" vars shared temporarily via top-level loader ∆F.dyalog...
+⍝ Loader ∆F.dyalog shares global variables via transient namespace ⎕SE.⍙⍙FGlobals.
+⍝ Add them to this namespace... 
   ⎕THIS ⎕NS ⎕SE.⍙⍙FGlobals 
-⍝ Note the list of "globals"
+⍝ Note the names of all these xferred "globals"
   GLOBALS← ⎕SE.⍙⍙FGlobals.⎕NL ¯2 ¯9       
 ⍝ Set char. rendering of ⎕THIS, so we can set ⎕THIS.⎕DF to something arbitrary.
   ∆THIS← ⍕⎕THIS                
 
    :Section      ∆F SOURCE
 ⍝ =======================================================================
-⍝ ∆F USER FUNCTION Source - See ⍙Export_∆F
+⍝ ∆F USER FUNCTION SOURCE 
+⍝     ∆F_Template ==> ##.∆F (Actual name and destination set at ⍙Export_∆F)
 ⍝ =======================================================================
-⍝ ∆F_Template:  ==>  ##.∆F (typically)
-⍝    Actual name and destination set at ⍙Export_∆F.
 ⍝ ∆F: 
-⍝    result← {opts←⍬} ∇ f-string [args]
+⍝    result← {opts←⍬|()} ∇ f-string [args]
 ⍝ See notes elsewhere on ∆F itself.
 ⍝ 
 ⍝ NB. Modify header names and constants __THIS__  and __UP__ 
@@ -28,13 +28,13 @@
       :TRAP TRAP_ERRORS/0                                       
       ⍝ Phase I: Set options and normalise args!  **************            
         :If  900⌶0                                            ⍝ No opts
-            opts← ⎕NS OPTS_DEFns                              ⍝   Copy OPTS_DEFns                
+            opts← ⎕NS OPTS_DEFns                              ⍝ → Copy OPTS_DEFns                
         :ElseIf 9=__UP__.⎕NC 'opts'                           ⍝ NS opt
-            opts← ⎕NS OPTS_DEFns __UP__.opts                  ⍝   Copy OPTS_DEFns and user opts                         
+            opts← ⎕NS OPTS_DEFns __UP__.opts                  ⍝ → Copy OPTS_DEFns and user opts                         
         :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts      ⍝ Ints / booleans, none trailing
-            opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts ⍝   Copy OPTS_DEFns and user opts
+            opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts ⍝ → Copy OPTS_DEFns and user opts
         :Else                                                 ⍝ Kitchen sink 
-            result← args Special opts ⋄ :Return               ⍝   Help / other special or error
+            result← args Special opts ⋄ :Return               ⍝ → Help / other special or error
         :EndIf 
         args← ,⊆args  
       ⍝ Phase II: Execute!  **************                   
@@ -120,26 +120,26 @@
      (c= rb)∧ ûsr.brC≤ 1: (CFDfn pfx) w                ⍝ Closing brace? Opt'lly Trim (CFDTrimR pfx) ==> and RETURN!!!
       c∊ lb_rb: (pfx, c) ∇ w⊣ ûsr.brC+← -/c= lb_rb     ⍝ Inc/dec ûsr.brC as appropriate
       c∊ qtsL:  (pfx, a) ∇ w⊣ a w← ûsr CFQS c w        ⍝ Process quoted string.
-      c= dol:   (pfx, scF) ∇ w                         ⍝ $ => ⎕FMT 
+      c= dol:   (pfx, iF⊃ fastCT) ∇ w                  ⍝ $ => ⎕FMT 
       c= esc:   (pfx, a) ∇ w⊣ a w← ûsr CFEsc w         ⍝ `⍵, `⋄, `A, `B, etc.
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
     ⍝ These next two guards will be true only if cd rsu∊ FUTURES, respectively.
-      c= cd:  (pfx, scCD) ∇ w                          ⍝ Adam B's CircleDiaeresis (optional).
-      c= rsu: (pfx, scSel) ∇ w                         ⍝ Select / Sane Indexing.
+      c= cd:  w ∇⍨ pfx, (iCD⊃ fastCT)                  ⍝ ⍥ Adam B's CircleDiaeresis (optional).
+      c= rsu: w ∇⍨ pfx, (iSel⊃ fastCT)                 ⍝ ⊇ Select / Sane Indexing.
       ~c∊selfDoc: ⎕SIGNAL cfLogicÊ                     ⍝ If guard true, CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
-      ûsr.brC>1:    (pfx, c scA⊃⍨ c= pct) ∇ w          ⍝ internal dfn => not SDCF
+      ûsr.brC>1: w ∇⍨ pfx, c (iA⊃ fastCT)⊃⍨ c= pct     ⍝ internal dfn => not SDCF
         p← +/∧\' '=w
-      rb≠ ⊃p↓w:  (pfx, c scA⊃⍨ c= pct) ∇ w             ⍝ not CF-final '}' => not SDCF
+      rb≠ ⊃p↓w:  w ∇⍨ pfx, c (iA⊃ fastCT)⊃⍨ c= pct     ⍝ not CF-final '}' => not SDCF
     ⍝ SDCF: SELF-DEFINING CODE FIELD
         cfLit← AplQt ûsr.cfBeg↑⍨ ûsr.cfL+ p            ⍝ Put CF-literal in quotes
-        fmtr←  (scA scM⊃⍨ c='→')                       ⍝ vert or horiz. SDCF?
+        fmtr←  (iA iM⊃⍨ c='→')⊃ fastCT                 ⍝ vert or horiz. SDCF?
         (cfLit, fmtr, CFDfn pfx) ((p+1)↓w)             ⍝ ==> RETURN!
     }
 
 ⍝ ===========================================================================
-⍝ ScanFStr main (executive) begins here
+⍝ ScanFStr executive begins here
 ⍝    On entry: 
 ⍝        ⍺ is a namespace; 
 ⍝        ⍵ is the f-string, a possibly null char vector
@@ -178,8 +178,8 @@
   0∊ ûsr.(verbose box auto inline (|dfn))∊ 0 1: ⎕SIGNAL optÊ    
   ⍝ Shortcuts: 
   ⍝    See ⍙Load_Shortcuts 
-  ⍝ This must follow the ordering specified there EXACTLY.  
-    (scA scB scC scD scF scJ scQ scS scT scW scÐ scM scCD scSel)← ûsr.inline⊃ scCodeTbl   
+  ⍝ Select relevant part of code table-- library-based or inline
+    fastCT← ûsr.inline⊃ scCodeTbl 
     
     ûsr.acache← ⍬                                      ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
@@ -191,7 +191,7 @@
                                                        ⍝ Scan complete. 
     VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message                                        
   0= ≢flds: VMsg '(1 0⍴⍬)', '⍨'/⍨ ûsr.dfn≠0            ⍝ If there are no flds, return 1 by 0 matrix
-    code← CFDfn (ûsr.box⊃ scM scÐ), OrderFlds flds     ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
+    code← CFDfn (fastCT⊃⍨ ûsr.box⊃ iM iÐ), OrderFlds flds ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
   0=ûsr.dfn: VMsg code                                 ⍝ Emit code ready to execute
     fstrQ← ',⍨⊂', AplQt fstr                           ⍝ Is ûsr.dfn (1,¯1): add quoted fmt string (`⍵0)
     VMsg lb, code, fstrQ, rb                           ⍝ Emit ûsr.dfn-based str ready to cvt to ûsr.dfn in caller
@@ -239,7 +239,7 @@
   qtÊ←         Ê 'Unpaired quote in code field' 
   cfLogicÊ←    Ê 'A logic error has occurred processing a code field'
   optÊ←        Ê 'Invalid option(s) in left argument. For help: ∆F⍨''help'''
-  scBadÊ←      Ê {'Sequence "`',⍵,'" does not represent a valid shortcut.'}
+  ScBadÊ←      Ê {'Sequence "`',⍵,'" does not represent a valid shortcut.'}
                T1←{
                   t1← 'Sequence "`',⍵,'" not valid in code fields outside strings.'
                   t2← 'Did you mean "',⍵,'"?'
@@ -248,10 +248,11 @@
   EscÊ←        Ê T1 ⋄ ⎕EX 'T1'  
                t1← 'Help file "',HELP_HTML_FI,'" not found in current directory (CD)'
                t2← 'CD: "','"',⍨⊃1 ⎕NPARTS ''
-  helpFiÊ←  22 Ê t1,(⎕UCS 13),(17⍴''),t2 ⋄ ⎕EX 't1' 't2'
+  helpFiÊ←  22 Ê t1,(⎕UCS 13),(17⍴''),t2 
+               ⎕EX 't1' 't2'
    :EndSection Constants
 
-   :Section Utilities (Zero Side Effects) 
+   :Section Utilities (Must Have Zero Side Effects) 
 ⍝ ===================================================================================
 ⍝ Utilities (fns/ops) for ScanFStr above.
 ⍝ ∘ These must have zero side effects, except those reflected in ûsr-namespace objects.
@@ -277,7 +278,7 @@
 ⍝ TFProc:  flds@CVV← ûsr ∇ str
 ⍝ If a text field <str> is not 0-length, place in quotes and add it to ûsr.flds.
 ⍝ Ensure adjacent fields are sep by ≥1 blank.
-  TFProc← {0=≢⍵: ⍺.flds ⋄ 0≠ ≢⍵: ⍺.flds,← ⊂sp_sq, sq,⍨ ⍵/⍨ 1+ sq= ⍵ ⋄ ⍺.flds }  
+  TFProc← {0=≢⍵: ⍺.flds ⋄ ⍺.flds,← ⊂sp_sq, sq,⍨ ⍵/⍨ 1+ sq= ⍵ ⋄ ⍺.flds }  
 
 ⍝ CFEsc:  (code w)← ûsr ∇ fstr
 ⍝ Handle escapes  in Code Fields OUTSIDE of CF-Quotes.  
@@ -289,7 +290,7 @@
     c='L': (⍺ libUtils.LibAuto w) w                    ⍝ Library shortcut: special (niladic) case
       p← MapSC c                                       ⍝ Look for other shortcuts
     nSC> p: (⍺.inline p⊃ scCodeTbl) w                  ⍝ Found? return code string.
-    c∊⍥⎕C ⎕A: ⎕SIGNAL scBadÊ c                         ⍝ Nope: Unknown shortcut!
+    c∊⍥⎕C ⎕A: ⎕SIGNAL ScBadÊ c                         ⍝ Nope: Unknown shortcut!
       ⎕SIGNAL EscÊ c                                   ⍝ Nope: An escape foll. by non-alphabetic.
   } ⍝ End CFEsc 
 
@@ -582,7 +583,7 @@
     W← {⎕ML←1⋄⍺←⎕UCS 39⋄ 1<|≡⍵: ⍺∘∇¨⍵⋄L R←2⍴⍺⋄{L,R,⍨⍕⍵}⍤1⊢⍵}
   
   ⍝ Select (Sane Indexing):  ⊇
-    selCodeStr← '(⊂⍛⌷)' '(⌷⍤0 99)' ⊃⍨ APL_VERSION< 20 
+    selCodeStr← '(⊂⍛⌷)'                      ⍝ '(⌷⍤0 99)' if APL_VERSION< 20 
 
   ⍝ CircleDiaeresis
   ⍝ Adam B's "future" ⍥ with depth operator extension 
@@ -656,11 +657,12 @@
   scCD2←  cdNm { ⍵: Publish ⍺ ⋄ 2⍴ cd } cdFut
   scSel2← 2⍴ ⊂rsu selCodeStr⊃⍨ rsuFut 
   
-  ⍝ Do not change order without adjusting runtime code
+  ⍝ Do not change order without adjusting runtime code (at ScanFStr executive)
   ⍝    scA scB... ← ûsr.inline⊃ scCodeTbl   
   scCodeTbl← ↓⍉↑scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scSel2 
   nSC← ≢scUser←  'A    B    C    D    F    J    Q    S    T    W'~ ' '
   MapSC← scUser∘⍳
+  iA iB iC iD iF iJ iQ iS iT iW iÐ iM iCD iSel← ⍳≢⊃scCodeTbl  
   ok← 1 
   ∇ 
 

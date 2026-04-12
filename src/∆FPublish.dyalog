@@ -1,8 +1,8 @@
 ﻿∆FPublish parms
-  ; anyUpdts; copyright; docDep; force; hdr; html; libDir; libra; loader   
-  ; md; mdTmp; ns; pandocBin; parmFi; pdf; pgm; pgmDep; priv; privF        
-  ; privFdir; privdir; productionCode; pub; pubF; pubFdir; pubdir; quiet   
-  ; readme; sideN2FN; temp; tempdir; timestamp; title; version; _          
+  ; anyUpdts; cd; copyright; docDep; force; globFi; hdr; html; libDir      
+  ; libra; loader; md; mdTmp; ns; pandocBin; parmFi; pdf; pgm; pgmDep; priv
+  ; privF; privFdir; privdir; productionCode; pub; pubF; pubFdir; pubdir   
+  ; quiet; readme; sideN2FN; temp; tempdir; timestamp; title; version; _   
   ; CSay; CopyFi; Delete; Diamonds; Fi; HomeDir; Hr; HtmlMacro; Macros     
   ; MacrosInSrc; Md2Html; MdPandoc2Git; NeedsUpdate; Parm; Priv; PrivF; Pub
   ; PubF; Say; Temp; Tp; UpdatePgm                                         

@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-03-16') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-03-20') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading
@@ -32,17 +32,18 @@
 ⍝ 1. find the name nm in £.nm...[[∘]←] (first token in a qua.lif.ied name), and
 ⍝ 2. If valid and not seen before:
 ⍝   - If £. is followed by a dotted name nm1.nm2[...], then nm←nm1, the first one.
-⍝     That entire namespace is loaded, if found. In this case, that's 'nm1'; then
+⍝     That ENTIRE(!) namespace is loaded, if found. In this case, that's 'nm1'; then
 ⍝   - (via LoadObj) get source code for 'nm1' from a file or workspace in the 
 ⍝     path (pârms.⍙fullPath).
 ⍝ ∘ Does NOT affect the string ⍵ being scanned. 
 ⍝   - That's left to the scanner that called LibAuto.
 ⍝   - Is only used for its ⎕CY or ⎕FIX side effect via LoadObj. 
-⍝   - We add <name> to the cache, once we see it.  
+⍝   - We add <name> to the cache, once we see it, whether loaded, not found, or invalid!  
 ⍝ ∘ A name may be in the user library w/o having been loaded directly, e.g. 
 ⍝   - if a file in the domain of ⎕FIX contains multiple objects, all may be loaded,
 ⍝     as long as <name> is included.
 ⍝ ∘ No attempt is made to load (⎕CY/⎕FIX) invalid names or those already in ûLib.
+⍝   That awaits a new load of ∆F (whether by ]load or ⎕FIX).
   LibNoAuto← {ûLibNmP} 
   LibAuto←{      
     ~⍺.auto:                 ûLibNmP                ⍝ Not auto? →Return.
@@ -114,10 +115,10 @@
         FixByType← { 
           sfx← ⊂⊃⌽⎕NPARTS fi← ⍵  
           ⍝ When ⎕FIX is applied to ¨fi¨, ¨êNm¨ must be among the names listed as ⎕FIXed.  
-          IfF sfx:  rcEN rcOK⊃⍨ êNm⊂⍛∊ êNms⊢← 2 ûLib.⎕FIX _FOpts êErrFi⊢←fi    ⍝ aplf/o/n, dyalog
-          IfA sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm (AN2Apl ⊃⎕NGET fi 1)                 ⍝ apla
-          IfJ sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm (⎕JSON _JOpts ⊃⎕NGET fi 0)           ⍝ json
-          IfT sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm ⊃⎕NGET fi (OptT sfx)                 ⍝ aplv, txt, aplvv, aplm
+          IfF sfx:  rcEN rcOK⊃⍨ êNm⊂⍛∊ êNms⊢← 2 ûLib.⎕FIX _FOpts êErrFi⊢←fi    ⍝ See below 
+          IfA sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm (AN2Apl ⊃⎕NGET fi 1)                 ⍝   ...
+          IfJ sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm (⎕JSON _JOpts ⊃⎕NGET fi 0)           ⍝   ...
+          IfT sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm ⊃⎕NGET fi (OptT sfx)                 ⍝   ...
                     rcEN rcOK⊃⍨ êNm⊂⍛∊ êNms⊢← êNm FixOrAssign fi               ⍝ Any other suffix                    
         }
         (FixByType fi) ('file:"',fi,'"')         
@@ -198,8 +199,8 @@
           }
         rc=rcNF: Ê 11 ('Object "',êNm,'" not found on search path')   
         rc=rcEN: Ê 11 ('Obj "',êNm,'" not present in ',srcFi) 
-      ⍝ rc=rcER: ↓↓↓.
-                 Ê êDMX.EN,⍥⊂ 'Error loading ',êNms,' into user library (',êDMX.Message,')'
+        rc=rcER: Ê êDMX.EN,⍥⊂ 'Error loading ',êNms,' into user library (',êDMX.Message,')'
+                 Ê 911 ('EndScan Logic Error: Unknown Return Code')
       }
     ⍝   ===========================================================================
     ⍝   Executive for LoadObj 
@@ -301,25 +302,25 @@
           pârms.verbose← (⍬ ⎕NULL∊⍨ ⊂pârms.verbose)⊃ pârms.verbose ##.VERBOSE_RUNTIME 
       1: _← pârms⊣ pârms.⍙readParms← 1 0 
     }  
-    ⍝ Set baseline pârms in case we are directed NOT to read the default pârms or if it's corrupted...
-      SetBaseParms←{
-          ⍙readParms auto path prefix suffix verbose← (0 0) 0 ⍬ ⍬ ⍬ (##.VERBOSE_RUNTIME) 
-          'pârms' ⎕NS '⍙readParms' 'auto' 'path' 'prefix' 'suffix' 'verbose' 
-      }
-    ⍝ What to do if loading defaults or user pârms fails.
-    ⍝    ⍺ LoadErr warning
-    ⍝ Issues warning ⍵ if ⍵ is non-null  
-    ⍝ Sets LibAuto to a nop and sets auto and ⍙readParms to ¯1.
-    ⍝ isUsrP=1: error loading USER parameters (.∆F file); 
-    ⍝ isUsrP=0: error loading DEFAULT parameters
-      LoadErr← { isUsrP← ⍺        
-          warn← '❗❗❗ ∆F LIB. WARNING: ' 
-          amsg← (⊂'Library Autoload is '),¨ 'not available' 'available',¨'' ' with default parameters.'
-          _← { 0=≢⍵: ⍬ ⋄ ⊢⎕← warn, ⍵ }¨ ⍵ ⎕DMX.Message (isUsrP⊃ amsg)    
-          ⎕THIS.(LibAuto← LibNoAuto)                  ⍝ No Auto function!
-          pârms.(auto ⍙readParms← 0 (0 0))  
-        1: _← 0 
-      }
+  ⍝ Set baseline pârms in case we are directed NOT to read the default pârms or if it's corrupted...
+    SetBaseParms←{
+        ⍙readParms auto path prefix suffix verbose← (0 0) 0 ⍬ ⍬ ⍬ (##.VERBOSE_RUNTIME) 
+        'pârms' ⎕NS '⍙readParms' 'auto' 'path' 'prefix' 'suffix' 'verbose' 
+    }
+  ⍝ What to do if loading defaults or user pârms fails.
+  ⍝    ⍺ LoadErr warning
+  ⍝ Issues warning ⍵ if ⍵ is non-null  
+  ⍝ Sets LibAuto to a nop and sets auto and ⍙readParms to ¯1.
+  ⍝ isUsrP=1: error loading USER parameters (.∆F file); 
+  ⍝ isUsrP=0: error loading DEFAULT parameters
+    LoadErr← { isUsrP← ⍺        
+        warn← '❗❗❗ ∆F LIB. WARNING: ' 
+        amsg← (⊂'Library Autoload is '),¨ 'not available' 'available',¨'' ' with default parameters.'
+        _← { 0=≢⍵: ⍬ ⋄ ⊢⎕← warn, ⍵ }¨ ⍵ ⎕DMX.Message (isUsrP⊃ amsg)    
+        ⎕THIS.(LibAuto← LibNoAuto)                  ⍝ No Auto function!
+        pârms.(auto ⍙readParms← 0 (0 0))  
+      1: _← 0 
+    }
 
   ⍝ LoadUserParms: Loadtime routine
   ⍝ Loads parameter file ⍵ (if it exists) into namespace ⍺
@@ -353,7 +354,8 @@
       GenFullPath←{
         pfx pth← ⍵.(prefix path)
         ⍬{
-          0=≢⍵: ⍺ ⋄ p← ⊂⊃⍵ 
+        0=≢⍵: ⍺ 
+          p← ⊂⊃⍵ 
         2<|≡p: (⍺, p) ∇ 1↓⍵                            ⍝ workspace
           (⍺, ,p∘., '/'∘., pfx) ∇ 1↓⍵                  ⍝ file 
         } pth  
