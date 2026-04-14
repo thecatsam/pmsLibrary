@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-03-20') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-04-14') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading
