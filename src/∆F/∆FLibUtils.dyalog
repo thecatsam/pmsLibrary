@@ -18,7 +18,7 @@
 
   :Section  Runtime Routines 
 ⍝ ===================================================================================
-⍝ RUNTIME ROUTINES
+⍝ RUNTIME ROUTINES: LibAuto (called in the code scanner)
 ⍝ ===================================================================================
 ⍝ LibAuto: libStr← ûsr ∇ str 
 ⍝    str: str starts 1 char after '£' or '`L'. 
@@ -43,7 +43,7 @@
 ⍝   - if a file in the domain of ⎕FIX contains multiple objects, all may be loaded,
 ⍝     as long as <name> is included.
 ⍝ ∘ No attempt is made to load (⎕CY/⎕FIX) invalid names or those already in ûLib.
-⍝   That awaits a new load of ∆F (whether by ]load or ⎕FIX).
+⍝   That awaits a fresh reload of ∆F (whether by ]load or ⎕FIX).
   LibNoAuto← {ûLibNmP} 
   LibAuto←{      
     ~⍺.auto:                 ûLibNmP                ⍝ Not auto? →Return.
@@ -61,7 +61,8 @@
   ⍝ Support Fns: NoLB, NmSpan
     NoLB← {(∨\' '≠⍵)/⍵}                             ⍝ Fast Idiom. 
     ⍝ NmSpan: Find longest left-anchored span of symbols valid in APL simple user names.
-    ⍝         We ensure the sequence is a valid name in a later step (see above).
+    ⍝         We ensure the sequence is an actual valid name in a later step (see above).
+    ⍝         For the fast span, it just needs to include (among other things) valid names.
       nmSym← { ⍺← ⎕D ⋄ 0=≢⍵: ⍺~'⍺⍵∇' ⋄ ¯1=⎕NC f←⊃⍵: ⍺ ∇ 1↓⍵ ⋄ (⍺,f) ∇ 1↓⍵ } ⎕AV   
     NmSpan← 0⍳⍨∊∘nmSym
  

@@ -10,37 +10,21 @@
 ⍝ Where's the globals file? Everything else is defined there!
   GLOBALS_FI← '∆F/∆FGlobals.dyalog'   
 
-⍝ ⎕DF val is returned/displayed by ⎕FIX or ]LOAD
-  Succeed_←  {⎕DF g.(DEST_NS⍕⍛,'.∆F [',VERSION,']')}
-⍝ Reporting on success if Verbose 
-  ReportQ_←  {g.VERBOSE_LOADTIME: ⎕←'✅✅✅ Created namespace "',g.DEST_NS⍕⍛,'.⍙FUtils"' ⋄ 1: _←0 }
-  Succeed←   Succeed_ ReportQ_
-⍝ Error Reporting
-  FailGlob← { ⎕DF emsg, 'Unable to find global variables needed to load ∆F or libraries' }
-  FailLoad← { ⎕DF emsg, 'Unable to load ∆F or associated ns (library) in ',⍕g.DEST_NS  }
-  Err22←    { 1: ⎕←emsg, 'File "', ⍵,'" does not exist!'}       ⍝ See Signal 22  
-  ErrVers←  { 1: ⎕← '❌❌❌ ∆F Domain Error: Dyalog 20 or later is required'}
-  ErrApl←   { 1: ⎕← '❌❌❌ APL ', ⎕DMX.EM,': ',d1↑⍨ ' '⍳⍨ d1← 1⊃ ⎕DMX.DM }   
-  PathAdd←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
-  emsg←     '❌❌❌ Load Error: '
-⍝ Delete comments unless of form "⍝!.*"
-  NoCm←     { ⍵/⍨ 0≠≢¨⍵ }'''[^'']*''' '\h*⍝(?!\!).*$' ⎕R '&' ''  
-
   ∇ {globFi}← ⍙Load_∆FUtils globFi
     ; g; ok; src 
     ⎕SIGNAL 0                                            ⍝ Clear ⎕DMX
     :Trap 0 
     ⍝ Load into <g> the global variables (used at load and runtime)
       :If ~⎕NEXISTS globFi 
-          FailGlob Err22 globFi ⋄ :Return 
+          FailGlob ErrNoFi globFi ⋄ :Return 
       :EndIf 
       g← 0 ⎕FIX globFi                                   ⍝ Load globals into temp <g>
       :If g.APL_VERSION< 20                              ⍝ This version requires Dyalog 20                                        
-          FailLoad ErrVers ⍬ ⋄ :Return 
+          FailLoad ErrVersn ⍬ ⋄ :Return 
       :ElseIf ~⎕NEXISTS g.SRC_FI
-          FailLoad Err22 g.SRC_FI ⋄ :Return   
+          FailLoad ErrNoFi g.SRC_FI ⋄ :Return   
       :EndIf 
-      src← NoCm⍣(~g.KEEP_SRC_CM) ⊃⎕NGET g.SRC_FI 1  
+      src← NoCmX⍣(~g.KEEP_SRC_CM) ⊃⎕NGET g.SRC_FI 1  
     ⍝ Prepare to load <SRC_FI>'s source code
       ⎕SE.⍙⍙FGlobals← g                                  ⍝ Make globals <g> visible to <src> 
       g.DEST_NS.⎕FIX⍠ 'FixWithErrors' 1⊣ src             ⍝ ... <src> will copy them in for its use.
@@ -57,6 +41,21 @@
     :EndTrap 
     ⎕EX '⎕SE.⍙⍙FGlobals'                                 ⍝ Clean up (outside trap)
   ∇
+  ⍝ ⎕DF val is returned/displayed by ⎕FIX or ]LOAD
+  Succeed_←  {⎕DF g.(DEST_NS⍕⍛,'.∆F [',VERSION,']')}
+⍝ Reporting on success if Verbose 
+  ReportQ_←  {g.VERBOSE_LOADTIME: ⎕←'✅✅✅ Created namespace "',g.DEST_NS⍕⍛,'.⍙FUtils"' ⋄ 1: _←0 }
+  Succeed←   Succeed_ ReportQ_
+⍝ Error Reporting
+  FailGlob← { ⎕DF emsg, 'Unable to find global variables needed to load ∆F or libraries' }
+  FailLoad← { ⎕DF emsg, 'Unable to load ∆F or associated ns (library) in ',⍕g.DEST_NS  }
+  ErrNoFi←  { 1: ⎕←emsg, 'File "', ⍵,'" does not exist!'}       ⍝ See Signal 22  
+  ErrVersn← { 1: ⎕← '❌❌❌ ∆F Domain Error: Dyalog 20 or later is required'}
+  ErrApl←   { 1: ⎕← '❌❌❌ APL ', ⎕DMX.EM,': ',d1↑⍨ ' '⍳⍨ d1← 1⊃ ⎕DMX.DM }   
+  PathAdd←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
+  emsg←     '❌❌❌ Load Error: '
+⍝ Delete comments unless of form "⍝!.*"
+  NoCmX←    { ⍵/⍨ 0≠≢¨⍵ }'''[^'']*''' '\h*⍝(?!\!).*$' ⎕R '&' ''  
 
 ⍝ ============== EXECUTIVE ==============
 ⍝ Load ∆FUtils, which will load other required libraries...

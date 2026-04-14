@@ -115,28 +115,28 @@
         ûsr.cfL+← 1+ p← CFBrk ⍵                        ⍝ ûsr.cfL is set in ScanAll above.  1: '{'
       p= ≢⍵:  ⎕SIGNAL brÊ                              ⍝ Missing "}" => Error. 
         pfx← ⍺, p↑⍵ 
-        c←   p⌷⍵
+        c←   p⌷⍵              
         w←   (p+1)↓⍵ 
      (c= rb)∧ ûsr.brC≤ 1: (CFDfn pfx) w                ⍝ Closing brace? Opt'lly Trim (CFDTrimR pfx) ==> and RETURN!!!
       c∊ lb_rb: (pfx, c) ∇ w⊣ ûsr.brC+← -/c= lb_rb     ⍝ Inc/dec ûsr.brC as appropriate
       c∊ qtsL:  (pfx, a) ∇ w⊣ a w← ûsr CFQS c w        ⍝ Process quoted string.
-      c= dol:   (pfx, iF⊃ fastCT) ∇ w                  ⍝ $ => ⎕FMT 
+      c= dol:   (pfx, scF) ∇ w                    ⍝ $ => ⎕FMT 
       c= esc:   (pfx, a) ∇ w⊣ a w← ûsr CFEsc w         ⍝ `⍵, `⋄, `A, `B, etc.
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
     ⍝ These next two guards will be true only if cd rsu∊ FUTURES, respectively.
-      c= cd:  w ∇⍨ pfx, (iCD⊃ fastCT)                  ⍝ ⍥ Adam B's CircleDiaeresis (optional).
-      c= rsu: w ∇⍨ pfx, (iSel⊃ fastCT)                 ⍝ ⊇ Select / Sane Indexing.
+      c= cd:  w ∇⍨ pfx, (scCD)                    ⍝ ⍥ Adam B's CircleDiaeresis (optional).
+      c= rsu: w ∇⍨ pfx, (scSel)                   ⍝ ⊇ Select / Sane Indexing.
       ~c∊selfDoc: ⎕SIGNAL cfLogicÊ                     ⍝ If guard true, CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
-      ûsr.brC>1: w ∇⍨ pfx, c (iA⊃ fastCT)⊃⍨ c= pct     ⍝ internal dfn => not SDCF
+      ûsr.brC>1: w ∇⍨ pfx, c scA⊃⍨ c= pct       ⍝ internal dfn => not SDCF
         p← +/∧\' '=w
-      rb≠ ⊃p↓w:  w ∇⍨ pfx, c (iA⊃ fastCT)⊃⍨ c= pct     ⍝ not CF-final '}' => not SDCF
+      rb≠ ⊃p↓w:  w ∇⍨ pfx, c scA⊃⍨ c= pct       ⍝ not CF-final '}' => not SDCF
     ⍝ SDCF: SELF-DEFINING CODE FIELD
         cfLit← AplQt ûsr.cfBeg↑⍨ ûsr.cfL+ p            ⍝ Put CF-literal in quotes
-        fmtr←  (iA iM⊃⍨ c='→')⊃ fastCT                 ⍝ vert or horiz. SDCF?
+        fmtr← scA scM⊃⍨ c='→'                      ⍝ vert or horiz. SDCF?
         (cfLit, fmtr, CFDfn pfx) ((p+1)↓w)             ⍝ ==> RETURN!
-    }
+    }   
 
 ⍝ ===========================================================================
 ⍝ ScanFStr executive begins here
@@ -176,11 +176,9 @@
     ûsr← ⍺                                
   ⍝ Validate all options passed in ûsr (⍺).  dfn∊ ¯1 0 1; others ∊ 0 1.
   0∊ ûsr.(verbose box auto inline (|dfn))∊ 0 1: ⎕SIGNAL optÊ    
-  ⍝ Shortcuts: 
+  ⍝ Shortcuts used explicitly (not just via esc+alphabetic): 
   ⍝    See ⍙Load_Shortcuts 
-  ⍝ Select relevant part of code table-- library-based or inline
-    fastCT← ûsr.inline⊃ scCodeTbl 
-    
+    scA scCD scÐ scF scM scSel← ûsr.inline∘⊃¨ scA2 scCD2 scÐ2 scF2 scM2 scSel2 
     ûsr.acache← ⍬                                      ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
     ûsr.flds← ⍬                                        ⍝ output fields, each a CV (Char Vec)
@@ -191,7 +189,7 @@
                                                        ⍝ Scan complete. 
     VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message                                        
   0= ≢flds: VMsg '(1 0⍴⍬)', '⍨'/⍨ ûsr.dfn≠0            ⍝ If there are no flds, return 1 by 0 matrix
-    code← CFDfn (fastCT⊃⍨ ûsr.box⊃ iM iÐ), OrderFlds flds ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
+    code← CFDfn (ûsr.box⊃ scM scÐ), OrderFlds flds     ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
   0=ûsr.dfn: VMsg code                                 ⍝ Emit code ready to execute
     fstrQ← ',⍨⊂', AplQt fstr                           ⍝ Is ûsr.dfn (1,¯1): add quoted fmt string (`⍵0)
     VMsg lb, code, fstrQ, rb                           ⍝ Emit ûsr.dfn-based str ready to cvt to ûsr.dfn in caller
@@ -278,6 +276,7 @@
 ⍝ TFProc:  flds@CVV← ûsr ∇ str
 ⍝ If a text field <str> is not 0-length, place in quotes and add it to ûsr.flds.
 ⍝ Ensure adjacent fields are sep by ≥1 blank.
+⍝ Returns the current array of fields (CVV)
   TFProc← {0=≢⍵: ⍺.flds ⋄ ⍺.flds,← ⊂sp_sq, sq,⍨ ⍵/⍨ 1+ sq= ⍵ ⋄ ⍺.flds }  
 
 ⍝ CFEsc:  (code w)← ûsr ∇ fstr
@@ -413,7 +412,8 @@
 ⍝      Sets the named parameter to a new value.
 ⍝      Returns the previous value. The parameter must be valid.
 ⍝ 
-  Special← { val← ⎕C ⍵                                     ⍝ ⍺ is referenced for 'get' and 'set' only
+  Special← { 
+    val← ⎕C ⍕⍵                                    ⍝ ⍺ is referenced for 'get' and 'set' only
   ⍝ pârms: Load any new pârms without a ]load. 
   ⍝        Returns display of default and user pârms (as mx) in alph order.
     2≠ ⎕NC 'val': ⎕SIGNAL optÊ  
@@ -622,9 +622,7 @@
 ⍝ Warning: Be sure these can run in user env with any ⎕IO and ⎕ML: Localize them where needed.
 ⍝ NOTE: We are creating multiline objects using the old method for compatibility with Dyalog 19 etc.
   ∇ {ok}← ⍙Load_Shortcut_Calls 
-    ; scUser
-    ; scA2; scB2; scC2; scD2; scÐ2; scF2; scJ2
-    ; scM2; scQ2; scS2; scT2; scW2; scCD2; scSel2  
+    ; scUser 
     ; Inline; Publish 
     Publish←{ ⍺← Inline ⍵    
       1: _← (' ',' ',⍨ ∆THIS,'.',⍵) ⍺
@@ -651,18 +649,22 @@
   ⍝ ∆F-internal (non-user) funtions:  Ð  M
   ⍝ Others: CircleDiaeresis, Select -- called only via symbol ⍥, ⊇ (if enabled)
 
+  ⍝ Only these shortcuts are exported for use outside this function
+  ⍝    Export: scA2 scCD2 scF2 scM2 scSel2   
+  ⎕SHADOW   'scB2 scC2  scJ2  scQ2  scS2  scT2  scW2'
   scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← Publish¨ 'A'  'B' 'C' 'J' 'M' 'Q' 'S'  'T'  'W' 
   scÐ2←   '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' Publish 'Ð'     
   scF2←   2⍴⊂' ⎕FMT ' 
   scCD2←  cdNm { ⍵: Publish ⍺ ⋄ 2⍴ cd } cdFut
   scSel2← 2⍴ ⊂rsu selCodeStr⊃⍨ rsuFut 
-  
-  ⍝ Do not change order without adjusting runtime code (at ScanFStr executive)
-  ⍝    scA scB... ← ûsr.inline⊃ scCodeTbl   
-  scCodeTbl← ↓⍉↑scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scSel2 
-  nSC← ≢scUser←  'A    B    C    D    F    J    Q    S    T    W'~ ' '
+    
+  ⎕SHADOW '⍙'
+  scCodeTbl← ↓⍉↑⍙← scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scSel2 
+ ⍝ iA iB iC iD iF iJ iQ iS iT iW iÐ iM iCD iSel← ⍳≢⍙ 
+⍝ nSC: # of user-accessible shortcuts via <esc><let>
+  nSC← ≢scUser←  'A B C D F J Q S T W'~ ' '
   MapSC← scUser∘⍳
-  iA iB iC iD iF iJ iQ iS iT iW iÐ iM iCD iSel← ⍳≢⊃scCodeTbl  
+⍝ Select relevant part of code table-- library-based or inline
   ok← 1 
   ∇ 
 
