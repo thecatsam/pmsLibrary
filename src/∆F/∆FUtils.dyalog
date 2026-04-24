@@ -26,7 +26,7 @@
   ∇ result← {opts} ∆F_Template args 
     :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
-      ⍝ Phase I: Set options and normalise args!  **************            
+      ⍝ Phase I: Set options and normalise args!       
         :If  900⌶0                                            ⍝ No opts
             opts← ⎕NS OPTS_DEFns                              ⍝ → Copy OPTS_DEFns                
         :ElseIf 9=__UP__.⎕NC 'opts'                           ⍝ NS opt
@@ -125,16 +125,16 @@
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
     ⍝ These next two guards will be true only if cd rsu∊ FUTURES, respectively.
-      c= cd:  w ∇⍨ pfx, (scCD)                    ⍝ ⍥ Adam B's CircleDiaeresis (optional).
-      c= rsu: w ∇⍨ pfx, (scSel)                   ⍝ ⊇ Select / Sane Indexing.
+      c= cd:  w ∇⍨ pfx, scCD                           ⍝ ⍥ Adam B's CircleDiaeresis (optional).
+      c= rsu: w ∇⍨ pfx, scSel                          ⍝ ⊇ Select / Sane Indexing.
       ~c∊selfDoc: ⎕SIGNAL cfLogicÊ                     ⍝ If guard true, CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
-      ûsr.brC>1: w ∇⍨ pfx, c scA⊃⍨ c= pct       ⍝ internal dfn => not SDCF
+      ûsr.brC>1: w ∇⍨ pfx, c scA⊃⍨ c= pct              ⍝ internal dfn => not SDCF
         p← +/∧\' '=w
-      rb≠ ⊃p↓w:  w ∇⍨ pfx, c scA⊃⍨ c= pct       ⍝ not CF-final '}' => not SDCF
+      rb≠ ⊃p↓w:  w ∇⍨ pfx, c scA⊃⍨ c= pct              ⍝ not CF-final '}' => not SDCF
     ⍝ SDCF: SELF-DEFINING CODE FIELD
         cfLit← AplQt ûsr.cfBeg↑⍨ ûsr.cfL+ p            ⍝ Put CF-literal in quotes
-        fmtr← scA scM⊃⍨ c='→'                      ⍝ vert or horiz. SDCF?
+        fmtr← scA scM⊃⍨ c='→'                          ⍝ vert or horiz. SDCF?
         (cfLit, fmtr, CFDfn pfx) ((p+1)↓w)             ⍝ ==> RETURN!
     }   
 
@@ -178,15 +178,15 @@
   0∊ ûsr.(verbose box auto inline (|dfn))∊ 0 1: ⎕SIGNAL optÊ    
   ⍝ Shortcuts used explicitly (not just via esc+alphabetic): 
   ⍝    See ⍙Load_Shortcuts 
-    scA scCD scÐ scF scM scSel← ûsr.inline∘⊃¨ scA2 scCD2 scÐ2 scF2 scM2 scSel2 
+    scA scCD scÐ scF scM scSel← ûsr.inline⊃¨ scA2 scCD2 scÐ2 scF2 scM2 scSel2 
     ûsr.acache← ⍬                                      ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
     ûsr.flds← ⍬                                        ⍝ output fields, each a CV (Char Vec)
     ûsr.omC←  0                                        ⍝ initialise omega counter to 0 (see `⍵)
     ûsr.auto∧← libUtils.pârms.auto                     ⍝ auto can usefully be 1 only if pârms.auto is 1.     
-                                                       ⍝ Start the scan (recursive).                    
+⍝   *** START THE SCAN ***                             ⍝ Start the scan (recursive).                    
     flds← '' ScanAll⊢ fstr← ∊⍵                         ⍝    fstr: char vec of vecs => char vec                     
-                                                       ⍝ Scan complete. 
+⍝   *** SCAN COMPLETE ***                              ⍝ Scan complete. 
     VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message                                        
   0= ≢flds: VMsg '(1 0⍴⍬)', '⍨'/⍨ ûsr.dfn≠0            ⍝ If there are no flds, return 1 by 0 matrix
     code← CFDfn (ûsr.box⊃ scM scÐ), OrderFlds flds     ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
