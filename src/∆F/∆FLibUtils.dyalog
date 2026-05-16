@@ -1,7 +1,8 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-04-23') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-05-15') 
 :Namespace libUtils
 ⍝ ===================================================================================
-⍝ This namespace handles Library (£ or `L) shortcut automatic loading
+⍝ This namespace handles Library (£ or `L) shortcut automatic loading.
+⍝ See also LIB_PARM_FI ('./∆FParmDefs.apla') for customized library parameters.
 ⍝ *** It handles NOTHING ELSE ***
 ⍝ See sections for...
 ⍝ a. Runtime Routines 

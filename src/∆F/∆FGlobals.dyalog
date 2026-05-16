@@ -4,18 +4,18 @@
 ⍝ GENERAL GLOBAL VARIABLES:  
 ⍝ Exported to ∆FUtils via temp ns ⎕SE.⍙FGlobals.
 ⍝ ============   
-⍝ DEST_NS                                                                    
-⍝ ESCAPE_CHAR  FUTURES          HELP_HTML_FI    INLINE_UTILS        KEEP_SRC_CM 
-⍝ LIB_ACTIVE   LIB_PARM_FI      LIB_SRC_FI      LIB_USER_FI         LIB_SRC_FI 
-⍝ OPTS_DEFval  OPTS_KW          OPTS_N          QUOTES_SUPPLEMENTAL SIGNAL_LIB_ERRS    
-⍝ TRAP_ERRORS  VERBOSE_LOADTIME VERBOSE_RUNTIME VERSION 
+⍝ DEST_NS         ESCAPE_CHAR  FUTURES          HELP_HTML_FI    INLINE_UTILS                                                               
+⍝ KEEP_SRC_CM     LIB_ACTIVE   LIB_PARM_FI      LIB_SRC_FI      LIB_USER_FI
+⍝ LIB_SRC_FI      OPTS_DEFval  OPTS_KW          OPTS_N          QUOTES_SUPPLEMENTAL
+⍝ SIGNAL_LIB_ERRS TRAP_ERRORS  VERBOSE_LOADTIME VERBOSE_RUNTIME VERSION 
+⍝ 
  
   SRC_FI←         '∆F/∆FUtils.dyalog'
   DEST_NS←         ⎕THIS.##.##                         ⍝ Typically, ⎕SE 
   ADD_∆F_TO_PATH← 1                                    ⍝ If 1, adds ∆F to Dyalog ⎕PATH.
  
   VERSION← 'v.0.2.2'          ⍝ Set/updated by ∆F_Publish.dyalog...
-⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F.
+⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F utility.
   TRAP_ERRORS← 1             
 ⍝
 ⍝ VERBOSE_RUNTIME: Run-time verbosity flag
@@ -118,7 +118,7 @@
   OPTS_DEFns← ()⎕VSET OPTS_KW OPTS_DEFval
 
 ⍝ KEEP_SRC_CM: Are source comments maintained in runtime namespace ∆FUtils?
-  KEEP_SRC_CM← 0 
+  KEEP_SRC_CM← 1 
 
 ⍝ Returns 20 if Dyalog 20, 19 if 19. (This version requires Dyalog 20 or later)
   APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion' 

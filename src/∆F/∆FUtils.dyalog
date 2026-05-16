@@ -178,7 +178,9 @@
   0∊ ûsr.(verbose box auto inline (|dfn))∊ 0 1: ⎕SIGNAL optÊ    
   ⍝ Shortcuts used explicitly (not just via esc+alphabetic): 
   ⍝    See ⍙Load_Shortcuts 
-    scA scCD scÐ scF scM scSel← ûsr.inline⊃¨ scA2 scCD2 scÐ2 scF2 scM2 scSel2 
+    scA scCD scÐ scF scM scSel← ûsr.inline⊃¨ (
+      scA2 ⋄ scCD2 ⋄ scÐ2 ⋄ scF2 ⋄ scM2 ⋄ scSel2
+    ) 
     ûsr.acache← ⍬                                      ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
     ûsr.flds← ⍬                                        ⍝ output fields, each a CV (Char Vec)
@@ -652,7 +654,7 @@
   ⍝ Only these shortcuts are exported for use outside this function
   ⍝    Export: scA2 scCD2 scF2 scM2 scSel2   
   ⎕SHADOW   'scB2 scC2  scJ2  scQ2  scS2  scT2  scW2'
-  scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← Publish¨ 'A'  'B' 'C' 'J' 'M' 'Q' 'S'  'T'  'W' 
+  scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← Publish¨ 'ABCJMQSTW' 
   scÐ2←   '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' Publish 'Ð'     
   scF2←   2⍴⊂' ⎕FMT ' 
   scCD2←  cdNm { ⍵: Publish ⍺ ⋄ 2⍴ cd } cdFut
