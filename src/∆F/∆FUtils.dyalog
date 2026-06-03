@@ -1,6 +1,6 @@
 :Namespace ⍙FUtils   
 ⍝  VERSION: Dyalog 20 and later!
-:Section CORE 
+:Section CORE  
 ⍝ Env for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
   ⎕IO ⎕ML ⎕PP← 0 1 34     
 ⍝ Loader ∆F.dyalog shares global variables via transient namespace ⎕SE.⍙⍙FGlobals.
