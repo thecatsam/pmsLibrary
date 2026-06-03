@@ -1,5 +1,5 @@
 :Namespace  
-⍝ ∆FGlobals.dyalog => nameless namespace
+⍝ ∆FGlobals.dyalog => nameless namespace  
 ⍝ =======================================================================
 ⍝ GENERAL GLOBAL VARIABLES:  
 ⍝ Exported to ∆FUtils via temp ns ⎕SE.⍙FGlobals.
