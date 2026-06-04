@@ -603,9 +603,12 @@ contains utilities used by <strong>∆F</strong> and, once
 <strong>∆F</strong> always refers to <strong>⍙FUtils</strong> in its
 <em>original</em> location.</li>
 <li>By default, the target namespace (<code><em>⎕SE</em></code>) will be
-added to the end of <code>⎕PATH</code>, if not already defined there.
-You may always choose to relocate or assign <strong>∆F</strong> anywhere
-you want so that it is available.</li>
+added to the end of <code>⎕PATH</code>, if not already defined
+there.<span class="margin-note">To create an alias to
+<code>⎕SE.∆F</code> in namespace
+<em>curdir</em>:<br>  <code>curdir.∆F←⎕SE.∆F</code></span> You may
+always choose to make an alias to <strong>⎕SE.∆F</strong> anywhere you
+want so that it is available conveniently.</li>
 </ol>
 <p><big>👉</big> <small>You may now call <code>∆F</code> with the
 desired <a href="#f-call-syntax-overview">arguments</a> and <a

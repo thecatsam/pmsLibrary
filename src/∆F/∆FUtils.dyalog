@@ -501,19 +501,19 @@
   ∇ {targNm}← ⍙Export_∆F args 
     ; targNm; destNs; lockFn; in; out; up 
     ; Fix; Hardwire; QCom; NoEL; QLock; XR  
-  ⍝ ('targNm' '∆F') ('destNs' ##) ('lockFn' 0)
+  ⍝ parms...
     targNm destNs lockFn← args ⎕VGET  ('targNm' '∆F') ('destNs' ##) ('lockFn' 0) 
-
+  ⍝ vars...
     up← '##.' ''⊃⍨ destNs=⎕THIS
     in←  '∆F_Template' '__UP__\.' '__THIS__'  '\b(args|opts|result)\b'
     out← targNm         up          ∆THIS     '⍙F_\1'
-
+  ⍝ Util fns...
     XR←       62∘⎕ATX 
     Hardwire← in ⎕R out ⍠ 'UCP' 1  
     NoEL←     { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
     Fix←      destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
     QLock←    destNs.⎕LOCK⍣lockFn
-
+  ⍝ main...
     :If targNm≡ Fix NoEL Hardwire XR '∆F_Template' 
       {} QLock targNm
       {}(⎕∘←)⍣VERBOSE_LOADTIME⊢ '✅✅✅ Created function ',(⍕destNs),'.',targNm 
@@ -522,7 +522,7 @@
     :EndIf 
   ∇
 
-:Section Shortcut functions
+:Section Shortcut functions `A, `B, `C, etc.
 ⍝ Above
     A← {
       ⎕ML←1 ⋄ ⍺←⍬
@@ -589,6 +589,8 @@
 
   ⍝ CircleDiaeresis
   ⍝ Adam B's "future" ⍥ with depth operator extension 
+  ⍝ NOTE: This is the dfns version-- 
+  ⍝    See the function below for details on variants.
     cdNm← { 22:: '' ⋄ ⊃2 ⎕FIX ⍵} 'file://∆F/CircleDiaeresis.dyalog'
 
 :EndSection Shortcut functions 

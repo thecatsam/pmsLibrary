@@ -1,0 +1,8 @@
+﻿∆VSETX←{
+    0::⎕DMX.EM ⎕SIGNAL ⎕DMX.EN
+    2=≢⍺:_←⍵⊣n ⎕VSET⊂v,⍥⊂⍵ ⍺⍺⍨n ⎕VGET v⊣n v←⍺
+    n v i←⍺
+    0≠n.⎕NC v:_←n v ∇ ⍵
+    1:_←(n ⎕VSET⊂v i)v ∇ ⍵
+
+}

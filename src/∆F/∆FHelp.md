@@ -70,7 +70,7 @@ _dfns_ and other familiar tools.
    Now, the target directory (`⎕SE`) will contain the function `∆F` and namespace `⍙FUtils`.
 3. By default, the ***help*** file, **∆F/∆FHelp.html** is available at `]load` time. If so, it will be copied into **⍙FUtils**. If not available, a message will note the absence of _help_ information.
 4. Namespace <code>_⎕SE_.**⍙FUtils**</code> contains utilities used by **∆F** and, once `]load`ed, **_should not_** be moved, as **∆F** always refers to **⍙FUtils** in its _original_ location.
-5. By default, the target namespace (<code>_⎕SE_</code>) will be added to the end of `⎕PATH`, if not already defined there. You may always choose to relocate or assign **∆F** anywhere you want so that it is available.
+5. By default, the target namespace (<code>_⎕SE_</code>) will be added to the end of `⎕PATH`, if not already defined there.<∆N>To create an alias to `⎕SE.∆F` in namespace *curdir*:<br>&emsp;&emsp;`curdir.∆F←⎕SE.∆F`</∆N> You may always choose to make an alias to **⎕SE.∆F** anywhere you want so that it is available conveniently.
 
 <big>👉</big>&nbsp;<small>You may now call `∆F` with the desired [arguments](#f-call-syntax-overview) and [options](#f-option-details).</small><br>
 <big>👉</big>&nbsp;<small>**∆F** is `⎕IO`- and `⎕ML`-independent.<br></small>
