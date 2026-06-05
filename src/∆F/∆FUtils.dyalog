@@ -14,16 +14,16 @@
    :Section      ∆F SOURCE
 ⍝ =======================================================================
 ⍝ ∆F USER FUNCTION SOURCE 
-⍝     ∆F_Template ==> ##.∆F (Actual name and destination set at ⍙Export_∆F)
+⍝     ∆F_Source ==> ##.∆F (Actual name and destination set at ⍙Export_∆F)
 ⍝ =======================================================================
 ⍝ ∆F: 
 ⍝    result← {opts←⍬|()} ∇ f-string [args]
 ⍝ See notes elsewhere on ∆F itself.
 ⍝ 
 ⍝ NB. Modify header names and constants __THIS__  and __UP__ 
-⍝ ∘ We need __UP__  (typically ##) to address the fact that header vars that are 
-⍝   namespaces aren't transferred automatically into :With blocks (per Dyalog doc).
-  ∇ result← {opts} ∆F_Template args 
+⍝ ∘ We need __UP__  (typically ##) to address the fact that header var names that are 
+⍝   namespaces aren't visible automatically inside :With blocks (per Dyalog doc).
+  ∇ result← {opts} ∆F_Source args 
     :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
       ⍝ Phase I: Set options and normalise args!       
@@ -40,16 +40,16 @@
       ⍝ Phase II: Execute!  **************                   
       ⍝ Determine output mode based on opts.dfn and execute.
         :Select opts.dfn  
-      ⍝ 0: Execute F-string    
+      ⍝  0: Execute F-string    
         :Case  0        
             result← opts ((⊃⎕RSI){ ⍺⍺⍎ ⍺ ScanFStr ⊃⍵⊣ ⎕EX 'opts' 'args'}) args 
-      ⍝ 1: Generate dfn code 
+      ⍝  1: Generate dfn code 
         :Case  1       
             result← (⊃⎕RSI)⍎ opts ScanFStr ⊃args
-      ⍝ ¯1: Generate source code for dfn
+      ⍝  ¯1: Generate source code for dfn
         :Case ¯1                                    
             result← opts ScanFStr ⊃args  
-      ⍝ Else: Run help or other special code           
+      ⍝  Else: Run help or other special code           
         :Else          ⍝ 'help', etc. => Give help, etc.      
             result← Special opts  
         :EndSelect   
@@ -499,22 +499,23 @@
 ⍝ If destNs is the namespace ⎕THIS, then we:
 ⍝    ∘ set '__UP__.'  to  ''
   ∇ {targNm}← ⍙Export_∆F args 
-    ; targNm; destNs; lockFn; in; out; up 
-    ; Fix; Hardwire; QCom; NoEL; QLock; XR  
+    ; srcNm; targNm; destNs; lockFn; in; out; up 
+    ; Fix; Xlate; QCom; NoEL; QLock; XR  
   ⍝ parms...
+    srcNm← '∆F_Source' 
     targNm destNs lockFn← args ⎕VGET  ('targNm' '∆F') ('destNs' ##) ('lockFn' 0) 
   ⍝ vars...
     up← '##.' ''⊃⍨ destNs=⎕THIS
-    in←  '∆F_Template' '__UP__\.' '__THIS__'  '\b(args|opts|result)\b'
-    out← targNm         up          ∆THIS     '⍙F_\1'
+    in←   srcNm '__UP__\.' '__THIS__'  '\b(args|opts|result)\b'
+    out← targNm    up        ∆THIS     '⍙F_\1'
   ⍝ Util fns...
-    XR←       62∘⎕ATX 
-    Hardwire← in ⎕R out ⍠ 'UCP' 1  
+    XR←       62∘⎕ATX                                   ⍝ XR that keeps source spacing
+    Xlate← in ⎕R out ⍠ 'UCP' 1  
     NoEL←     { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
     Fix←      destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
     QLock←    destNs.⎕LOCK⍣lockFn
   ⍝ main...
-    :If targNm≡ Fix NoEL Hardwire XR '∆F_Template' 
+    :If targNm≡ Fix NoEL Xlate XR srcNm 
       {} QLock targNm
       {}(⎕∘←)⍣VERBOSE_LOADTIME⊢ '✅✅✅ Created function ',(⍕destNs),'.',targNm 
     :Else 
