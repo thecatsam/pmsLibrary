@@ -85,9 +85,11 @@
 ⍝      i.e. to select subarrays based on depth (just as ⍤ selects subarrays based on Rank).
 ⍝    - If not enabled, only the standard behaviours of ⍥ (in versions 19 and 20) are enabled.
 ⍝    See CircleDiaeresis.dyalog in directory ∆F for attribution and license.
+⍝ '…' ∊ FUTURES
+⍝    Potential future implementation of Ellipsis, Adam B's extensions to dfns:to.
 ⍝ '⊇' ∊ FUTURES
 ⍝    Potential future implementation of right shoe underbar (⊇) as Select (aka "sane indexing").
-  FUTURES← '⍥⊇' 
+  FUTURES← '⍥⊇…'/⍨ 1  
 
 ⍝ =======================================================================
 ⍝ SESSION LIBRARY (£ or `L) VARIABLES

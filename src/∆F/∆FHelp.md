@@ -280,7 +280,7 @@ For n=┌─┐, n×Pi=┌───────┐
 
 ```
    ∆F'{ £.hex 57005 48879 51966}'   ⍝ Get hex fn to convert dec to hexadecimal!
- dead  beef  cafe 
+ dead  beef  cafe                   ⍝ Yes, those are ordinary hexadecimal numbers!
 ```
 
 ### <span class="blue"><strong>That's 80% of what you need. Read on for more...</strong></span> {.unnumbered}

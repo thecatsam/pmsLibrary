@@ -20,16 +20,17 @@
 ⍝    result← {opts←⍬|()} ∇ f-string [args]
 ⍝ See notes elsewhere on ∆F itself.
 ⍝ 
-⍝ NB. Modify header names and constants __THIS__  and __UP__ 
-⍝ ∘ We need __UP__  (typically ##) to address the fact that header var names that are 
-⍝   namespaces aren't visible automatically inside :With blocks (per Dyalog doc).
-  ∇ result← {opts} ∆F_Source args 
+⍝ NB. Modify header names and "macro" constants __THIS__  and __UP__ 
+⍝ ∘ We need __UP__  (typically ##) to handle the fact that header variable names that are 
+⍝   namespaces aren't automatically made visible INSIDE :With blocks (per Dyalog doc).
+  ∇ result← {opts} ∆F_Source args ; opts_ns 
+    opts_ns← 9=⎕NC 'opts'
     :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
       ⍝ Phase I: Set options and normalise args!       
         :If  900⌶0                                            ⍝ No opts
             opts← ⎕NS OPTS_DEFns                              ⍝ → Copy OPTS_DEFns                
-        :ElseIf 9=__UP__.⎕NC 'opts'                           ⍝ NS opt
+        :ElseIf opts_ns                                       ⍝ opts references a namespace
             opts← ⎕NS OPTS_DEFns __UP__.opts                  ⍝ → Copy OPTS_DEFns and user opts                         
         :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts      ⍝ Ints / booleans, none trailing
             opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts ⍝ → Copy OPTS_DEFns and user opts
@@ -126,6 +127,7 @@
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
     ⍝ These next two guards will be true only if cd rsu∊ FUTURES, respectively.
       c= cd:  w ∇⍨ pfx, scCD                           ⍝ ⍥ Adam B's CircleDiaeresis (optional).
+      c= el:  w ∇⍨ pfx, scEl                           ⍝ … Adam B's Ellipsis (optional)
       c= rsu: w ∇⍨ pfx, scSel                          ⍝ ⊇ Select / Sane Indexing.
       ~c∊selfDoc: ⎕SIGNAL cfLogicÊ                     ⍝ If guard true, CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
@@ -178,8 +180,8 @@
   0∊ ûsr.(verbose box auto inline (|dfn))∊ 0 1: ⎕SIGNAL optÊ    
   ⍝ Shortcuts used explicitly (not just via esc+alphabetic): 
   ⍝    See ⍙Load_Shortcuts 
-    scA scCD scÐ scF scM scSel← ûsr.inline⊃¨ (
-      scA2 ⋄ scCD2 ⋄ scÐ2 ⋄ scF2 ⋄ scM2 ⋄ scSel2
+    scA scCD scEl scÐ scF scM scSel← ûsr.inline⊃¨ (
+      scA2 ⋄ scCD2 ⋄ scEl2 ⋄ scÐ2 ⋄ scF2 ⋄ scM2 ⋄ scSel2
     ) 
     ûsr.acache← ⍬                                      ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
@@ -217,7 +219,7 @@
 ⍝    See QUOTES_SUPPLEMENTAL
   qtsL qtsR← (dq,¨2⍴sq) { 0=⎕NC ⍵: ⍺ ⋄ 0=≢v← ⎕OR ⍵: ⍺ ⋄ ⍺,¨ ↓⍉↑,⊆v } 'QUOTES_SUPPLEMENTAL'
 ⍝ Other basic characters
-  sp lb rb lp rp dol omUs ra da pct libra cd rsu← ' {}()$⍹→↓%£⍥⊇'  ⍝ rsu: right shoe underbar
+  sp lb rb lp rp dol omUs ra da pct libra cd el rsu← ' {}()$⍹→↓%£⍥…⊇'  ⍝ rsu: right shoe underbar
 ⍝ Seq. `⋄ OR `◇ (see dia2[0, 1]) map onto ⎕UCS 13.
 ⍝ dia2[0]: Dyalog stmt separator (⋄) 
 ⍝ dia2[1]: Alternative character (◇) that is easier to read in some web browsers. 
@@ -226,8 +228,8 @@
 ⍝ We take dq to be high freq, but other quotes as low.
 ⍝               "  `   {  }  $   ⍹    →  ↓  %   £      '« (default)
   cfBrkList←  ∪ dq esc lb rb dol omUs ra da pct libra, qtsL    
-⍝ See defs of FUTURES, cd (⍥) and rsu (⊇) 
-  cfBrkList,← cd rsu/⍨ cd rsu ∊ FUTURES
+⍝ See defs of FUTURES, cd (⍥), el (…) rsu (⊇) 
+  cfBrkList,← cd rsu el/⍨ cd rsu el ∊ FUTURES
   tfBrkList← esc lb                 
   lb_rb← lb rb ⋄ om_omUs← om omUs ⋄ sp_sq← sp sq ⋄   esc_lb_rb← esc lb rb  
 ⍝ self-doc code field chars →↓%
@@ -506,7 +508,7 @@
     targNm destNs lockFn← args ⎕VGET  ('targNm' '∆F') ('destNs' ##) ('lockFn' 0) 
   ⍝ vars...
     up← '##.' ''⊃⍨ destNs=⎕THIS
-    in←   srcNm '__UP__\.' '__THIS__'  '\b(args|opts|result)\b'
+    in←   srcNm '__UP__\.' '__THIS__'  '\b(args|opts(_ns)?|result)\b'
     out← targNm    up        ∆THIS     '⍙F_\1'
   ⍝ Util fns...
     XR←       62∘⎕ATX                                   ⍝ XR that keeps source spacing
@@ -594,6 +596,11 @@
   ⍝    See the function below for details on variants.
     cdNm← { 22:: '' ⋄ ⊃2 ⎕FIX ⍵} 'file://∆F/CircleDiaeresis.dyalog'
 
+  ⍝ Ellipsis 
+  ⍝ Adam B's future … enhancement to dfns fn ¨to¨.
+  ⍝   2 … 10, 'a' … 'z', etc. 
+    elNm← { 22:: '' ⋄ ⊃2 ⎕FIX ⍵} 'file://∆F/Ellipsis.dyalog'
+
 :EndSection Shortcut functions 
 
 ⍝ ⍙Load_Shortcut_Calls:   ∇     (niladic) 
@@ -645,8 +652,10 @@
       ⎕← (f⊃ '❌❌❌' '✅✅✅'), _
     } 
     cdFut←  (cd∊ FUTURES) ∧ 0≠≢cdNm 
+    elFut←  (el∊ FUTURES) ∧ 0≠≢elNm
     rsuFut← rsu∊ FUTURES 
     'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
+    'Ellipsis (…) Extension of dfns to' Note elFut VERBOSE_LOADTIME
     'Right-Shoe Underscore (⊇) Select/Sane Indexing' Note rsuFut VERBOSE_LOADTIME
 
   ⍝ User-callable functions:          A  B  C  D  F  J  Q  S  T  W 
@@ -661,11 +670,12 @@
   scÐ2←   '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' Publish 'Ð'     
   scF2←   2⍴⊂' ⎕FMT ' 
   scCD2←  cdNm { ⍵: Publish ⍺ ⋄ 2⍴ cd } cdFut
+  scEl2←  elNm { ⍵: Publish ⍺ ⋄ 2⍴ el } elFut  
   scSel2← 2⍴ ⊂rsu selCodeStr⊃⍨ rsuFut 
     
   ⎕SHADOW '⍙'
-  scCodeTbl← ↓⍉↑⍙← scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scSel2 
- ⍝ iA iB iC iD iF iJ iQ iS iT iW iÐ iM iCD iSel← ⍳≢⍙ 
+  scCodeTbl← ↓⍉↑⍙← scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scEl2 scSel2 
+ ⍝ iA iB iC iD iF iJ iQ iS iT iW iÐ iM iCD iEL iSel← ⍳≢⍙ 
 ⍝ nSC: # of user-accessible shortcuts via <esc><let>
   nSC← ≢scUser←  'A B C D F J Q S T W'~ ' '
   MapSC← scUser∘⍳
