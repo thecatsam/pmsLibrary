@@ -23,17 +23,17 @@
 ⍝ NB. Modify header names and "macro" constants __THIS__  and __UP__ 
 ⍝ ∘ We need __UP__  (typically ##) to handle the fact that header variable names that are 
 ⍝   namespaces aren't automatically made visible INSIDE :With blocks (per Dyalog doc).
-  ∇ result← {opts} ∆F_Source args ; opts_ns 
-    opts_ns← 9=⎕NC 'opts'
+  ∇ result← {opts} ∆F_Source args  
     :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
-      ⍝ Phase I: Set options and normalise args!       
+      ⍝ Phase I: Set options and normalise args! 
+      ⍝          User option styles? kw=keyword-style, pos'l=positional-style        
         :If  900⌶0                                            ⍝ No opts
             opts← ⎕NS OPTS_DEFns                              ⍝ → Copy OPTS_DEFns                
-        :ElseIf opts_ns                                       ⍝ opts references a namespace
-            opts← ⎕NS OPTS_DEFns __UP__.opts                  ⍝ → Copy OPTS_DEFns and user opts                         
+        :ElseIf 9=__UP__.⎕NC 'opts'                           ⍝ opts references a namespace
+            opts← ⎕NS OPTS_DEFns __UP__.opts                  ⍝ → Copy OPTS_DEFns and kw user opts                        
         :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts      ⍝ Ints / booleans, none trailing
-            opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts ⍝ → Copy OPTS_DEFns and user opts
+            opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts ⍝ → Copy OPTS_DEFns and pos'l user opts
         :Else                                                 ⍝ Kitchen sink 
             result← args Special opts ⋄ :Return               ⍝ → Help / other special or error
         :EndIf 
@@ -58,7 +58,6 @@
         ⎕SIGNAL ⊂⎕DMX.('EM' 'EN' 'Message' ,⍥⊂¨('∆F ',EM) EN Message) 
     :EndTrap 
   :EndWith 
-
   ⍝! (C) Copyright 2025, 2026 Sam the Cat Foundation
   ∇
    :EndSection   ∆F SOURCE
@@ -533,14 +532,28 @@
     } 
   ⍝ Box
     B← {⎕ML←1⋄d←|≡⍵⋄⍺←0⋄⍺⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵}  
-  ⍝ Commas (Numeric ~)
+  ⍝ Commas - Inserts a separator s (default ",") every n (default 5) digits in
+  ⍝          the integer part of each right argument string.
+  ⍝          You may enter no left arg or a left arg of: n, s, n s, or s n, with
+  ⍝          omitted elements (n or s) replaced by the defaults. 
+  ⍝          Note: n is either an integer or a (character) digit.
+  ⍝          These are the same:  "5_" and (5 "_").
+  ⍝      Examples:
+  ⍝          E.g.  { `C "123324"}     { 4 `C "123324"}     { 4 "_" `C "123324"}
+  ⍝                { "_" `C "123324"} { "_" 4 `C "123324"}
+  ⍝          Missing items in the left arg will have the default: 3 ","
     C←{ 
-      ⎕IO ⎕ML←0 1
-      d←3','⋄⍺←d⋄n s←⍺,d↑⍨0⌊2-⍨≢⍺   ⍝ d: defaults, n: ndigits, s: separator  
-      n←⍕n⋄s←{⍵≡⍥,'&':'\&'⋄⍵/⍨1+'\'=⍵}s 
-      src←'[.Ee]\d+' ('(?<=\d)(?=(\d{',n,'})+([-¯.Ee]|(?=\s|$)))')
-      snk←'&' (,s,'&')
-      1=≢w←{src ⎕R snk⊢⍵}⍤1⍕⍵: ⊃w⋄w
+      ⎕IO ⎕ML←0 1 ⋄ d← 3 ',' ⋄ ⍺← d 
+      O← ⍕¨{                                            ⍝ Get options; d=defaults, o=options. 
+        d←3 ',' ⋄ o←⍵ ⋄ o0← (⎕D∊⍨ ⊃o)∨ 0=⊃0⍴o           ⍝ o0=1 if first option is <a number or digit>
+        o0: o,(d↑⍨-0⌈2-≢o) ⋄ (d↑⍨0⌈2-≢o),⌽o    
+      }  
+      Esc← { ⍵≡⍥, '&': '\&' ⋄ ⍵/⍨1+ '\'= ⍵}             ⍝ In case & or \ is the char separator
+      n s← O ⍺
+    ⎕←  src←'[.Ee]\d+',⍥⊂ '(?<=\d)(?=(\d{', n, '})+([-¯.Ee]|(?=\s|$)))'
+    ⎕←  snk←'&',⍥⊂ '&',⍨ Esc s 
+      w← src ⎕R snk⍤1⍕⍵
+      ⊃⍣(1=≢⍵)⊢w  
     } 
   ⍝ Date: See Time (below)
   ⍝ Display

@@ -1,5 +1,5 @@
 ﻿∆FPublish parms
-  ; anyUpdts; cd; copyright; docDep; force; globFi; hdr; html; libDir      
+  ; anyUpdts; cd; copyright; docDep; force; globFi; hdr; html; itemF; libDir      
   ; libra; loader; md; mdTmp; ns; pandocBin; parmFi; pdf; pgm; pgmDep; priv
   ; privF; privFdir; privdir; productionCode; pub; pubF; pubFdir; pubdir   
   ; quiet; readme; sideN2FN; temp; tempdir; timestamp; title; version; _   
@@ -74,6 +74,8 @@
   globFi←    '∆FGlobals.dyalog'
   pdf←       '∆FHelp.pdf'            ⍝ PDF 
   cd←        'CircleDiaeresis.dyalog' ⍝ Adam B's ⍥ with depth emulation
+  el←        'Ellipsis.dyalog'
+
 
 ⍝ File specs 
   privF pubF priv pub temp← 0 1 2 3 9
@@ -326,7 +328,7 @@ Say'    TEMP:  ', HomeDir Fi Temp ⍬
 Hr
 
 pgmDep← ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) ((Priv loader)(Pub loader))((PrivF parmFi)(PubF parmFi))
-pgmDep,← ((PrivF cd)(PubF cd))((PrivF globFi)(PubF globFi))
+pgmDep,← ((PrivF cd)(PubF cd))((PrivF el)(PubF el))((PrivF globFi)(PubF globFi))
 :IF 4< |≡pgmDep
     11 ⎕SIGNAL⍨ 'DOMAIN ERROR: pgmDep improperly defined'
  :EndIf 
@@ -339,11 +341,11 @@ pgmDep,← ((PrivF cd)(PubF cd))((PrivF globFi)(PubF globFi))
     UpdatePgm PrivF pgm 
     UpdatePgm PrivF libra 
     UpdatePgm Priv loader 
-    CopyFi(PrivF cd)(PubF cd)
+    :FOR itemF :in cd el parmFi globFi 
+        CopyFi(PrivF itemF )(PubF itemF)
+    :EndFor 
     CopyFi(Priv loader)(Pub loader)
     CopyFi(PrivF libra)(PubF libra)
-    CopyFi(PrivF parmFi)(PubF parmFi)
-    CopyFi(PrivF globFi)(PubF globFi)
     force CopyFi(PrivF pgm)(PubF pgm)                    ⍝ Make ∆F library public
 :EndIf
 

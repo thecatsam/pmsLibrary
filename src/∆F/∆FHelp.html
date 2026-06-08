@@ -2410,12 +2410,14 @@ here.</td>
 <td style="text-align: justify;">By default, adds commas after every 3rd
 digit (from the right) of the <em>integer</em> part of each number in
 <code>⍵</code> (leaving the fractional part as is). <code>⍵</code> is
-zero or more num strings and/or numbers. If specified, ⍺[0] is the
-stride, <em>if not 3,</em> as an integer or as a single quoted digit; if
-specified, ⍺[1] is the character (even “`◇”) to insert <em>in place
-of</em> a comma. <br><small>Examples: “5_” adds an underscore every 5
-digits from the right. “3`◇” puts each set of 3 digits on its own
-line.</small></td>
+zero or more num strings and/or numbers. The options <code>⍺</code>
+consists of up to two scalars, one number <code>n</code> (if not 3) for
+every n digits from right to left, and one character (even “`◇”) to
+insert (if not a comma). <br><small>Examples: “5_” or “_5” adds an
+underscore every 5 digits from the right. “3`◇” puts each set of 3
+digits on its own line. “_” places underscores between every 3 digits
+from the right.<br>Note: Tolerates chars mixed in with digits, but only
+formats numbers to the left of an optional decimal point.</small></td>
 </tr>
 <tr>
 <td style="text-align: justify;"><strong>`D</strong></td>
