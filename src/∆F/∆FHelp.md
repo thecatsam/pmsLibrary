@@ -1581,7 +1581,7 @@ Note that the opening quote `«` is treated as an ordinary character within the 
 ## Omega Shortcut Expressions: Details
 
 3.  All **Omega** shortcut expressions in the _f‑string_ are evaluated left to right and are ⎕IO-independent.
-1.  **⍹** is a synonym for **\`⍵**. It is Unicode character `⎕UCS 9081`. Either glyph is valid only in **Code** fields and outside **Quoted strings**.
+1.  **⍹** is a synonym for **\`⍵**. It is Unicode character `⎕UCS 9081`. Either glyph has a special meaning *only* within **Code** fields and outside **Quoted strings**.
 4.  **\`⍵𝑑𝑑** or **⍹𝑑𝑑** is equivalent to the expression `(⍵⊃⍨dd+⎕IO)`. Here **𝑑𝑑** must be a _non-negative integer_ with at least 1 digit.
 5.  **\`⍵** or **⍹** (with ***no*** digits appended) is equivalent to `(⍵⊃⍨1+ii+⎕IO)`, where *ii* is the index of the most recent
 **Omega** expression (of either type) to its left in the *f-string*;if there is no such expression, *ii* is `1`.

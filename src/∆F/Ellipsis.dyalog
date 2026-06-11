@@ -1,6 +1,6 @@
 ﻿ ⍝ By Adam B. under name Ellipsis (aliased here as Ë)
  ⍝ See: https://github.com/abrudz/dyalog-apl-extended/blob/master/Ellipsis.dyalog
- ⍝ … Fill sequence gap (http://dfns.dyalog.com/n_to.htm)
+ ⍝ …  (⎕UCS 8230) Fill sequence gap (http://dfns.dyalog.com/n_to.htm)
    Ë ←{ 
      ⍺←⊢
      ⍺{⎕IO←0
@@ -14,7 +14,7 @@
          lead←-(2-charend)⌊(≢⍺)⌊+/charend=charbegins       ⍝ to be considered
          head←lead↓⍺                                       ⍝ to be prepended
          begin←(¯1⌊lead)↑¯2↑default,lead↑⍺                 ⍝ first one/two items
-         charend:head,tail,⍨⎕UCS(⎕UCS begin)∇ ⎕UCS end     ⍝ char sequences
+         charend: head,tail,⍨⎕UCS(⎕UCS begin)∇ ⎕UCS end    ⍝ char sequences
          from step←-⍨\2↑begin,begin+×end-begin             ⍝ step default is +/- 1
          head,tail,⍨from+step×⍳0⌈1+⌊(end-from)÷step+step=0 ⍝ ⍺ thru ⍵ inclusive
      }⍤1⊢⍵}

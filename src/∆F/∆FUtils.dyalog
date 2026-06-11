@@ -42,7 +42,7 @@
       ⍝ Determine output mode based on opts.dfn and execute.
         :Select opts.dfn  
       ⍝  0: Execute F-string    
-        :Case  0        
+        :Case  0              ⍝ Executed code string refs args (as ⍵), not just ⊃⍵.
             result← opts ((⊃⎕RSI){ ⍺⍺⍎ ⍺ ScanFStr ⊃⍵⊣ ⎕EX 'opts' 'args'}) args 
       ⍝  1: Generate dfn code 
         :Case  1       
@@ -502,6 +502,8 @@
   ∇ {targNm}← ⍙Export_∆F args 
     ; srcNm; targNm; destNs; lockFn; in; out; up 
     ; Fix; Xlate; QCom; NoEL; QLock; XR  
+   ⍝ targNm←'∆F'
+   ⍝ :Return 
   ⍝ parms...
     srcNm← '∆F_Source' 
     targNm destNs lockFn← args ⎕VGET  ('targNm' '∆F') ('destNs' ##) ('lockFn' 0) 
@@ -531,7 +533,10 @@
       ⊃⍪/(⌈2÷⍨w-m)⌽¨f↑⍤1⍨¨m←⌈/w←⊃∘⌽⍤⍴¨f←⎕FMT¨⍺⍵
     } 
   ⍝ Box
-    B← {⎕ML←1⋄d←|≡⍵⋄⍺←0⋄⍺⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵}  
+    B← {
+      ⎕ML←1 ⋄ d←|≡⍵ ⋄ ⍺←0
+      ⍺⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵
+    }  
   ⍝ Commas - Inserts a separator s (default ",") every n (default 5) digits in
   ⍝          the integer part of each right argument string.
   ⍝          You may enter no left arg or a left arg of: n, s, n s, or s n, with
@@ -541,19 +546,19 @@
   ⍝      Examples:
   ⍝          E.g.  { `C "123324"}     { 4 `C "123324"}     { 4 "_" `C "123324"}
   ⍝                { "_" `C "123324"} { "_" 4 `C "123324"}
-  ⍝          Missing items in the left arg will have the default: 3 ","
+  ⍝          Items omitted in the left arg will have their defaults: 3 ","
     C←{ 
-      ⎕IO ⎕ML←0 1 ⋄ d← 3 ',' ⋄ ⍺← d 
-      O← ⍕¨{                                            ⍝ Get options; d=defaults, o=options. 
-        d←3 ',' ⋄ o←⍵ ⋄ o0← (⎕D∊⍨ ⊃o)∨ 0=⊃0⍴o           ⍝ o0=1 if first option is <a number or digit>
-        o0: o,(d↑⍨-0⌈2-≢o) ⋄ (d↑⍨0⌈2-≢o),⌽o    
+      ⎕IO ⎕ML←0 1 ⋄ nd← ≢def← 3 ',' ⋄ ⍺← def 
+      Opt← ⍕¨{                                          ⍝ Get options; def=defaults, o=options (⍺) 
+        o←⍵ ⋄ isN← (⎕D∊⍨ ⊃o)∨ 0=⊃0⍴o                    ⍝ isN=1 if first option is <a number or digit>
+        isN: o,(def↑⍨-0⌈nd-≢o) ⋄ (def↑⍨0⌈nd-≢o),⌽o    
       }  
-      Esc← { ⍵≡⍥, '&': '\&' ⋄ ⍵/⍨1+ '\'= ⍵}             ⍝ In case & or \ is the char separator
-      n s← O ⍺
-    ⎕←  src←'[.Ee]\d+',⍥⊂ '(?<=\d)(?=(\d{', n, '})+([-¯.Ee]|(?=\s|$)))'
-    ⎕←  snk←'&',⍥⊂ '&',⍨ Esc s 
-      w← src ⎕R snk⍤1⍕⍵
-      ⊃⍣(1=≢⍵)⊢w  
+      Esc← { ⍵≡⍥, '&': '\&' ⋄ ⍵/⍨1+ '\'= ⍵}             ⍝ Escapes. In case & or \ is the char separator
+      n s← Opt ⍺
+      src← '[.Ee]\d+',⍥⊂ '(?<=\d)(?=(\d{', n, '})+([-¯.Ee]|(?=\s|$)))'
+      snk← '&',⍥⊂ '&',⍨ Esc s 
+      w← src ⎕R snk⍤1 ⍕⍵
+      ⊃⍣(1=≢⍵)⊢ w  
     } 
   ⍝ Date: See Time (below)
   ⍝ Display
@@ -563,11 +568,12 @@
   ⍝ Justify
     J← {
         ⎕PP←34⋄⍺←'L'⋄B←{+/∧\' '=⍵}
-        w⌽⍨(1⎕C⍺){ o←⊂⍺                   ⍝ Treat ⍺ as a scalar.
+        w⌽⍨(1⎕C⍺) { o← ⊂⍺                               ⍝ Treat ⍺ as a scalar.
           o∊'L'¯1:B ⍵
           o∊'R' 1:-B⌽⍵ 
-          ⌈0.5×⍵-⍥B⌽⍵                     ⍝ If invalid ⍺, assume 'C'.
-        }w←⎕FMT⍵
+          o∊'C' 0: ⌈0.5×⍵-⍥B⌽⍵                          ⍝ If o is invalid, drop off ends of earth.
+          ⎕SIGNAL ⊂ ('EN' 11) ('Message' 'Shortcut given invalid option (⍺)')
+        } w←⎕FMT⍵
     }
   ⍝ Library
   ⍝ £, `L: Not here-- handled ad hoc in code (it's niladic)...   
@@ -578,7 +584,7 @@
     } 
   ⍝ Quote                   
     Q←  {
-      ⍺←⎕UCS 39            
+      ⍺← ''''               ⍝ Qt (⎕UCS 39)
       1<|≡⍵:⍺∘∇¨⍵                              
       (0=⍴⍴⍵)∧1=≡⍵:⍵                           
       (0≠≡⍵)∧326=⎕DR⍵:⍺∘∇¨⍵                 
@@ -593,12 +599,15 @@
     }
   ⍝ Time / Date   
     T← {
-      ⎕ML←1
-      ⍺←'%ISO%'
+      ⎕ML←1 ⋄  ⍺←'%ISO%'
       ∊⍣(1=≡⍵)⊢⍺(1200⌶)⊢1⎕DT⊆⍵
     }
   ⍝ Wrap 
-    W← {⎕ML←1⋄⍺←⎕UCS 39⋄ 1<|≡⍵: ⍺∘∇¨⍵⋄L R←2⍴⍺⋄{L,R,⍨⍕⍵}⍤1⊢⍵}
+    W← {
+      ⎕ML←1 ⋄ ⍺←⎕UCS 39
+      1<|≡⍵: ⍺∘∇¨⍵
+      L R←2⍴⍺⋄{L,R,⍨⍕⍵}⍤1⊢⍵
+    }
   
   ⍝ Select (Sane Indexing):  ⊇
     selCodeStr← '(⊂⍛⌷)'                      ⍝ '(⌷⍤0 99)' if APL_VERSION< 20 
@@ -648,28 +657,43 @@
 ⍝ NOTE: We are creating multiline objects using the old method for compatibility with Dyalog 19 etc.
   ∇ {ok}← ⍙Load_Shortcut_Calls 
     ; scUser 
-    ; Inline; Publish 
-    Publish←{ ⍺← Inline ⍵    
+    ; Fn2Inline; Publish 
+    Publish←{ 
+        ⍺← Fn2Inline ⍵    
       1: _← (' ',' ',⍨ ∆THIS,'.',⍵) ⍺
     }
-    Inline← {  
-        bdy←  (⊂f↓⍨ 2+'←'⍳⍨ f←⊃bdy), 1↓ bdy← 62 ⎕ATX ⍵ 
-        i o← ↓⍉↑('''[^'']*''' '\0') ('\h*⍝.*' '')  ('^\h+|\h+$' '')  ('\h*([⋄⎕{}()])\h*' '\1')  
-      1= ≢bdy← i ⎕R o⊣ bdy: ⊃bdy  
-        '{','}',⍨ ¯1↓∊'⋄',⍨¨ 1↓¯1↓ bdy  
+    PublishIfFut← { 
+        nm cod fut← ⍵ ⋄ 
+      fut: Publish nm ⋄ 
+        2⍴ cod 
+    }
+    Fn2Inline← {  
+        s← 61 ⎕ATX ⍵                       ⍝ src in
+        b←  (⊂f↓⍨ 2+'←'⍳⍨ f←⊃s), 1↓ s      ⍝ body
+        src snk← ↓⍉↑(
+          ('''[^'']*'''         '\0')       ⍝ Quotes
+          ('\h*⍝.*'             '')         ⍝ comments
+          ('^\h+|\h+$'          '')         ⍝ leading/trailing spaces
+          ('\h*([←⋄⎕{}()]+)\h*' '\1')       ⍝ spaces before/after any of these "←⋄⎕{}()"
+        )
+        ib← src ⎕R snk⍠('Mode' 'M')⊣ b                  ⍝ inline form of body
+      1= ≢ib: ⊃ib                          ⍝ single stmt; output as is.
+        '{', 1↓ ¯1↓ ∊'⋄',⍨¨ ib             ⍝ multi-stmt ( add stmt sep "⋄", remove extra one.)
     } 
   ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
-    ⎕SHADOW 'cdFut' 'rsuFut' 'Note' 
-    Note← { f v←⍵ ⋄ ~v: _← ⍬ 
-      _←' Future Feature', (f⊃' not ' ' '), 'available: ', ⍺
-      ⎕← (f⊃ '❌❌❌' '✅✅✅'), _
-    } 
-    cdFut←  (cd∊ FUTURES) ∧ 0≠≢cdNm 
-    elFut←  (el∊ FUTURES) ∧ 0≠≢elNm
-    rsuFut← rsu∊ FUTURES 
-    'CircleDiaeresis (⍥) Depth-Extension' Note cdFut VERBOSE_LOADTIME
-    'Ellipsis (…) Extension of dfns to' Note elFut VERBOSE_LOADTIME
-    'Right-Shoe Underscore (⊇) Select/Sane Indexing' Note rsuFut VERBOSE_LOADTIME
+    ⎕SHADOW 'cdFut' 'rsuFut' 'elFut' 'g' 'grps'
+    cdFut elFut rsuFut←  cd el rsu { (⍺∊ FUTURES) ∧ 0≠≢⍵ } cdNm elNm 'dummy'
+    grps← (
+      cdFut 'CircleDiaeresis (⍥) Depth-Extension'  
+      elFut  'Ellipsis (…) Extension of dfns ¨to¨'   
+      rsuFut 'Right-Shoe Underscore (⊇) Select/Sane Indexing'  
+    )
+    :For g :In grps
+       :IF VERBOSE_LOADTIME 
+          _← '❌❌❌' '✅✅✅'⊃⍨ ⊃g
+          ⎕← _, ' Future feature', (' not ' ' '⊃⍨ ⊃g), 'available: ',⊃⌽g
+       :ENDIF 
+    :EndFor 
 
   ⍝ User-callable functions:          A  B  C  D  F  J  Q  S  T  W 
   ⍝                                   L (handled ad hoc); D (synonym to T)
@@ -682,8 +706,7 @@
   scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← Publish¨ 'ABCJMQSTW' 
   scÐ2←   '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' Publish 'Ð'     
   scF2←   2⍴⊂' ⎕FMT ' 
-  scCD2←  cdNm { ⍵: Publish ⍺ ⋄ 2⍴ cd } cdFut
-  scEl2←  elNm { ⍵: Publish ⍺ ⋄ 2⍴ el } elFut  
+  scCD2 scEl2←  PublishIfFut¨ (cdNm cd cdFut) (elNm el elFut) 
   scSel2← 2⍴ ⊂rsu selCodeStr⊃⍨ rsuFut 
     
   ⎕SHADOW '⍙'
