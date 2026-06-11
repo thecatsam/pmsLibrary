@@ -16,7 +16,7 @@
  
   VERSION← 'v.0.2.2'          ⍝ Set/updated by ∆F_Publish.dyalog...
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F utility.
-  TRAP_ERRORS← 1             
+  TRAP_ERRORS← 1            
 ⍝
 ⍝ VERBOSE_RUNTIME: Run-time verbosity flag
 ⍝ (verbose: 1) is ∆F-settable (user) run-time verbosity flag-- which
@@ -46,7 +46,7 @@
 ⍝        APL will signal the expected APL error (typically as a VALUE ERROR) 
 ⍝        |      (verbose:0)∆F'{0: £.pcox 12 ⋄ 3}'
 ⍝        |  3
-  SIGNAL_LIB_ERRS←  0 
+  SIGNAL_LIB_ERRS← 0 
  
 ⍝ ESCAPE_CHAR: Allows an installation to use a non-standard "escape" char.
 ⍝ ESCAPE_CHAR must be a scalar.

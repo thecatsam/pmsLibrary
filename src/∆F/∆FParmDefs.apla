@@ -2,24 +2,26 @@
   ⍝ Default (Internal) Library Parameter File  (in APL Array Notation) 
   ⍝ Default file:           ∆F/∆FParmDefs.apla
   ⍝ User parameter file:   ./.∆F (no filetype)  
-  ⍝ Global settings that impact the two parameter files:
-  ⍝    LIB_ACTIVE, VERBOSE_RUNTIME 
-  ⍝ LIB_ACTIVE: 
-  ⍝      Setting  Do we want to use the SESSION LIBRARY autoload feature?
-  ⍝      2     Yes. Load default and user parameters
-  ⍝      1     Yes. Load default parameters ONLY.
-  ⍝      0     No.  No autoload features should be available.
-  ⍝ VERBOSE_RUNTIME: 
-  ⍝      Compile-time and run-time verbosity flag
-  ⍝      1     Yes. Be verbose at runtime
-  ⍝      0     No.  Don't.
+
+  ⍝ ∆F/∆FGlobals.dyalog contains...
+    ⍝ Global settings that impact the two parameter files:
+    ⍝    LIB_ACTIVE, VERBOSE_RUNTIME 
+    ⍝ LIB_ACTIVE: 
+    ⍝      Setting  Do we want to use the SESSION LIBRARY autoload feature?
+    ⍝      2     Yes. Load default and user parameters
+    ⍝      1     Yes. Load default parameters ONLY.
+    ⍝      0     No.  No autoload features should be available.
+    ⍝ VERBOSE_RUNTIME: 
+    ⍝      Compile-time and run-time verbosity flag
+    ⍝      1     Yes. Be verbose at runtime
+    ⍝      0     No.  Don't.
   
   ⍝                
-  ⍝ Items with their default values may be omitted in user .∆F file.           
+  ⍝ Items with their default values may be omitted in this user file, .∆F.           
    
   ⍝ Parameter auto:
   ⍝   0: user must load own objects; nothing is automatic.                
-  ⍝   1: dfns and files (if any) searched in sequence set by dfnsOrder.
+  ⍝   1: dfns and files (if any) searched in sequence set in path below..
   ⍝      See path for directory search sequence. 
   ⍝ If the user sets (auto: 0) as a ∆F option, then objects already loaded will
   ⍝ be found and used normally, but no new objects will be autoloaded. New objects
@@ -39,7 +41,7 @@
   ⍝    For a file directory, the item must be a simple char vector
   ⍝        'MyDyalogLib'
   ⍝    For workspaces, the item must be a vector of one or more char vectors
-  ⍝        (⊂'dfns') or (⊂'MyDyalogLib/mathfns') or ('dfns', 'myDfns')
+  ⍝        ('dfns'⋄) or ('MyDyalogLib/mathfns'⋄) or ('dfns' ⋄ 'myDfns')
   ⍝  To indicate we don't want to search ANY files, 
   ⍝     best: (load: 0)
   ⍝     ok:   (path: ⎕NULL)
@@ -54,11 +56,17 @@
     prefix: ⍬ 
                               
   ⍝ suffix: at least one suffix is required for files to be checked.
-  ⍝ ∘  Note: Add the '.' prefix! 
   ⍝ ∘  Suffixes don't apply to workspaces (so they're ignored). See documentation for definitions.
   ⍝ ∘  By default, unknown filetypes are not enabled; if they are enabled, they work the same as '.dyalog'.
   ⍝ ∘  If you wish, place the most likely suffixes first.
-    suffix: ('.aplf' ⋄ '.apla' ⋄ '.aplo' ⋄ '.apln' ⋄ '.json' ⋄ '.txt' ⋄ '.dyalog')    
+  ⍝ Meanings of suffixes:
+  ⍝ .aplf- fn, .apla- array, .aplo- operator, apln- namespace
+  ⍝ .json- json5 obj, .txt- a matrix or vector of vectors, .dyalog- fn, op, namespace
+  ⍝ .txt- char vec (w/cr), .aplv- char vec (w/cr), .aplvv- char vec of vectors, .aplm- char matrix, 
+    suffix: (
+      '.aplf' ⋄ '.apla'  ⋄ '.aplo' ⋄ '.apln' ⋄ '.json' ⋄  '.dyalog' ⋄ '.txt' ⋄ 
+      '.aplv' ⋄ '.aplvv' ⋄ '.aplm' 
+    )    
                   
   ⍝  Internal Runtime (hidden) Parameters. Do not modify or delete.                                               
     ⍙readParms:  0 0                    ⍝ Have we read ([0] default parms, [1] user .∆F parms)

@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-06-10') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-06-11') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading.
@@ -120,7 +120,7 @@
           IfF sfx:  rcEN rcOK⊃⍨ êNm⊂⍛∊ êNms⊢← 2 ûLib.⎕FIX _FOpts êErrFi⊢←fi    ⍝ See below 
           IfA sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm (AN2Apl ⊃⎕NGET fi 1)                 ⍝   ...
           IfJ sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm (⎕JSON _JOpts ⊃⎕NGET fi 0)           ⍝   ...
-          IfT sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm ⊃⎕NGET fi (OptT sfx)                 ⍝   ...
+          IfT sfx:  rcOK⊣ ûLib ⎕VSET ⊂êNm (⊃⎕NGET fi (OptT sfx))               ⍝   ...
                     rcEN rcOK⊃⍨ êNm⊂⍛∊ êNms⊢← êNm FixOrAssign fi               ⍝ Any other suffix                    
         }
         (FixByType fi) ('file:"',fi,'"')         
@@ -129,7 +129,7 @@
       IfF←    ∊∘'.aplf' '.aplo' '.apln' '.dyalog'      ⍝ ⎕FIXable obj.
       IfA←    ≡∘(⊂'.apla')                             ⍝ APLAN obj.
       IfJ←    ≡∘(⊂'.json')                             ⍝ JSON obj
-      IfT←    ∊∘(st←'.aplv' '.txt' '.aplvv' '.aplm')   ⍝ char. obj  
+      IfT←    ∊∘(st←'.aplv' '.txt' '.aplvv' '.aplm')   ⍝ char. obj (vec, vv, vv, m)  
       OptT←   ⌷∘0 1 1 2(st∘⍳)                          ⍝ ⎕NGET as target type
       _FOpts← ⍠('FixWithErrors' 0)('Quiet' 1)    
       _JOpts← ⍠('Dialect' 'JSON5')('Compact' 0)('Null' ⎕NULL)  

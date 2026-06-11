@@ -113,7 +113,7 @@
   ⍝ ScanCF will delete runs of leading and trailing blanks from output code; internal runs will remain.
     ScanCF← {     
         ûsr.cfL+← 1+ p← CFBrk ⍵                        ⍝ ûsr.cfL is set in ScanAll above.  1: '{'
-      p= ≢⍵:  ⎕SIGNAL brÊ                              ⍝ Missing "}" => Error. 
+      p= ≢⍵:  ⎕SIGNAL êBr                              ⍝ Missing "}" => Error. 
         pfx← ⍺, p↑⍵ 
         c←   p⌷⍵              
         w←   (p+1)↓⍵ 
@@ -124,11 +124,10 @@
       c= esc:   (pfx, a) ∇ w⊣ a w← ûsr CFEsc w         ⍝ `⍵, `⋄, `A, `B, etc.
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
-    ⍝ These next two guards will be true only if cd rsu∊ FUTURES, respectively.
-      c= cd:  w ∇⍨ pfx, scCD                           ⍝ ⍥ Adam B's CircleDiaeresis (optional).
-      c= el:  w ∇⍨ pfx, scEl                           ⍝ … Adam B's Ellipsis (optional)
-      c= rsu: w ∇⍨ pfx, scSel                          ⍝ ⊇ Select / Sane Indexing.
-      ~c∊selfDoc: ⎕SIGNAL cfLogicÊ                     ⍝ If guard true, CFBrk leaked unknown char.
+    ⍝ FUTURES: ⍥ Adam B's CircleDiaeresis (optional).    
+    ⍝          … Adam B's Ellipsis (optional)    ⊇ Select / Sane Indexing.
+      c∊ FUTURES: w ∇⍨ pfx, scCD scEl scSel c⊃⍨ cd el rsu⍳ c   
+      ~c∊selfDoc: ⎕SIGNAL êCfLogic                     ⍝ If guard true, CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
       ûsr.brC>1: w ∇⍨ pfx, c scA⊃⍨ c= pct              ⍝ internal dfn => not SDCF
         p← +/∧\' '=w
@@ -176,7 +175,7 @@
 ⍝   cfL       -   code field running length (for SDCFs). Set in dfn ScanAll.
     ûsr← ⍺                                
   ⍝ Validate all options passed in ûsr (⍺).  dfn∊ ¯1 0 1; others ∊ 0 1.
-  0∊ ûsr.(verbose box auto inline (|dfn))∊ 0 1: ⎕SIGNAL optÊ    
+  0∊ ûsr.(verbose box auto inline (|dfn))∊ 0 1: ⎕SIGNAL êOpt    
   ⍝ Shortcuts used explicitly (not just via esc+alphabetic): 
   ⍝    See ⍙Load_Shortcuts 
     scA scCD scEl scÐ scF scM scSel← ûsr.inline⊃¨ (
@@ -226,7 +225,7 @@
 ⍝ Order "break" chars roughly by frequency, high to low. 
 ⍝ We take dq to be high freq, but other quotes as low.
 ⍝               "  `   {  }  $   ⍹    →  ↓  %   £      '« (default)
-  cfBrkList←  ∪ dq esc lb rb dol omUs ra da pct libra, qtsL    
+  cfBrkList←  ∪ dq esc lb rb dol omUs ra da pct libra, qtsL  
 ⍝ See defs of FUTURES, cd (⍥), el (…) rsu (⊇) 
   cfBrkList,← cd rsu el/⍨ cd rsu el ∊ FUTURES
   tfBrkList← esc lb                 
@@ -236,20 +235,20 @@
 
 ⍝ Error constants and fns  
     Ê← { ⍺←11 ⋄ ⊂'EN' ⍺,⍥⊂ 'Message' ⍵ }
-  brÊ←         Ê 'Unpaired brace "{"'
-  qtÊ←         Ê 'Unpaired quote in code field' 
-  cfLogicÊ←    Ê 'A logic error has occurred processing a code field'
-  optÊ←        Ê 'Invalid option(s) in left argument. For help: ∆F⍨''help'''
-  ScBadÊ←      Ê {'Sequence "`',⍵,'" does not represent a valid shortcut.'}
+  êBr←         Ê 'Unpaired brace "{"'
+  êQt←         Ê 'Unpaired quote in code field' 
+  êCfLogic←    Ê 'A logic error has occurred processing a code field'
+  êOpt←        Ê 'Invalid option(s) in left argument. For help: ∆F⍨''help'''
+  êScBad←      Ê {'Sequence "`',⍵,'" does not represent a valid shortcut.'}
                T1←{
                   t1← 'Sequence "`',⍵,'" not valid in code fields outside strings.'
                   t2← 'Did you mean "',⍵,'"?'
                   t1,nl,(17⍴''),t2 
                }
-  EscÊ←        Ê T1 ⋄ ⎕EX 'T1'  
+  êEsc←        Ê T1 ⋄ ⎕EX 'T1'  
                t1← 'Help file "',HELP_HTML_FI,'" not found in current directory (CD)'
                t2← 'CD: "','"',⍨⊃1 ⎕NPARTS ''
-  helpFiÊ←  22 Ê t1,(⎕UCS 13),(17⍴''),t2 
+  êHelpFi←  22 Ê t1,(⎕UCS 13),(17⍴''),t2 
                ⎕EX 't1' 't2'
    :EndSection Constants
 
@@ -290,10 +289,10 @@
       c w← (0⌷⍵) (1↓⍵) ⋄ ⍺.cfL+← 1   
     c∊ om_omUs: ⍺ CFOm w                               ⍝ Permissively allows `⍹ as equiv to `⍵ OR ⍹ 
     c='L': (⍺ libUtils.LibAuto w) w                    ⍝ Library shortcut: special (niladic) case
-      p← MapSC c                                       ⍝ Look for other shortcuts
-    nSC> p: (⍺.inline p⊃ scCodeTbl) w                  ⍝ Found? return code string.
-    c∊⍥⎕C ⎕A: ⎕SIGNAL ScBadÊ c                         ⍝ Nope: Unknown shortcut!
-      ⎕SIGNAL EscÊ c                                   ⍝ Nope: An escape foll. by non-alphabetic.
+      p← sc.Map c                                      ⍝ Look for other shortcuts
+    sc.nEsc> p: (⍺.inline p⊃ sc.tbl) w                 ⍝ Found? return code string.
+    c∊⍥⎕C ⎕A: ⎕SIGNAL êScBad c                         ⍝ Nope: Unknown shortcut!
+      ⎕SIGNAL êEsc c                                   ⍝ Nope: An escape foll. by non-alphabetic.
   } ⍝ End CFEsc 
 
  ⍝ CFQS: CF Quoted String scan
@@ -319,7 +318,7 @@
           a lW ←⍺       
         0= ≢⍵: ⍺  
           p← CFSBrk ⍵  
-        p= ≢⍵: ⎕SIGNAL qtÊ 
+        p= ≢⍵: ⎕SIGNAL êQt 
           c c2← 2↑ p↓ ⍵ 
       ⍝ See CFQSEsc, below, for handling of escapes in CF quoted strings.
       ⍝ <skip> is how many characters were consumed...
@@ -419,7 +418,7 @@
     val← ⎕C ⍕⍵                                    ⍝ ⍺ is referenced for 'get' and 'set' only
   ⍝ pârms: Load any new pârms without a ]load. 
   ⍝        Returns display of default and user pârms (as mx) in alph order.
-    2≠ ⎕NC 'val': ⎕SIGNAL optÊ  
+    2≠ ⎕NC 'val': ⎕SIGNAL êOpt  
   ⍝ LoadParms (isVerbose isCompact isRuntime)   
     'parms-c'≡ 7↑val: _← libUtils.LoadParms '-v -c -r'
     'parms'  ≡   val: _← libUtils.LoadParms '-v    -r'
@@ -428,10 +427,10 @@
   ⍝ Undocumented: 'get' 'set'. Use at own risk.
     'get'    ≡   val: _← ⎕VGET ⊃⊆⍺                        ⍝ get one global ⍺ 
     'set'    ≡   val: _← (⎕VSET ⊂⍺)⊢ ⎕VGET ⊃⍺             ⍝ set one global, return old val
-    'help'   ≢ 4↑val: ⎕SIGNAL optÊ 
+    'help'   ≢ 4↑val: ⎕SIGNAL êOpt 
   ⍝ (Below) help, help-wide, or help-narrow?
       CLoadHtml← {   ⍝ Conditionally load help html file, i.e. if not already loaded...
-        22:: ⎕SIGNAL helpFiÊ 
+        22:: ⎕SIGNAL êHelpFi 
         0= ⎕NC ⍵: ⊢⎕THIS.helpHtml← ⊃⎕NGET HELP_HTML_FI 
           ⎕THIS.helpHtml  
       }
@@ -625,7 +624,7 @@
 
 :EndSection Shortcut functions 
 
-⍝ ⍙Load_Shortcut_Calls:   ∇     (niladic) 
+⍝ ⍙Load_Shortcut_Calls:   sc← ∇     (niladic) 
 ⍝ At ⎕FIX time, load the run-time userLibrary names and code for user Shortcuts
 ⍝ and similar code (Ð, display, is used internally, so not a true user shortcut).
 ⍝ The userLibrary entries created in ∆Fapl are: 
@@ -635,16 +634,16 @@
 ⍝ scA (etc): [0] local absolute name of dfn (with spaces), [1] its code              
 ⍝ Abbrev  Descript.       Valence     User Shortcuts   Notes
 ⍝ A       [⍺]ABOVE ⍵      ambi       `A, %             Center ⍺ above ⍵. ⍺←''.  Std sc is %
-⍝ B       BOX ⍵           ambi       `B                Put ⍵ in a box.
-⍝ C       COMMAS          monadic    `C                Add commas to numbers every 3 digits R-to-L
+⍝ B       [⍺]BOX ⍵        ambi       `B                Put ⍵ in a box.
+⍝ C       [⍺]COMMAS       ambi       `C                Add commas (⍺[1]) to numbers every 3 (⍺[0]) digits R-to-L
 ⍝ Ð       DISPLAY ⍵       dyadic                       Var Ð only used internally...
 ⍝ F       [⍺]FORMAT ⍵     ambi       `F, $             ⎕FMT.   Std is $
-⍝ J       [⍺] JUSTIFY ⍵   ambi       `J                justify rows of ⍵. ⍺←'l'. ⍺∊'lcr' left/ctr/rght.
-⍝ -       [⍺] LIBRARY ⍵   niladic     £, `L            *** handled in line (ad hoc) ***
-⍝ M       MERGE[⍺] ⍵      ambi                         Var M only used internally...
-⍝ Q       QUOTE ⍵         ambi       `Q                Put only text in quotes. ⍺←''''
+⍝ J       [⍺]JUSTIFY ⍵    ambi       `J                justify rows of ⍵. ⍺←'l'. ⍺∊'lcr' left/ctr/rght.
+⍝ -       LIBRARY         niladic     £, `L            £.nm1 (etc) handled in line (ad hoc) 
+⍝ M       [⍺]MERGE ⍵      ambi                         Var M only used internally...
+⍝ Q       [⍺]QUOTE ⍵      ambi       `Q                Put only text in quotes. ⍺←''''
 ⍝ S       [⍺]SERIALISE ⍵  ambi       `S                Apl Array Notation Serialise
-⍝ T       ⍺ DATE-TIME ⍵   dyadic     `T, `D            Format ⍵, 1 or more timestamps, acc. to ⍺.
+⍝ T       [⍺]DATE-TIME ⍵  ambi       `T, `D            Format ⍵, 1 or more timestamps, acc. to ⍺.
 ⍝ W       [⍺1 ⍺2]WRAP ⍵   ambi       `W                Wrap ⍵ in decorators, ⍺1 ⍺2.  ⍺←''''. See doc.
 ⍝
 ⍝ For A, B, C, D, F, J, M, Q, T, W; all like A example shown here:
@@ -655,19 +654,18 @@
 ⍝ At runtime, we'll generate shortcut code "pointers" scA, scB etc. based on flag ¨inline¨.
 ⍝ Warning: Be sure these can run in user env with any ⎕IO and ⎕ML: Localize them where needed.
 ⍝ NOTE: We are creating multiline objects using the old method for compatibility with Dyalog 19 etc.
-  ∇ {ok}← ⍙Load_Shortcut_Calls 
-    ; scUser 
-    ; Fn2Inline; Publish 
-    Publish←{ 
-        ⍺← Fn2Inline ⍵    
-      1: _← (' ',' ',⍨ ∆THIS,'.',⍵) ⍺
-    }
-    PublishIfFut← { 
-        nm cod fut← ⍵ ⋄ 
-      fut: Publish nm ⋄ 
-        2⍴ cod 
+  ∇ {sc}← ⍙Load_Shortcut_Calls 
+  ; cdFut; elFut; rsuFut; g; grps; scEscCodes; _ 
+  ; CPublish ; Fn2Inline; In  
+  ⍝:Extern cd; cdNm; el; elNm; rsu; selCodeStr; VERBOSE_LOADTIME
+
+    CPublish← { 
+        ⍺← 1 ⋄ alt (nm char)← ⍺ ⍵ 
+      0≡alt: 2⍴ char
+        (' ',' ',⍨ ∆THIS,'.',nm)  (alt Fn2Inline nm) nm 
     }
     Fn2Inline← {  
+      0≠⊃0⍴ ⍺: ⍺
         s← 61 ⎕ATX ⍵                       ⍝ src in
         b←  (⊂f↓⍨ 2+'←'⍳⍨ f←⊃s), 1↓ s      ⍝ body
         src snk← ↓⍉↑(
@@ -680,8 +678,7 @@
       1= ≢ib: ⊃ib                          ⍝ single stmt; output as is.
         '{', 1↓ ¯1↓ ∊'⋄',⍨¨ ib             ⍝ multi-stmt ( add stmt sep "⋄", remove extra one.)
     } 
-  ⍝ "Experimental" - future ⍥ operator, adding Depth operation.
-    ⎕SHADOW 'cdFut' 'rsuFut' 'elFut' 'g' 'grps'
+  ⍝ "Experimental" - future operators (from Adam B's github repository)
     cdFut elFut rsuFut←  cd el rsu { (⍺∊ FUTURES) ∧ 0≠≢⍵ } cdNm elNm 'dummy'
     grps← (
       cdFut 'CircleDiaeresis (⍥) Depth-Extension'  
@@ -700,23 +697,21 @@
   ⍝ ∆F-internal (non-user) funtions:  Ð  M
   ⍝ Others: CircleDiaeresis, Select -- called only via symbol ⍥, ⊇ (if enabled)
 
-  ⍝ Only these shortcuts are exported for use outside this function
-  ⍝    Export: scA2 scCD2 scF2 scM2 scSel2   
-  ⎕SHADOW   'scB2 scC2  scJ2  scQ2  scS2  scT2  scW2'
-  scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← Publish¨ 'ABCJMQSTW' 
-  scÐ2←   '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' Publish 'Ð'     
+  ⍝ These shortcuts are exported for use outside this function
+  ⍝:Extern scA2 scB2; scC2; scCD2 cEl2 scJ2; scQ2; scS2; scF2; scM2; scT2; scW2; scÐ2; scSel2 
+  scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← CPublish¨ 'ABCJMQSTW' 
+  scÐ2←   '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' CPublish 'Ð'     
   scF2←   2⍴⊂' ⎕FMT ' 
-  scCD2 scEl2←  PublishIfFut¨ (cdNm cd cdFut) (elNm el elFut) 
+  scCD2 scEl2←  cdFut elFut CPublish¨ (cdNm cd) (elNm el) 
   scSel2← 2⍴ ⊂rsu selCodeStr⊃⍨ rsuFut 
     
-  ⎕SHADOW '⍙'
-  scCodeTbl← ↓⍉↑⍙← scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scEl2 scSel2 
- ⍝ iA iB iC iD iF iJ iQ iS iT iW iÐ iM iCD iEL iSel← ⍳≢⍙ 
-⍝ nSC: # of user-accessible shortcuts via <esc><let>
-  nSC← ≢scUser←  'A B C D F J Q S T W'~ ' '
-  MapSC← scUser∘⍳
-⍝ Select relevant part of code table-- library-based or inline
-  ok← 1 
+⍝ Using sc namespace in ∆F routines. Members: tbl, nEsc, Map 
+  sc← (
+     tbl: ↓⍉↑scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scEl2 scSel2 
+   ⍝ nEsc: # of user-accessible shortcuts via <esc><let>, i.e. `A, `B, etc.
+     nEsc: ≢scEscCodes← 'ABCDFJQSTW' 
+  )
+  sc.Map← scEscCodes∘⍳
   ∇ 
 
   ∇ {ok}← ⍙Load_Help hfi;e1; e2 
@@ -772,7 +767,8 @@
             ⎕SIGNAL 911 
         :EndIf     
         ⍙Export_∆F (targNm: '∆F' ⋄ destNs: ## ⋄ lockFn: 0)   
-        ⍙Load_Shortcut_Calls
+      ⍝ Sets sc: namespace with global shortcut table and related
+        sc← ⍙Load_Shortcut_Calls
         ⍙Load_Help HELP_HTML_FI
         LIB_ACTIVE← ⍙Load_LibAuto LIB_SRC_FI LIB_ACTIVE KEEP_SRC_CM   
         ⍙ShowGlobalsIf VERBOSE_RUNTIME
