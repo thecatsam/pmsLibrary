@@ -23,6 +23,7 @@
 ⍝ NB. Modify header names and "macro" constants __THIS__  and __UP__ 
 ⍝ ∘ We need __UP__  (typically ##) to handle the fact that header variable names that are 
 ⍝   namespaces aren't automatically made visible INSIDE :With blocks (per Dyalog doc).
+    __THIS__ __UP__← ⎕THIS ⍝ Default...
   ∇ result← {opts} ∆F_Source args  
     :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       

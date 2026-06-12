@@ -1,13 +1,13 @@
-:Namespace  ⍝ An unnamed ns 
+:Namespace                           ⍝ An unnamed ns 
 ⍝ ∆F Utility and Library Loader...   
 ⍝ [*] Dyalog ≥20 Version!
 ⍝ Note: This is an UNNAMED namespace, so its name won't clutter the target namespace, 
 ⍝ while it loads (ns) ⍙FUtils and (fn) ∆F via, e.g.,
-⍝    ]load ∆F [-target=⎕SE]     or     +⎕SE.⎕FIX '∆F.dyalog'
+⍝    ]load ∆F [-target=⎕SE]     or     ⊢⎕SE.⎕FIX '∆F.dyalog'
 ⍝ ⍙FUtils in turn loads other items...
 
   ⎕IO ⎕ML← 0 1
-⍝ Where's the globals file? Everything else is defined there!
+⍝ Where's the globals file? All global parameters are defined there!
   GLOBALS_FI← '∆F/∆FGlobals.dyalog'   
 
   ∇ {globFi}← ⍙Load_∆FUtils globFi
@@ -41,7 +41,7 @@
     :EndTrap 
     ⎕EX '⎕SE.⍙⍙FGlobals'                                 ⍝ Clean up (outside trap)
   ∇
-  ⍝ ⎕DF val is returned/displayed by ⎕FIX or ]LOAD
+⍝ ⎕DF val is returned/displayed by ⎕FIX or ]LOAD
   Succeed_←  {⎕DF g.(DEST_NS⍕⍛,'.∆F [',VERSION,']')}
 ⍝ Reporting on success if Verbose 
   ReportQ_←  {g.VERBOSE_LOADTIME: ⎕←'✅✅✅ Created namespace "',g.DEST_NS⍕⍛,'.⍙FUtils"' ⋄ 1: _←0 }

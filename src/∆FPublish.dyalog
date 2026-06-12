@@ -1,6 +1,6 @@
 ﻿∆FPublish parms
   ; anyUpdts; cd; copyright; docDep; force; globFi; hdr; html; itemF; libDir      
-  ; libra; loader; md; mdTmp; ns; pandocBin; parmFi; pdf; pgm; pgmDep; priv
+  ; libra; loader;loader2; md; mdTmp; ns; pandocBin; parmFi; pdf; pgm; pgmDep; priv
   ; privF; privFdir; privdir; productionCode; pub; pubF; pubFdir; pubdir   
   ; quiet; readme; sideN2FN; temp; tempdir; timestamp; title; version; _   
   ; CSay; CopyFi; Delete; Diamonds; Fi; HomeDir; Hr; HtmlMacro; Macros     
@@ -69,6 +69,7 @@
   readme←    'README.md'             ⍝ Git README file
   hdr←       '∆FHelp_Hdr.html'       ⍝ local header file.
   loader←    '∆F.dyalog'             ⍝ ∆F bootstrap utility
+  loader2←   '∆FStd.dyalog'             ⍝ ∆F bootstrap utility
   libra←     '∆FLibUtils.dyalog'     ⍝ £ library
   parmFi←    '∆FParmDefs.apla'       ⍝ 
   globFi←    '∆FGlobals.dyalog'
@@ -327,7 +328,8 @@ Say'    PUBF:  ', HomeDir Fi PubF ⍬
 Say'    TEMP:  ', HomeDir Fi Temp ⍬
 Hr
 
-pgmDep← ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) ((Priv loader)(Pub loader))((PrivF parmFi)(PubF parmFi))
+pgmDep←  ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) 
+pgmDep,← ((Priv loader)(Pub loader))((Priv loader2)(Pub loader2))((PrivF parmFi)(PubF parmFi))
 pgmDep,← ((PrivF cd)(PubF cd))((PrivF el)(PubF el))((PrivF globFi)(PubF globFi))
 :IF 4< |≡pgmDep
     11 ⎕SIGNAL⍨ 'DOMAIN ERROR: pgmDep improperly defined'
@@ -338,6 +340,7 @@ pgmDep,← ((PrivF cd)(PubF cd))((PrivF el)(PubF el))((PrivF globFi)(PubF globFi
     anyUpdts∨←1
     _←¯1 Say'Updating ∆F utility ',Tp PubF pgm
     _←¯1 Say'Updating ∆F loader  ',Tp PubF loader
+    _←¯1 Say'Updating ∆F loader  ',Tp PubF loader2
     UpdatePgm PrivF pgm 
     UpdatePgm PrivF libra 
     UpdatePgm Priv loader 
@@ -345,6 +348,7 @@ pgmDep,← ((PrivF cd)(PubF cd))((PrivF el)(PubF el))((PrivF globFi)(PubF globFi
         CopyFi(PrivF itemF )(PubF itemF)
     :EndFor 
     CopyFi(Priv loader)(Pub loader)
+    CopyFi(Priv loader2)(Pub loader2)
     CopyFi(PrivF libra)(PubF libra)
     force CopyFi(PrivF pgm)(PubF pgm)                    ⍝ Make ∆F library public
 :EndIf
