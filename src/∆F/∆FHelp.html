@@ -590,24 +590,22 @@ class="header-section-number">1.2</span> Loading and Running
 class="margin-note"><em>Or,</em> <code>⎕SE.⎕FIX'∆F.Dyalog'</code><br><strong><em>⎕SE:</em></strong>
 Or any <em>target</em> namespace you desire.</span>, enter:
 <br> <code>]load ∆F -target=⎕SE</code><br> Now, the target directory
-(<code>⎕SE</code>) will contain the namespace <code>∆FUtils</code>.</li>
+(<code>⎕SE</code>) will contain the namespace <code>∆FUtils</code>,
+containing <code>∆F</code> and supporting services and objects.</li>
+<li>By default, the target namespace (<code><em>⎕SE.∆FUtils</em></code>)
+will be added to the end of <code>⎕PATH</code>, if not already defined
+there.<span class="margin-note">To create an alias to
+<code>⎕SE.∆FUtils.∆F</code> in namespace
+<em>curdir</em>:<br>  <code>curdir.∆F←⎕SE.∆FUtils.∆F</code></span></li>
+<li><strong>∆F</strong> may be called as is, i.e. as <code>∆F</code>, or
+fully specified as <code>⎕SE.∆FUtils.∆F</code>.</li>
+<li>You may always choose to create an alias to <strong>∆F</strong> in
+your chosen namespace, e.g. via <code>∆F← ⎕SE.∆FUtils.∆F</code>.</li>
 <li>By default, the <strong><em>help</em></strong> file,
 <strong>∆F/∆FHelp.html</strong> is available at <code>]load</code> time.
 If so, it will be copied into <strong>∆FUtils</strong>. If not
 available, a message will note the absence of <em>help</em>
 information.</li>
-<li>Namespace <code><em>⎕SE</em>.<strong>∆FUtils</strong></code>
-contains <strong>∆F</strong> and utilities used by <strong>∆F</strong>;
-once <code>]load</code>ed, <strong>∆F</strong> <strong><em><em>should
-not</em></em></strong> be moved, as <strong>∆F</strong> always refers to
-<strong>∆FUtils</strong> in its <em>original</em> location.</li>
-<li>By default, the target namespace (<code><em>⎕SE.∆FUtils</em></code>)
-will be added to the end of <code>⎕PATH</code>, if not already defined
-there.<span class="margin-note">To create an alias to
-<code>⎕SE.∆FUtils.∆F</code> in namespace
-<em>curdir</em>:<br>  <code>curdir.∆F←⎕SE.∆FUtils.∆F</code></span> You
-may always choose to make an alias to <strong>⎕SE.∆F</strong> anywhere
-you want so that it is available conveniently.</li>
 </ol>
 <p><big>👉</big> <small>You may now call <code>∆F</code> with the
 desired <a href="#f-call-syntax-overview">arguments</a> and <a

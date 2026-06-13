@@ -67,10 +67,11 @@ _dfns_ and other familiar tools.
 
 1. Confirm that your current directory remains as before.
 2. From your Dyalog session<∆N>*Or,*&emsp;`⎕SE.⎕FIX'∆F.Dyalog'`<br>**_⎕SE:_** Or any _target_ namespace you desire.</∆N>, enter: <br>&emsp;`]load ∆F -target=⎕SE`<br>
-   Now, the target directory (`⎕SE`) will contain the namespace `∆FUtils`.
-3. By default, the ***help*** file, **∆F/∆FHelp.html** is available at `]load` time. If so, it will be copied into **∆FUtils**. If not available, a message will note the absence of _help_ information.
-4. Namespace <code>_⎕SE_.**∆FUtils**</code> contains **∆F** and utilities used by **∆F**;  once `]load`ed, **∆F** ***_should not_*** be moved, as **∆F** always refers to **∆FUtils** in its _original_ location.
-5. By default, the target namespace (<code>_⎕SE.∆FUtils_</code>) will be added to the end of `⎕PATH`, if not already defined there.<∆N>To create an alias to `⎕SE.∆FUtils.∆F` in namespace *curdir*:<br>&emsp;&emsp;`curdir.∆F←⎕SE.∆FUtils.∆F`</∆N> You may always choose to make an alias to **⎕SE.∆F** anywhere you want so that it is available conveniently.
+   Now, the target directory (`⎕SE`) will contain the namespace `∆FUtils`, containing `∆F` and supporting services and objects. 
+3. By default, the target namespace (<code>_⎕SE.∆FUtils_</code>) will be added to the end of `⎕PATH`, if not already defined there.<∆N>To create an alias to `⎕SE.∆FUtils.∆F` in namespace *curdir*:<br>&emsp;&emsp;`curdir.∆F←⎕SE.∆FUtils.∆F`</∆N>
+4. **∆F** may be called as is, i.e. as `∆F`, or fully specified as `⎕SE.∆FUtils.∆F`. 
+5. You may always choose to create an alias to **∆F** in your chosen namespace, e.g. via `∆F← ⎕SE.∆FUtils.∆F`.
+4. By default, the ***help*** file, **∆F/∆FHelp.html** is available at `]load` time. If so, it will be copied into **∆FUtils**. If not available, a message will note the absence of _help_ information.
 
 <big>👉</big>&nbsp;<small>You may now call `∆F` with the desired [arguments](#f-call-syntax-overview) and [options](#f-option-details).</small><br>
 <big>👉</big>&nbsp;<small>**∆F** is `⎕IO`- and `⎕ML`-independent.<br></small>
