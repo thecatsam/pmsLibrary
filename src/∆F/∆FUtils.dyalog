@@ -1,13 +1,22 @@
-:Namespace ⍙FUtils   
+:Namespace ∆FUtils   
 ⍝  VERSION: Dyalog 20 and later!
 :Section CORE  
 ⍝ Env for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
   ⎕IO ⎕ML ⎕PP← 0 1 34     
 ⍝ Loader ∆F.dyalog shares global variables via transient namespace ⎕SE.⍙⍙FGlobals.
 ⍝ Note the names of all the globals
-  GLOBALS← ⎕SE.⍙⍙FGlobals.⎕NL ¯2 ¯9       
+  GLOBALS← ⎕SE.⍙⍙FGlobals.⎕NL ¯2 ¯9  
+
 ⍝ Merge the globals into this namespace... 
   ⎕THIS ⎕NS ⎕SE.⍙⍙FGlobals 
+
+⍝ Conditionally augment ⎕PATH
+  PathAdd←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
+  ⎕←FN_NS← ⎕THIS DEST_NS ⊃⍨ PROMOTE_FN  
+  ⎕PATH,← ⎕PATH PathAdd FN_NS            ⍝ Add dest NS to ⎕PATH
+
+  0 ⎕EXPORT ⎕NL ¯2 ¯3
+  1 ⎕EXPORT '∆F'
 
 ⍝ Set char. rendering of ⎕THIS, so we can set ⎕THIS.⎕DF to something arbitrary.
   ∆THIS← ⍕⎕THIS                
@@ -15,17 +24,16 @@
    :Section   ∆F SOURCE
 ⍝ =======================================================================
 ⍝ ∆F USER FUNCTION SOURCE 
-⍝     ∆F_Source ==> ##.∆F (Actual name and destination set at ⍙Export_∆F)
+⍝     ∆F ==> ##.∆F (Actual name and destination set at ⍙Export_∆F)
 ⍝ =======================================================================
 ⍝ ∆F: 
 ⍝    result← {opts←⍬|()} ∇ f-string [args]
 ⍝ See notes elsewhere on ∆F itself.
 ⍝ 
 ⍝ NB. Modify header names and "macro" constants __THIS__  and __UP__ 
-⍝ ∘ We need __UP__  (typically ##) to handle the fact that header variable names that are 
+⍝ ∘ We need __UP__  (typically ⎕THIS) to handle the fact that header variable names that are 
 ⍝   namespaces aren't automatically made visible INSIDE :With blocks (per Dyalog doc).
-    __THIS__ __UP__← ⎕THIS ⍝ Default...
-  ∇ result← {opts} ∆F_Source args  
+  ∇ result← {opts} ∆F args  
     :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
       ⍝ Phase I: Set options and normalise args! 
@@ -497,7 +505,7 @@
 ⍝ If destNs is not namespace ⎕THIS, then we "promote the fn to target namespace,
 ⍝    ∘ obscure (mangle) local vars: ¨result¨ ¨opts¨ and ¨args¨
 ⍝    ∘ sets __⎕THIS__.##. to ##.
-⍝    ∘ sets __THIS__ to refer to this namespace (i.e. ...⍙FUtils)
+⍝    ∘ sets __THIS__ to refer to this namespace (i.e. ...∆FUtils)
 ⍝ If destNs is the namespace ⎕THIS, then we:
 ⍝    ∘ set '__UP__.'  to  ''
   ∇ {targNm}← ⍙Export_∆F args 
@@ -506,12 +514,12 @@
    ⍝ targNm←'∆F'
    ⍝ :Return 
   ⍝ parms...
-    srcNm← '∆F_Source' 
+    srcNm← '∆F' 
     targNm destNs lockFn← args ⎕VGET  ('targNm' '∆F') ('destNs' ##) ('lockFn' 0) 
   ⍝ vars...
     up← '##.' ''⊃⍨ destNs=⎕THIS
-    in←   srcNm '__UP__\.' '__THIS__'  '\b(args|opts(_ns)?|result)\b'
-    out← targNm    up        ∆THIS     '⍙F_\1'
+    in←   srcNm               '__UP__\.' '__THIS__'  '\b(args|opts(_ns)?|result)\b'
+    out←  targNm    up        ∆THIS     '⍙F_\1'
   ⍝ Util fns...
     XR←       62∘⎕ATX                                   ⍝ XR: ⎕CR that keeps source spacing
     Xlate← in ⎕R out ⍠ 'UCP' 1  
@@ -768,7 +776,7 @@
             ⎕←↑1⍴⊂'❌❌❌ This version of ∆F requires Dyalog 20 or later'
             ⎕SIGNAL 911 
         :EndIf     
-        ⍙Export_∆F (targNm: '∆F' ⋄ destNs: ## ⋄ lockFn: 0)   
+        ⍙Export_∆F (targNm: '∆F'  ⋄ destNs: FN_NS ⋄ lockFn: 0)   
       ⍝ Sets sc: namespace with global shortcut table and related
         sc← ⍙Load_Shortcut_Calls
         ⍙Load_Help HELP_HTML_FI

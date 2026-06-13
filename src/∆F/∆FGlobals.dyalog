@@ -10,11 +10,12 @@
 ⍝ SIGNAL_LIB_ERRS TRAP_ERRORS  VERBOSE_LOADTIME VERBOSE_RUNTIME VERSION 
 ⍝ 
  
-  SRC_FI←         '∆F/∆FUtils.dyalog'
-  DEST_NS←         ⎕THIS.##.##                         ⍝ Typically, ⎕SE 
-  ADD_∆F_TO_PATH← 1                                    ⍝ If 1, adds ∆F to Dyalog ⎕PATH.
+  SRC_FI←         '∆F/∆FUtils.dyalog'                 ⍝ Typically, namespace ∆FUtils as well
+  DEST_NS←         ⎕SE                                ⍝ Typically ∆FUtils is put in ⎕SE 
+  PROMOTE_FN←      0                                  ⍝ If 1, put FN in ⎕SE, not ⎕SE.∆FUtils
+  ADD_∆F_TO_PATH←  1                                  ⍝ If 1, adds ∆F to Dyalog ⎕PATH.
  
-  VERSION← 'v.0.3.1'          ⍝ Set/updated by ∆F_Publish.dyalog...
+  VERSION← 'v.0.4.1'                                  ⍝ Set/updated by ∆F_Publish.dyalog...
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F utility.
   TRAP_ERRORS← 1            
 ⍝

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>∆F Formatted String Literals (v.0.3.1)</title>
+  <title>∆F Formatted String Literals (v.0.4.1)</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -507,7 +507,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">∆F Formatted String Literals (v.0.3.1)</h1>
+<h1 class="title">∆F Formatted String Literals (v.0.4.1)</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 
@@ -590,25 +590,24 @@ class="header-section-number">1.2</span> Loading and Running
 class="margin-note"><em>Or,</em> <code>⎕SE.⎕FIX'∆F.Dyalog'</code><br><strong><em>⎕SE:</em></strong>
 Or any <em>target</em> namespace you desire.</span>, enter:
 <br> <code>]load ∆F -target=⎕SE</code><br> Now, the target directory
-(<code>⎕SE</code>) will contain the function <code>∆F</code> and
-namespace <code>⍙FUtils</code>.</li>
+(<code>⎕SE</code>) will contain the namespace <code>∆FUtils</code>.</li>
 <li>By default, the <strong><em>help</em></strong> file,
 <strong>∆F/∆FHelp.html</strong> is available at <code>]load</code> time.
-If so, it will be copied into <strong>⍙FUtils</strong>. If not
+If so, it will be copied into <strong>∆FUtils</strong>. If not
 available, a message will note the absence of <em>help</em>
 information.</li>
-<li>Namespace <code><em>⎕SE</em>.<strong>⍙FUtils</strong></code>
-contains utilities used by <strong>∆F</strong> and, once
-<code>]load</code>ed, <strong><em>should not</em></strong> be moved, as
-<strong>∆F</strong> always refers to <strong>⍙FUtils</strong> in its
-<em>original</em> location.</li>
-<li>By default, the target namespace (<code><em>⎕SE</em></code>) will be
-added to the end of <code>⎕PATH</code>, if not already defined
+<li>Namespace <code><em>⎕SE</em>.<strong>∆FUtils</strong></code>
+contains <strong>∆F</strong> and utilities used by <strong>∆F</strong>;
+once <code>]load</code>ed, <strong>∆F</strong> <strong><em><em>should
+not</em></em></strong> be moved, as <strong>∆F</strong> always refers to
+<strong>∆FUtils</strong> in its <em>original</em> location.</li>
+<li>By default, the target namespace (<code><em>⎕SE.∆FUtils</em></code>)
+will be added to the end of <code>⎕PATH</code>, if not already defined
 there.<span class="margin-note">To create an alias to
-<code>⎕SE.∆F</code> in namespace
-<em>curdir</em>:<br>  <code>curdir.∆F←⎕SE.∆F</code></span> You may
-always choose to make an alias to <strong>⎕SE.∆F</strong> anywhere you
-want so that it is available conveniently.</li>
+<code>⎕SE.∆FUtils.∆F</code> in namespace
+<em>curdir</em>:<br>  <code>curdir.∆F←⎕SE.∆FUtils.∆F</code></span> You
+may always choose to make an alias to <strong>⎕SE.∆F</strong> anywhere
+you want so that it is available conveniently.</li>
 </ol>
 <p><big>👉</big> <small>You may now call <code>∆F</code> with the
 desired <a href="#f-call-syntax-overview">arguments</a> and <a
@@ -1760,9 +1759,9 @@ Shortcut</h2>
 denotes <span class="margin-note"><strong>£ alias:</strong>
 <code>`L</code>. £ is from the first letter of the Latin <em>lībra</em>,
 “pound”, very apt for a
-<em>libra</em>-ry.<br><br><strong>⍙FUtils</strong>: <em>See <a
+<em>libra</em>-ry.<br><br><strong>∆FUtils</strong>: <em>See <a
 href="#f-installation"><strong>∆F</strong> Installation</a>, above.</em>
-</span> a “private” <em>user</em> namespace in <strong>⍙FUtils</strong>,
+</span> a “private” <em>user</em> namespace in <strong>∆FUtils</strong>,
 where the user may place and manipulate useful objects for the duration
 of the <strong><em>current</em></strong> <em>APL</em> session. For
 example, the user may wish to: <span class="margin-note"><em>For
@@ -1832,9 +1831,9 @@ copied into a £ibrary, and to see <em>where</em> it’s copied from, use
 <em>session.</em> Since subsequent uses will use the <code>£.pco</code>
 already copied into the library, they are
 <strong><em>quiet</em></strong>.</span></p>
-<pre><code>   (verbose: 1) ∆F &#39;{ ⍸ 1 £.pco ⍳100 }&#39;    ⍝ (verbose: 1) &lt;==&gt; 0 1 
-∆F: Copied &quot;pco&quot; into £=[⎕SE.⍙FUtils.library] from &quot;ws:dfns&quot;
-{ ⎕SE.⍙FUtils.M ⌽⍬({⍸ 1 (⎕SE.⍙FUtils.library).pco ⍳100}⍵)}⍵
+<pre><code>   (verbose: 1) ∆F &#39;{ ⍸ 1 £.pco ⍳100 }&#39;    ⍝ (verbose: 1) &lt;==&gt; 0 1 </code></pre>
+<pre class="skip"><code>∆F: Copied &quot;pco&quot; into £=[⎕SE.∆FUtils.library] from &quot;ws:dfns&quot;
+{ ⎕SE.∆FUtils.M ⌽⍬({⍸ 1 (⎕SE.∆FUtils.library).pco ⍳100}⍵)}⍵
 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97</code></pre>
 <p><big>👉</big> With the default <em>verbose</em> setting,
 <code>(verbose: 0)</code>, the autoload process works the same way, but
@@ -1930,7 +1929,7 @@ since the overhead for analyzing the <em>f‑string</em> contents
 <strong><em>all</em></strong> the subsequent calls. An
 <strong>∆F</strong>-derived <em>dfn</em> can also be made standalone,
 <em>i.e.</em> independent of the runtime library,
-<strong>⍙FUtils</strong>.</p>
+<strong>∆FUtils</strong>.</p>
 <p>Let’s explore an example where getting the best performance for a
 heavily used <strong>∆F</strong> string is important.</p>
 <p>First, let’s grab <code>cmpx</code> and set the variable
@@ -2200,7 +2199,7 @@ load/create any Session Library objects for use with the £ or
 <strong><em>auto: 1</em></strong> (default),</strong></span> honors the
 default and user-defined settings for
 <code>auto</code>.<br><big>👉</big> Depends on (i) user parameter file
-<strong>./.∆F</strong> and (ii) the namespace <strong>⍙FUtils</strong>
+<strong>./.∆F</strong> and (ii) the namespace <strong>∆FUtils</strong>
 created during the <code>]load</code> process.</td>
 </tr>
 <tr>
@@ -2212,13 +2211,13 @@ created during the <code>]load</code> process.</td>
 internal support function used is included in the result. <span
 class="red"><strong>If <strong><em>dfn</em></strong> is also
 1,</strong></span> <strong><em>no</em></strong> reference to namespace
-<strong>⍙FUtils</strong> will be made during the execution of the
+<strong>∆FUtils</strong> will be made during the execution of the
 generated <em>dfn</em>. (<strong><em>Exception:</em></strong> see
 <em>Session Library Shortcuts</em> below.)<br><span
 class="red"><strong>If <strong><em>inline: 0</em></strong>
 (default),</strong></span> whenever <strong>∆F</strong> or a
 <em>dfn</em> generated by it is executed, it makes calls to library
-routines in the namespace <strong>⍙FUtils</strong>, created during the
+routines in the namespace <strong>∆FUtils</strong>, created during the
 <code>]load</code> process for
 <strong>∆F</strong>.<br><big>👉</big> This option is experimental and
 may simply disappear one day.</td>
@@ -3030,12 +3029,12 @@ option <em>returns</em> the code string, the
 code string.</p>
 <h3 data-number="6.1.2" id="future-behaviours"><span
 class="header-section-number">6.1.2</span> Future Behaviours</h3>
-<p>There are two future behaviours of APL primitives optionally
-supported by <strong>∆F</strong>, an extension to circle diaeresis (⍥)
-and the availability of right shoe underscore (⊇). Each is available if
-included in the value of <span class="margin-note">See
+<p>There are three future behaviours of APL primitives optionally
+supported by <strong>∆F</strong>: an extension to circle diaeresis (⍥),
+the right shoe underscore (⊇), and the ellipsis (…). Each is available
+if included in the value of <span class="margin-note">See
 below</span>load-time parameter, <code>FUTURES</code>. By default,
-<code>FUTURES← '⍥⊇'</code>.</p>
+<code>FUTURES← '⍥⊇…'</code>.</p>
 <h4 data-number="6.1.2.1"
 id="future-behaviour-of-circle-diaeresis-here-today"><span
 class="header-section-number">6.1.2.1</span> Future Behaviour of ⍥
@@ -3065,6 +3064,17 @@ class="margin-note">See <code>FUTURES</code> global variable in
 <code>'⍥'</code>. For more information, see
 <a id="displayText" href="javascript:linkAlert();"><span
 class="linkNote">https://aplwiki.com/wiki/From</span></a>.</p>
+<h4 data-number="6.1.2.3"
+id="future-behaviour-of-ellipsis-range-function-here-today"><span
+class="header-section-number">6.1.2.3</span> Future Behaviour of …
+(Ellipsis [“range” function]) Here Today</h4>
+<p>As a load-time option, <strong>∆F</strong> adds the “future”
+<strong>Ellipsis</strong> function, which is a “range” function similar
+to function <strong>to</strong> in the <em>dfns</em> workspace, extended
+to handle characters as well as integers (see discussion at
+https://dfns.dyalog.com/n_to.htm). E.g. <code>'a' … 'j'</code> is the
+same as ‘abcdefghij’, just as <code>1 … 10</code> is the same as `1 2 3
+4 5 6 7 8 9 10’. This is similar to Python’s range() function.</p>
 <h3 data-number="6.1.3" id="f-helps-secret-variant"><span
 class="header-section-number">6.1.3</span> ∆F Help’s Secret Variant</h3>
 <p><code>∆F⍨'help'</code> has a secret variant: <span

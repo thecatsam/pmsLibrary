@@ -7,18 +7,17 @@
 ⍝   establishes function ∆F in the dest ns.
 ⍝ THen ⍙FUtils, in turn, 
 ⍝ - loads other items needed based on the global variables passed.
-⍝ How to load:
+⍝ How to load (note: sets ⎕PATH to include the target so ∆F is found).
 ⍝     ]load ∆F [-target=⎕SE]     or     ⊢⎕SE.⎕FIX '∆F.dyalog'
 
 ∇ {ok}← Load gFi  
   ;g; PathAdd; FILE 
   ⎕IO ⎕ML← 0 1 
-  PathAdd←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
+  
   :Trap 0
     g← ⎕SE.⍙⍙FGlobals← 0 ⎕FIX FILE← gFi                      ⍝ Share globals via ⎕SE.⍙⍙FGlobals
     g.DEST_NS.⎕FIX⍠ 'FixWithErrors' 1⊣ FILE← g.SRC_FI        ⍝ Generate ⍙FUtils in destination
-    ⎕PATH,← ⎕PATH PathAdd g.DEST_NS                          ⍝ Add dest NS to ⎕PATH
-    ⎕DF (⍕g.DEST_NS),'.(∆F ⍙FUtils) [',g.VERSION,']'         ⍝ Report ∆F info via ⎕DF
+    ⎕DF (⍕g.DEST_NS),'.(∆F ∆FUtils) [',g.VERSION,']'         ⍝ Report ∆F info via ⎕DF
   :Else    
     ⎕DF '∆F ',⎕DMX.EM,': ',⎕DMX.Message,' ','"','"',⍨FILE    ⍝ Report error via ⎕DF
   :EndTrap 
