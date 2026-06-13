@@ -594,13 +594,12 @@ Or any <em>target</em> namespace you desire.</span>, enter:
 containing <code>∆F</code> and supporting services and objects.</li>
 <li>By default, the target namespace (<code><em>⎕SE.∆FUtils</em></code>)
 will be added to the end of <code>⎕PATH</code>, if not already defined
-there.<span class="margin-note">To create an alias to
-<code>⎕SE.∆FUtils.∆F</code> in namespace
-<em>curdir</em>:<br>  <code>curdir.∆F←⎕SE.∆FUtils.∆F</code></span></li>
+there.</li>
 <li><strong>∆F</strong> may be called as is, i.e. as <code>∆F</code>, or
 fully specified as <code>⎕SE.∆FUtils.∆F</code>.</li>
 <li>You may always choose to create an alias to <strong>∆F</strong> in
-your chosen namespace, e.g. via <code>∆F← ⎕SE.∆FUtils.∆F</code>.</li>
+your chosen namespace (say, <code>mydir</code>), e.g. via
+<code>mydir.∆F← ⎕SE.∆FUtils.∆F</code>.</li>
 <li>By default, the <strong><em>help</em></strong> file,
 <strong>∆F/∆FHelp.html</strong> is available at <code>]load</code> time.
 If so, it will be copied into <strong>∆FUtils</strong>. If not

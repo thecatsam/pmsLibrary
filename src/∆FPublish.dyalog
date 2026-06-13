@@ -34,7 +34,7 @@
   ⎕← version← { (0 ⎕FIX ⍵).VERSION } '∆F/∆FGlobals.dyalog'
 
 ⍝ Constants
-  timestamp←     ∊∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
+  timestamp←     ∊⎕SE.∆FUtils.∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
   title←         '∆F F-string Utility for Dyalog APL (v.',version,')'
 
 ⍝ Setup Parm (parameter check) and generate quiet option.
