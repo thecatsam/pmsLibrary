@@ -4,14 +4,15 @@
 ⍝ Env for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
   ⎕IO ⎕ML ⎕PP← 0 1 34     
 ⍝ Loader ∆F.dyalog shares global variables via transient namespace ⎕SE.⍙⍙FGlobals.
-⍝ Add them to this namespace... 
-  ⎕THIS ⎕NS ⎕SE.⍙⍙FGlobals 
-⍝ Note the names of all these xferred "globals"
+⍝ Note the names of all the globals
   GLOBALS← ⎕SE.⍙⍙FGlobals.⎕NL ¯2 ¯9       
+⍝ Merge the globals into this namespace... 
+  ⎕THIS ⎕NS ⎕SE.⍙⍙FGlobals 
+
 ⍝ Set char. rendering of ⎕THIS, so we can set ⎕THIS.⎕DF to something arbitrary.
   ∆THIS← ⍕⎕THIS                
 
-   :Section      ∆F SOURCE
+   :Section   ∆F SOURCE
 ⍝ =======================================================================
 ⍝ ∆F USER FUNCTION SOURCE 
 ⍝     ∆F_Source ==> ##.∆F (Actual name and destination set at ⍙Export_∆F)
@@ -512,7 +513,7 @@
     in←   srcNm '__UP__\.' '__THIS__'  '\b(args|opts(_ns)?|result)\b'
     out← targNm    up        ∆THIS     '⍙F_\1'
   ⍝ Util fns...
-    XR←       62∘⎕ATX                                   ⍝ XR that keeps source spacing
+    XR←       62∘⎕ATX                                   ⍝ XR: ⎕CR that keeps source spacing
     Xlate← in ⎕R out ⍠ 'UCP' 1  
     NoEL←     { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
     Fix←      destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
@@ -535,7 +536,7 @@
   ⍝ Box
     B← {
       ⎕ML←1 ⋄ d←|≡⍵ ⋄ ⍺←0
-      ⍺⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵
+      ⍺ ⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵
     }  
   ⍝ Commas - Inserts a separator s (default ",") every n (default 5) digits in
   ⍝          the integer part of each right argument string.
@@ -756,7 +757,7 @@
   ⍙ShowGlobalsIf←{  
     ~⍵: _←1 0⍴0  
       vv← { 9= ⎕NC '⍵': ⊂⍕⍵ ⋄ 1∘⎕SE.Dyalog.Array.Serialise ⍵}¨ ⎕VGET gg← ⊂∘⍋⍛⌷⍨GLOBALS   
-    1: _← ↑  '(', ')',⍨ vv {'  ',⍵ , ⍺}¨ (1+⌈/≢¨ gg)↑¨gg,¨ ':'  
+    1: _← ↑'(', ')',⍨ vv {∊'  ',⍵ , ' ', ⍺}¨ (1+⌈/≢¨ gg)↑¨gg,¨ ':'  
   }
 ⍝ ====================================================================================
 ⍝ Execute the FIX-TIME Routines
@@ -781,6 +782,5 @@
   Initialise 
 :EndSection FIX_TIME_ROUTINES 
 ⍝ === END OF CODE ================================================================================
-:EndNamespace 
-
 ⍝ (C) 2025 Sam the Cat Foundation
+:EndNamespace 

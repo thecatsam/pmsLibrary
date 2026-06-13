@@ -338,7 +338,7 @@ pgmDep,← ((PrivF cd)(PubF cd))((PrivF el)(PubF el))((PrivF globFi)(PubF globFi
     Hr
     anyUpdts∨←1
     _←¯1 Say'Updating ∆F utility ',Tp PubF pgm
-    _←¯1 Say'Updating ∆F loader  ',Tp PubF loader
+    _←¯1 Say'Updating ∆F loader  ',Tp Pub loader
     UpdatePgm PrivF pgm 
     UpdatePgm PrivF libra 
     UpdatePgm Priv loader 

@@ -1,27 +1,29 @@
-:Namespace                           ⍝ An unnamed ns 
-⍝ ∆F Utility and Library Loader...   
-⍝ [*] Dyalog ≥20 Version!
-⍝ Note: This is an UNNAMED namespace, so its name won't clutter the target namespace, 
-⍝ while it loads (ns) ⍙FUtils and (fn) ∆F via, e.g.,
-⍝    ]load ∆F [-target=⎕SE]     or     ⊢⎕SE.⎕FIX '∆F.dyalog'
-⍝ ⍙FUtils in turn loads other items...
+:Namespace                            
+⍝ ∆F Utility and Library Loader (Dyalog ≥20 Version!)
+⍝ Note: This is an UNNAMED namespace, so its name won't clutter the destination namespace, 
+⍝ Run Load <fi>
+⍝ - fi: a file with global variables, converting to a namespace, and then
+⍝ - loads file g.SRC_FI (typically ∆FUtils.dyalog) as ⍙FUtils in dest ns, and  
+⍝   establishes function ∆F in the dest ns.
+⍝ THen ⍙FUtils, in turn, 
+⍝ - loads other items needed based on the global variables passed.
+⍝ How to load:
+⍝     ]load ∆F [-target=⎕SE]     or     ⊢⎕SE.⎕FIX '∆F.dyalog'
 
-∇ {message}← Load GLOBAL_FI  ;g; FILE 
-  ⎕IO ⎕ML← 0 1 ⋄ FILE← ''
+∇ {ok}← Load gFi  
+  ;g; PathAdd; FILE 
+  ⎕IO ⎕ML← 0 1 
   PathAdd←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
-  Fi← { FILE⊢← ⍵ }
-
   :Trap 0
-    ⎕SE.⍙⍙FGlobals← g← 0 ⎕FIX Fi GLOBAL_FI         ⍝ Make globals <g> visible to <src> 
-    g.DEST_NS.⎕FIX⍠ 'FixWithErrors' 1⊣ Fi g.SRC_FI 
-    ⎕PATH,← ⎕PATH PathAdd g.DEST_NS
-    message← ⎕DF (⍕g.DEST_NS),'.∆F [',g.VERSION,'] Standard Version'
-  :Else 
-    message← ⎕DF '∆F ',⎕DMX.EM,': ',⎕DMX.Message,' ','"','"',⍨FILE  
+    g← ⎕SE.⍙⍙FGlobals← 0 ⎕FIX FILE← gFi                      ⍝ Share globals via ⎕SE.⍙⍙FGlobals
+    g.DEST_NS.⎕FIX⍠ 'FixWithErrors' 1⊣ FILE← g.SRC_FI        ⍝ Generate ⍙FUtils in destination
+    ⎕PATH,← ⎕PATH PathAdd g.DEST_NS                          ⍝ Add dest NS to ⎕PATH
+    ⎕DF (⍕g.DEST_NS),'.(∆F ⍙FUtils) [',g.VERSION,']'         ⍝ Report ∆F info via ⎕DF
+  :Else    
+    ⎕DF '∆F ',⎕DMX.EM,': ',⎕DMX.Message,' ','"','"',⍨FILE    ⍝ Report error via ⎕DF
   :EndTrap 
-  ⎕EX '⎕SE.⍙⍙FGlobals' 
+  ok← ⎕EX '⎕SE.⍙⍙FGlobals'                                   ⍝ Remove ⎕SE.⍙⍙FGlobals even on failure.
 ∇
-
   Load '∆F/∆FGlobals.dyalog'    
             
 :EndNamespace ⍝ Unnamed

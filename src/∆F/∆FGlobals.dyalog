@@ -14,7 +14,7 @@
   DEST_NS←         ⎕THIS.##.##                         ⍝ Typically, ⎕SE 
   ADD_∆F_TO_PATH← 1                                    ⍝ If 1, adds ∆F to Dyalog ⎕PATH.
  
-  VERSION← 'v.0.2.2'          ⍝ Set/updated by ∆F_Publish.dyalog...
+  VERSION← 'v.0.3.1'          ⍝ Set/updated by ∆F_Publish.dyalog...
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F utility.
   TRAP_ERRORS← 1            
 ⍝
