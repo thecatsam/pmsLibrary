@@ -10,12 +10,12 @@
 ⍝ SIGNAL_LIB_ERRS TRAP_ERRORS  VERBOSE_LOADTIME VERBOSE_RUNTIME VERSION 
 ⍝ 
  
-  SRC_FI←         '∆F/∆FUtils.dyalog'                 ⍝ Typically, namespace ∆FUtils as well
+  SRC_FI←         '∆F/∆FUtils.dyalog'                 ⍝ Typically, >> namespace ∆FUtils as well
   DEST_NS←         ⎕SE                                ⍝ Typically ∆FUtils is put in ⎕SE 
-  PROMOTE_FN←      0                                  ⍝ If 1, put FN in ⎕SE, not ⎕SE.∆FUtils
-  ADD_∆F_TO_PATH←  1                                  ⍝ If 1, adds ∆F to Dyalog ⎕PATH.
- 
+  PROMOTE_∆F←      0                                  ⍝ If 1, put ∆F itself in ⎕SE, not ⎕SE.∆FUtils
+  ADD_∆F_TO_PATH←  1                                  ⍝ If 1, adds ∆FUtils to Dyalog ⎕PATH.
   VERSION← 'v.0.4.1'                                  ⍝ Set/updated by ∆F_Publish.dyalog...
+
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F utility.
   TRAP_ERRORS← 1            
 ⍝
@@ -39,7 +39,7 @@
 ⍝        report library (£) autoload errors ONLY as informational messages.  
 ⍝        |     (verbose:1)∆F'{0: £.pcox 12 ⋄ 3}'
 ⍝        |  ∆F DOMAIN ERROR: Object "pcox" not found on search path
-⍝        | { ⎕SE.⍙FUtils.M ⌽⍬({0: (⎕SE.⍙FUtils.userLibrary).pcox 12 ⋄ 3}⍵)}⍵
+⍝        | { ⎕SE.∆FUtils.M ⌽⍬({0: (⎕SE.∆FUtils.userLibrary).pcox 12 ⋄ 3}⍵)}⍵
 ⍝        |  3                                  ⍝ <== function string executed normally!
 ⍝   1b.  If (verbose: 0) and (VERBOSE_RUNTIME=0) 
 ⍝        no informational messages are generated.
@@ -70,14 +70,14 @@
 ⍝ If 1, by default,
 ⍝     puts full definitions of internal utilities (shortcuts etc.) into the result.
 ⍝ If 0, by default,
-⍝     refers to local copies of internal utilities in the result.
+⍝     refers to local copies of internal utilities in ∆FUtils in the result.
 ⍝ May be overridden by (inline: ⍵), where ⍵ is either 1 or 0.
 ⍝ There are occasions where INLINE_UTILS mode results in marginally faster code, but
 ⍝ in general with (verbose: 1), the code is very long and rather unreadable.
   INLINE_UTILS← 0 
 
 ⍝ HELP FILE          
-⍝ File is loaded into ⍙FUtils at load-time for use by ∆F⍨'help'. 
+⍝ File is loaded into ∆FUtils at load-time for use by ∆F⍨'help'. 
   HELP_HTML_FI← '∆F/∆FHelp.html'                       
 
 ⍝ FUTURES

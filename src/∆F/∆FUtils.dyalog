@@ -3,20 +3,11 @@
 :Section CORE  
 ⍝ Env for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
   ⎕IO ⎕ML ⎕PP← 0 1 34     
-⍝ Loader ∆F.dyalog shares global variables via transient namespace ⎕SE.⍙⍙FGlobals.
+⍝ Loader ∆F.dyalog shares global variables via transient namespace ⎕SE.∆FGlobals⍙Temp.
 ⍝ Note the names of all the globals
-  GLOBALS← ⎕SE.⍙⍙FGlobals.⎕NL ¯2 ¯9  
-
+  GLOBALS← ⎕SE.∆FGlobals⍙Temp.⎕NL ¯2 ¯9  
 ⍝ Merge the globals into this namespace... 
-  ⎕THIS ⎕NS ⎕SE.⍙⍙FGlobals 
-
-⍝ Conditionally augment ⎕PATH
-  PathAdd←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
-  ⎕←FN_NS← ⎕THIS DEST_NS ⊃⍨ PROMOTE_FN  
-  ⎕PATH,← ⎕PATH PathAdd FN_NS            ⍝ Add dest NS to ⎕PATH
-
-  0 ⎕EXPORT ⎕NL ¯2 ¯3
-  1 ⎕EXPORT '∆F'
+  ⎕THIS ⎕NS ⎕SE.∆FGlobals⍙Temp 
 
 ⍝ Set char. rendering of ⎕THIS, so we can set ⎕THIS.⎕DF to something arbitrary.
   ∆THIS← ⍕⎕THIS                
@@ -30,9 +21,13 @@
 ⍝    result← {opts←⍬|()} ∇ f-string [args]
 ⍝ See notes elsewhere on ∆F itself.
 ⍝ 
-⍝ NB. Modify header names and "macro" constants __THIS__  and __UP__ 
-⍝ ∘ We need __UP__  (typically ⎕THIS) to handle the fact that header variable names that are 
-⍝   namespaces aren't automatically made visible INSIDE :With blocks (per Dyalog doc).
+⍝ Note ⍙EXPORT_∆F (q.v.) will modify header names and "macro" constants __THIS__  and __UP__ 
+⍝ If PROMOTE_∆F
+⍝        1        __THIS__← ⎕THIS     __UP__← ⎕THIS.##
+⍝        0        __THIS__← ⎕THIS     __UP__← ⎕THIS 
+⍝ ∘ Note: header variable names that are namespaces aren't automatically made visible 
+⍝   INSIDE :With blocks (per Dyalog doc).
+
   ∇ result← {opts} ∆F args  
     :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
@@ -130,7 +125,7 @@
      (c= rb)∧ ûsr.brC≤ 1: (CFDfn pfx) w                ⍝ Closing brace? Opt'lly Trim (CFDTrimR pfx) ==> and RETURN!!!
       c∊ lb_rb: (pfx, c) ∇ w⊣ ûsr.brC+← -/c= lb_rb     ⍝ Inc/dec ûsr.brC as appropriate
       c∊ qtsL:  (pfx, a) ∇ w⊣ a w← ûsr CFQS c w        ⍝ Process quoted string.
-      c= dol:   (pfx, scF) ∇ w                    ⍝ $ => ⎕FMT 
+      c= dol:   (pfx, scF) ∇ w                         ⍝ $ => ⎕FMT 
       c= esc:   (pfx, a) ∇ w⊣ a w← ûsr CFEsc w         ⍝ `⍵, `⋄, `A, `B, etc.
       c= omUs:  (pfx, a) ∇ w⊣ a w← ûsr CFOm w          ⍝ ⍹, alias to `⍵ (see CFEsc).
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
@@ -518,7 +513,7 @@
     targNm destNs lockFn← args ⎕VGET  ('targNm' '∆F') ('destNs' ##) ('lockFn' 0) 
   ⍝ vars...
     up← '##.' ''⊃⍨ destNs=⎕THIS
-    in←   srcNm               '__UP__\.' '__THIS__'  '\b(args|opts(_ns)?|result)\b'
+    in←   srcNm  '__UP__\.' '__THIS__'  '\b(args|opts(_ns)?|result)\b'
     out←  targNm    up        ∆THIS     '⍙F_\1'
   ⍝ Util fns...
     XR←       62∘⎕ATX                                   ⍝ XR: ⎕CR that keeps source spacing
@@ -533,6 +528,8 @@
     :Else 
       11 ⎕SIGNAL⍨'❌❌❌ There was an error applying ⍙Export_∆F. Could not create "',(⍕destNs),'.',targNm  
     :EndIf 
+    0 ⎕EXPORT ⎕NL -3 4
+    1 ⎕EXPORT ⊂'∆F'
   ∇
 
 :Section Shortcut functions `A, `B, `C, etc.
@@ -770,13 +767,20 @@
 ⍝ ====================================================================================
 ⍝ Execute the FIX-TIME Routines
 ⍝ ====================================================================================
-  ∇ ok← Initialise 
+  ∇ ok← Initialise  ; fn_ns 
     :Trap ok← 0   
         :If APL_VERSION < 20
             ⎕←↑1⍴⊂'❌❌❌ This version of ∆F requires Dyalog 20 or later'
             ⎕SIGNAL 911 
-        :EndIf     
-        ⍙Export_∆F (targNm: '∆F'  ⋄ destNs: FN_NS ⋄ lockFn: 0)   
+        :EndIf   
+        fn_ns← ⎕THIS ⎕THIS.## ⊃⍨ PROMOTE_∆F  
+      ⍝ Conditionally augment ⎕PATH
+        :IF ADD_∆F_TO_PATH
+            PathAdd←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
+            ⎕PATH,← ⎕PATH PathAdd fn_ns          ⍝ Add dest NS to ⎕PATH
+        :ENDIf 
+  
+        ⍙Export_∆F (targNm: '∆F'  ⋄ destNs: fn_ns ⋄ lockFn: 0)   
       ⍝ Sets sc: namespace with global shortcut table and related
         sc← ⍙Load_Shortcut_Calls
         ⍙Load_Help HELP_HTML_FI

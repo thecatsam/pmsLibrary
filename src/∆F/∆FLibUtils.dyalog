@@ -9,24 +9,24 @@
 ⍝    (services used when an £ or `L is seen in the user's code field), and
 ⍝ b. LoadTime routines 
 ⍝    (setting up the active library services). 
-⍝ ∘ See ⍙FUtils for fn ⍙Load_LibAuto, which loads this library.
+⍝ ∘ See ∆FUtils for fn ⍙Load_LibAuto, which loads this library.
 ⍝ ∘ See "Executive" at bottom of file, which calls
 ⍝   - LibComplete 
 ⍝   - LoadParms  
 ⍝ ∘ Local and External variables pointing to the "user" library userLibrary.
-⍝   - ûLib  -  the namespace ref itself, by default ⍙FUtils.userLibrary (##.userLibrary)
+⍝   - ûLib  -  the namespace ref itself, by default ∆FUtils.userLibrary (##.userLibrary)
 ⍝   - ûLibNm-  the name of ûLib
 
   :Section  Runtime Routines 
 ⍝ ===================================================================================
-⍝ RUNTIME ROUTINES: LibAuto (called in the code scanner)
+⍝ RUNTIME ROUTINES: LibAuto (called in ScanCF and CFEsc in ∆FUtils)
 ⍝ ===================================================================================
 ⍝ LibAuto: libStr← ûsr ∇ str 
 ⍝    str: str starts 1 char after '£' or '`L'. 
 ⍝    ûsr: namespace with (r/w:) ûsr.acache; (r/o:) êauto; (read in LoadObj:) êverbose 
 ⍝ Returns: ûLibNmP, the library name surrounded by parens, no matter what.
 ⍝ ∘ Used by ∆F's scan process when it sees £ or `L. 
-⍝   ∘ Called from the main scan routines CF_SF and CF_Esc. 
+⍝   ∘ Called from the main scan routines CF_SF and CFEsc. 
 ⍝   ∘ In turn calls fn LoadObj when a library name, nm, is being referenced 
 ⍝     (not set) for the first time.
 ⍝ Task:

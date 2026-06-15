@@ -269,7 +269,7 @@ For n=┌─┐, n×Pi=┌───────┐
 ``` 
    anim←(cat: 1 ◇ dog: 2 ◇ mouse: 3)
    ∆F '{`⍵1 `S anim ↓} { `⍵2 `S anim↓}' 1 0    
-  `⍵1 `S anim ↓        `⍵1 `S anim↓ 
+  `⍵1 `S anim ↓        `⍵2 `S anim↓ 
 (cat:1◇dog:2◇mouse:3◇)  (        
                          cat:1   
                          dog:2   
