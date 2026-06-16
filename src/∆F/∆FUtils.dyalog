@@ -3,12 +3,11 @@
 :Section CORE  
 ⍝ Env for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
   ⎕IO ⎕ML ⎕PP← 0 1 34     
-⍝ Loader ∆F.dyalog shares global variables via transient namespace ⎕SE.∆FGlobals⍙Temp.
-⍝ Note the names of all the globals
-  GLOBALS← ⎕SE.∆FGlobals⍙Temp.⎕NL ¯2 ¯9  
-⍝ Merge the globals into this namespace... 
-  ⎕THIS ⎕NS ⎕SE.∆FGlobals⍙Temp 
-
+⍝ Loader ∆F.dyalog shares global variables via transient namespace ⎕SE.∆F⍙Glob.
+⍝ [1] Save the names of all the globals for later use, before merging into this ns.
+  GLOBALS← ⎕SE.∆F⍙Glob.⎕NL ¯2 ¯9  
+⍝ [2] Merge the globals into this ns.
+  ⎕THIS ⎕NS ⎕SE.∆F⍙Glob 
 ⍝ Set char. rendering of ⎕THIS, so we can set ⎕THIS.⎕DF to something arbitrary.
   ∆THIS← ⍕⎕THIS                
 
@@ -29,7 +28,7 @@
 ⍝   INSIDE :With blocks (per Dyalog doc).
 
   ∇ result← {opts} ∆F args  
-    :With __THIS__   
+    ⍝::ED :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
       ⍝ Phase I: Set options and normalise args! 
       ⍝          User option styles? kw=keyword-style, pos'l=positional-style        
@@ -62,7 +61,7 @@
     :Else 
         ⎕SIGNAL ⊂⎕DMX.('EM' 'EN' 'Message' ,⍥⊂¨('∆F ',EM) EN Message) 
     :EndTrap 
-  :EndWith 
+  ⍝::ED :EndWith 
   ⍝! (C) Copyright 2025, 2026 Sam the Cat Foundation
   ∇
    :EndSection   ∆F SOURCE
@@ -425,8 +424,8 @@
   ⍝        Returns display of default and user pârms (as mx) in alph order.
     2≠ ⎕NC 'val': ⎕SIGNAL êOpt  
   ⍝ LoadParms (isVerbose isCompact isRuntime)   
-    'parms-c'≡ 7↑val: _← libUtils.LoadParms '-v -c -r'
-    'parms'  ≡   val: _← libUtils.LoadParms '-v    -r'
+    'parms-c'≡ 7↑val: _← libUtils.LoadParms  (verbose: 1 ⋄ compact: 1 ⋄ runtime: 1)
+    'parms'  ≡   val: _← libUtils.LoadParms  (verbose: 1 ⋄ runtime: 1) 
     'path'   ≡   val: _← libUtils.ShowPath ⍬ 
     'globals'≡   val: _← ⍙ShowGlobalsIf 1                 ⍝ list all "globals"
   ⍝ Undocumented: 'get' 'set'. Use at own risk.
@@ -511,13 +510,18 @@
   ⍝ parms...
     srcNm← '∆F' 
     targNm destNs lockFn← args ⎕VGET  ('targNm' '∆F') ('destNs' ##) ('lockFn' 0) 
-  ⍝ vars...
-    up← '##.' ''⊃⍨ destNs=⎕THIS
-    in←   srcNm  '__UP__\.' '__THIS__'  '\b(args|opts(_ns)?|result)\b'
-    out←  targNm    up        ∆THIS     '⍙F_\1'
-  ⍝ Util fns...
+    in←   srcNm  '__THIS__' 
+    out←  targNm   ∆THIS    
+    :IF destNs≠⎕THIS 
+        in,←  '⍝::ED ' '__UP__\.'  '\b(args|opts|result)\b'  ⍝ scramble ∆F args, opts, result 
+        out,← ''       '##.'       '⍙F_\1'
+    :Else 
+        in,← '⍝::ED.*' '__UP__\.' 
+        out,← ''       ''
+    :EndIf 
+   ⍝ Util fns...
     XR←       62∘⎕ATX                                   ⍝ XR: ⎕CR that keeps source spacing
-    Xlate← in ⎕R out ⍠ 'UCP' 1  
+    Xlate←    in ⎕R out ⍠ 'UCP' 1  
     NoEL←     { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
     Fix←      destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
     QLock←    destNs.⎕LOCK⍣lockFn
@@ -744,11 +748,11 @@
         :Return 
     :EndIf 
     :TRAP 22 
-        :If keepCm 
-           ⎕FIX 'file://',libFi
-        :Else 
-           ⎕FIX⍠ 'FixWithErrors' 0⊣{ ⍵/⍨ 0≠≢¨⍵ } '''[^'']*''' '\h*⍝(?!\!).*$' ⎕R '&' ''⊢ ⊃⎕NGET libFi 1 
-        :EndIf 
+        src← keepCm { 
+          ⍺: ⍵ 
+          t/⍨ 0≠≢¨t← '''[^'']*''' '\h*⍝(?!\!).*$' '^\h*$' ⎕R '&' '' ''⊢ ⊃⎕NGET ⍵ 1
+        }libFi  
+        ⎕FIX⍠ 'FixWithErrors' 0⊣ src 
         :If VERBOSE_LOADTIME 
             ⎕←'✅✅✅ Loaded services for Library shortcut (£)',how  
         :EndIf 
@@ -775,11 +779,10 @@
         :EndIf   
         fn_ns← ⎕THIS ⎕THIS.## ⊃⍨ PROMOTE_∆F  
       ⍝ Conditionally augment ⎕PATH
-        :IF ADD_∆F_TO_PATH
-            PathAdd←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
-            ⎕PATH,← ⎕PATH PathAdd fn_ns          ⍝ Add dest NS to ⎕PATH
+        :IF ADD_∆F_TO_PATH ⋄ ⎕SHADOW 'Add2Path'
+            Add2Path←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
+            ⎕PATH,← ⎕PATH Add2Path fn_ns          ⍝ Add dest NS to ⎕PATH
         :ENDIf 
-  
         ⍙Export_∆F (targNm: '∆F'  ⋄ destNs: fn_ns ⋄ lockFn: 0)   
       ⍝ Sets sc: namespace with global shortcut table and related
         sc← ⍙Load_Shortcut_Calls

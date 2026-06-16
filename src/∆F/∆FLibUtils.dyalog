@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-06-13') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-06-16') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading.
@@ -16,6 +16,7 @@
 ⍝ ∘ Local and External variables pointing to the "user" library userLibrary.
 ⍝   - ûLib  -  the namespace ref itself, by default ∆FUtils.userLibrary (##.userLibrary)
 ⍝   - ûLibNm-  the name of ûLib
+⍝   - ûLibNmP- '(', ûLibNm, ')'
 
   :Section  Runtime Routines 
 ⍝ ===================================================================================
@@ -244,7 +245,7 @@
 
 ⍝ LoadParms: Load default and user pârms for Library processing. (A .∆F LOAD TIME utility)
 ⍝   rc← ∇ opts
-⍝   opts: '[-v] [-c] [-r]'
+⍝   opts:  (isV: 0 ⋄ isC: 0 ⋄ isR: 0)
 ⍝ ∘ If called more than once, we reload everything so that any user pârms loaded
 ⍝   reflect changes to the initial, built-in state.
 ⍝     Load default pârms? If LIB_ACTIVE≥1
@@ -266,16 +267,16 @@
 ⍝   GenFullPath
 ⍝   LoadErr 
 ⍝   _CShow 
-  ∇ {rc}← LoadParms opts   
+  ∇ {rc}← LoadParms optsNs  
     ; isV; isC; isR 
-    isV isC isR← (1∊⍷∘opts)¨ '-v' '-c' '-r'  
+    isV isC isR← optsNs ⎕VGET ('verbose' 0)('compact' 0)('runtime' 0)
     rc← 1 0⍴⍬ 
     SetBaseParms ⍬
     :If ##.LIB_ACTIVE≥ 1 
         LoadDefaultParms ##.LIB_PARM_FI 
         :If ##.LIB_ACTIVE= 2
         :AndIf rc← pârms.⍙readParms[0]                 ⍝ Did we read the defaults? If so, continue...
-          isR LoadUserParms  ##.LIB_USER_FI        
+          isR LoadUserParms ##.LIB_USER_FI        
         :EndIf
       ⍝ If pârms.⍙fullPath is empty, then turn auto off, since there's nowhere to search..
         :If ~0∊ ≢¨pârms.(prefix path)
@@ -384,6 +385,6 @@
 ⍝ =========================================================================
 ⍝ EXECUTIVE
   LibComplete ##.userLibrary
-  LoadParms  ''
+  LoadParms  ()                    
 :EndSection Loadtime Routines
 :EndNamespace   ⍝ libUtils

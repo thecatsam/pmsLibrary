@@ -60,15 +60,17 @@
   ⍝ ∘  By default, unknown filetypes are not enabled; if they are enabled, they work the same as '.dyalog'.
   ⍝ ∘  If you wish, place the most likely suffixes first.
   ⍝ Meanings of suffixes:
-  ⍝ .aplf- fn, .apla- array, .aplo- operator, apln- namespace
-  ⍝ .json- json5 obj, .txt- a matrix or vector of vectors, .dyalog- fn, op, namespace
-  ⍝ .txt- char vec (w/cr), .aplv- char vec (w/cr), .aplvv- char vec of vectors, .aplm- char matrix, 
+  ⍝ .aplf:  fn,                   .apla:   array, 
+  ⍝ .aplo:  op,                   .apln:   ns
+  ⍝ .json:  json5 obj,            .dyalog: fn, op, ns
+  ⍝ .txt:   char vec (w/cr),      .aplv:   char vec (w/cr), 
+  ⍝ .aplvv: char vec of vectors,  .aplm:   char matrix, 
     suffix: (
       '.aplf' ⋄ '.apla'  ⋄ '.aplo' ⋄ '.apln' ⋄ '.json' ⋄  '.dyalog' ⋄ '.txt' ⋄ 
       '.aplv' ⋄ '.aplvv' ⋄ '.aplm' 
     )    
                   
-  ⍝  Internal Runtime (hidden) Parameters. Do not modify or delete.                                               
-    ⍙readParms:  0 0                    ⍝ Have we read ([0] default parms, [1] user .∆F parms)
-    ⍙fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
+  ⍝  Internal Runtime (hidden) Parameters. Generated for ∆FLibUtils use only.                                
+  ⍝  ⍙readParms:  0 0                    ⍝ Have we read ([0] default parms, [1] user .∆F parms)
+  ⍝  ⍙fullPath:   ⍬                      ⍝ ⍬ Zilde: Generated from path and prefixes.
 )  

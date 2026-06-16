@@ -10,8 +10,7 @@
 ⍝ SIGNAL_LIB_ERRS TRAP_ERRORS  VERBOSE_LOADTIME VERBOSE_RUNTIME VERSION 
 ⍝ 
  
-  SRC_FI←         '∆F/∆FUtils.dyalog'                 ⍝ Typically, >> namespace ∆FUtils as well
-  DEST_NS←         ⎕SE                                ⍝ Typically ∆FUtils is put in ⎕SE 
+  SRC_FI←         '∆F/∆FUtils.dyalog'                 ⍝ Typically, rendered as namespace ∆FUtils as well
   PROMOTE_∆F←      0                                  ⍝ If 1, put ∆F itself in ⎕SE, not ⎕SE.∆FUtils
   ADD_∆F_TO_PATH←  1                                  ⍝ If 1, adds ∆FUtils to Dyalog ⎕PATH.
   VERSION← 'v.0.4.1'                                  ⍝ Set/updated by ∆F_Publish.dyalog...
@@ -121,7 +120,7 @@
   OPTS_DEFns← ()⎕VSET OPTS_KW OPTS_DEFval
 
 ⍝ KEEP_SRC_CM: Are source comments maintained in runtime namespace ∆FUtils?
-  KEEP_SRC_CM← 1 
+  KEEP_SRC_CM← 0 
 
 ⍝ Returns 20 if Dyalog 20, 19 if 19. (This version requires Dyalog 20 or later)
   APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion' 
