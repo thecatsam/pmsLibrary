@@ -2,18 +2,23 @@
 ⍝ ∆FGlobals.dyalog => nameless namespace  
 ⍝ =======================================================================
 ⍝ GENERAL GLOBAL VARIABLES:  
-⍝ Exported to ∆FUtils via temp ns ⎕SE.⍙FGlobals.
+⍝ These are treated as "installation-level" variables, not user-level variables.
+⍝ Exported via ∆F.dyalog "loader" to ∆FUtils via temp ns ⎕SE.∆F⍙Share.  
+⍝ See ∆F.dyalog for details.
 ⍝ ============   
-⍝ DEST_NS         ESCAPE_CHAR  FUTURES          HELP_HTML_FI    INLINE_UTILS                                                               
-⍝ KEEP_SRC_CM     LIB_ACTIVE   LIB_PARM_FI      LIB_SRC_FI      LIB_USER_FI
-⍝ LIB_SRC_FI      OPTS_DEFval  OPTS_KW          OPTS_N          QUOTES_SUPPLEMENTAL
-⍝ SIGNAL_LIB_ERRS TRAP_ERRORS  VERBOSE_LOADTIME VERBOSE_RUNTIME VERSION 
-⍝ 
+⍝ ADD_∆F_TO_PATH  APL_VERSION   ESCAPE_CHAR FUTURES
+⍝ HELP_HTML_FI    INLINE_UTILS  KEEP_SRC_CM  
+⍝ lIB_ACTIVE      LIB_PARM_FI   LIB_SRC_FI  LIB_USER_FI
+⍝ OPTS_DEFns      OPTS_DEFval   OPTS_KW     OPTS_N
+⍝ PROMOTE_∆F      QS_FR1        QUOTES_SUPPLEMENTAL  
+⍝ SIGNAL_LIB_ERRS SRC_FI        TRAP_ERRORS VERBOSE_LOADTIME  
+⍝ VERBOSE_RUNTIME VERSION 
+    
  
   SRC_FI←         '∆F/∆FUtils.dyalog'                 ⍝ Typically, rendered as namespace ∆FUtils as well
   PROMOTE_∆F←      0                                  ⍝ If 1, put ∆F itself in ⎕SE, not ⎕SE.∆FUtils
   ADD_∆F_TO_PATH←  1                                  ⍝ If 1, adds ∆FUtils to Dyalog ⎕PATH.
-  VERSION← 'v.0.4.1'                                  ⍝ Set/updated by ∆F_Publish.dyalog...
+  VERSION← 'v.0.4.2'                                  ⍝ Set/updated by ∆F_Publish.dyalog...
 
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F utility.
   TRAP_ERRORS← 1            
@@ -44,7 +49,7 @@
 ⍝        no informational messages are generated.
 ⍝   2.   If the ∆F code containing any missing object is executed,
 ⍝        APL will signal the expected APL error (typically as a VALUE ERROR) 
-⍝        |      (verbose:0)∆F'{0: £.pcox 12 ⋄ 3}'
+⍝        |      (verbose:0)∆F'{0:: £.pcox 12 ⋄ 3}'
 ⍝        |  3
   SIGNAL_LIB_ERRS← 0 
  
@@ -115,11 +120,9 @@
   OPTS_N←       ≢OPTS_DEFval 
 
 ⍝ OPTS_DEFns: The defaults in namespace form. Treat as a read-only object.
-⍝    i.e. OPTS_DEFns← ()⎕VSET OPTS_KW OPTS_DEFval    ⍝ (Dyalog 20 or later)  
-⍝ Was: OPTS_DEFns←  (⎕NS⍬) {⍺⊣ ⍺.{⍎⍺,'←⊃⍵'}⍤1 0/⍵} OPTS_KW OPTS_DEFval
   OPTS_DEFns← ()⎕VSET OPTS_KW OPTS_DEFval
 
-⍝ KEEP_SRC_CM: Are source comments maintained in runtime namespace ∆FUtils?
+⍝ KEEP_SRC_CM: Are source comments maintained in runtime ns's ∆FUtils and ∆FUtils.libUtils?
   KEEP_SRC_CM← 0 
 
 ⍝ Returns 20 if Dyalog 20, 19 if 19. (This version requires Dyalog 20 or later)

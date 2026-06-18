@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>∆F Formatted String Literals (v.0.4.1)</title>
+  <title>∆F Formatted String Literals (v.0.4.2)</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -507,7 +507,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">∆F Formatted String Literals (v.0.4.1)</h1>
+<h1 class="title">∆F Formatted String Literals (v.0.4.2)</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 
@@ -593,8 +593,8 @@ Or any <em>target</em> namespace you desire.</span>, enter:
 (<code>⎕SE</code>) will contain the namespace <code>∆FUtils</code>,
 containing <code>∆F</code> and supporting services and objects.</li>
 <li>By default, the target namespace (<code><em>⎕SE.∆FUtils</em></code>)
-will be added to the end of <code>⎕PATH</code>, if not already defined
-there.</li>
+will be prepended to the <strong><em>beginning</em></strong> of
+<code>⎕PATH</code>.</li>
 <li><strong>∆F</strong> may be called as is, i.e. as <code>∆F</code>, or
 fully specified as <code>⎕SE.∆FUtils.∆F</code>.</li>
 <li>You may always choose to create an alias to <strong>∆F</strong> in
@@ -3067,8 +3067,10 @@ class="header-section-number">6.1.2.3</span> Future Behaviour of …
 (Ellipsis [“range” function]) Here Today</h4>
 <p>As a load-time option, <strong>∆F</strong> adds the “future”
 <strong>Ellipsis</strong> function, which is a “range” function similar
-to function <strong>to</strong> in the <em>dfns</em> workspace, extended
-to handle characters as well as integers (see discussion at
+<span class="margin-note">See <strong>abrudz</strong>
+dyalog-apl-extended on Github [retrieved 2026-02-13].</span> to function
+<strong>to</strong> in the <em>dfns</em> workspace, extended to handle
+characters as well as integers (see discussion at
 https://dfns.dyalog.com/n_to.htm). E.g. <code>'a' … 'j'</code> is the
 same as ‘abcdefghij’, just as <code>1 … 10</code> is the same as `1 2 3
 4 5 6 7 8 9 10’. This is similar to Python’s range() function.</p>

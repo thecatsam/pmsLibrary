@@ -1,5 +1,5 @@
 ---
-title: "∆F Formatted String Literals (v.0.4.1)"
+title: "∆F Formatted String Literals (v.0.4.2)"
 toc: true
 ---
 
@@ -68,7 +68,7 @@ _dfns_ and other familiar tools.
 1. Confirm that your current directory remains as before.
 2. From your Dyalog session<∆N>*Or,*&emsp;`⎕SE.⎕FIX'∆F.Dyalog'`<br>**_⎕SE:_** Or any _target_ namespace you desire.</∆N>, enter: <br>&emsp;`]load ∆F -target=⎕SE`<br>
    Now, the target directory (`⎕SE`) will contain the namespace `∆FUtils`, containing `∆F` and supporting services and objects. 
-3. By default, the target namespace (<code>_⎕SE.∆FUtils_</code>) will be added to the end of `⎕PATH`, if not already defined there.
+3. By default, the target namespace (<code>_⎕SE.∆FUtils_</code>) will be prepended to the ***beginning*** of `⎕PATH`.
 4. **∆F** may be called as is, i.e. as `∆F`, or fully specified as `⎕SE.∆FUtils.∆F`. 
 5. You may always choose to create an alias to **∆F** in your chosen namespace (say, `mydir`), e.g. via `mydir.∆F← ⎕SE.∆FUtils.∆F`.
 4. By default, the ***help*** file, **∆F/∆FHelp.html** is available at `]load` time. If so, it will be copied into **∆FUtils**. If not available, a message will note the absence of _help_ information.
@@ -1803,7 +1803,9 @@ For more information, see <a id="displayText" href="javascript:linkAlert();"><sp
 #### Future Behaviour of … (Ellipsis ["range" function]) Here Today
 
 As a load-time option, **∆F** adds the "future" **Ellipsis** function, which is a "range" function 
-similar to function **to** in the *dfns* workspace, extended to handle characters
+similar <∆N>See **abrudz**
+dyalog-apl-extended  on Github [retrieved 2026-02-13].</∆N>
+to function **to** in the *dfns* workspace, extended to handle characters
 as well as integers (see discussion
 at https://dfns.dyalog.com/n_to.htm).  E.g. `'a' … 'j'` is the same as 'abcdefghij', just 
 as `1 … 10` is the same as `1 2 3 4 5 6 7 8 9 10'.  This is similar to Python's range() function.

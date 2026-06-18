@@ -45,8 +45,11 @@
   ⍝  To indicate we don't want to search ANY files, 
   ⍝     best: (load: 0)
   ⍝     ok:   (path: ⎕NULL)
-  ⍝           directory      workspace    directory
-    path:  ( 'MyDyalogLib' ⋄ ('dfns'⋄) ⋄  '.'   ⋄ )  
+  ⍝ Search order:
+  ⍝      1] dir "./MyDyalogLib"
+  ⍝      2] ws  "dfns"
+  ⍝      3] dir "."
+    path: ( 'MyDyalogLib' ⋄ ('dfns'⋄) ⋄ '.' ⋄ )  
                   
   ⍝ prefix: literal string to prefix to each name, when searching directories.
   ⍝     Ignored for workspaces.

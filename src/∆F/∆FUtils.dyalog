@@ -3,11 +3,14 @@
 :Section CORE  
 ⍝ Env for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
   ⎕IO ⎕ML ⎕PP← 0 1 34     
-⍝ Loader ∆F.dyalog shares global variables via transient namespace ⎕SE.∆F⍙Glob.
-⍝ [1] Save the names of all the globals for later use, before merging into this ns.
-  GLOBALS← ⎕SE.∆F⍙Glob.⎕NL ¯2 ¯9  
+⍝ Loader ∆F.dyalog shares transient namespace ⎕SE.∆F⍙Share, containing: 
+⍝ - global variables in globals
+⍝ - source for the library (£,`L) code as libsrc
+⍝ 
+⍝ [1] Save the names of all the globals passed here for later use.
+  GLOBALS← ⎕SE.∆F⍙Share.globals.⎕NL ¯2 ¯9  
 ⍝ [2] Merge the globals into this ns.
-  ⎕THIS ⎕NS ⎕SE.∆F⍙Glob 
+  ⎕THIS ⎕NS ⎕SE.∆F⍙Share.globals
 ⍝ Set char. rendering of ⎕THIS, so we can set ⎕THIS.⎕DF to something arbitrary.
   ∆THIS← ⍕⎕THIS                
 
@@ -739,7 +742,7 @@
     :EndTrap 
   ∇
   ∇ {libActive}← ⍙Load_LibAuto (libFi libActive keepCm)
-    ; how 
+    ;how 
     how← ' from "',libFi,'" into "','"',⍨∆THIS 
     :If libActive=0
         ⎕←↑1⍴⊂'❗❗❗ WARNING: Library autoload services were not loaded',how
@@ -748,11 +751,7 @@
         :Return 
     :EndIf 
     :TRAP 22 
-        src← keepCm { 
-          ⍺: ⍵ 
-          t/⍨ 0≠≢¨t← '''[^'']*''' '\h*⍝(?!\!).*$' '^\h*$' ⎕R '&' '' ''⊢ ⊃⎕NGET ⍵ 1
-        }libFi  
-        ⎕FIX⍠ 'FixWithErrors' 0⊣ src 
+        ⎕FIX⍠ 'FixWithErrors' 0⊣ ⎕SE.∆F⍙Share.libsrc
         :If VERBOSE_LOADTIME 
             ⎕←'✅✅✅ Loaded services for Library shortcut (£)',how  
         :EndIf 
@@ -771,17 +770,19 @@
 ⍝ ====================================================================================
 ⍝ Execute the FIX-TIME Routines
 ⍝ ====================================================================================
-  ∇ ok← Initialise  ; fn_ns 
+  ∇ ok← Initialise  ; fn_ns; Add2Path  
     :Trap ok← 0   
         :If APL_VERSION < 20
             ⎕←↑1⍴⊂'❌❌❌ This version of ∆F requires Dyalog 20 or later'
             ⎕SIGNAL 911 
         :EndIf   
         fn_ns← ⎕THIS ⎕THIS.## ⊃⍨ PROMOTE_∆F  
-      ⍝ Conditionally augment ⎕PATH
-        :IF ADD_∆F_TO_PATH ⋄ ⎕SHADOW 'Add2Path'
-            Add2Path←  {(1∊⍷)/ ' ',¨' ',⍨¨ ⍵ ⍺: '' ⋄ 0=≢ ⍺: ⍵ ⋄ ' ', ⍵ }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
-            ⎕PATH,← ⎕PATH Add2Path fn_ns          ⍝ Add dest NS to ⎕PATH
+      ⍝ Conditionally augment ⎕PATH, adding fn_ns to the BEGINNING of ⎕PATH.
+        :IF ADD_∆F_TO_PATH  
+            Add2Path←  {  
+               ⍵,' ',('(\s|^)',⍵,'(\s|$)') ⎕R '' ⊣ ⍺
+            }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
+            ⎕PATH← ⎕PATH Add2Path fn_ns          ⍝ Add dest NS to ⎕PATH
         :ENDIf 
         ⍙Export_∆F (targNm: '∆F'  ⋄ destNs: fn_ns ⋄ lockFn: 0)   
       ⍝ Sets sc: namespace with global shortcut table and related
@@ -795,6 +796,7 @@
     :EndTrap 
   ∇ 
   Initialise 
+  ⎕EX 'loader' 'g'
 :EndSection FIX_TIME_ROUTINES 
 ⍝ === END OF CODE ================================================================================
 ⍝ (C) 2025 Sam the Cat Foundation

@@ -10,26 +10,29 @@
 ⍝     ]load ∆F [-target=⎕SE]     or     ⊢⎕SE.⎕FIX '∆F.dyalog'
 ⍝ ---------------------------------------------
 
+
 ∇ {ok}← Load gFi 
-  ;dest ;g; src; FILE  
+  ;dest ;f ;g ;in; out; src; libsrc; share; ss  
   ⎕IO ⎕ML← 0 1 
+  share← ⎕SE.∆F⍙Share← ( globals: ⍬ ⋄ libsrc: ⍬) 
   :Trap 0
-    g← 0 ⎕FIX FILE← gFi                                ⍝ Load globals from file into ns <g>
-    ⎕SE.∆F⍙Glob← g                                     ⍝ Share globals with  ∆FUtils
-    src← g.KEEP_SRC_CM{                                ⍝ Opt'lly Delete comments/blank lines
-      ⍺: ⍵                                  
-      in out← ( '''[^'']*''' '\h*⍝(?!\!).*' '^\h*$' ) ( '&' '' '' )           
-      t/⍨ 0≠≢¨t←  in ⎕R out ⊃⎕NGET ⍵ 1                 ⍝ (Keep ⍝! comments)
-    } FILE←g.SRC_FI 
-    dest← ⎕THIS.##
-    dest.⎕FIX⍠ 'FixWithErrors' 0⊣ src             ⍝ Generate ∆FUtils in destination
-    ⎕DF (⍕dest),'.∆FUtils [',g.VERSION,']'   ⍝ Report ∆F info via ⎕DF
+      g← 0 ⎕FIX f← gFi                                  ⍝ Load globals from file into ns <g> 
+      ss← g.(SRC_FI LIB_SRC_FI) 
+      :If g.KEEP_SRC_CM
+          src libsrc← {⊃⎕NGET ⍵ 1} ss 
+      :Else 
+          in out← ( '''[^'']*''' '\h*⍝(?!\!).*' '^\h*$' )  ( '&' '' '' )
+          r← in ⎕R out¨  ss 
+          src libsrc← { t/⍨ 0≠≢¨t← ⊃⎕NGET ⍵ 1 }¨r
+      :EndIf 
+      share.( globals libsrc )← g libsrc                ⍝ libsrc ⎕FIXed in ∆FUtils...
+      dest← ⎕THIS.##
+      dest.⎕FIX ⍠ 'FixWithErrors' 0⊣ src                ⍝ ⎕FIX ∆FUtils in <dest>
+      ⎕DF (⍕dest),'.∆FUtils [',g.VERSION,']'            ⍝ Report ∆F info via ⎕DF
   :Else                                                     
-    ⎕DF {                                              ⍝ Report error via ⎕DF
-      '*** ERROR LOADING ∆F: ',⎕DMX.(EM,': ',Message),' "',⍵, '"'
-    } FILE       
+      ⎕DF ⎕DMX.( '*** ERROR LOADING ∆F: ', EM, ': ', Message ) ⍝ Report error via ⎕DF
   :EndTrap 
-  ok← ⎕EX '⎕SE.∆F⍙Glob'                                ⍝ Remove globals ns even on failure.
+  ok← ⎕EX '⎕SE.∆F⍙Share'                                ⍝ Remove globals ns even on failure.
 ∇
   Load '∆F/∆FGlobals.dyalog'
             
