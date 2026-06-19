@@ -17,13 +17,13 @@
    :Section   ∆F SOURCE
 ⍝ =======================================================================
 ⍝ ∆F USER FUNCTION SOURCE 
-⍝     ∆F ==> ##.∆F (Actual name and destination set at ⍙Export_∆F)
+⍝     ∆F ==> ##.∆F (Actual name and destination set at Export_∆F)
 ⍝ =======================================================================
 ⍝ ∆F: 
 ⍝    result← {opts←⍬|()} ∇ f-string [args]
 ⍝ See notes elsewhere on ∆F itself.
 ⍝ 
-⍝ Note ⍙EXPORT_∆F (q.v.) will modify header names and "macro" constants __THIS__  and __UP__ 
+⍝ Note Export_∆F (q.v.) will modify header names and "macro" constants __THIS__  and __UP__ 
 ⍝ If PROMOTE_∆F
 ⍝        1        __THIS__← ⎕THIS     __UP__← ⎕THIS.##
 ⍝        0        __THIS__← ⎕THIS     __UP__← ⎕THIS 
@@ -472,7 +472,7 @@
 :Namespace libUtils
 ⍝⍝⍝⍝⍝ This is a local stub, pending (optional, but expected) load of ∆FLibUtils below.
   ∇ {libNs}←  LibSimple libNs 
-    ; _readParmFi 
+    ; ⍙readParms; auto
     ⍝ external in the stub... 
     ⍝   libUser, Auto, ShowPath, LoadParms
     ⍝ external loaded from ∆FLibUtils.dyalog:
@@ -495,19 +495,19 @@
 :Section FIX_TIME_ROUTINES 
 ⍝ ===================================================================================
 
-⍝ ⍙Export_∆F : rc← ∇ (targNm: '∆F' ⋄ destNs: ## ⋄ lockFn: 0) 
+⍝ Export_∆F : rc← ∇ (targNm: '∆F' ⋄ destNs: ## ⋄ lockFn: 0) 
 ⍝   Args are optional (i.e. () is valid).
 ⍝ Used internally only at FIX-time:
-⍝ On execution (default mode), ⍙Export_∆F creates ∆F in location specified as <destNs>.
+⍝ On execution (default mode), Export_∆F creates ∆F in location specified as <destNs>.
 ⍝ If destNs is not namespace ⎕THIS, then we "promote the fn to target namespace,
 ⍝    ∘ obscure (mangle) local vars: ¨result¨ ¨opts¨ and ¨args¨
 ⍝    ∘ sets __⎕THIS__.##. to ##.
 ⍝    ∘ sets __THIS__ to refer to this namespace (i.e. ...∆FUtils)
 ⍝ If destNs is the namespace ⎕THIS, then we:
 ⍝    ∘ set '__UP__.'  to  ''
-  ∇ {targNm}← ⍙Export_∆F args 
+  ∇ {targNm}← Export_∆F args 
     ; srcNm; targNm; destNs; lockFn; in; out; up 
-    ; Fix; Xlate; QCom; NoEL; QLock; XR  
+    ; CR62; Fix; Xlate; QCom; NoEL; QLock 
    ⍝ targNm←'∆F'
    ⍝ :Return 
   ⍝ parms...
@@ -516,27 +516,28 @@
     in←   srcNm  '__THIS__' 
     out←  targNm   ∆THIS    
     :IF destNs≠⎕THIS 
-        in,←  '⍝::ED ' '__UP__\.'  '\b(args|opts|result)\b'  ⍝ scramble ∆F args, opts, result 
+        in,←  '⍝::ED\s' '__UP__\.'  '\b(args|opts|result)\b'  
         out,← ''       '##.'       '⍙F_\1'
     :Else 
-        in,← '⍝::ED.*' '__UP__\.' 
+        in,← '⍝::ED\s.*' '__UP__\.' 
         out,← ''       ''
     :EndIf 
    ⍝ Util fns...
-    XR←       62∘⎕ATX                                   ⍝ XR: ⎕CR that keeps source spacing
+    CR62←       62∘⎕ATX                                 ⍝ CR62: ⎕CR that keeps source spacing
     Xlate←    in ⎕R out ⍠ 'UCP' 1  
     NoEL←     { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
     Fix←      destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
     QLock←    destNs.⎕LOCK⍣lockFn
   ⍝ main...
-    :If targNm≡ Fix NoEL Xlate XR srcNm 
+    :If targNm≡ Fix NoEL Xlate CR62 srcNm 
       {} QLock targNm
       {}(⎕∘←)⍣VERBOSE_LOADTIME⊢ '✅✅✅ Created function ',(⍕destNs),'.',targNm 
     :Else 
-      11 ⎕SIGNAL⍨'❌❌❌ There was an error applying ⍙Export_∆F. Could not create "',(⍕destNs),'.',targNm  
+      11 ⎕SIGNAL⍨∊(
+        '❌❌❌ There was an error applying Export_∆F. Could not create "',(⍕destNs),'.',targNm
+      )  
     :EndIf 
-    0 ⎕EXPORT ⎕NL -3 4
-    1 ⎕EXPORT ⊂'∆F'
+    0 1 ⎕EXPORT¨ (⎕NL ¯3 ¯4) (⊂'∆F')           ⍝ Only export is ∆F.
   ∇
 
 :Section Shortcut functions `A, `B, `C, etc.
@@ -585,7 +586,7 @@
           o∊'L'¯1:B ⍵
           o∊'R' 1:-B⌽⍵ 
           o∊'C' 0: ⌈0.5×⍵-⍥B⌽⍵                          ⍝ If o is invalid, drop off ends of earth.
-          ⎕SIGNAL ⊂ ('EN' 11) ('Message' 'Shortcut given invalid option (⍺)')
+          ⎕SIGNAL ⊂ ('EN' 11) ('Message' 'Shortcut option (⍺) was invalid')
         } w←⎕FMT⍵
     }
   ⍝ Library
@@ -597,14 +598,14 @@
     } 
   ⍝ Quote                   
     Q←  {
-      ⍺← ''''               ⍝ Qt (⎕UCS 39)
+      ⍺← ''''               
       1<|≡⍵:⍺∘∇¨⍵                              
       (0=⍴⍴⍵)∧1=≡⍵:⍵                           
       (0≠≡⍵)∧326=⎕DR⍵:⍺∘∇¨⍵                 
       ⎕ML←1                                                                   
       ⍺{0=80|⎕DR⍵:⍺,⍺,⍨⍵/⍨ 1+⍺=⍵⋄⍵}⍤1⊢⍵        
     }
-  ⍝ Serialise
+  ⍝ Serialise (display in APLAN)
     S← { 
       ⎕ML←1⋄11 16 6::⍵⋄⍺←0⋄     
       1=≢s←⍺⎕SE.Dyalog.Array.Serialise⍵:⊃s⋄
@@ -784,7 +785,7 @@
             }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
             ⎕PATH← ⎕PATH Add2Path fn_ns          ⍝ Add dest NS to ⎕PATH
         :ENDIf 
-        ⍙Export_∆F (targNm: '∆F'  ⋄ destNs: fn_ns ⋄ lockFn: 0)   
+        Export_∆F (targNm: '∆F'  ⋄ destNs: fn_ns ⋄ lockFn: 0)   
       ⍝ Sets sc: namespace with global shortcut table and related
         sc← ⍙Load_Shortcut_Calls
         ⍙Load_Help HELP_HTML_FI

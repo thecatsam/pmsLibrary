@@ -13,7 +13,6 @@
 ⍝ PROMOTE_∆F      QS_FR1        QUOTES_SUPPLEMENTAL  
 ⍝ SIGNAL_LIB_ERRS SRC_FI        TRAP_ERRORS VERBOSE_LOADTIME  
 ⍝ VERBOSE_RUNTIME VERSION 
-    
  
   SRC_FI←         '∆F/∆FUtils.dyalog'                 ⍝ Typically, rendered as namespace ∆FUtils as well
   PROMOTE_∆F←      0                                  ⍝ If 1, put ∆F itself in ⎕SE, not ⎕SE.∆FUtils
