@@ -67,11 +67,11 @@ _dfns_ and other familiar tools.
 
 1. Confirm that your current directory remains as before.
 2. From your Dyalog session<∆N>*Or,*&emsp;`⎕SE.⎕FIX'∆F.Dyalog'`<br>**_⎕SE:_** Or any _target_ namespace you desire.</∆N>, enter: <br>&emsp;`]load ∆F -target=⎕SE`<br>
-   Now, the target directory (`⎕SE`) will contain the namespace `∆FUtils`, containing `∆F` and supporting services and objects. 
-3. By default, the target namespace (<code>_⎕SE.∆FUtils_</code>) will be prepended to the ***beginning*** of `⎕PATH`.
-4. **∆F** may be called as is, i.e. as `∆F`, or fully specified as `⎕SE.∆FUtils.∆F`. 
-5. You may always choose to create an alias to **∆F** in your chosen namespace (say, `mydir`), e.g. via `mydir.∆F← ⎕SE.∆FUtils.∆F`.
-4. By default, the ***help*** file, **∆F/∆FHelp.html** is available at `]load` time. If so, it will be copied into **∆FUtils**. If not available, a message will note the absence of _help_ information.
+   Now, the target directory (`⎕SE`) will contain the namespace `FString`, containing `∆F` and supporting services and objects. 
+3. By default, the target namespace (<code>_⎕SE.FString_</code>) will be prepended to the ***beginning*** of `⎕PATH`.
+4. **∆F** may be called as is, i.e. as `∆F`, or fully specified as `⎕SE.FString.∆F`. 
+5. You may always choose to create an alias to **∆F** in your chosen namespace (say, `mydir`), e.g. via `mydir.∆F← ⎕SE.FString.∆F`.
+4. By default, the ***help*** file, **∆F/∆FHelp.html** is available at `]load` time. If so, it will be copied into **FString**. If not available, a message will note the absence of _help_ information.
 
 <big>👉</big>&nbsp;<small>You may now call `∆F` with the desired [arguments](#f-call-syntax-overview) and [options](#f-option-details).</small><br>
 <big>👉</big>&nbsp;<small>**∆F** is `⎕IO`- and `⎕ML`-independent.<br></small>
@@ -1108,9 +1108,9 @@ Tony wins £349
  
 The shortcut (Session) **Library** 
 `£` denotes 
-<∆N>**£ alias:** `` `L ``. £ is from the first letter of the Latin *lībra*, "pound", very apt for a *libra*-ry.<br><br>**∆FUtils**: *See [**∆F** Installation](#f-installation), above.*
+<∆N>**£ alias:** `` `L ``. £ is from the first letter of the Latin *lībra*, "pound", very apt for a *libra*-ry.<br><br>**FString**: *See [**∆F** Installation](#f-installation), above.*
 </span>
-a "private" *user* namespace in **∆FUtils**,
+a "private" *user* namespace in **FString**,
 where the user may place and manipulate useful objects for the duration
 of the ***current*** *APL* session. For example, the user may wish to: <∆N>*For details, see  [Code Field Short&shy;cuts](#code-field-shortcuts) below.*</∆N>
 
@@ -1178,8 +1178,8 @@ and to see _where_ it's copied from, use **∆F**'s **_verbose_** option:
    (verbose: 1) ∆F '{ ⍸ 1 £.pco ⍳100 }'    ⍝ (verbose: 1) <==> 0 1 
 ```
 ```skip
-∆F: Copied "pco" into £=[⎕SE.∆FUtils.library] from "ws:dfns"
-{ ⎕SE.∆FUtils.M ⌽⍬({⍸ 1 (⎕SE.∆FUtils.library).pco ⍳100}⍵)}⍵
+∆F: Copied "pco" into £=[⎕SE.FString.library] from "ws:dfns"
+{ ⎕SE.FString.M ⌽⍬({⍸ 1 (⎕SE.FString.library).pco ⍳100}⍵)}⍵
 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97
 ```
 
@@ -1257,7 +1257,7 @@ Table: 3a. <strong>Using the <em>dfn Option</em></strong>
 
 
 <∆N><br>**standalone:** _i.e._ via the _inline_ option. See [option details](#f-option-details) (be&shy;low) re&shy;gard&shy;ing the _inline_ option and ex&shy;ceptions.</∆N>
-The _dfn_ option is most useful when you are making repeated use of an _f‑string_, since the overhead for analyzing the _f‑string_ contents **_once_** will be amortized over **_all_** the subsequent calls. An **∆F**-derived _dfn_ can also be made standalone, _i.e._ independent of the runtime library, **∆FUtils**.
+The _dfn_ option is most useful when you are making repeated use of an _f‑string_, since the overhead for analyzing the _f‑string_ contents **_once_** will be amortized over **_all_** the subsequent calls. An **∆F**-derived _dfn_ can also be made standalone, _i.e._ independent of the runtime library, **FString**.
 
 Let's explore an example where getting the best performance for a heavily
 used **∆F** string is important.
@@ -1430,8 +1430,8 @@ Table: 5a. <strong>∆F Call Syntax Overview</strong>
 |   **dfn**    |                       **_[0]_**                  |                                **_dfn:&nbsp;0_**                                 | <span class="red"><strong>If **_dfn:&nbsp;1_**,</strong></span> **∆F** returns a dfn, which (upon execution) produces the same output as the default mode.<br><span class="red"><strong>If **_dfn:&nbsp;0_** (default),</strong></span> **∆F** returns a char. matrix.                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **verbose**  |                       **_[1]_**                  |                              **_verbose:&nbsp;0_**                               | <span class="red"><strong>If **_verbose:&nbsp;1_**,</strong></span> Renders newline characters from `` `◇ `` as the visible `␤` character. Displays the source code that the _f‑string_ **_actually_** generates; <span class="red"><strong>if&nbsp;**_dfn_** is also ***1***,</strong></span> this will include the embedded _f‑string_ source (accessed as `` `⍵0 ``). After the source code is displayed, it will be executed or converted to a _dfn_ and returned (see the **_dfn_** option above).<br><span class="red"><strong>If **_verbose:&nbsp;0_** (default),</strong></span> newline characters from `` `◇ `` are rendered normally as carriage returns, `⎕UCS 13`; the **_dfn_** source code is not displayed. |
 |   **box**    |                       **_[2]_**                  |                                **_box:&nbsp;0_**                                 | <span class="red"><strong>If **_box:&nbsp;1_**,</strong></span> each field (except a null **Text** field) is boxed separately.<br><span class="red"><strong>If **_box:&nbsp;0_** (default),</strong></span> nothing is boxed automatically. Any **Code** field expression may be explicitly boxed using the **Box** shortcut, `` `B ``.<br><big>👉</big>&nbsp;**_Box_** mode can be used with settings <strong>`dfn: 1`</strong> _and_ <strong>`dfn: 0`.</strong>                                                                                                                                                                                                                    |
-|   **auto**   |                       **_[3]_**                  |                                **_auto:&nbsp;1_**                                | <span class="red"><strong>If **_auto:&nbsp;0_**,</strong></span> user must manually load/create any Session Library objects for use with the £ or `` `L `` shortcuts.<br><span class="red"><strong>If **_auto:&nbsp;1_** (default),</strong></span> honors the default and user-defined settings for `auto`.<br><big>👉</big>&nbsp;Depends on (i) user parameter file **./.∆F** and (ii) the namespace **∆FUtils** created during the `]load` process.                                                                                                                                                                                                                                 |
-|  **inline**  |                       **_[4]_**                  |                               **_inline:&nbsp;0_**                               | <span class="red"><strong>If **_inline:&nbsp;1_**,</strong></span> the code for each internal support function used is included in the result. <span class="red"><strong>If ***dfn*** is also 1,</strong></span> **_no_** reference to namespace **∆FUtils** will be made during the execution of the generated _dfn_. (**_Exception:_** see _Session Library Shortcuts_ below.)<br><span class="red"><strong>If **_inline:&nbsp;0_** (default),</strong></span> whenever **∆F** or a _dfn_ generated by it is executed, it makes calls to library routines in the namespace **∆FUtils**, created during the `]load` process for **∆F**.<br><big>👉</big>&nbsp;This option is experimental and may simply disappear one day.            |
+|   **auto**   |                       **_[3]_**                  |                                **_auto:&nbsp;1_**                                | <span class="red"><strong>If **_auto:&nbsp;0_**,</strong></span> user must manually load/create any Session Library objects for use with the £ or `` `L `` shortcuts.<br><span class="red"><strong>If **_auto:&nbsp;1_** (default),</strong></span> honors the default and user-defined settings for `auto`.<br><big>👉</big>&nbsp;Depends on (i) user parameter file **./.∆F** and (ii) the namespace **FString** created during the `]load` process.                                                                                                                                                                                                                                 |
+|  **inline**  |                       **_[4]_**                  |                               **_inline:&nbsp;0_**                               | <span class="red"><strong>If **_inline:&nbsp;1_**,</strong></span> the code for each internal support function used is included in the result. <span class="red"><strong>If ***dfn*** is also 1,</strong></span> **_no_** reference to namespace **FString** will be made during the execution of the generated _dfn_. (**_Exception:_** see _Session Library Shortcuts_ below.)<br><span class="red"><strong>If **_inline:&nbsp;0_** (default),</strong></span> whenever **∆F** or a _dfn_ generated by it is executed, it makes calls to library routines in the namespace **FString**, created during the `]load` process for **∆F**.<br><big>👉</big>&nbsp;This option is experimental and may simply disappear one day.            |
 | **special**  |                   **_'help'_**                   |                                     &mdash;                                      | <span class="red"><strong>If ***'help'*** is specified,</strong></span> this amazing doc&shy;ument&shy;ation is displayed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | **special**  |                  **_'parms'_**                   |                                     &mdash;                                      | <span class="red"><strong>If ***'parms'*** is specified,</strong></span> updates and displays Session Library (`£` or `` `L ``) pa&shy;ram&shy;eters.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 Table: 5b. <strong>∆F Option Details</strong>
@@ -1662,7 +1662,7 @@ If `0`, the runtime impact of the feature is more modest still.
 
 To support the Session Library auto-load process, there are parameters that may _optionally_ be tailored:
 
-- **LIB_ACTIVE**: A global variable set in ∆FUtils.dyalog.
+- **LIB_ACTIVE**: A global variable set in FString.dyalog.
   - 2: Load default and user parameters (default);
   - 1: Load default parameters ONLY;
   - 0: No autoload features should be available.
@@ -1788,7 +1788,7 @@ dyalog-apl-extended /CircleDiaeresis.dyalog** on Github [retrieved 2026-02-13].<
 Adám Brudzewsky's **Depth operator** 
 extension to circle diaeresis (⍥), which works similarly to rank (⍤), but selects
 array components based on depth rather than rank.  If the value of the load-time 
-parameter <∆N>See `FUTURES` global variable in ∆F/∆FUtils.dyalog.</∆N> `FUTURES` includes `'⍥'`,
+parameter <∆N>See `FUTURES` global variable in ∆F/FString.dyalog.</∆N> `FUTURES` includes `'⍥'`,
 then this fun *future* feature will be 
 recognized within code fields, without impacting other capabilities of `⍥`. 
 For more information, see <a id="displayText" href="javascript:linkAlert();"><span class="linkNote">https:\/\/aplwiki.com\/wiki\/Depth_(operator)</span></a>.
@@ -1797,7 +1797,7 @@ For more information, see <a id="displayText" href="javascript:linkAlert();"><sp
 
 As a load-time option, **∆F** adds the "future" **Select** function (also known as **Sane indexing**)
 if the value of the load-time 
-parameter <∆N>See `FUTURES` global variable in ∆F/∆FUtils.dyalog.</∆N> `FUTURES` includes `'⍥'`.
+parameter <∆N>See `FUTURES` global variable in ∆F/FString.dyalog.</∆N> `FUTURES` includes `'⍥'`.
 For more information, see <a id="displayText" href="javascript:linkAlert();"><span class="linkNote">https:\/\/aplwiki.com\/wiki\/From</span></a>.
 
 #### Future Behaviour of … (Ellipsis ["range" function]) Here Today

@@ -3,7 +3,7 @@
 ⍝ =======================================================================
 ⍝ GENERAL GLOBAL VARIABLES:  
 ⍝ These are treated as "installation-level" variables, not user-level variables.
-⍝ Exported via ∆F.dyalog "loader" to ∆FUtils via temp ns ⎕SE.∆F⍙Share.  
+⍝ Exported via ∆F.dyalog "loader" to FString via temp ns ⎕SE.∆F⍙Share.  
 ⍝ See ∆F.dyalog for details.
 ⍝ ============   
 ⍝ ADD_∆F_TO_PATH  APL_VERSION   ESCAPE_CHAR FUTURES
@@ -14,9 +14,9 @@
 ⍝ SIGNAL_LIB_ERRS SRC_FI        TRAP_ERRORS VERBOSE_LOADTIME  
 ⍝ VERBOSE_RUNTIME VERSION 
  
-  SRC_FI←         '∆F/∆FUtils.dyalog'                 ⍝ Typically, rendered as namespace ∆FUtils as well
-  PROMOTE_∆F←      0                                  ⍝ If 1, put ∆F itself in ⎕SE, not ⎕SE.∆FUtils
-  ADD_∆F_TO_PATH←  1                                  ⍝ If 1, adds ∆FUtils to Dyalog ⎕PATH.
+  SRC_FI←         '∆F/FString.dyalog'                 ⍝ Typically, rendered as namespace FString as well
+  PROMOTE_∆F←      0                                  ⍝ If 1, put ∆F itself in ⎕SE, not ⎕SE.FString
+  ADD_∆F_TO_PATH←  1                                  ⍝ If 1, adds FString to Dyalog ⎕PATH.
   VERSION← 'v.0.4.2'                                  ⍝ Set/updated by ∆F_Publish.dyalog...
 
 ⍝ TRAP_ERRORS: If 0, turns off error trapping in ∆F utility.
@@ -42,7 +42,7 @@
 ⍝        report library (£) autoload errors ONLY as informational messages.  
 ⍝        |     (verbose:1)∆F'{0: £.pcox 12 ⋄ 3}'
 ⍝        |  ∆F DOMAIN ERROR: Object "pcox" not found on search path
-⍝        | { ⎕SE.∆FUtils.M ⌽⍬({0: (⎕SE.∆FUtils.userLibrary).pcox 12 ⋄ 3}⍵)}⍵
+⍝        | { ⎕SE.FString.M ⌽⍬({0: (⎕SE.FString.userLibrary).pcox 12 ⋄ 3}⍵)}⍵
 ⍝        |  3                                  ⍝ <== function string executed normally!
 ⍝   1b.  If (verbose: 0) and (VERBOSE_RUNTIME=0) 
 ⍝        no informational messages are generated.
@@ -73,14 +73,14 @@
 ⍝ If 1, by default,
 ⍝     puts full definitions of internal utilities (shortcuts etc.) into the result.
 ⍝ If 0, by default,
-⍝     refers to local copies of internal utilities in ∆FUtils in the result.
+⍝     refers to local copies of internal utilities in FString in the result.
 ⍝ May be overridden by (inline: ⍵), where ⍵ is either 1 or 0.
 ⍝ There are occasions where INLINE_UTILS mode results in marginally faster code, but
 ⍝ in general with (verbose: 1), the code is very long and rather unreadable.
   INLINE_UTILS← 0 
 
 ⍝ HELP FILE          
-⍝ File is loaded into ∆FUtils at load-time for use by ∆F⍨'help'. 
+⍝ File is loaded into FString at load-time for use by ∆F⍨'help'. 
   HELP_HTML_FI← '∆F/∆FHelp.html'                       
 
 ⍝ FUTURES
@@ -121,7 +121,7 @@
 ⍝ OPTS_DEFns: The defaults in namespace form. Treat as a read-only object.
   OPTS_DEFns← ()⎕VSET OPTS_KW OPTS_DEFval
 
-⍝ KEEP_SRC_CM: Are source comments maintained in runtime ns's ∆FUtils and ∆FUtils.libUtils?
+⍝ KEEP_SRC_CM: Are source comments maintained in runtime ns's FString and FString.libUtils?
   KEEP_SRC_CM← 0 
 
 ⍝ Returns 20 if Dyalog 20, 19 if 19. (This version requires Dyalog 20 or later)

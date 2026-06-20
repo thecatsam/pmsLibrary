@@ -1,4 +1,4 @@
-:Namespace ∆FUtils   
+:Namespace FString   
 ⍝  VERSION: Dyalog 20 and later!
 :Section CORE  
 ⍝ Env for ∆F code. Remember, user code is executed in CALLER space (⊃⎕RSI) 
@@ -502,7 +502,7 @@
 ⍝ If destNs is not namespace ⎕THIS, then we "promote the fn to target namespace,
 ⍝    ∘ obscure (mangle) local vars: ¨result¨ ¨opts¨ and ¨args¨
 ⍝    ∘ sets __⎕THIS__.##. to ##.
-⍝    ∘ sets __THIS__ to refer to this namespace (i.e. ...∆FUtils)
+⍝    ∘ sets __THIS__ to refer to this namespace (i.e. ...FString)
 ⍝ If destNs is the namespace ⎕THIS, then we:
 ⍝    ∘ set '__UP__.'  to  ''
   ∇ {targNm}← Export_∆F args 
@@ -747,7 +747,7 @@
     how← ' from "',libFi,'" into "','"',⍨∆THIS 
     :If libActive=0
         ⎕←↑1⍴⊂'❗❗❗ WARNING: Library autoload services were not loaded',how
-        ⎕←'✅✅✅ LIB_ACTIVE is set to ',(⍕libActive),' in ∆F/∆FUtils.dyalog'
+        ⎕←'✅✅✅ LIB_ACTIVE is set to ',(⍕libActive),' in ∆F/FString.dyalog'
         ⎕←'✅✅✅ £ and `L shortcuts are available without them, as if (auto: 0) is set.'
         :Return 
     :EndIf 
@@ -771,7 +771,7 @@
 ⍝ ====================================================================================
 ⍝ Execute the FIX-TIME Routines
 ⍝ ====================================================================================
-  ∇ ok← Initialise  ; fn_ns; Add2Path  
+  ∇ ok← Initialise ; fn_ns; Add2Path  
     :Trap ok← 0   
         :If APL_VERSION < 20
             ⎕←↑1⍴⊂'❌❌❌ This version of ∆F requires Dyalog 20 or later'
@@ -781,8 +781,9 @@
       ⍝ Conditionally augment ⎕PATH, adding fn_ns to the BEGINNING of ⎕PATH.
         :IF ADD_∆F_TO_PATH  
             Add2Path←  {  
-               ⍵,' ',('(\s|^)',⍵,'(\s|$)') ⎕R '' ⊣ ⍺
-            }⍥('⎕se' ⎕R'\u&' ⍠1)∘⍕ 
+              R← ('(\s|^)',⍵,'(\s|$)') ⎕R ' '
+              ⍵, ' ', R ⊣ ⍺
+            }⍥('⎕se' '\s+' ⎕R'\u&' ' ' ⍠1)∘⍕ 
             ⎕PATH← ⎕PATH Add2Path fn_ns          ⍝ Add dest NS to ⎕PATH
         :ENDIf 
         Export_∆F (targNm: '∆F'  ⋄ destNs: fn_ns ⋄ lockFn: 0)   
@@ -797,7 +798,6 @@
     :EndTrap 
   ∇ 
   Initialise 
-  ⎕EX 'loader' 'g'
 :EndSection FIX_TIME_ROUTINES 
 ⍝ === END OF CODE ================================================================================
 ⍝ (C) 2025 Sam the Cat Foundation

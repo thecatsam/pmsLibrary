@@ -31,7 +31,7 @@
  ⍝ Library directory
  DIR←'/Users/petermsiegel/MyDyalogLibrary/pmsLibrary/src'
  ⍝ Session libraries
- utils←'∆SH' '∆F' '∆D'
+ utils← '∆F' '∆SH' '∆D'
  
  
  #.⎕PATH,⍨←(' ⎕SE'↓⍨,0=≢⎕PATH)/⍨ ~' ⎕SE '(1∘∊⍷)' ',' ',⍨⎕PATH

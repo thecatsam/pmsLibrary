@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-06-19') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-06-20') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading.
@@ -9,18 +9,18 @@
 ⍝    (services used when an £ or `L is seen in the user's code field), and
 ⍝ b. LoadTime routines 
 ⍝    (setting up the active library services). 
-⍝ ∘ See ∆FUtils for fn ⍙Load_LibAuto, which loads this library.
+⍝ ∘ See FString for fn ⍙Load_LibAuto, which loads this library.
 ⍝ ∘ See "Executive" at bottom of file, which calls
 ⍝   - LibComplete 
 ⍝   - LoadParms  
 ⍝ ∘ Local and External variables pointing to the "user" library userLibrary.
-⍝   - ûLib  -  the namespace ref itself, by default ∆FUtils.userLibrary (##.userLibrary)
+⍝   - ûLib  -  the namespace ref itself, by default FString.userLibrary (##.userLibrary)
 ⍝   - ûLibNm-  the name of ûLib
 ⍝   - ûLibNmP- '(', ûLibNm, ')'
 
   :Section  Runtime Routines 
 ⍝ ===================================================================================
-⍝ RUNTIME ROUTINES: LibAuto (called in ScanCF and CFEsc in ∆FUtils)
+⍝ RUNTIME ROUTINES: LibAuto (called in ScanCF and CFEsc in FString)
 ⍝ ===================================================================================
 ⍝ LibAuto: libStr← ûsr ∇ str 
 ⍝    str: str starts 1 char after '£' or '`L'. 

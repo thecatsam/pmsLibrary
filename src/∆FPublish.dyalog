@@ -34,7 +34,7 @@
   ⎕← version← { (0 ⎕FIX ⍵).VERSION } '∆F/∆FGlobals.dyalog'
 
 ⍝ Constants
-  timestamp←     ∊⎕SE.∆FUtils.∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
+  timestamp←     ∊⎕SE.FString.∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
   title←         '∆F F-string Utility for Dyalog APL (v.',version,')'
 
 ⍝ Setup Parm (parameter check) and generate quiet option.
@@ -62,7 +62,7 @@
   pubdir←   libDir,'Delta.F-f.string.utility/'
 
 ⍝ Our files (sans directory names)
-  pgm←       '∆FUtils.dyalog'        ⍝ ∆F lib
+  pgm←       'FString.dyalog'        ⍝ ∆F lib
   html←      '∆FHelp.html'           ⍝ html
   md←        '∆FHelp.md'             ⍝ markdown
   mdTmp←     'tmp_README.md'         ⍝ A temporary file!

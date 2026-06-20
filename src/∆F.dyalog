@@ -1,16 +1,16 @@
 :Namespace              ⍝ Unnamed NS. Won't clutter destination ns.                 
 ⍝ ∆F Utility and Library Loader (Dyalog ≥20 Version!).
-⍝ Does minimal loading; makes globals available to ∆FUtils, which does rest of loading.
+⍝ Does minimal loading; makes globals available to FString, which does rest of loading.
 ⍝ Load gFi
 ⍝ - gFi: a file with global variables: '∆F/∆FGlobals.dyalog' ==> g (a local namespace)
-⍝ - From g, gets name of the source for ∆F and its library,  g.SRC_FI (typically ∆FUtils.dyalog) 
-⍝   as ∆FUtils  
+⍝ - From g, gets name of the source for ∆F and its library,  g.SRC_FI (typically FString.dyalog) 
+⍝   as FString  
 ⍝ - From g, gets name of the "library £" file libSrc
-⍝ - Creates temporary namespace ⎕SE.⍙FShare to share <g> and the contents <libSrc>
+⍝ - Creates temporary namespace ⎕SE.⍙FShare to share the globals and the contents of <libSrc>
 ⍝   establishes function ∆F in the dest ns.
-⍝ - Establishes ∆FUtils
-⍝ THen ⍙FUtils, in turn, 
-⍝ - establishes ∆FUtils.libUtils
+⍝ - Establishes FString
+⍝ THen FString, in turn, 
+⍝ - establishes FString.libUtils
 ⍝ - loads other items needed based on the global variables passed.
 ⍝ --------------
 ⍝ To use: 
@@ -28,9 +28,9 @@
           in out← ( '''[^'']*''' '\h*⍝(?!\!).*' '^\h*$' )  ( '&' '' '' )
           src libsrc← { t/⍨ 0≠≢¨t← in ⎕R out⊢ ⍵ }¨ src libsrc 
       :EndIf 
-      ⎕SE.∆F⍙Share← (globals: g ⋄ libsrc: libsrc)       ⍝ libsrc ⎕FIXed in ∆FUtils...
-      dest.⎕FIX ⍠ 'FixWithErrors' 0⊣ src                ⍝ ⎕FIX ∆FUtils in <dest>
-      ⎕DF (⍕dest),'.∆FUtils [',g.VERSION,']'            ⍝ Report ∆F info via ⎕DF
+      ⎕SE.∆F⍙Share← (globals: g ⋄ libsrc: libsrc)       ⍝ libsrc ⎕FIXed in FString...
+      dest.⎕FIX ⍠ 'FixWithErrors' 0⊣ src                ⍝ ⎕FIX FString in <dest>
+      ⎕DF (⍕dest),'.FString [',g.VERSION,']'            ⍝ Report ∆F info via ⎕DF
   :Else                                                     
       ⎕DF ∊⎕DMX.(                                       ⍝ Report error via ⎕DF
         '*** ERROR LOADING ∆F: ', EM, ': ', Message 
