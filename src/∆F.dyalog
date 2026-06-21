@@ -20,12 +20,16 @@
 ∇ {ok}← Load gFi 
   ;dest ;g ;in; lib; out; main 
   ⎕IO ⎕ML← 0 1 
-  dest← ⎕THIS.##
+  dest← ⎕THIS.##                                        ⍝ The ns goes to our parent, not us
   :Trap 0
       g← 0 ⎕FIX  gFi                                    ⍝ Load globals from file into namespace <g>
       main lib← { ⊃⎕NGET ⍵ 1}¨ g.( SRC_FI LIB_SRC_FI ) 
-      :If ~g.KEEP_SRC_CM                                ⍝ Remove comments (except ⍝!)?
-          in out← ( '''[^'']*''' '\h*⍝(?!\!).*' '^\h*$' )  ( '&' '' '' )
+      :If ~g.KEEP_SRC_CM                                ⍝ Remove comments?  (except ⍝!)
+          in out← ↓⍉↑( 
+            '''[^'']*'''    '&'
+            '\h*⍝(?!\!).*'  ''
+            '^\h*$'         '' 
+          )
           main lib← { t/⍨ 0≠≢¨t← in ⎕R out⊢ ⍵ }¨ main lib 
       :EndIf 
     ⍝ Share globals and lib with <main> as it is fixed...
