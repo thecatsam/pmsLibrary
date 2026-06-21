@@ -58,8 +58,8 @@
   tempdir←  '/Users/petermsiegel/Desktop/'             ⍝ Not currrently used!
   privFdir← libDir,'pmsLibrary/src/∆F/'
   privdir←  libDir,'pmsLibrary/src/'
-  pubFdir←  libDir,'Delta.F-f.string.utility/∆F/'
-  pubdir←   libDir,'Delta.F-f.string.utility/'
+  pubFdir←  libDir,'f-string-apl/∆F/'
+  pubdir←   libDir,'f-string-apl/'
 
 ⍝ Our files (sans directory names)
   pgm←       'FString.dyalog'        ⍝ ∆F lib
