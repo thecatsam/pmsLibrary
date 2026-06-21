@@ -698,7 +698,7 @@
         :Return 
     :EndIf 
     :TRAP 22 
-        ⎕FIX⍠ 'FixWithErrors' 0⊣ ⎕SE.∆F⍙Share.libsrc
+        ⎕FIX⍠ 'FixWithErrors' 0⊣ ⎕SE.∆F⍙Share.library
         :If VERBOSE_LOADTIME 
             ⎕←'✅✅✅ Loaded services for Library shortcut (£)',how  
         :EndIf 

@@ -18,25 +18,27 @@
 ⍝ ---------------------------------------------
 
 ∇ {ok}← Load gFi 
-  ;dest ;g ;in; libsrc; out; src 
+  ;dest ;g ;in; lib; out; main 
   ⎕IO ⎕ML← 0 1 
   dest← ⎕THIS.##
   :Trap 0
-      g← 0 ⎕FIX  gFi                                    ⍝ Load globals from file into ns <g> 
-      src libsrc← { ⊃⎕NGET ⍵ 1}¨ g.( SRC_FI LIB_SRC_FI ) 
-      :If ~g.KEEP_SRC_CM
+      g← 0 ⎕FIX  gFi                                    ⍝ Load globals from file into namespace <g>
+      main lib← { ⊃⎕NGET ⍵ 1}¨ g.( SRC_FI LIB_SRC_FI ) 
+      :If ~g.KEEP_SRC_CM                                ⍝ Remove comments (except ⍝!)?
           in out← ( '''[^'']*''' '\h*⍝(?!\!).*' '^\h*$' )  ( '&' '' '' )
-          src libsrc← { t/⍨ 0≠≢¨t← in ⎕R out⊢ ⍵ }¨ src libsrc 
+          main lib← { t/⍨ 0≠≢¨t← in ⎕R out⊢ ⍵ }¨ main lib 
       :EndIf 
-      ⎕SE.∆F⍙Share← (globals: g ⋄ libsrc: libsrc)       ⍝ libsrc ⎕FIXed in FString...
-      dest.⎕FIX ⍠ 'FixWithErrors' 0⊣ src                ⍝ ⎕FIX FString in <dest>
+    ⍝ Share globals and lib with <main> as it is fixed...
+      ⎕SE.∆F⍙Share← (globals: g ⋄ library: lib)         ⍝ lib ⎕FIXed in FString...
+      dest.⎕FIX ⍠ 'FixWithErrors' 0⊣ main               ⍝ ⎕FIX main in <dest>
       ⎕DF (⍕dest),'.FString [',g.VERSION,']'            ⍝ Report ∆F info via ⎕DF
   :Else                                                     
       ⎕DF ∊⎕DMX.(                                       ⍝ Report error via ⎕DF
         '*** ERROR LOADING ∆F: ', EM, ': ', Message 
       )  
   :EndTrap 
-  ok← ⎕EX '⎕SE.∆F⍙Share'                                ⍝ Remove globals ns even on failure.
+⍝ Unshare globals (on success or failure)
+  ok← ⎕EX '⎕SE.∆F⍙Share'                                
 ∇
   Load '∆F/∆FGlobals.dyalog'
             
