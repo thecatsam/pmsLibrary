@@ -16,29 +16,20 @@
 
    :Section   ∆F SOURCE
 ⍝ =======================================================================
-⍝ ∆F USER FUNCTION SOURCE 
-⍝     ∆F ==> ##.∆F (Actual name and destination set at Export_∆F)
+⍝ ∆F Utility 
 ⍝ =======================================================================
 ⍝ ∆F: 
 ⍝    result← {opts←⍬|()} ∇ f-string [args]
 ⍝ See notes elsewhere on ∆F itself.
 ⍝ 
-⍝ Note Export_∆F (q.v.) will modify header names and "macro" constants __THIS__  and __UP__ 
-⍝ If PROMOTE_∆F
-⍝        1        __THIS__← ⎕THIS     __UP__← ⎕THIS.##
-⍝        0        __THIS__← ⎕THIS     __UP__← ⎕THIS 
-⍝ ∘ Note: header variable names that are namespaces aren't automatically made visible 
-⍝   INSIDE :With blocks (per Dyalog doc).
-
   ∇ result← {opts} ∆F args  
-    ⍝::ED :With __THIS__   
       :TRAP TRAP_ERRORS/0                                       
       ⍝ Phase I: Set options and normalise args! 
       ⍝          User option styles? kw=keyword-style, pos'l=positional-style        
         :If  900⌶0                                            ⍝ No opts
             opts← ⎕NS OPTS_DEFns                              ⍝ → Copy OPTS_DEFns                
-        :ElseIf 9=__UP__.⎕NC 'opts'                           ⍝ opts references a namespace
-            opts← ⎕NS OPTS_DEFns __UP__.opts                  ⍝ → Copy OPTS_DEFns and kw user opts                        
+        :ElseIf 9=⎕NC 'opts'                                  ⍝ opts references a namespace
+            opts← ⎕NS OPTS_DEFns opts                         ⍝ → Copy OPTS_DEFns and kw user opts                        
         :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf  OPTS_N≥ ≢opts      ⍝ Ints / booleans, none trailing
             opts← (⎕NS OPTS_DEFns) ⎕VSET (OPTS_KW↑⍨≢opts)opts ⍝ → Copy OPTS_DEFns and pos'l user opts
         :Else                                                 ⍝ Kitchen sink 
@@ -64,10 +55,9 @@
     :Else 
         ⎕SIGNAL ⊂⎕DMX.('EM' 'EN' 'Message' ,⍥⊂¨('∆F ',EM) EN Message) 
     :EndTrap 
-  ⍝::ED :EndWith 
   ⍝! (C) Copyright 2025, 2026 Sam the Cat Foundation
   ∇
-   :EndSection   ∆F SOURCE
+   :EndSection   ∆F Utility 
 ⍝ END ====================   ∆F (User Function)   ==============================  
 
    :Section ScanFStr ( Top-Level ∆F Service)
@@ -133,7 +123,7 @@
       c= libra: (pfx, ûsr libUtils.LibAuto w) ∇ w      ⍝ £ library.
     ⍝ FUTURES: ⍥ Adam B's CircleDiaeresis (optional).    
     ⍝          … Adam B's Ellipsis (optional)    ⊇ Select / Sane Indexing.
-      c∊ FUTURES: w ∇⍨ pfx, scCD scEl scSel c⊃⍨ cd el rsu⍳ c   
+      c∊ FUTURES: w ∇⍨ pfx, scCD scEl scSel c⊃⍨ cd el rsu⍳ c    
       ~c∊selfDoc: ⎕SIGNAL êCfLogic                     ⍝ If guard true, CFBrk leaked unknown char.
     ⍝ '→', '↓' or '%'. See if a "regular" char/shortcut or self-defining code field      
       ûsr.brC>1: w ∇⍨ pfx, c scA⊃⍨ c= pct              ⍝ internal dfn => not SDCF
@@ -431,11 +421,12 @@
     'parms'  ≡   val: _← libUtils.LoadParms  (verbose: 1 ⋄ runtime: 1) 
     'path'   ≡   val: _← libUtils.ShowPath ⍬ 
     'globals'≡   val: _← ⍙ShowGlobalsIf 1                 ⍝ list all "globals"
+    'futures'≡   val: _← 'Futures: ',sq, sq,⍨ FUTURES     ⍝ What "futures" are enabled...
   ⍝ Undocumented: 'get' 'set'. Use at own risk.
     'get'    ≡   val: _← ⎕VGET ⊃⊆⍺                        ⍝ get one global ⍺ 
     'set'    ≡   val: _← (⎕VSET ⊂⍺)⊢ ⎕VGET ⊃⍺             ⍝ set one global, return old val
     'help'   ≢ 4↑val: ⎕SIGNAL êOpt 
-  ⍝ (Below) help, help-wide, or help-narrow?
+    ⍝ help | help-n[arrow] | help-w[ide] 
       CLoadHtml← {   ⍝ Conditionally load help html file, i.e. if not already loaded...
         22:: ⎕SIGNAL êHelpFi 
         0= ⎕NC ⍵: ⊢⎕THIS.helpHtml← ⊃⎕NGET HELP_HTML_FI 
@@ -449,7 +440,7 @@
       html← CLoadHtml 'helpHtml' 
     ⍝ Screen widths correspond to 'help-narrow' vs 'help-wide'/'help' parameters in ⍵.
       s← (900 1000) (900 1350)⊃⍨ ~'-n'(1∘∊⍷)⍵   ⍝ ⍵ is 'help[-wide]' or 'help-narrow'
-      obj← ('HTML'  html) (s,⍨ ⊂'Size') (15 35,⍨ ⊂'Posn') ('Coord' 'ScaledPixel')   
+      obj← ('HTML' html) (s,⍨ ⊂'Size') (15 35,⍨ ⊂'Posn') ('Coord' 'ScaledPixel')   
       1 0⍴⍬⊣ html RenderHtml obj    
   }        
   
@@ -494,51 +485,6 @@
 ⍝ ===================================================================================
 :Section FIX_TIME_ROUTINES 
 ⍝ ===================================================================================
-
-⍝ Export_∆F : rc← ∇ (targNm: '∆F' ⋄ destNs: ## ⋄ lockFn: 0) 
-⍝   Args are optional (i.e. () is valid).
-⍝ Used internally only at FIX-time:
-⍝ On execution (default mode), Export_∆F creates ∆F in location specified as <destNs>.
-⍝ If destNs is not namespace ⎕THIS, then we "promote the fn to target namespace,
-⍝    ∘ obscure (mangle) local vars: ¨result¨ ¨opts¨ and ¨args¨
-⍝    ∘ sets __⎕THIS__.##. to ##.
-⍝    ∘ sets __THIS__ to refer to this namespace (i.e. ...FString)
-⍝ If destNs is the namespace ⎕THIS, then we:
-⍝    ∘ set '__UP__.'  to  ''
-  ∇ {targNm}← Export_∆F args 
-    ; srcNm; targNm; destNs; lockFn; in; out; up 
-    ; CR62; Fix; Xlate; QCom; NoEL; QLock 
-   ⍝ targNm←'∆F'
-   ⍝ :Return 
-  ⍝ parms...
-    srcNm← '∆F' 
-    targNm destNs lockFn← args ⎕VGET  ('targNm' '∆F') ('destNs' ##) ('lockFn' 0) 
-    in←   srcNm  '__THIS__' 
-    out←  targNm   ∆THIS    
-    :IF destNs≠⎕THIS 
-        in,←  '⍝::ED\s' '__UP__\.'  '\b(args|opts|result)\b'  
-        out,← ''       '##.'       '⍙F_\1'
-    :Else 
-        in,← '⍝::ED\s.*' '__UP__\.' 
-        out,← ''       ''
-    :EndIf 
-   ⍝ Util fns...
-    CR62←       62∘⎕ATX                                 ⍝ CR62: ⎕CR that keeps source spacing
-    Xlate←    in ⎕R out ⍠ 'UCP' 1  
-    NoEL←     { ⍵/⍨ 0≠≢¨⍵ }                             ⍝ NoEL: No Empty Lines  
-    Fix←      destNs∘{11:: '' ⋄ ⊃2 ⍺.⎕FIX ⍵}
-    QLock←    destNs.⎕LOCK⍣lockFn
-  ⍝ main...
-    :If targNm≡ Fix NoEL Xlate CR62 srcNm 
-      {} QLock targNm
-      {}(⎕∘←)⍣VERBOSE_LOADTIME⊢ '✅✅✅ Created function ',(⍕destNs),'.',targNm 
-    :Else 
-      11 ⎕SIGNAL⍨∊(
-        '❌❌❌ There was an error applying Export_∆F. Could not create "',(⍕destNs),'.',targNm
-      )  
-    :EndIf 
-    0 1 ⎕EXPORT¨ (⎕NL ¯3 ¯4) (⊂'∆F')           ⍝ Only export is ∆F.
-  ∇
 
 :Section Shortcut functions `A, `B, `C, etc.
 ⍝ Above
@@ -777,7 +723,7 @@
             ⎕←↑1⍴⊂'❌❌❌ This version of ∆F requires Dyalog 20 or later'
             ⎕SIGNAL 911 
         :EndIf   
-        fn_ns← ⎕THIS ⎕THIS.## ⊃⍨ PROMOTE_∆F  
+        fn_ns← ⎕THIS 
       ⍝ Conditionally augment ⎕PATH, adding fn_ns to the BEGINNING of ⎕PATH.
         :IF ADD_∆F_TO_PATH  
             Add2Path←  {  
@@ -786,7 +732,8 @@
             }⍥('⎕se' '\s+' ⎕R'\u&' ' ' ⍠1)∘⍕ 
             ⎕PATH← ⎕PATH Add2Path fn_ns          ⍝ Add dest NS to ⎕PATH
         :ENDIf 
-        Export_∆F (targNm: '∆F'  ⋄ destNs: fn_ns ⋄ lockFn: 0)   
+      ⍝ Only Export from FString namespace  is ∆F 
+        0 1 ⎕EXPORT¨ (⎕NL ¯3 ¯4) (⊂'∆F')          
       ⍝ Sets sc: namespace with global shortcut table and related
         sc← ⍙Load_Shortcut_Calls
         ⍙Load_Help HELP_HTML_FI
