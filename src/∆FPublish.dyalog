@@ -154,16 +154,16 @@
         SideN2FN←⍺⍺{
             _←¯1 Say'Converting sidenotes to footnotes in ',Tp ⍺⍺
             NL←⎕UCS 10
-            counter←1
+            fnCtr←1
             fnList←NL,'## Footnotes',NL,NL
             in←'<∆N>(.*?)</∆N>'
             out←{
-                cText←⍕counter
-                counter+←1
-                fnText←⍵.Lengths[1]↑⍵.Offsets[1]↓⍵.Block
-                fnText←'^\s*(?:<br>)*\s*' '\s*(?:<br>)*\s*$'⎕R'' _OptsM fnText
-                fnList,←'[^',cText,']: ',fnText,NL
-                '[^',cText,'] '
+                fnCur← fnCtr
+                fnCtr+←1
+                fnIn←⍵.Lengths[1]↑⍵.Offsets[1]↓⍵.Block
+                fnOut←'^\s*(?:<br>)*\s*' '\s*(?:<br>)*\s*$'⎕R'' _OptsM fnIn
+                fnList,←'[^',fnCur,']: ',fnOut,NL
+                '[^',⍕fnCur,'] '
             }
             fnList,⍨in ⎕R out _OptsM ⍵ 
         }
