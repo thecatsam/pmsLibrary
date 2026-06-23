@@ -1,5 +1,6 @@
 ﻿∆FTiming
- ;logfile 
+ ;logfile ; ⎕PW
+ ⎕PW←200
   
 logfile←'∆FTiming.data'
 ⎕←'Logfile is ',logfile
@@ -15,6 +16,8 @@ logfile←'∆FTiming.data'
           OUT,← ⊂V ('∆F\s+',t,'\s+→\s+([\d\.E¯]+)') ⎕S '\1'⊣lines 
       :ENdFor
        OUT←OUT[¯1+1 2 4 3] 
+       ⎕← '  Ave     Min     Max   Last'
+       ⎕← ↑{w← ⍵⊃OUT ⋄ 100÷⍨⌊0.5+100×10000×((+/÷≢) w)(⌊/w)(⌈/w)(⊃⌽w)}¨0 0 1 2 3
        ⎕←']plot OUT -type=tower'
       :RETURN
   :Caselist 't '
