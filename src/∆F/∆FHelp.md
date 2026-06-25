@@ -1450,7 +1450,7 @@ Table: 5b. <strong>∆F Option Details</strong>
   Table: 5c. <strong>∆F Default Options</strong>
  
 
-- **Positional-style options:** If **∆F**'s left argument `⍺` is a simple integer vector (or a scalar), omitted (trailing) elements are replaced by the corresponding elements of the default, `0 0 0 1 0`.<br><big>👉</big>&nbsp;Extra elements will be **_ignored!_**
+- **Positional-style options:** If **∆F**'s left argument `⍺` is a simple integer vector (or a scalar), omitted (trailing) elements are replaced by the corresponding elements of the default, `0 0 0 1 0`.<br><big>👉</big>&nbsp;Extra elements will trigger a ***DOMAIN ERROR.***
 - **Keyword-style options:** If the left argument is a <∆N>Dyalog 20 and later. See docu&shy;ment&shy;ation on _APL_ Ar&shy;ray Not&shy;ation.</∆N>namespace,
   it is assumed to contain option names (in any order) with their non-default values,<br>&emsp;&emsp;e.g. `(verbose: 1 ◇ auto: 0)`;  
    Keyword options are new for Dyalog 20. They are sometimes clearer and more convenient than positional keywords.
@@ -1834,7 +1834,7 @@ include:
 ```skip
 
   TRAP_ERRORS      VERBOSE_RUNTIME      VERBOSE_LOADTIME  SIGNAL_LIB_ERRS
-  ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_UTILS      HELP_HTML_FI   
+  ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_DEF        HELP_HTML_FI   
   LIB_ACTIVE       LIB_PARM_FI          LIB_USER_FI       LIB_SRC_FI
   OPTS_KW          OPTS_DEFval          OPTS_N
   VERBOSE_RUNTIME  VERSION              FUTURES
