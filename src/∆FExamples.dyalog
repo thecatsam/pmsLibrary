@@ -70,7 +70,7 @@
     ⎕←'Loading...'
     ⎕DL 1
 
-    :If 0=⊃0⍴⎕FX ToFn NoBL Select¨#.FI←Split Dmd Code Skip⊃⎕NGET'∆F/∆FHelp.md'
+    :If 0=⊃0⍴⎕FX ToFn NoBL Select¨#.FI←Split Dmd Code Skip⊃⎕NGET'∆F/Help.md'
         'Unable to ⎕FX ''∆FE'''
         :Return
     :EndIf

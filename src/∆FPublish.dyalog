@@ -31,7 +31,7 @@
 ⍝ Key settable parameters...
   productionCode← 1
   copyright←     '2026'
-  ⎕← version← { (0 ⎕FIX ⍵).VERSION } '∆F/∆FGlobals.aplns'
+  ⎕← version← { (0 ⎕FIX ⍵).VERSION } '∆F/Globals.aplns'
 
 ⍝ Constants
   timestamp←     ∊⎕SE.FString.∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
@@ -63,16 +63,16 @@
 
 ⍝ Our files (sans directory names)
   pgm←       'FString.dyalog'        ⍝ ∆F lib
-  html←      '∆FHelp.html'           ⍝ html
-  md←        '∆FHelp.md'             ⍝ markdown
+  html←      'Help.html'             ⍝ html
+  md←        'Help.md'               ⍝ markdown
   mdTmp←     'tmp_README.md'         ⍝ A temporary file!
   readme←    'README.md'             ⍝ Git README file
-  hdr←       '∆FHelp_Hdr.html'       ⍝ local header file.
+  hdr←       'Help_Hdr.html'         ⍝ local header file.
   loader←    '∆F.dyalog'             ⍝ ∆F bootstrap utility
-  libra←     '∆FLibUtils.dyalog'     ⍝ £ library
-  parmFi←    '∆FParmDefs.apla'       ⍝ 
-  globFi←    '∆FGlobals.aplns'
-  pdf←       '∆FHelp.pdf'            ⍝ PDF 
+  libra←     'LibUtils.dyalog'       ⍝ £ library
+  parmFi←    'ParmDefs.apla'         ⍝ 
+  globFi←    'Globals.aplns'
+  pdf←       'Help.pdf'            ⍝ PDF 
   cd←        'CircleDiaeresis.dyalog' ⍝ Adam B's ⍥ with depth emulation
   el←        'Ellipsis.dyalog'
 
