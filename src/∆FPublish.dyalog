@@ -31,7 +31,7 @@
 ⍝ Key settable parameters...
   productionCode← 1
   copyright←     '2026'
-  ⎕← version← { (0 ⎕FIX ⍵).VERSION } '∆F/∆FGlobals.dyalog'
+  ⎕← version← { (0 ⎕FIX ⍵).VERSION } '∆F/∆FGlobals.aplns'
 
 ⍝ Constants
   timestamp←     ∊⎕SE.FString.∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
@@ -71,7 +71,7 @@
   loader←    '∆F.dyalog'             ⍝ ∆F bootstrap utility
   libra←     '∆FLibUtils.dyalog'     ⍝ £ library
   parmFi←    '∆FParmDefs.apla'       ⍝ 
-  globFi←    '∆FGlobals.dyalog'
+  globFi←    '∆FGlobals.aplns'
   pdf←       '∆FHelp.pdf'            ⍝ PDF 
   cd←        'CircleDiaeresis.dyalog' ⍝ Adam B's ⍥ with depth emulation
   el←        'Ellipsis.dyalog'

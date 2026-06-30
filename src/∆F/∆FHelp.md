@@ -1644,7 +1644,10 @@ specified.
 |     .apln                   |             Fixes ns script             |        9        |        ⎕FIX        |            ✔             |       ✔<small> FUTURE</small>       |
 |     .apla                   | Assigns array or ns<br>(array notation) |      2, 9       |    _assignment_    |            ✔             |                  ✔                  |
 |     .json                   |           Fixes ns from JSON5           |        9        |       ⎕JSON        |            ✔             |                  ✔                  |
-|      .txt                   |          Assigns char. vectors          |        2        |    _assignment_    |            ✔             |                  ✔                  |
+|      .txt                   |          Assigns a char. vector         |        2        |    _assignment_    |            ✔             |                  ✔                  |
+|      .aplv                  |          Assigns a char. vector         |        2        |    _assignment_    |            ✔             |                  ✔                  |
+|      .aplvv                 |    Assigns char. vector of vectors      |        2        |    _assignment_    |            ✔             |                  ✔                  |
+|      .aplm                  |          Assigns char. matrix           |        2        |    _assignment_    |            ✔             |                  ✔                  |
 |   .dyalog                   |              Fixes object               |     3, 4, 9     |        ⎕FIX        |            ✔             | <span class="red"><strong>✘<small> NEVER</small></strong></span> |
 | user-specified              |              Fixes object               |     3, 4, 9     |        ⎕FIX        |      <span class="red"><strong>✘</strong></span>      | <span class="red"><strong>✘<small> NEVER</small></strong></span> |
 

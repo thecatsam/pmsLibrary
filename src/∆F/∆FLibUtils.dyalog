@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-06-25') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-06-29') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading.
@@ -16,7 +16,7 @@
 ⍝ ∘ Local and External variables pointing to the "user" library userLibrary.
 ⍝   - ûLib  -  the namespace ref itself, by default FString.userLibrary (##.userLibrary)
 ⍝   - ûLibNm-  the name of ûLib
-⍝   - ûLibNmP- '(', ûLibNm, ')'
+⍝   - ûLibTok- ûLibNm with an appended space.
 
   :Section  Runtime Routines 
 ⍝ ===================================================================================
@@ -25,7 +25,7 @@
 ⍝ LibAuto: libStr← ûsr ∇ str 
 ⍝    str: str starts 1 char after '£' or '`L'. 
 ⍝    ûsr: namespace with (r/w:) ûsr.acache; (r/o:) êauto; (read in LoadObj:) êverbose 
-⍝ Returns: ûLibNmP, the library name surrounded by parens, no matter what.
+⍝ Returns: ûLibTok, the library name surrounded by parens, no matter what.
 ⍝ ∘ Used by ∆F's scan process when it sees £ or `L. 
 ⍝   ∘ Called from the main scan routines CF_SF and CFEsc. 
 ⍝   ∘ In turn calls fn LoadObj when a library name, nm, is being referenced 
@@ -46,26 +46,28 @@
 ⍝     as long as <name> is included.
 ⍝ ∘ No attempt is made to load (⎕CY/⎕FIX) invalid names or those already in ûLib.
 ⍝   That awaits a fresh reload of ∆F (whether by ]load or ⎕FIX).
-  LibNoAuto← {ûLibNmP} 
+  LibNoAuto← {ûLibTok} 
   LibAuto←{      
-    ~⍺.auto:                 ûLibNmP                ⍝ Not auto? →Return.
+    ~⍺.auto:                 ûLibTok                ⍝ Not auto? →Return.
         w← NoLB ⍵                                   ⍝     Skip blanks
-    '.'≠ ⊃w:                 ûLibNmP                ⍝ No initial period? →Return.
+    '.'≠ ⊃w:                 ûLibTok                ⍝ No initial period? →Return.
         w← NoLB 1↓w                                 ⍝     Skip more blanks,
-        nm← w↑⍨ len← NmSpan w                       ⍝     Get the (apparent) simple name and length.  
-    (⊂nm)∊ ⍺.acache:         ûLibNmP                ⍝ Saw it before? →Return.
+        len← NmSpan w                               ⍝     Grab the apparent name and length.
+        nm← len↑ w                                  ⍝      
+    nm⊂⍛∊ ⍺.acache:          ûLibTok                ⍝ Saw it before? →Return.
         ⍺.acache,← ⊂nm                              ⍝     Mark as seen (even if invalid)
-    0≠ ûLib.⎕NC nm:          ûLibNmP                ⍝ In libuser (>1) or invalid name (-1)? →Return. 
-    '←'= ⊃'∘ '~⍨ len↓w:      ûLibNmP                ⍝ Setting name (simple ←)? →Return.
+    0≠ ûLib.⎕NC nm:          ûLibTok                ⍝ In libuser (>1) or invalid name (-1)? →Return.
+        w← len↓w                                    ⍝     Skip the name.
+    '←'= ⊃w~ '∘ ':           ûLibTok                ⍝ If assignment, →Return.
         _← ⍺ LoadObj nm                             ⍝ Try to load obj definition
-                             ûLibNmP                ⍝ →Return.                                       
+                             ûLibTok                ⍝ →Return.                                       
   }
   ⍝ Support Fns: NoLB, NmSpan
     NoLB← {(∨\' '≠⍵)/⍵}                             ⍝ Fast Idiom. 
     ⍝ NmSpan: Find longest left-anchored span of symbols valid in APL simple user names.
     ⍝         We ensure the sequence is an actual valid name in a later step (see above).
     ⍝         For the fast span, it just needs to include (among other things) valid names.
-      nmSym← { ⍺← ⎕D ⋄ 0=≢⍵: ⍺~'⍺⍵∇' ⋄ ¯1=⎕NC f←⊃⍵: ⍺ ∇ 1↓⍵ ⋄ (⍺,f) ∇ 1↓⍵ } ⎕AV   
+      nmSym← ⎕D{ 0=≢⍵: ⍺~'⍺⍵∇' ⋄ ¯1=⎕NC f←⊃⍵: ⍺ ∇ 1↓⍵ ⋄ (⍺,f) ∇ 1↓⍵ } ⎕AV   
     NmSpan← 0⍳⍨∊∘nmSym
  
   ⍝ ======================================================================================
@@ -127,11 +129,16 @@
         (FixByType fi) ('file:"',fi,'"')         
       } 
     ⍝ IfF, etc.: Type tests for FixByType (above); OptT: Option for ⎕NGET for type <t>
-      IfF←    ∊∘'.aplf' '.aplo' '.apln' '.dyalog'      ⍝ ⎕FIXable obj.
-      IfA←    ≡∘(⊂'.apla')                             ⍝ APLAN obj.
-      IfJ←    ≡∘(⊂'.json')                             ⍝ JSON obj
-      IfT←    ∊∘(st←'.aplv' '.txt' '.aplvv' '.aplm')   ⍝ char. obj (vec, vv, vv, m)  
-      OptT←   ⌷∘0 1 1 2(st∘⍳)                          ⍝ ⎕NGET as target type
+              t0← '.aplf' '.aplo' '.apln' '.dyalog'
+      IfF←    ∊∘t0                                     ⍝ ⎕FIXable obj.
+      IfA←    ≡∘⊂∘'.apla'                              ⍝ APLAN obj.
+      IfJ←    ≡∘⊂∘'.json'                              ⍝ JSON obj
+              t1←'.txt' '.aplv' '.aplvv' '.aplm'
+      IfT←    ∊∘t1   ⍝ char. obj (vec+nl, vec+nl, vv, m)  
+      OptT←   ⌷∘0 0 1 2 (t1∘⍳)                         ⍝ ⎕NGET as target type
+    ⍝           ↑ ↑ ↑ ↑__ mx
+    ⍝           | | |____ vec of vec
+    ⍝           |_|______ vec w/ LF (⎕UCS 10) 
       _FOpts← ⍠('FixWithErrors' 0)('Quiet' 1)    
       _JOpts← ⍠('Dialect' 'JSON5')('Compact' 0)('Null' ⎕NULL)  
 
@@ -140,8 +147,8 @@
     ⍝ If it fails due to 19/11, try reading <fi> as an array notation object, assigning its value to <nm>.
       ⍝ 19: FILE ACCESS ERROR (⎕FIX/⎕NGET). 11: ERROR ⎕FIXING object contents.
       FixOrAssign← { 
-        19 11:: (⊂⍺)⊣ ûLib ⎕VSET ⊂⍺ (AN2Apl ⊃⎕NGET ⍵ 1)         ⍝ Array Notation? Assign value to ⍺.
-          2 ûLib.⎕FIX _FOpts êErrFi⊢← ⍵                         ⍝ Fixable object? Return what ⎕FIX returns.
+        19 11:: ⍺⊂⍛⊣ ûLib ⎕VSET ⊂⍺ (AN2Apl ⊃⎕NGET ⍵ 1)         ⍝ Array Notation? Assign value to ⍺.
+          2 ûLib.⎕FIX _FOpts êErrFi⊢← ⍵                        ⍝ Fixable object? Return what ⎕FIX returns.
       }
       
     ⍝ SubScanWS:     
@@ -166,13 +173,12 @@
     ⍝ extern: êNm  
     ⍝ Recursively scan the path for name ⍵ in each file OR wsid 
     ⍝ spec in pârms.⍙fullPath   
-    ⍝ ∘ If we see a array (with a single string), it's a workspace: 
+    ⍝ ∘ If we see a vec of vectors (with a single string vector), it's a workspace: 
     ⍝   call and return result from SubScanWS
     ⍝ ∘ Otherwise, 
     ⍝   call and return result from SubScanFiles
-      ⍝ If cur is a vector of (0 or more) char vectors, each is assumed to be a workspace id.
-      ⍝ When done, having returned rcNF, recursively continue ScanPath.
-      ⍝ Otherwise (rcOK or rcER), return from ScanPath.
+    ⍝   - When done, having returned rcNF, recursively continue ScanPath.
+    ⍝   - Otherwise (rcOK or rcER), return from ScanPath.
       ScanPath← {  
         0= ≢⍵: rcNF ⍬ ⋄ path← ⍵ ⋄ cur← ⊃path
         1< |≡cur: path SubScanWS cur                   ⍝ If VCV, => at least 1 workspace.    
@@ -197,7 +203,7 @@
         rc=rcOK: rc⊣ ⎕← '∆F: Copied ', qNms, ' into £ibrary',(0≠ ≢srcFi)/ ' from ',srcFi
           Ê← rc∘{  ⍝ Error msgs, either signaled or simply reported.
             en message← ⍵ 
-            libE: ⎕SIGNAL ⊂('EN' en) ('Message' message) 
+            libE: ⎕SIGNAL ⊂('EN' en) ('Message' message)('EM') 
             ~êVerbose: ⍺ ⋄ ⍺⊣ ⎕← ('∆F ',⎕EM en),': ',message   
           }
         rc=rcNF: Ê 11 ('Object "',êNm,'" not found on search path')   
@@ -236,10 +242,10 @@
 ⍝   LibComplete: Point to (empty, but named) user library at load-time.
 ⍝      actual ref is typically ##.userLibrary, local ref (alias): ûLib, local name: ûLibNm.
 ⍝ external: 
-⍝      ûLib, ûLibNm, ûLibNmP
+⍝      ûLib, ûLibNm, ûLibTok
   ∇ {libRef}← LibComplete libRef
     libRef.⎕DF ⎕NULL                      ⍝ Clear, if set...
-    ûLibNmP← '(',')',⍨ ûLibNm← ⍕ûLib← libRef 
+    ûLibTok← ' ',⍨ ûLibNm← ⍕ûLib← libRef 
     ûLib.⎕DF '£=[',ûLibNm,']'
   ∇
 
@@ -386,6 +392,6 @@
 ⍝ =========================================================================
 ⍝ EXECUTIVE
   LibComplete ##.userLibrary
-  LoadParms  ()                    
+  LoadParms ()                    
 :EndSection Loadtime Routines
 :EndNamespace   ⍝ libUtils
