@@ -73,8 +73,8 @@
   parmFi←    'ParmDefs.apla'         ⍝ 
   globFi←    'Globals.aplns'
   pdf←       'Help.pdf'            ⍝ PDF 
-  cd←        'CircleDiaeresis.dyalog' ⍝ Adam B's ⍥ with depth emulation
-  el←        'Ellipsis.dyalog'
+  cd←        'Futures/CircleDiaeresis.aplo' ⍝ Adam B's ⍥ with depth emulation
+  el←        'Futures/Ellipsis.aplf'
 
 
 ⍝ File specs 
