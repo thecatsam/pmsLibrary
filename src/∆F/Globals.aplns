@@ -130,6 +130,12 @@
 ⍝ KEEP_SRC_CM: Are source comments maintained in runtime ns's FString and FString.libUtils?
   KEEP_SRC_CM← 0 
 
+⍝ Fstring argument cache MAX and KEEP. KEEP is how many to keep when max number of elements 
+⍝ in the f-string cache is exceeded.  Be sure FSTR_CACHE_KEEP << FSTR_CACHE_MAX. 
+  ARG_CACHE_MAX←  500  
+  ARG_CACHE_KEEP← 350
+  ARG_CACHE_ENABLED← 1
+
 ⍝ Returns 20 if Dyalog 20, 19 if 19. (This version requires Dyalog 20 or later)
   APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion' 
 :EndNamespace ⍝ ⍙FGlobals

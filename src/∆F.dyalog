@@ -28,6 +28,10 @@
         ~⎕NEXISTS ⍵: ⎕SIGNAL ⊂('EN' 22)('Message',⍥⊂'No such file or directory: "',⍵,'"') 
         ⊃⎕NGET ⍵ 1
       }¨ g.( SRC_FI LIB_SRC_FI ) 
+    ⍝ If the argument cache is disabled, remove associated code from scanFStr
+      :If ~g.ARG_CACHE_ENABLED
+            main← '^.*⍝::ARG_CACHE.*$' ⎕R ''⊣ main
+      :EndIf
       :If ~g.KEEP_SRC_CM                                ⍝ Remove comments?  (except ⍝!)
           main lib← { 
             in out← ↓⍉↑( 
