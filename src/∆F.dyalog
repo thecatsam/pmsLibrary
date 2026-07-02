@@ -23,20 +23,22 @@
   dest← ⎕THIS.##                                        ⍝ The <main> ns goes to our parent, not us
   :Trap 0
       g← 0 ⎕FIX  gFi                                    ⍝ Load globals from file into namespace <g>
-    ⍝ Make sure key source files exist (if not: set to '')
+    ⍝ Make sure key source files <main> and <lib> exist (if not: set to '')
        main lib← { 
         ~⎕NEXISTS ⍵: ⎕SIGNAL ⊂('EN' 22)('Message',⍥⊂'No such file or directory: "',⍵,'"') 
         ⊃⎕NGET ⍵ 1
       }¨ g.( SRC_FI LIB_SRC_FI ) 
-    ⍝ If the argument cache is disabled, remove associated code from scanFStr
-      :If ~g.ARG_CACHE_ENABLED
+    ⍝ If the argument cache is disabled, remove associated code lines from scanFStr in <main>
+      :If g.ARG_CACHE_ENABLED
+          (⎕∘←)⍣(g.VERBOSE_LOADTIME)⊢ '✅✅✅ Arg cache: ENABLED'
+      :Else 
+          (⎕∘←)⍣(g.VERBOSE_LOADTIME)⊢ '✅✅✅ Arg cache: DISABLED'
             main← '^.*⍝::ARG_CACHE.*$' ⎕R ''⊣ main
       :EndIf
-      :If ~g.KEEP_SRC_CM                                ⍝ Remove comments?  (except ⍝!)
+    ⍝ If ~g.KEEP_SRC_CM, remove comments, except ⍝! comments.
+      :If ~g.KEEP_SRC_CM                                
           main lib← { 
-            in out← ↓⍉↑( 
-              '''[^'']*'''  '&' ⋄ '\h*⍝(?!\!).*'  '' ⋄ '^\h*$'  '' 
-            )
+            in out← ↓⍉↑( '''[^'']*'''  '&' ⋄ '\h*⍝(?!\!).*'  '' ⋄ '^\h*$'  '' )
             t/⍨ 0≠≢¨t← in ⎕R out⊢ ⍵  
           }¨ main lib 
       :EndIf 
