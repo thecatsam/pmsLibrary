@@ -27,7 +27,7 @@
       ⍝ Phase I: Set options and normalise args! 
       ⍝          User option styles? kw=keyword-style, pos'l=positional-style        
         :If  900⌶0                                            ⍝ No opts
-            opts← ⎕NS OPTS_DEFns                              ⍝ → Copy OPTS_DEFns                
+            opts← ⎕NS OPTS_DEFns                              ⍝ → Make private copy of OPTS_DEFns                 
         :ElseIf 9=⎕NC 'opts'                                  ⍝ opts references a namespace
             opts← ⎕NS OPTS_DEFns opts                         ⍝ → Copy OPTS_DEFns and kw user opts                        
         :ElseIf 11 83∊⍨ ⎕DR opts ⋄ :AndIf OPTS_KW ≥⍥≢ opts    ⍝ Ints / booleans, none trailing
@@ -173,14 +173,14 @@
     ûsr← ⍺                                
   ⍝ Validate all options passed in ûsr (⍺).  dfn∊ ¯1 0 1; others ∊ 0 1.
   0∊ ûsr.(verbose box auto inline (|dfn))∊ 0 1: ⎕SIGNAL êOpt  
-  ⍝ See if we have the fstr code in the fstr argument cache-- only if dfn=0  
-  ⍝ If so, we are done! Otherwise, set ûsr.key from ⍵ and ûsr options (above).             
-  ⍬≢ val← ûsr ArgCacheGet ⍵: val                       ⍝::ARG_CACHE
+    VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message (returns ⍵) 
+  ⍝ If (0=ûsr.verbose) and we've cached the code str for this key, return val.
+  ⍝ The key is based on the arg ⍵ and a subset of options in ûsr.
+  ⍝ See ArgCacheGet.
+  ⍬≢ ⊃⌽key val← ûsr ArgCacheGet ⍵: val                 ⍝::ARG_CACHE
   ⍝ Shortcuts used explicitly (not just via esc+alphabetic): 
   ⍝    See ⍙Load_Shortcuts 
-    scA scCD scEl scÐ scF scM scSel← ûsr.inline⊃¨ (
-      scA2 ⋄ scCD2 ⋄ scEl2 ⋄ scÐ2 ⋄ scF2 ⋄ scM2 ⋄ scSel2
-    ) 
+    scA scCD scEl scÐ scF scM scSel← ûsr.inline⊃¨ scA2  scCD2  scEl2  scÐ2  scF2  scM2  scSel2
     ûsr.acache← ⍬                                      ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
     ûsr.flds← ⍬                                        ⍝ output fields, each a CV (Char Vec)
@@ -189,10 +189,9 @@
 ⍝   *** START THE SCAN ***                             ⍝ Start the scan (recursive).                    
     flds← '' ScanAll⊢ fstr← ∊⍵                         ⍝    fstr: char vec of vecs => char vec                     
 ⍝   *** SCAN COMPLETE ***                              ⍝ Scan complete. 
-    VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message (returns ⍵)                                        
   0= ≢flds: VMsg '(1 0⍴⍬)', '⍨'/⍨ ûsr.dfn≠0            ⍝ If there are no flds, return 1 by 0 matrix
     code← CFDfn (ûsr.box⊃ scM scÐ), OrderFlds flds     ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
-  0=ûsr.dfn: VMsg ûsr.key ArgCacheSet code             ⍝::ARG_CACHE
+  0=ûsr.dfn: VMsg key ArgCacheSet code                 ⍝::ARG_CACHE    Emit code ready to execute
   0=ûsr.dfn: VMsg code                                 ⍝::NO_ARG_CACHE Emit code ready to execute
     fstrQ← ',⍨⊂', AplQt fstr                           ⍝ Is ûsr.dfn (1,¯1): add quoted fmt string (`⍵0)
     VMsg lb, code, fstrQ, rb                           ⍝ Emit ûsr.dfn-based str ready to cvt to ûsr.dfn in caller
@@ -258,13 +257,24 @@
    ∇ {isTrue}← SetArgCache isTrue 
     :IF isTrue
         argCache← ( kk: ⍬ ⋄ vv: ⍬ ⋄ max: ARG_CACHE_MAX ⋄ keep: ARG_CACHE_KEEP ) 
-      ⍝ Add the k v pair to the arg cache.
+      ⍝ ArgCacheSet:   val← key ∇ val
+      ⍝ Add the k v pair to the arg cache, but keep a finite amount of
+      ⍝ the most recent entries.
         ArgCacheSet← argCache. { 
           (kk vv),← ⊂¨⍺ ⍵ ⋄ max≥ ≢kk: ⍵ ⋄ kk↑⍨← -keep ⋄ ⍵
-        }            
-      ⍝ If ⍺.dfn=0, returns ⍬. Else sets ûsr.key← the key and returns the value (or ⍬)         
+        }  
+      ⍝ ArgCacheGet:   <key val>← ûsr ∇ arg      
+      ⍝ If dfn=0, 
+      ⍝    - generate a key <key> from arg and ûsr, then
+      ⍝    - see if we have <val>, the fstr code in the fstr argument cache.
+      ⍝         If so, we are done: return <key val>. 
+      ⍝         If not, return <key ⍬>.
+      ⍝ Else, 
+      ⍝    - return ⍬ ⍬.     
+      ⍝ The key depends on ⍵ and ûsr.(verbose box inline). 
+      ⍝ Verbose impacts whether newlines are translated to visual newlines '␤'.
         ArgCacheGet← argCache. { 
-          ⍺.dfn≠ 0: ⍺.key← ⍬ ⋄ p←kk⍳ ⊂⍺.key← ⍵ ⍺.( verbose box inline ) ⋄ p= ≢kk: ⍬ ⋄ p⊃ vv 
+          ⍺.dfn≠ 0: ⍬ ⍬ ⋄ p←kk⍳ ⊂key← ⍵ ⍺.( verbose box inline ) ⋄ p= ≢kk: key ⍬ ⋄ key (p⊃ vv)  
         }  
     :EndIF 
    ∇
