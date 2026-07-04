@@ -62,14 +62,14 @@
   pubdir←   libDir,'f-string-apl/'
 
 ⍝ Our files (sans directory names)
-  pgm←       'FString.dyalog'        ⍝ ∆F lib
+  pgm←       'FString.aplns'         ⍝ ∆F lib
   html←      'Help.html'             ⍝ html
   md←        'Help.md'               ⍝ markdown
   mdTmp←     'tmp_README.md'         ⍝ A temporary file!
   readme←    'README.md'             ⍝ Git README file
   hdr←       'Help_Hdr.html'         ⍝ local header file.
   loader←    '∆F.dyalog'             ⍝ ∆F bootstrap utility
-  libra←     'LibUtils.dyalog'       ⍝ £ library
+  libra←     'LibUtils.aplns'        ⍝ £ library
   parmFi←    'ParmDefs.apla'         ⍝ 
   globFi←    'Globals.aplns'
   pdf←       'Help.pdf'            ⍝ PDF 

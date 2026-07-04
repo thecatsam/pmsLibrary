@@ -260,7 +260,7 @@
       ⍝ ArgCacheSet:   val← key ∇ val
       ⍝ Add the k v pair to the arg cache, but keep a finite amount of
       ⍝ the most recent entries.
-        ArgCacheSet← argCache. { 
+        ArgCacheSet← argCache. { ⍬≡⍺: ⍬⊣ ⎕←'∆F Logic Error: Arg Cache key is empty.'
           (kk vv),← ⊂¨⍺ ⍵ ⋄ max≥ ≢kk: ⍵ ⋄ kk↑⍨← -keep ⋄ ⍵
         }  
       ⍝ ArgCacheGet:   <key val>← ûsr ∇ arg      
@@ -513,12 +513,12 @@
 ⍝ Utilities for "userLibrary" shortcut (£, `L) 
 ⍝ See LoadLibAuto 
 :Namespace libUtils
-⍝⍝⍝⍝⍝ This is a local stub, pending (optional, but expected) load of ∆FLibUtils below.
+⍝⍝⍝⍝⍝ This is a local stub, pending (optional, but expected) load of LibUtils below.
   ∇ {libNs}←  LibSimple libNs 
     ; ⍙readParms; auto
     ⍝ external in the stub... 
     ⍝   libUser, Auto, ShowPath, LoadParms
-    ⍝ external loaded from ∆FLibUtils.dyalog:
+    ⍝ external loaded from LibUtils.aplns:
     ⍝   libUser, Auto, pârms, ShowPath, LoadParms 
       ⎕THIS.libUser← libNs
       libNs.⎕DF ⎕NULL                                  ⍝ Clear any prior ⎕DF.
@@ -694,9 +694,9 @@
   ⍝ "Experimental" - future operators (from Adam B's github repository)
     cdFut elFut rsuFut←  cd el rsu { (⍺∊ FUTURES) ∧ 0≠≢⍵ } cdNm elNm 'rsu-dummy'
     grps← (
-      cdFut 'CircleDiaeresis (⍥) Depth-Extension'  
-      elFut  'Ellipsis (…) Extension of dfns ¨to¨'   
-      rsuFut 'Right-Shoe Underscore (⊇) Select/Sane Indexing'  
+      cdFut,⍥⊂  (23↑'Depth Operator.'),         (25↑' ⍥ CircleDiaeresis'),      '⎕UCS 9061'
+      elFut,⍥⊂  (23↑'Extension to dfns <to>.'), (25↑' … Ellipsis'),             '⎕UCS 8230'
+      rsuFut,⍥⊂ (23↑'Select/Sane Indexing.'),   (25↑' ⊇ Right-Shoe Underscore'),'⎕UCS 8839'
     )
     :For g :In grps
        :IF VERBOSE_LOADTIME 
@@ -745,7 +745,7 @@
     how← ' from "',libFi,'" into "','"',⍨∆THIS 
     :If libActive=0
         ⎕←↑1⍴⊂'❗❗❗ WARNING: Library autoload services were not loaded',how
-        ⎕←'✅✅✅ LIB_ACTIVE is set to ',(⍕libActive),' in ∆F/FString.dyalog'
+        ⎕←'✅✅✅ LIB_ACTIVE is set to ',(⍕libActive),' in ∆F/FString.aplns'
         ⎕←'✅✅✅ £ and `L shortcuts are available without them, as if (auto: 0) is set.'
         :Return 
     :EndIf 
