@@ -1,5 +1,5 @@
 :Namespace  
-⍝ ∆FGlobals.dyalog => nameless namespace  
+⍝ ∆FGlobals.aplns => nameless namespace  
 ⍝ =======================================================================
 ⍝ GENERAL GLOBAL VARIABLES:  
 ⍝ These are treated as "installation-level" variables, not user-level variables.
