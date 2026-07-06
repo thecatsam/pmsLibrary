@@ -109,7 +109,7 @@
 ⍝                  Load default parameters ONLY, never user's. Good for a demo environment!
 ⍝              0   No.    No.
 ⍝                  No autoload features should be available.
-  LIB_ACTIVE←  2                                       ⍝ Full functionality
+  LIB_ACTIVE←  2                                       ⍝ 2= Full functionality
   LIB_PARM_FI← '∆F/ParmDefs.apla' 
   LIB_USER_FI← '.∆F'                                   ⍝ User parameters, rel. to Apl ]CD
   LIB_SRC_FI←  '∆F/LibUtils.aplns'                     ⍝ Library shortcuts (£,  `L) utilities.
