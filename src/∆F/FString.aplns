@@ -168,9 +168,9 @@
 ⍝ U inline    0   If 0, puts ref to FString function.
 ⍝             1*  If 1, puts shortcut code defs right in output string; 
 ⍝                 1 if INLINE_DEF is set to 1.
-⍝ U cache  1   Is the code cached for a specific command-line fstring and options?  
+⍝ U cache     1   Is the code cached for a specific command-line fstring and options?  
 ⍝             0*  0 for all users, if FS_CACHE_ENABLED global is set to 0.
-⍝   libActive ⍬   library autoload cache character vector of vectors (CVV)
+⍝   lîbObjs   ⍬   library autoload cache character vector of vectors (CVV)
 ⍝   nl        CR  newline: nl (CR) or nlVis (the visible newline '␤').  
 ⍝   fields    ⍬   global field list (CVV)
 ⍝   omC       0   omega index counter: current index for omega shortcuts (`⍵, ⍹).
@@ -179,15 +179,15 @@
 ⍝   cfL       -   code field running length (for SDCFs). Set in dfn ScanAll.
     ûsr← ⍺                                
   ⍝ Validate all options passed in ûsr (⍺).  dfn∊ ¯1 0 1; others ∊ 0 1.
-    core← |ûsr.( dfn verbose box auto inline )         ⍝ For cache, see FSGet.
+    core← |ûsr.( dfn verbose box auto inline )         ⍝ For cache, see FSCGet.
   11≠ ⎕DR core: ⎕SIGNAL êOpt                           ⍝ Are core opts bool?
     VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                 ⍝ Verbose option message (returns ⍵) 
-    key code← ûsr.cache FSGet ⍵ core                   ⍝ Have we cached code ...  
+    key code← ûsr.cache FSCGet ⍵ core                   ⍝ Have we cached code ...  
   ⍬≢ code: VMsg code                                   ⍝ ... for this arg & core opts? 
 ⍝   Shortcuts used explicitly (not just via esc+alphabetic): 
 ⍝   See ⍙Load_Shortcuts 
-    scA scCD scEl scÐ scF scM scSel← ûsr.inline⊃¨ scA2  scCD2  scEl2  scÐ2  scF2  scM2  scSel2
-    ûsr.libActive← ⍬                                   ⍝ £ibrary shortcut "autoload" cache...
+    scA scCD scEl scÐ scF scM scSel← ûsr.inline⊃ sc.byVar 
+    ûsr.lîbObjs← ⍬                                     ⍝ £ibrary shortcut "autoload" cache...
     ûsr.nl← ûsr.verbose⊃ nl nlVis                      ⍝ A newline escape (`⋄) maps onto nlVis if verbose mode.
     ûsr.flds← ⍬                                        ⍝ output fields, each a CV (Char Vec)
     ûsr.omC←  0                                        ⍝ initialise omega counter to 0 (see `⍵)
@@ -197,9 +197,9 @@
 ⍝   *** SCAN COMPLETE ***                              ⍝ ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
   0= ≢flds: VMsg '(1 0⍴⍬)', '⍨'/⍨ ûsr.dfn≠0            ⍝ If there are no flds, return 1 by 0 matrix
     code← CFDfn (ûsr.box⊃ scM scÐ), OrderFlds flds     ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
-  0=ûsr.dfn: VMsg key FSSet code                       ⍝ Emit code ready to execute
+  0=ûsr.dfn: VMsg key FSCSet code                      ⍝ Emit code ready to execute
     fstrQ← ',⍨⊂', AplQt fstr                           ⍝ Is ûsr.dfn (1,¯1): add quoted fmt string (`⍵0)
-    VMsg key FSSet lb, code, fstrQ, rb                 ⍝ Emit ûsr.dfn-based str ready to cvt to ûsr.dfn in caller
+    VMsg key FSCSet lb, code, fstrQ, rb                ⍝ Emit ûsr.dfn-based str ready to cvt to ûsr.dfn in caller
   } ⍝ ScanFStr 
 ⍝ === End of ScanFStr ========================================================  
 
@@ -258,36 +258,36 @@
                ⎕EX 't1' 't2'
    :EndSection Constants
 
-   :Section Argument Cache (No Side Effects) 
-   ∇ {isTrue}← ACInitialise isTrue 
+   :Section F-String Cache (No Side Effects except on fscCache defined here.) 
+   ∇ {isTrue}← FSCInitialise isTrue 
     :IF isTrue
       ⍝             kk: key list; cc: code-string list;
       ⍝             max: max # of keys to maintain; keep: min to maintain as kk fills.
-        fsCache← ( kk: ⍬ ⋄ cc: ⍬ ⋄ max: FS_CACHE_MAX ⋄ keep: FS_CACHE_KEEP ) 
-      ⍝ FSGet:   (key′ code)← ûsr.cache ∇ key← (arg core)  
-      ⍝   key′ returned may be the <key> passed in OR ⍬.   
+        fscCache← ( kk: ⍬ ⋄ cc: ⍬ ⋄ max: FS_CACHE_MAX ⋄ keep: FS_CACHE_KEEP ) 
+      ⍝ FSCGet:   (key′ code)← ûsr.cache ∇ key← (arg core)  
+      ⍝    key′ returned may be the <key> passed in OR ⍬.   
       ⍝ If ⍺≠0
       ⍝    - For key <key>, see if we have cached <code>, the fstr code equiv of the key.
       ⍝         If so, we are done: return <key code>. 
-      ⍝         If not, return <key ⍬>, i.e. we should do a FSSet after processing the f-string. 
+      ⍝         If not, return <key ⍬>, i.e. we should do a FSCSet after processing the f-string. 
       ⍝ Else
       ⍝    - Return ⍬ ⍬, i.e. set key′← ⍬ (no key) and code to 0.
-        FSGet← fsCache. { 0= ⍺: ⍬ ⍬ ⋄ p←kk⍳ ⊂⍵ ⋄ p= ≢kk: ⍵ ⍬ ⋄ ⍵ (p⊃ cc) }  
-      ⍝ FSSet: code← key ∇ code
+        FSCGet← fscCache. { 0= ⍺:  ⋄ p←kk⍳ ⊂⍵ ⋄ p= ≢kk: ⍵ ⍬ ⋄ ⍵ (p⊃ cc) }  
+      ⍝ FSCSet: code← key ∇ code
       ⍝ Add the k v pair to the arg cache, but keep a finite amount of
       ⍝ the most recent entries. Return code.
       ⍝ If key is ⍬, immediately return code.
-        FSSet← fsCache. { 
+        FSCSet← fscCache. { 
           ⍬≡⍺: ⍵ ⋄ (kk cc),← ⊂¨⍺ ⍵                     ⍝ Append ⍺, ⍵ to kk, cc.
           max≥ ≢kk: ⍵⊣ kk∘← 1500⌶ kk                   ⍝ Hash keys <kk>
            ⍵⊣ kk∘← 1500⌶ kk↑⍨ -keep                    ⍝ Too many keys? Trunc and rehash.
         }  
-    :Else ⍝ Caching Disabled
-        FSGet← (⍬ ⍬)⍨                                  ⍝ Return constant (key and code value null)
-        FSSet← ⊢                                       ⍝ Return right arg, code.
+    :Else ⍝ F-String Caching Disabled
+        FSCGet← (⍬ ⍬)⍨                                  ⍝ Return constant (key and code value null)
+        FSCSet← ⊢                                       ⍝ Return right arg, code.
     :EndIF 
    ∇
-   ACInitialise FS_CACHE_ENABLED=1 
+   FSCInitialise FS_CACHE_ENABLED=1 
    :EndSection Argument Cache (No Side Effects) 
 
    :Section Utilities (Must Have Zero Side Effects) 
@@ -328,7 +328,7 @@
     c∊ om_omUs: ⍺ CFOm w                               ⍝ Permissively allows `⍹ as equiv to `⍵ OR ⍹ 
     c='L': (⍺ libUtils.LibAuto w) w                    ⍝ Library shortcut: special (niladic) case
       p← sc.Map c                                      ⍝ Look for other shortcuts
-    sc.nEsc> p: (⍺.inline p⊃ sc.tbl) w                 ⍝ Found? return code string.
+    sc.nShortcuts> p: (⍺.inline p⊃ sc.byMap) w         ⍝ Found? return code string.
     c∊⍥⎕C ⎕A: ⎕SIGNAL êScBad c                         ⍝ Nope: Unknown shortcut!
       ⎕SIGNAL êEsc c                                   ⍝ Nope: An escape foll. by non-alphabetic.
   } ⍝ End CFEsc 
@@ -687,6 +687,7 @@
   ∇ {sc}← LoadShortcutCalls 
   ; cdFut; elFut; rsuFut; g; grps; scEscCodes; _ 
   ; CPublish ; Fn2Inline; In  
+  ;scA2 ;scB2; scC2; scCD2; scÐ2; scEl2; scF2; scJ2; scM2; scS2; scSel2; scT2; scQ2; scW2
   ⍝:Extern cd; cdNm; el; elNm; rsu; selCodeStr; VERBOSE_LOADTIME
 
     CPublish← { 
@@ -728,18 +729,18 @@
   ⍝ Others: CircleDiaeresis, Select -- called only via symbol ⍥, ⊇ (if enabled)
 
   ⍝ These shortcuts are exported for use outside this function
-  ⍝:Extern scA2 scB2; scC2; scCD2 cEl2 scJ2; scQ2; scS2; scF2; scM2; scT2; scW2; scÐ2; scSel2 
   scA2 scB2 scC2 scJ2 scM2 scQ2 scS2 scT2 scW2 ← CPublish¨ 'ABCJMQSTW' 
   scÐ2←   '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' CPublish 'Ð'     
   scF2←   2⍴⊂ ' ⎕FMT ' 
   scCD2 scEl2←  cdFut elFut CPublish¨ (cdNm cd) (elNm el)    
   scSel2← 2⍴ ⊂rsu selCodeStr⊃⍨ rsuFut 
     
-⍝ Using sc (shortcut) namespace in ∆F routines. Members: tbl, nEsc, Map 
+⍝ Using sc (shortcut) namespace in ∆F routines. Members: byMap, byVar, nShortcuts, Map.
   sc← (
-     tbl: ↓⍉↑scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scEl2 scSel2 
-   ⍝ nEsc: # of user-accessible shortcuts via <esc><let>, i.e. `A, `B, etc.
-     nEsc: ≢scEscCodes← 'ABCDFJQSTW' 
+     byMap: ↓⍉↑scA2 scB2 scC2 scT2 scF2 scJ2 scQ2 scS2 scT2 scW2 scÐ2 scM2 scCD2 scEl2 scSel2 
+     byVar:  0 1⊃¨ ⊂↓⍉↑ scA2  scCD2  scEl2  scÐ2  scF2  scM2  scSel2
+   ⍝ nShortcuts: # of user-accessible shortcuts via <esc><let>, i.e. `A, `B, etc.
+     nShortcuts: ≢scEscCodes← 'ABCDFJQSTW' 
   )
   sc.Map← scEscCodes∘⍳
   ∇ 
@@ -757,12 +758,12 @@
         ok← 0 
     :EndTrap 
   ∇
-  ∇ {libActive}← LoadLibAuto (libFi libActive keepCm)
+  ∇ {libAuto}←  LoadLibAuto (libFi libAuto)
     ;how 
     how← ' from "',libFi,'" into "','"',⍨∆THIS 
-    :If libActive=0
+    :If libAuto=0
         ⎕←↑1⍴⊂'∆F ❗❗❗ WARNING: Library autoload services were not loaded',how
-        ⎕←'∆F ✅✅✅ LIB_ACTIVE is set to ',(⍕libActive),' in ∆F/FString.aplns'
+        ⎕←'∆F ✅✅✅ LIB_AUTO is set to ',(⍕libObjs),' in ∆F/FString.aplns'
         ⎕←'∆F ✅✅✅ £ and `L shortcuts are available without them, as if (auto: 0) is set.'
         :Return 
     :EndIf 
@@ -772,7 +773,7 @@
             ⎕←'∆F ✅✅✅ Loaded services for Library shortcut (£)',how  
         :EndIf 
     :Else
-        libActive← 0 
+        libAuto← 0 
         ⎕←↑1⍴⊂'∆F ❗❗❗ WARNING: Unable to load Library autoload services',how 
         ⎕←'∆F ✅✅✅ £ and `L shortcuts are available without autoload (auto: 0).'
     :EndTrap
@@ -807,7 +808,7 @@
       ⍝ Sets sc: namespace with global shortcut table and related
         sc← LoadShortcutCalls
         LoadHelp HELP_HTML_FI
-        LIB_ACTIVE← LoadLibAuto LIB_SRC_FI LIB_ACTIVE KEEP_SRC_CM   
+        LIB_AUTO← LoadLibAuto LIB_SRC_FI LIB_AUTO 
         ShowGlobalsIf VERBOSE_RUNTIME
     :Else 
         ⎕← ↑⎕DMX.DM ⋄  ⎕←'Stack: ' ⋄ ⎕← 4{⍺≥≢⍵: '   ',⍵ ⋄ ⍺ ∇ ⍺↓⍵⊣ ⎕← '   ',⍺↑⍵} ⎕XSI  
