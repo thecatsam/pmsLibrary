@@ -15,10 +15,11 @@ logfile←'∆FTiming.data'
       :FOR t :in 't1' 't2 cv' 't3 10' 't4'
           OUT,← ⊂V ('∆F\s+',t,'\s+→\s+([\d\.E¯]+)') ⎕S '\1'⊣lines 
       :ENdFor
-       OUT←OUT[¯1+1 2 4 3] 
+       OUT← OUT[¯1+1 2 4 3] 
        ⎕← '  Ave     Min     Max   Last'
        ⎕← ↑{w← ⍵⊃OUT ⋄ 100÷⍨⌊0.5+100×10000×((+/÷≢) w)(⌊/w)(⌈/w)(⊃⌽w)}¨0 0 1 2 3
        ⎕←']plot OUT -type=tower'
+       ⎕SE.UCMD 'plot OUT -type=tower'
       :RETURN
   :Caselist 't '
       ⋄
