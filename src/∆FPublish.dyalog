@@ -3,7 +3,7 @@
   ; libra; loader; md; mdTmp; ns; pandocBin; parmFi; pdf; pgm; pgmDep; priv
   ; privF; privFdir; privdir; productionCode; pub; pubF; pubFdir; pubdir   
   ; quiet; readme; sideN2FN; temp; tempdir; timestamp; title; version; _   
-  ; CSay; CopyFi; Delete; Diamonds; Fi; HomeDir; Hr; HtmlMacro; Macros     
+  ; CSay; CopyFi; Delete; Diamonds; Fi; homeDir; Hr; HtmlMacro; Macros     
   ; MacrosInSrc; Md2Html; MdPandoc2Git; NeedsUpdate; Parm; Priv; PrivF; Pub
   ; PubF; Say; Temp; Tp; UpdatePgm                                         
   ; _OptsC; _OptsM                                                         
@@ -53,7 +53,7 @@
   pandocBin←'/usr/local/bin/pandoc'
 
 ⍝ Directories...
-  HomeDir←  '/Users/petermsiegel/' ⎕R '~/'
+  homeDir←  '/Users/petermsiegel/' ⎕R '~/'
   libDir←   '/Users/petermsiegel/MyDyalogLibrary/'
   tempdir←  '/Users/petermsiegel/Desktop/'             ⍝ Not currrently used!
   privFdir← libDir,'pmsLibrary/src/∆F/'
@@ -135,12 +135,15 @@
       ⍝ ============================================
       ⍝ Miscellany: Remove button HTML
       ⍝             set all <details> to <details open>, except leave the TOC details as is.
-        in←'<button.*?</button>' '<details +id="TOC">' '<details>'         '\n(<pTbr>\s*\n)+'
-        out←'⍠⍠⍠'                '&'                   '<details open>'    ''
-      ⍝ <!-- gittitle ### ∆F Formatted String Literals (v.0.1.1) -->
-        in,← '<GIT\h*>(.*?)</GIT\h*>'        '<NOGIT\h*>.*?</NOGIT\h*>' 
-        out,←'\1'                             '' 
-        Miscellany←in ⎕R out _OptsM 
+        src snk← ↓⍉↑(
+          ('<button.*?</button>'         '⍠⍠⍠')   
+          ('<details +id="TOC">'         '&' )    
+          ('<details>'                   '<details open>')    
+          ('\n(<pTbr>\s*\n)+'            '')
+          ('<GIT\h*>(.*?)</GIT\h*>'      '\1' )                         
+          ('<NOGIT\h*>.*?</NOGIT\h*>'    '' )
+        )
+        Miscellany← src ⎕R snk _OptsM 
         ⍝ SideN2Null: Remove sidenotes.
         SideN2Null←⍺⍺{
             _←¯1 Say'Removing sidenotes in ',Tp ⍺⍺
@@ -160,7 +163,7 @@
             out←{
                 fnCur← fnCtr
                 fnCtr+←1
-                fnIn←⍵.Lengths[1]↑⍵.Offsets[1]↓⍵.Block
+                fnIn← ⍵.Lengths[1]↑⍵.Offsets[1]↓⍵.Block
                 fnOut←'^\s*(?:<br>)*\s*' '\s*(?:<br>)*\s*$'⎕R'' _OptsM fnIn
                 fnList,←'[^',fnCur,']: ',fnOut,NL
                 '[^',⍕fnCur,'] '
@@ -175,40 +178,41 @@
     ml←{ ⍝ ml: match list.
         ⍝ ∆Link are links that we won't follow, but will tell the user how to do it.
         ⍝ Why not follow-- in htmlRenderer, we can't return to HELP without bother. 
-        ∆Link←   '<a id="displayText" href="javascript:linkAlert();">'
-        ∆Link,←  '<span class="linkNote">'
+        ∆Link←  ∊(
+           '<a id="displayText" href="javascript:linkAlert();">'
+           '<span class="linkNote">'
+        )
         ∆Link0←  '</span></a>'
-        ml←⍬
-        ml,←⊂ '___TIMESTAMP___' timestamp 
-        ml,←⊂ '___COPYRIGHT___' copyright 
-        ml,←⊂ '___VERSION___'   version 
-        ml,←⊂ 'v(\.\d+){3,5}'    version     ⍝ v.0.1.2
-        ml,←⊂ 'VERSION\h*←\h*''.*?'''  ('VERSION← ','''',version,'''')
-        ml,←⊂ '<GIT\h*>(.*?)</GIT\h*>'   ''
-        ml,←⊂ '</?NOGIT\h*>'    ''
-        ml,←⊂ '<∆Red>'          '<span class="red"><strong>'
-        ml,←⊂   '</∆Red>'         '</strong></span>'
-        ml,←⊂ '<∆Blue>'         '<span class="blue"><strong>'
-        ml,←⊂   '</∆Blue>'        '</strong></span>'
-        ml,←⊂ '<∆Green>'        '<span class="green"><strong>'
-        ml,←⊂   '</∆Green>'       '</strong></span>'
-        ml,←⊂ '<∆Gr[ea]y>'         '<span class="grey"><strong>'
-        ml,←⊂   '</∆Gr[ea]y>'       '</strong></span>'
-        ml,←⊂ '<∆Sum>'          '<summary class="summary">'
-        ml,←⊂   '</∆Sum>'         '</summary>'
-        ml,←⊂ '<∆Fade>'         '<span style="opacity:0.6;">'
-        ml,←⊂   '</∆Fade>'        '</span>'
-        ml,←⊂ '<∆N>'            '<span class="margin-note">'
-        ml,←⊂   '</∆N>'           '</span>'
-        ml,←⊂ '<∆L>'            ∆Link 
-        ml,←⊂   '</∆L>'           ∆Link0
-      ⍝ Scroll target: <a id="intro" class="scroll-target"></a>
-        ml,←⊂ '<∆Targ ([^>]+)>' '<a id="\1" class="scroll-target"></a>'      
-        ml,←⊂ '&RHAND;'         '<big>👉</big>\&nbsp;'     ⍝  a big 👉
-        ml
+        (
+           ( '___TIMESTAMP___'          timestamp)
+           ( '___COPYRIGHT___'          copyright)
+           ( '___VERSION___'            version)
+           ( 'v(\.\d+){3,5}'            version)     ⍝ v.0.1.2
+           ( 'VERSION\h*←\h*''.*?'''    ('VERSION← ','''',version,''''))
+           ( '<GIT\h*>(.*?)</GIT\h*>'   '')
+           ( '</?NOGIT\h*>'             '')
+           ( '<∆Red>'                   '<span class="red"><strong>')
+           ( '</∆Red>'                  '</strong></span>')
+           ( '<∆Blue>'                  '<span class="blue"><strong>')
+           ( '</∆Blue>'                 '</strong></span>')
+           ( '<∆Green>'                 '<span class="green"><strong>')
+           ( '</∆Green>'                '</strong></span>')
+           ( '<∆Gr[ea]y>'               '<span class="grey"><strong>')
+           ( '</∆Gr[ea]y>'              '</strong></span>')
+           ( '<∆Sum>'                   '<summary class="summary">')
+           ( '</∆Sum>'                  '</summary>')
+           ( '<∆Fade>'                  '<span style="opacity:0.6;">')
+           ( '</∆Fade>'                 '</span>')
+           ( '<∆N>'                     '<span class="margin-note">')
+           ( '</∆N>'                    '</span>')
+           ( '<∆L>'                     ∆Link)
+           ( '</∆L>'                    ∆Link0)
+           ( '<∆Targ ([^>]+)>'         '<a id="\1" class="scroll-target"></a>')
+           ( '&RHAND;'                 '<big>👉</big>\&nbsp;')        
+        )
     }0
     ⍝ Common: Common macros
-    Common←ml { src snk←↓⍉↑⍺⍺ ⋄ src ⎕R snk _OptsM ⍵ }
+    Common← ml { src snk←↓⍉↑⍺⍺ ⋄ src ⎕R snk _OptsM ⍵ }
 
     ⍝ Apply Common and Git Readme-specific macros based on type
     txt← Common GitReadmeOnly ⊃⎕NGET Fi io
@@ -244,26 +248,23 @@
   ⍝ Avoid pandoc's css (except min). It messes with tables.
   ⍝ Begin every option/spec var. for Pandoc with a space, unless empty.
   Md2Html←{
-    ∆← {⍺←'' ⋄ ⍺, ∊' ',¨⍵ }
-    in hdr out←⍵
-    ⍝ mDoc: omit default css: -M document-css=false
-    mDoc←'-M document-css=false'
-    mTitle← ''                                   ⍝ 'title="',title,'"' if not in doc.
-      ⍝ refLoc:  Use default for --reference-location=...'
-    refLoc← '' 
-    numSec←'-N'                                  ⍝ number sections
-    fiTyp← '-f markdown'                         ⍝ pandoc format markdown
-    fiIn←  Fi in
-    fiHdr← '-H ',Fi hdr 
-    fiOut← '-o ',Fi out
-    tableNos←  '' ⍝ '--filter pandoc-tablenos'
-  ⍝ Doesn't work as expected...: ' -s --toc --toc-depth=2'
-    toc← ''                     
-    opts← ∆ mDoc mTitle refLoc numSec tableNos toc 
-    _Fis←{i h o←⍺⍺¨⍵ ⋄ ∆ i '-H' h '-o' o}
-    _←Say'pandoc $opts' ∆ fiTyp (Tp _Fis in hdr out)
-    _←Say'>>>    $opts=',opts
-    parms←opts ∆ fiTyp (Fi _Fis in hdr out)
+      in hdr out←⍵
+      ∆← { ∊' ',¨ ⊆⍵ }
+
+      fiTyp← ∆ ' -f markdown '                     ⍝ pandoc format markdown
+      opts← ∆ (    
+      ⍝ mDoc: omit default css: -M document-css=false
+          '-M document-css=false'              ⍝ -M 
+          ''                                    ⍝ 'title="',title,'"' if not in doc.
+          ''                                    ⍝ refLoc:  Use default for --reference-location=...'
+          '-N'                                  ⍝ number sections                        
+          ''                                    ⍝ tableNos: '--filter pandoc-tablenos'
+          ''                                    ⍝ toc: Doesn't work as expected: -s --toc --toc-depth=2'
+      )
+      _Fis←{i h o←⍺⍺¨⍵ ⋄ ∆ i '-H' h '-o' o}
+      _←Say'pandoc $opts' fiTyp (Tp _Fis in hdr out)
+      _←Say'>>>    $opts=',opts
+      parms← opts, fiTyp, (Fi _Fis in hdr out)
     1:_←⎕SH pandocBin, parms
   }
 ⍝ MdPanDoc2Git: Convert pandoc-style markdown to Git format for readme.md ONLY.
@@ -320,11 +321,11 @@ sideN2FN←Parm'^'
 :EndIf
 Hr
 Say'∘ Directories:'
-Say'    PRIV:  ', HomeDir Fi Priv ⍬
-Say'    PRIVF: ', HomeDir Fi PrivF ⍬
-Say'    PUB:   ', HomeDir Fi Pub ⍬
-Say'    PUBF:  ', HomeDir Fi PubF ⍬
-Say'    TEMP:  ', HomeDir Fi Temp ⍬
+Say'    PRIV:  ', homeDir Fi Priv ⍬
+Say'    PRIVF: ', homeDir Fi PrivF ⍬
+Say'    PUB:   ', homeDir Fi Pub ⍬
+Say'    PUBF:  ', homeDir Fi PubF ⍬
+Say'    TEMP:  ', homeDir Fi Temp ⍬
 Hr
 
 pgmDep←  ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) 
