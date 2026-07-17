@@ -1,0 +1,14 @@
+﻿{{def: red '<red>',⍵,'</red>'}}
+{{def: green '<green>',⍵,'</green>'}}
+{{
+   def: bold 
+  '<b>',⍵,'</b>'
+  ⍝  Comment
+ }}  
+ 
+{{macros: on}}
+
+
+This is {{red One two {{bold three}} three four}}.
+
+This is {{red Some more {{bold three {{pink and}} {{green four}}}} three four}}.

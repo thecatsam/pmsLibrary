@@ -147,7 +147,7 @@
         ⍝ SideN2Null: Remove sidenotes.
         SideN2Null←⍺⍺{
             _←¯1 Say'Removing sidenotes in ',Tp ⍺⍺
-            in←'<∆N>.*?</∆N>'
+            in←'<∆Note>.*?</∆Note>'
             out←''
             in ⎕R out _OptsM ⍵
         }
@@ -159,7 +159,7 @@
             NL←⎕UCS 10
             fnCtr←1
             fnList←NL,'## Footnotes',NL,NL
-            in←'<∆N>(.*?)</∆N>'
+            in←'<∆Note>(.*?)</∆Note>'
             out←{
                 fnCur← fnCtr
                 fnCtr+←1
@@ -203,10 +203,10 @@
            ( '</∆Sum>'                  '</summary>')
            ( '<∆Fade>'                  '<span style="opacity:0.6;">')
            ( '</∆Fade>'                 '</span>')
-           ( '<∆N>'                     '<span class="margin-note">')
-           ( '</∆N>'                    '</span>')
-           ( '<∆L>'                     ∆Link)
-           ( '</∆L>'                    ∆Link0)
+           ( '<∆Note>'                  '<span class="margin-note">')
+           ( '</∆Note>'                 '</span>')
+           ( '<∆Link>'                  ∆Link)
+           ( '</∆Link>'                 ∆Link0)
            ( '<∆Targ ([^>]+)>'         '<a id="\1" class="scroll-target"></a>')
            ( '&RHAND;'                 '<big>👉</big>\&nbsp;')        
         )

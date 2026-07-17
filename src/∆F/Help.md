@@ -8,7 +8,7 @@ toc: true
 ## 0 Introduction {.unnumbered}
 
 <div class="right-margin-bar"> 
-<∆N>Short for "**format&shy;ted string lit&shy;er&shy;als**, _f‑strings_ were introduced in Python in 2016. **∆F** _f‑strings_ and Python's are **not** compatible.</∆N>
+<∆Note>Short for "**format&shy;ted string lit&shy;er&shy;als**, _f‑strings_ were introduced in Python in 2016. **∆F** _f‑strings_ and Python's are **not** compatible.</∆Note>
 
 <a id="intro" class="scroll-target"></a>
 
@@ -26,9 +26,9 @@ _dfns_ and other familiar tools.
 <details id="TOC" open>     <!-- option: open  Set id="TOC" here only. -->
 <summary class="summary">&ensp;<span style="opacity:0.6;">Show/Hide</span> <em>Major Headings</em></summary>
 
-<∆N><br><br><br>
+<∆Note><br><br><br>
 **Quick Start:** If you want the minimum before diving in.
-</∆N>
+</∆Note>
 <div class="multi-column-text" style="font-size:80%;">
 
 <big >1.  <a href="#inside-preparing"         >Preparing to Run **∆F**</a> 
@@ -57,8 +57,8 @@ _dfns_ and other familiar tools.
 ## **∆F** Installation
 
 1. Via your browser, go to Github URL <mark><a id="displayText" href="javascript:linkAlert();"><span class="linkNote">https://github.com/thecatsam/f-string-apl.git</span></a></mark>.
-2. Make a note of <∆N>Dyalog user command `]cd` will show you your current working directory.</∆N>your current (or desired) working directory.
-3. <∆N>**Download:** E.g. via the Github **Code** button, use download ZIP to place in the desired directory .</∆N>Download and copy the file **∆F.dyalog** and directory **∆F** (which contains several files) into the current working directory,
+2. Make a note of <∆Note>Dyalog user command `]cd` will show you your current working directory.</∆Note>your current (or desired) working directory.
+3. <∆Note>**Download:** E.g. via the Github **Code** button, use download ZIP to place in the desired directory .</∆Note>Download and copy the file **∆F.dyalog** and directory **∆F** (which contains several files) into the current working directory,
    ensuring they are peers, _i.e._ at the same directory level.
 
 <big>👉</big>&nbsp;Now, **∆F** is available to load and use. Continue in the [next section](#loading-and-running-f).
@@ -66,7 +66,7 @@ _dfns_ and other familiar tools.
 ## Loading and Running **∆F**
 
 1. Confirm that your current directory remains as before.
-2. From your Dyalog session<∆N>*Or,*&emsp;`⎕SE.⎕FIX'∆F.Dyalog'`<br>**_⎕SE:_** Or any _target_ namespace you desire.</∆N>, enter: <br>&emsp;`]load ∆F -target=⎕SE`<br>
+2. From your Dyalog session<∆Note>*Or,*&emsp;`⎕SE.⎕FIX'∆F.Dyalog'`<br>**_⎕SE:_** Or any _target_ namespace you desire.</∆Note>, enter: <br>&emsp;`]load ∆F -target=⎕SE`<br>
    Now, the target directory (`⎕SE`) will contain the namespace `FString`, containing `∆F` and supporting services and objects. 
 3. By default, the target namespace (<code>_⎕SE.FString_</code>) will be prepended to the ***beginning*** of `⎕PATH`.
 4. **∆F** may be called as is, i.e. as `∆F`, or fully specified as `⎕SE.FString.∆F`. 
@@ -81,7 +81,7 @@ help information is also available in the file _readme.md_ on Github.</small>
 
 ## Displaying ∆F **Help** in _APL_
 
-<∆N>If `∆F⍨'help'` seems exotic, try: `'help' ∆F ⍬`.</∆N>
+<∆Note>If `∆F⍨'help'` seems exotic, try: `'help' ∆F ⍬`.</∆Note>
 
 <big>👉</big>&nbsp;To display this **HELP** information, type: `∆F⍨ 'help'`.
 
@@ -94,19 +94,19 @@ help information is also available in the file _readme.md_ on Github.</small>
 <details open><summary class="summary">&ensp;<span style="opacity:0.6;">Show/Hide</span> <em>Overview</em> 
 </summary><a id="inside-overview" class="scroll-target"></a>
 
-<∆N>The current version of **∆F** requires Dyalog version 20.</∆N>
+<∆Note>The current version of **∆F** requires Dyalog version 20.</∆Note>
 Inspired by [Python f‑strings](#appendix-ii-python-fstrings), **∆F** includes a variety of capabilities to make it easy to evaluate, format, annotate, and display related multi&shy;dimensional information.
 A **∆F** _f-string_
 is (typically) a character vector, which may reference objects in the environment, additional
 function arguments, or both.
 
- <∆N>For *f-string* formats, see [**∆F** Call Syn&shy;tax Over&shy;view](#f-call-syntax-overview).</∆N>
+ <∆Note>For *f-string* formats, see [**∆F** Call Syn&shy;tax Over&shy;view](#f-call-syntax-overview).</∆Note>
 **∆F** _f‑strings_ include:
 
 - The abstraction of 2-dimensional character **_fields_**, generated one-by-one from the user's specifications and data, then aligned and catenated into a single overall character matrix result;
 
-<∆N>`` `◇ ``: back&shy;tick + state&shy;ment sep&shy;ar&shy;ator (`⎕UCS 96 8900`).
-</∆N>
+<∆Note>`` `◇ ``: back&shy;tick + state&shy;ment sep&shy;ar&shy;ator (`⎕UCS 96 8900`).
+</∆Note>
 
 - **Text** fields,
   each allowing [multiline Unicode text](#text-fields-and-space-fields), with the sequence `` `◇ `` generating a **new line**;
@@ -116,31 +116,31 @@ function arguments, or both.
 
   **Code** fields also provide a number of concise, convenient extensions, such as:
 
-  - **Quoted strings** <∆N>Quoted strings, like **Text** fields, allow easy entry of newlines via the sequence `` `◇ ``.</∆N>
+  - **Quoted strings** <∆Note>Quoted strings, like **Text** fields, allow easy entry of newlines via the sequence `` `◇ ``.</∆Note>
     in **Code** fields, with several quote styles:
 
     - **double-quotes**<br>
       `∆F '{"like this"}'` or `` ∆F '{"on`◇""three""`◇lines"}' ``
-    - **double angle quotation marks**,<∆N><big>**«**</big> and <big>**»**</big>: Also known as _guillemets_.</∆N><br>
+    - **double angle quotation marks**,<∆Note><big>**«**</big> and <big>**»**</big>: Also known as _guillemets_.</∆Note><br>
       `∆F '{«with internal quotes like "this" or ''this''»}'`,<br> _not to mention:_
     - _APL_'s tried-and-true embedded **single-quotes**,<br>
       `∆F '{''shown ''''right'''' here''}'`
 
-  - Simple shortcuts<∆N>Details on all the [shortcuts](#code-field-shortcuts) are provided later in this document.</∆N> for
+  - Simple shortcuts<∆Note>Details on all the [shortcuts](#code-field-shortcuts) are provided later in this document.</∆Note> for
 
     - **format**ting numeric arrays, **\$** (short for **⎕FMT**):<br>`∆F '{"F7.5" $ ?0 0}'`
     - putting a **box** around a specific expression, **\`B**:<br>`` ∆F '{`B ⍳2 2}' ``
     - placing the output of one expression **above** another, **%**:<br>`∆F '{"Pi"% ○1}'`
-    - formatting **date** and **time** expressions from _APL_ timestamps (**⎕TS**) using **\`T**<∆N>`` `T `` combines&nbsp;**1200⌶** and **⎕DT**</∆N>:<br>`` ∆F '{"hh:mm:ss" `T ⎕TS}' ``
-    - calling <∆N>**£** stands for _library_.</∆N>arbitrary functions on the fly from the **dfns** workspace or a user file:<br>`∆F '{41=£.pco 12}' ⍝ Is 41 the 12th prime?`
+    - formatting **date** and **time** expressions from _APL_ timestamps (**⎕TS**) using **\`T**<∆Note>`` `T `` combines&nbsp;**1200⌶** and **⎕DT**</∆Note>:<br>`` ∆F '{"hh:mm:ss" `T ⎕TS}' ``
+    - calling <∆Note>**£** stands for _library_.</∆Note>arbitrary functions on the fly from the **dfns** workspace or a user file:<br>`∆F '{41=£.pco 12}' ⍝ Is 41 the 12th prime?`
     - _and more_;
 
   - Simple mechanisms for concisely formatting and displaying data from
     - user arrays of any shape and dimensionality:<br>`tempC← 10 110 40 ◇ ∆F '{tempC}'`
       <br>
-    - arbitrary <∆N><br>£ quietly finds `dec` and `hex` in the **dfns** workspace.</∆N>_dfn_-style code:<br>`∆F '{ 223423 ≡⊃£.dec £.hex 223423: "Checks out" ◇ "Bad"}'`
+    - arbitrary <∆Note><br>£ quietly finds `dec` and `hex` in the **dfns** workspace.</∆Note>_dfn_-style code:<br>`∆F '{ 223423 ≡⊃£.dec £.hex 223423: "Checks out" ◇ "Bad"}'`
       <br>
-    - arguments to **∆F** that follow the format string:<br>`` ∆F '{32+`⍵1×9÷5}' (10 110 40) ``<∆N>`` `⍵1 ``: shortcut for `(⍵⊃⍨1+⎕IO)`</∆N>
+    - arguments to **∆F** that follow the format string:<br>`` ∆F '{32+`⍵1×9÷5}' (10 110 40) ``<∆Note>`` `⍵1 ``: shortcut for `(⍵⊃⍨1+⎕IO)`</∆Note>
     - _and more_;
 
 - **Space** fields, providing a simple mechanism both for separating adjacent **Text** fields and inserting (rectangular) blocks of any number of spaces between any two fields, where needed;
@@ -148,12 +148,12 @@ function arguments, or both.
   - one space: `{ }`; five spaces: `{     }`; or even, zero spaces: `{}`;
   - 1000 spaces? Use a **Code** field instead: `{1000⍴""}`.
 
-- Use of <∆N>These options are equi&shy;valent:<br>∘ `0 1 1` <br>∘ `(verbose: 1 ◇ box: 1)`</∆N>
+- Use of <∆Note>These options are equi&shy;valent:<br>∘ `0 1 1` <br>∘ `(verbose: 1 ◇ box: 1)`</∆Note>
   _either_ [**positional**](#f-option-details) or [**keyword**](#f-option-details) (namespace-based) options, based on _APL_ Array Notation (in&shy;tro&shy;duced in Dyalog 20);
 
 - Multiline (matrix) output built up field-by-field, left-to-right, from values and expressions in the calling environment or arguments to **∆F**;
 
-  - After all fields are generated, they are aligned vertically, then concatenated to form a single character matrix: **_the return value from_** **∆F**. <∆N><br>As a prototype, **∆F** is relatively slow, using an _APL_ recursive scan to analyze the **f‑string**. For a way to speed up frequently used _f‑strings_, see the [**_dfn_** option](#f-option-details).</∆N>
+  - After all fields are generated, they are aligned vertically, then concatenated to form a single character matrix: **_the return value from_** **∆F**. <∆Note><br>As a prototype, **∆F** is relatively slow, using an _APL_ recursive scan to analyze the **f‑string**. For a way to speed up frequently used _f‑strings_, see the [**_dfn_** option](#f-option-details).</∆Note>
 
 **∆F** is designed for ease of use, _ad hoc_ debugging, fine-grained formatting and informal user interaction, built using Dyalog functions and operators.
 
@@ -188,7 +188,7 @@ Table: 2a. <strong>The Three Field Types</strong>
 <summary class="summary">&ensp;<span style="opacity:0.6;">Show/Hide</span> <em>Quick Start</em>
 </summary><a id="inside-quick-start" class="scroll-target"></a>
 
-### <span class="blue"><strong>Here's a quick start for the <small>**TL;DR**</small> <∆N>too long didn't read</∆N>crowd. </strong></∆N> {.unnumbered} 
+### <span class="blue"><strong>Here's a quick start for the <small>**TL;DR**</small> <∆Note>too long didn't read</∆Note>crowd. </strong></∆Note> {.unnumbered} 
 
 **3.1: Embed variables**
 ```
@@ -300,7 +300,7 @@ Before providing information on **∆F** syntax and other details, _let's start 
 
 First, let's set some context for the examples. (You can set these however you want.)
 
-<∆N>All examples in this document assume `⎕IO←0 ◇ ⎕ML←1`.</∆N>
+<∆Note>All examples in this document assume `⎕IO←0 ◇ ⎕ML←1`.</∆Note>
 
 ```
    ⎕IO ⎕ML← 0 1
@@ -310,8 +310,8 @@ First, let's set some context for the examples. (You can set these however you w
 
 Here are **Code** fields with simple variables.
 
-<∆N>So far, this is like everybody else's _f‑strings_.
-</∆N>
+<∆Note>So far, this is like everybody else's _f‑strings_.
+</∆Note>
 
 ```
    name← 'Fred' ◇ age← 43
@@ -323,7 +323,7 @@ The patient's name is Fred. Fred is 43 years old.
 returns a single character matrix.
 Here **∆F** returns a matrix with 2 rows and 32 columns.
 
-<∆N> Now we're taking advantage of _APL_'s array-oriented style.
+<∆Note> Now we're taking advantage of _APL_'s array-oriented style.
 </span>
 
 ```
@@ -336,8 +336,8 @@ The temperature is 35°C or  95°F.
 
 Here, we assign the _f‑string_ to an _APL_ variable, then call **∆F** twice!
 
-<∆N>Setting `⎕RL` ensures our random numbers aren't random!
-</∆N>
+<∆Note>Setting `⎕RL` ensures our random numbers aren't random!
+</∆Note>
 
 ```
    ⎕RL← 2342342
@@ -354,7 +354,7 @@ Isn't Jack lucky, winning twice in a row!
 
 <details id="pPeek"><summary class="summary">&ensp;View a fancier example...</summary>
 
-<∆N><br>[See a different method using the **Wrap** shortcut](#winner2).
+<∆Note><br>[See a different method using the **Wrap** shortcut](#winner2).
 </span>
 
 <div id="winner1">
@@ -425,7 +425,7 @@ Mouse    Mickey
 
 ## Code Fields (Continued)
 
-<∆N>We could have used a **Space** field <code>{&nbsp;}</code> here as well.</∆N>
+<∆Note>We could have used a **Space** field <code>{&nbsp;}</code> here as well.</∆Note>
 And this is the same example with _identical_ output, but built using two **Code** fields
 separated by a **Text** field with a single space.
 
@@ -450,7 +450,7 @@ example            Fields
 
 Here is some multiline data we'll add to our **Code** fields.
 
-<∆N><br><br><br><br><br>Again, we use _APL_ _mix_ `↑` to generate multiline objects (matrices).</∆N>
+<∆Note><br><br><br><br><br>Again, we use _APL_ _mix_ `↑` to generate multiline objects (matrices).</∆Note>
 
 ```
    fNm←  'John' 'Mary' 'Ted'
@@ -463,8 +463,8 @@ Mary Jones     22 Smith St
 Ted  Templeton 12 High St
 ```
 
-<∆N>We formally discuss the `⎕FMT` short&shy;cut `$` [below](#the-format-shortcut).</∆N>
-<∆N><br><br>In this example, we could have used `0⍕⍪` and `1⍕⍪` here, of course. But we wanted to remind you what Dyalog's `⎕FMT` can do!
+<∆Note>We formally discuss the `⎕FMT` short&shy;cut `$` [below](#the-format-shortcut).</∆Note>
+<∆Note><br><br>In this example, we could have used `0⍕⍪` and `1⍕⍪` here, of course. But we wanted to remind you what Dyalog's `⎕FMT` can do!
 </span>
 
 Here's a slightly more interesting code expression, using `$` (a shortcut for `⎕FMT`)
@@ -529,7 +529,7 @@ But what if you want to place a box around every **Code**, **Text**, **_and_** *
 We just use the **box** mode option!
 
 While we can't place boxes inside text (or space) fields using `` `B ``,
-we can place a box around **_each_** field (_regardless_ of type) by setting **∆F**'s [**box** mode](#f-option-details) option, <∆N>**box mode:** `0 0 1` _or_ `(box: 1)`</∆N>to `1`:
+we can place a box around **_each_** field (_regardless_ of type) by setting **∆F**'s [**box** mode](#f-option-details) option, <∆Note>**box mode:** `0 0 1` _or_ `(box: 1)`</∆Note>to `1`:
 
 ```
    cv← 11.3 29.55 59.99
@@ -566,11 +566,11 @@ In contrast, **Code** fields that return null values&mdash;like `{""}` above&mda
 
 ## Omega Shortcuts (Explicit)
 
-<∆N>`` `⍵1 ``: Or its equivalent, `⍹1`.<br><strong>⍹</strong> is ⍵-underscore.</∆N>
+<∆Note>`` `⍵1 ``: Or its equivalent, `⍹1`.<br><strong>⍹</strong> is ⍵-underscore.</∆Note>
 &emsp;&emsp;<strong>Referencing **∆F** arguments after the _f‑string_: **Omega**
 shortcut expressions (like `` `⍵1 ``).</strong>
 
-<∆N>And `(⍵⊃⍨ 1+⎕IO)` is, of course, equivalent to `((1+⎕IO)⊃⍵)`.</∆N>
+<∆Note>And `(⍵⊃⍨ 1+⎕IO)` is, of course, equivalent to `((1+⎕IO)⊃⍵)`.</∆Note>
 The 
 expression `` `⍵1 `` is equivalent to `(⍵⊃⍨ 1+⎕IO)`, selecting the first argument after the _f‑string_. Similarly, `` `⍵99 `` would select `(⍵⊃⍨99+⎕IO)`.
 
@@ -589,7 +589,7 @@ The temperature is 11°C or 51.8°F
 
 ## Referencing the f‑string Itself
 
-<∆N> `` `⍵0 `` refers to the _f‑string_, independent of the the number of elements in the right argument to **∆F** (_effectively_, `⊆⍵`).
+<∆Note> `` `⍵0 `` refers to the _f‑string_, independent of the the number of elements in the right argument to **∆F** (_effectively_, `⊆⍵`).
 </span>
 The expression `` `⍵0 `` always refers to the _f‑string_ itself. Try this:
 
@@ -618,15 +618,15 @@ Our string «Our string {bL, `⍵0, bR} has {≢`⍵0} characters» has 47 chara
 
 ## The Format Shortcut
 
-<∆N>The **Format** shortcut `$`, or `` `F `` (short for `⎕FMT`), can also be used monadically, but let **∆F** handle that for you in most cases.
-</∆N>
+<∆Note>The **Format** shortcut `$`, or `` `F `` (short for `⎕FMT`), can also be used monadically, but let **∆F** handle that for you in most cases.
+</∆Note>
 
 > Let's add commas to some very large numbers using the **⎕FMT** shortcut `$`.
 
 We can use Dyalog's built-in formatting specifier "C" with shortcut `$`
 to add appropriate commas to the temperatures!
 
-<∆N><br><br>`C2F← 32+9×÷∘5`</∆N>
+<∆Note><br><br>`C2F← 32+9×÷∘5`</∆Note>
 
 ```
 ⍝  The temperature of the sun at its core in degrees C.
@@ -637,14 +637,14 @@ The sun's core is at 15,000,000°C or 27,000,032°F
 
 ## The Shortcut for Numeric Commas
 
-<∆N>Typically, each number or numeric string presented to `` `C `` will represent an integer, but if a real number is presented, only the integer part will have commas added.
+<∆Note>Typically, each number or numeric string presented to `` `C `` will represent an integer, but if a real number is presented, only the integer part will have commas added.
 </span>
 The shortcut for _Numeric_ **Commas** `` `C `` adds commas every 3 digits (from the right) to one or more numbers or numeric strings. It has an advantage over the `$` (Dyalog's `⎕FMT`) specifier: it doesn't require you to guesstimate field widths.
 
 Let's use the `` `C `` shortcut to add the commas to the temperatures!
 
-<∆N><br>Cool! OK, not literally.
-</∆N>
+<∆Note><br>Cool! OK, not literally.
+</∆Note>
 
 ```
    sun_core← 15E6               ⍝ 15000000 is a bit hard to parse!
@@ -668,7 +668,7 @@ Now, let's move on to Self-documenting **Code** fields.
 
 ## Self-documenting **Code** fields (SDCFs)
 
-<∆N>Our SDCFs are based on Python's single type of self-documenting expressions in _f‑strings_, but work somewhat differently.
+<∆Note>Our SDCFs are based on Python's single type of self-documenting expressions in _f‑strings_, but work somewhat differently.
 SDCFs are used **_only_** in **Code** fields _(duh)._
 </span>
 
@@ -684,7 +684,7 @@ The source code for a **Code** field can automatically be shown in **∆F**'s ou
 All you need do is enter
 
 - a right arrow <big>`→`</big> for a **horizontal** SDCF, or
-- a down arrow <big>`↓`</big> (or <big>`%`</big>)<∆N>`%` is the same glyph as for the **Above** shortcut, `%` or `` `A ``, discussed
+- a down arrow <big>`↓`</big> (or <big>`%`</big>)<∆Note>`%` is the same glyph as for the **Above** shortcut, `%` or `` `A ``, discussed
   in [the next section](#the-above-shortcut).</span> for a **vertical** SDCF,
 
 as the **_last non-space_** character in the **Code** field,
@@ -736,15 +736,15 @@ each field&mdash;using the **Box** [option](#f-option-details), _namespace_ styl
 
 > A cut above the rest…
 
-<∆N>`%` can be used monadically. In that case, a left argument of `''`
+<∆Note>`%` can be used monadically. In that case, a left argument of `''`
 (an empty string) is assumed.
-</∆N>
+</∆Note>
 Here's a useful feature. Let's use the shortcut `%` to display one
 expression centered above another;
 it's called **Above** and can _also_ be expressed as `` `A ``.
 
-<∆N>Remember, `` `⍵1 `` designates the **_first_** argument after the _f‑string_ itself, and `` `⍵2 `` the **_second_**.
-</∆N>
+<∆Note>Remember, `` `⍵1 `` designates the **_first_** argument after the _f‑string_ itself, and `` `⍵2 `` the **_second_**.
+</∆Note>
 
 ```
    ∆F '{"Employee" % ⍪`⍵1} {"Age" % ⍪`⍵2}' ('John Smith' 'Mary Jones')(29 23)
@@ -755,12 +755,12 @@ Mary Jones  23
 
 ## Text Justification Shortcut
 
-<∆N>`` `J `` is a variant of `just`, found in the _dfns_ library.</∆N>
+<∆Note>`` `J `` is a variant of `just`, found in the _dfns_ library.</∆Note>
 The Text **Justification** shortcut `` `J `` treats its right argument
 as a character array, justifying each line
 to the left (`⍺∊"L" ¯1`,
 the default), to the right (`⍺∊"R" 1`), or centered (`⍺∊"C" 0`).
-<∆N>**maximum `⎕PP`:** the maximum `⎕PP` is `17` for 64-bit floats, and `34` for 128-bit floats.
+<∆Note>**maximum `⎕PP`:** the maximum `⎕PP` is `17` for 64-bit floats, and `34` for 128-bit floats.
 </span>
 If its right argument contains floating point numbers, they will be displayed with the maximum
 print precision `⎕PP` available.
@@ -796,7 +796,7 @@ And what do you think this _f-string_ displays?
 > The _next_ best thing: the use of `` `⍵ `` in **Code** field expressions…
 
 We said we'd present the use of **Omega** shortcuts with implicit 
-<∆N>`` `⍵ ``: Or its equivalent, `⍹`.<br><strong>⍹</strong> is ⍵-underscore.</∆N>
+<∆Note>`` `⍵ ``: Or its equivalent, `⍹`.<br><strong>⍹</strong> is ⍵-underscore.</∆Note>
 indices `` `⍵ `` in **Code** fields. The expression `` `⍵ `` selects the _next_ element of the right argument `⍵` to **∆F**, defaulting to `` `⍵1 `` when first encountered, _i.e._ if there are **_no_** `` `⍵ `` elements (_explicit_ or _implicit_) to the **_left_** in the entire _f‑string_. If there is any such expression (_e.g._ `` `⍵5 ``), then `` `⍵ `` points to the element after that one (_e.g._ `` `⍵6 ``). If the item to the left is `` `⍵ ``, then we simply increment the index by `1` from that one.
 
 **Let's try an example.** Here, we display arbitrary 2-dimensional expressions,
@@ -806,7 +806,7 @@ starting with `` `⍵1 ``, the first, _i.e._ `(⍵⊃⍨ 1+⎕IO)`.
 So, from left to right `` `⍵ `` is `` `⍵1 ``, `` `⍵2 ``,
 and `` `⍵3 ``.
 
-<∆N>_Easy peasy._</∆N>
+<∆Note>_Easy peasy._</∆Note>
 
 ```
    ∆F '{(⍳2⍴`⍵) % (⍳2⍴`⍵) % (⍳2⍴`⍵)}' 1 2 3
@@ -853,7 +853,7 @@ Here, we display one boxed value above the other.
 <details id="pPeek"><summary class="summary">&ensp;Peek: Shortcuts are just Functions</summary>
 
 While not for the faint of heart, the expression above can be recast as this
-concise <∆N>**concise:** somewhat hard to read.
+concise <∆Note>**concise:** somewhat hard to read.
 </span>alternative:
 
 ```
@@ -866,20 +866,20 @@ concise <∆N>**concise:** somewhat hard to read.
 
 ## A Shortcut for Dates and Times (Part I)
 
-<∆N>The syntax for the Date-Time specifications in the left argument to `` `T `` can be found in the Dyalog doc&shy;ument&shy;ation under **1200⌶**. See [below](#code-field-shortcuts), for more info.
-</∆N>
-**∆F** supports a simple **Date-Time** shortcut `` `T `` built from **1200⌶** and **⎕DT**. It takes one or more Dyalog `⎕TS`-format timestamps as the right argument and a date-time specification as the <∆N>The default left arg&shy;ument is `⍺← '%ISO%'`, _i.e._ an ISO date-time.</∆N> (optional) left argument. Trailing elements of a timestamp may be omitted (they will each be treated as `0` in the specification string).
+<∆Note>The syntax for the Date-Time specifications in the left argument to `` `T `` can be found in the Dyalog doc&shy;ument&shy;ation under **1200⌶**. See [below](#code-field-shortcuts), for more info.
+</∆Note>
+**∆F** supports a simple **Date-Time** shortcut `` `T `` built from **1200⌶** and **⎕DT**. It takes one or more Dyalog `⎕TS`-format timestamps as the right argument and a date-time specification as the <∆Note>The default left arg&shy;ument is `⍺← '%ISO%'`, _i.e._ an ISO date-time.</∆Note> (optional) left argument. Trailing elements of a timestamp may be omitted (they will each be treated as `0` in the specification string).
 
 Let's look at the use of the `` `T `` shortcut to show the current time (now).
 
-<∆N>The time displayed in practice will be the _true_ current time.</∆N>
+<∆Note>The time displayed in practice will be the _true_ current time.</∆Note>
 
 ```
    ∆F 'It is now {"t:mm pp" `T ⎕TS}.'
 It is now 8:08 am.
 ```
 
-Here's a fancier example<∆N>The power is in the capabilities of `1200⌶` and `⎕DT`.</∆N>.
+Here's a fancier example<∆Note>The power is in the capabilities of `1200⌶` and `⎕DT`.</∆Note>.
 (We've added the _truncated_ timestamp `2025 01 01` right into the _f‑string_.)
 
 ```
@@ -898,7 +898,7 @@ you can use `` `D ``, which means exactly the same thing.
 ```
 
 Here, we'll pass the time stamp via a single **Omega**
-expression `` `⍵1 ``, whose argument <∆N>`(2025 1 21)`</∆N> is passed in parentheses.
+expression `` `⍵1 ``, whose argument <∆Note>`(2025 1 21)`</∆Note> is passed in parentheses.
 
 ```
    ∆F '{ "D Mmm YYYY ''was a'' Dddd." `T `⍵1}' (2025 1 21)
@@ -937,8 +937,8 @@ And what do you think this does?
 
 > Placing quotes around string elements of an array.
 
-<∆N>If a multi&shy;dimensional character array is found, its <em>rows</em> are quoted; if a character vector, it is quoted <em>in toto</em>; else, each character <em>scalar</em> is quoted in isolation.
-</∆N>
+<∆Note>If a multi&shy;dimensional character array is found, its <em>rows</em> are quoted; if a character vector, it is quoted <em>in toto</em>; else, each character <em>scalar</em> is quoted in isolation.
+</∆Note>
 The **Quote** shortcut `` `Q `` recursively scans its right argument, matching rows of character arrays, character vectors, and character scalars, doubling internal single quotes and placing single quotes around the items found.
 
 Non-character data is returned as is. This is useful, for example, when you wish to clearly distinguish character from numeric data.
@@ -997,7 +997,7 @@ Voilà, quotes appear around the character digits, but not the actual APL number
 
 The Serialise
 shortcut, `` `S ``, displays objects formatted in _APL_ Array Notation. These include
-arrays <∆N>NB. See Dyalog documentation for what is in the domain of Array Notation.</∆N>of any depth and shape that
+arrays <∆Note>NB. See Dyalog documentation for what is in the domain of Array Notation.</∆Note>of any depth and shape that
 contain only data arrays (nameclass: `2`) and namespaces (nameclass: `9`). The shortcut
 allows both a **_tabular_** (multiline) form (default or `` 0 `S ``) and a **_compact_** format (`` 1 `S ``).
 If an object cannot be displayed in Array Notation, it is typically displayed unformatted, _i.e._ as is.
@@ -1041,7 +1041,7 @@ APL:   (fred:1 2 3◇jack:9◇name:(a:1◇b:2◇)◇)
 
 > Wrapping results in left and right decorators...
 
-<∆N>For more, see [Wrap Shortcut: Details](#wrap-shortcut-details) _below_.
+<∆Note>For more, see [Wrap Shortcut: Details](#wrap-shortcut-details) _below_.
 </span>
 The shortcut **Wrap** `` `W `` is used
 when you want to place a **_decorator_** string immediately to the left or right of **_each_** row of simple objects in the right argument, `⍵`. It differs from the **Quote** shortcut `` `Q ``, which puts quotes **_only_** around the character arrays in `⍵`.
@@ -1088,7 +1088,7 @@ Now, let's try recasting an _earlier_ example&mdash;reshown here&mdash; to use *
 </div>
 <details id="pPeek"><summary class="summary">&ensp;Peek to see the solution with **Wrap**...</summary>
 
-<∆N><br><br>The string `"wins "` is the left prefix to **Wrap**, and `""` the right.</∆N>
+<∆Note><br><br>The string `"wins "` is the left prefix to **Wrap**, and `""` the right.</∆Note>
 
 ```
    n← ≢names← 'Mary' 'Jack' 'Tony'
@@ -1108,11 +1108,11 @@ Tony wins £349
  
 The shortcut (Session) **Library** 
 `£` denotes 
-<∆N>**£ alias:** `` `L ``. £ is from the first letter of the Latin *lībra*, "pound", very apt for a *libra*-ry.<br><br>**FString**: *See [**∆F** Installation](#f-installation), above.*
+<∆Note>**£ alias:** `` `L ``. £ is from the first letter of the Latin *lībra*, "pound", very apt for a *libra*-ry.<br><br>**FString**: *See [**∆F** Installation](#f-installation), above.*
 </span>
 a "private" *user* namespace in **FString**,
 where the user may place and manipulate useful objects for the duration
-of the ***current*** *APL* session. For example, the user may wish to: <∆N>*For details, see  [Code Field Short&shy;cuts](#code-field-shortcuts) below.*</∆N>
+of the ***current*** *APL* session. For example, the user may wish to: <∆Note>*For details, see  [Code Field Short&shy;cuts](#code-field-shortcuts) below.*</∆Note>
 
 - have regularly used functions or operators automatically available when needed, _or_
 - create objects that might be referred to, monitored, or modified during the session.
@@ -1127,7 +1127,7 @@ we could anticipate all the items we might need and copy them well in advance.
 
 Here we copy both routines from **_dfns_** in real time, only when they are needed.
 
-<∆N>`⎕CY` returns `0⍴⊂''` on success, _i.e._
+<∆Note>`⎕CY` returns `0⍴⊂''` on success, _i.e._
 an _invisible_, 0-width **Code** field!
 </span>
 
@@ -1147,8 +1147,8 @@ On subsequent calls, `sieve` and `to` are already available, as we can see here:
 
 > But, **∆F** can handle this all for you!
 
-If <∆N>Here, we only show examples of objects from the **_dfns_** workspace. _See [Code Field Shortcuts](#code-field-shortcuts) below._
-</∆N>
+If <∆Note>Here, we only show examples of objects from the **_dfns_** workspace. _See [Code Field Shortcuts](#code-field-shortcuts) below._
+</∆Note>
 the user references a simple name of the form
 `£.name` that
 has not (yet) been defined in the library,
@@ -1172,7 +1172,7 @@ In this next example, we use the function `pco` from the
 <big>👉</big>&nbsp;To understand _when_ an object is automatically copied into a £ibrary,
 and to see _where_ it's copied from, use **∆F**'s **_verbose_** option:
 
-<∆N><br>First use of `£.pco` this _session._ Since subsequent uses will use the `£.pco` already copied into the library, they are ***quiet***.</∆N>
+<∆Note><br>First use of `£.pco` this _session._ Since subsequent uses will use the `£.pco` already copied into the library, they are ***quiet***.</∆Note>
 
 ```
    (verbose: 1) ∆F '{ ⍸ 1 £.pco ⍳100 }'    ⍝ (verbose: 1) <==> 0 1 
@@ -1192,7 +1192,7 @@ and to see _where_ it's copied from, use **∆F**'s **_verbose_** option:
 
 > But we can use the Session Library shortcut for arrays as well.
 
-<∆N><big>👉</big>&nbsp;If `£.ctr` already exists, it must be in the same class
+<∆Note><big>👉</big>&nbsp;If `£.ctr` already exists, it must be in the same class
 as its new value, consistent with _APL_ rules.</span>
 
 Here is an example where we define a local session variable `ctr`,
@@ -1214,8 +1214,8 @@ This may be sensible when ∆F is called from a variety of namespaces and/or
 if the user doesn't wish to clutter the active namespace.
 
 In this example, we simply use `£` as a private namespace for the
-the <∆N>Remember: **∆F** evaluates fields left-to-right.</∆N>
-template variable `£.dt` used during the **∆F** <∆N><br><br><br>NB. `£.dt` hangs around after execution!</∆N>
+the <∆Note>Remember: **∆F** evaluates fields left-to-right.</∆Note>
+template variable `£.dt` used during the **∆F** <∆Note><br><br><br>NB. `£.dt` hangs around after execution!</∆Note>
 call:
 
 ```
@@ -1240,7 +1240,7 @@ performance improvements for *f-strings* that are used more than once.
 
 As shown in Table 3a (below), with _(i)_ the default _dfn_ option set to `0`,
 the value returned from a successful call to **∆F** is always a character matrix.
-However, _(ii)_ <∆N>Under identical conditions, of course.</∆N>
+However, _(ii)_ <∆Note>Under identical conditions, of course.</∆Note>
 if [_dfn_](#f-option-details) is set to `1`, then **∆F** returns a **dfn** that&mdash;
 when called later&mdash; will return the identical character expression.
 
@@ -1262,7 +1262,7 @@ Table: 3a. <strong>Using the <em>dfn Option</em></strong>
 <br>
 
 
-<∆N><br>**standalone:** _i.e._ via the _inline_ option. See [option details](#f-option-details) (be&shy;low) re&shy;gard&shy;ing the _inline_ option and ex&shy;ceptions.</∆N>
+<∆Note><br>**standalone:** _i.e._ via the _inline_ option. See [option details](#f-option-details) (be&shy;low) re&shy;gard&shy;ing the _inline_ option and ex&shy;ceptions.</∆Note>
 The _dfn_ option is most useful when you are making repeated use of an _f‑string_, since the overhead for analyzing the _f‑string_ contents **_once_** will be amortized over **_all_** the subsequent calls. An **∆F**-derived _dfn_ can also be made standalone, _i.e._ independent of the runtime library, **FString**.
 
 Let's explore an example where getting the best performance for a heavily
@@ -1311,7 +1311,7 @@ The temperature is 11°C or  51.8°F
 
 Now, let's compare the performance of the two formats, when caching of input fstrings 
 is ***not*** enabled; this simulates the relative performance the *first* time an fstring
-is encountered. <∆N><br><br><br>Both `t` and `T` will
+is encountered. <∆Note><br><br><br>Both `t` and `T` will
 reference `cv`. </span>
 
 ```
@@ -1324,8 +1324,8 @@ The precomputed version is <mark>much</mark> faster than the first use of `∆F 
 time it is only about *3 times faster* on average than a repeated use of `∆F t`.
 
 Before we get to syntax and other information, we want to show you
-that <∆N>The _dfn_ returned includes the original _f‑string_ text used to generate it,
-available as `` `⍵0 ``.</∆N>
+that <∆Note>The _dfn_ returned includes the original _f‑string_ text used to generate it,
+available as `` `⍵0 ``.</∆Note>
 the _dfn_ returned when the _dfn_ option is set to `1` can retrieve one or more arguments passed on the right side of **∆F**, using the very same omega shortcut expressions (like `` `⍵1 ``) we've
 discussed above.
 
@@ -1357,9 +1357,9 @@ The precomputed version again shows a <mark>substantial</mark> speedup over the 
 
 ## Multiline _F-strings_ in Dyalog 20
 
-Sometimes it's <∆N>Excuse the ob&shy;fusc&shy;atory sesqui&shy;pedal&shy;ianism!</∆N>programmatically pro&shy;pitious or pedagog&shy;ically per&shy;spicacious to construct, or display, an _f-string_ across
+Sometimes it's <∆Note>Excuse the ob&shy;fusc&shy;atory sesqui&shy;pedal&shy;ianism!</∆Note>programmatically pro&shy;pitious or pedagog&shy;ically per&shy;spicacious to construct, or display, an _f-string_ across
 multiple lines in the **∆F** call. You can do this using _APL_ Array Notation, for example, dividing
-the _f-string_ across multiple (parenthesized) character vectors, each on a separate line.<∆N><br><br><br><br><br><br>Note that APL handles the comments in multi-line strings!</∆N>
+the _f-string_ across multiple (parenthesized) character vectors, each on a separate line.<∆Note><br><br><br><br><br><br>Note that APL handles the comments in multi-line strings!</∆Note>
 
 ```
    lastNm firstNm MI← 'Smith' 'Mary' 'J'
@@ -1407,8 +1407,8 @@ Below, we summarize key information you've already gleaned from the examples.
 ## ∆F Call Syntax Overview
 
 <NOGIT>
-<∆N><br><br><br><br><br><br><br><br>See the example of [multiline _f-strings_ in Dy&shy;a&shy;log 20](#multiline-f-strings-in-dyalog-20).</∆N>
-<∆N><br><br><br><br><br>**_Options_** may be either _positional_
+<∆Note><br><br><br><br><br><br><br><br>See the example of [multiline _f-strings_ in Dy&shy;a&shy;log 20](#multiline-f-strings-in-dyalog-20).</∆Note>
+<∆Note><br><br><br><br><br>**_Options_** may be either _positional_
 or&mdash; starting in Dyalog v. 20&mdash; _keyword_-based. We show the posi&shy;tion&shy;al forms through&shy;out the ex&shy;amples, but doc&shy;ument the key&shy;words as well below.</span>
 </NOGIT>
 
@@ -1461,7 +1461,7 @@ Table: 5b. <strong>∆F Option Details</strong>
  
 
 - **Positional-style options:** If **∆F**'s left argument `⍺` is a simple integer vector (or a scalar), omitted (trailing) elements are replaced by the corresponding elements of the default, `0 0 0 1 0 1`.<br><big>👉</big>&nbsp;Extra elements will trigger a ***DOMAIN ERROR.***
-- **Keyword-style options:** If the left argument is a <∆N>Dyalog 20 and later. See docu&shy;ment&shy;ation on _APL_ Ar&shy;ray Not&shy;ation.</∆N>namespace,
+- **Keyword-style options:** If the left argument is a <∆Note>Dyalog 20 and later. See docu&shy;ment&shy;ation on _APL_ Ar&shy;ray Not&shy;ation.</∆Note>namespace,
   it is assumed to contain option names (in any order) with their non-default values,<br>&emsp;&emsp;e.g. `(verbose: 1 ◇ auto: 0)`;  
    Keyword options are new for Dyalog 20. They are sometimes clearer and more convenient than positional keywords.
 - **Help option:** If the left argument `⍺` starts with `'help'` (case ignored), this help information is displayed. In this case, the right argument to **∆F** is ignored.
@@ -1524,15 +1524,15 @@ Table: 5d. <strong>Code Field Shortcuts</strong>
 
 ## Escape Sequences: Text Fields & Quoted Strings
 
-<∆N>See [Quoted Strings in Code Fields](#quoted-strings-in-code-fields)
+<∆Note>See [Quoted Strings in Code Fields](#quoted-strings-in-code-fields)
 below on displaying quote characters like `"` in a string.
-</∆N>
+</∆Note>
 **∆F** **Text** fields and **Quoted strings** in **Code** fields may include
 a small number of escape sequences, beginning with the backtick `` ` ``.
 Some sequences are valid in **Text** fields _only_, but not in Quoted strings:
 
-<∆N><br><br><br><br><br>**Quoted Strings** appear ***only*** in **Code** fields.
-</∆N>
+<∆Note><br><br><br><br><br>**Quoted Strings** appear ***only*** in **Code** fields.
+</∆Note>
 
 <a id="table-escapes" class="scroll-target"></a>
 
@@ -1551,7 +1551,7 @@ Sequence    <br>Inserts   Description       Where
 ----------------------------------------------------------
 Table: 5e. <strong>Escape Sequences</strong>
 
-Other instances of the backtick character in **Text** fields or **Quoted strings** in **Code** fields will be <∆N>Sometimes a backtick is just a back&shy;tick.</∆N>
+Other instances of the backtick character in **Text** fields or **Quoted strings** in **Code** fields will be <∆Note>Sometimes a backtick is just a back&shy;tick.</∆Note>
 treated literally.
 
 
@@ -1567,7 +1567,7 @@ As mentioned in the introduction, **Quoted strings** in **Code** fields allow se
 - _APL_'s tried-and-true embedded **single-quotes**,<br>
   `∆F '{''shown like ''''this'''', "this" or «this».''}'`.
 
-<∆N>Compare these examples:<br>&emsp;**Invalid:**&ensp;<span class="red"><strong>∆F&ensp;'{"abc\`"def"}'</strong></∆N><br>&emsp;**Valid:**&ensp;`∆F '{"abc""def"}'`
+<∆Note>Compare these examples:<br>&emsp;**Invalid:**&ensp;<span class="red"><strong>∆F&ensp;'{"abc\`"def"}'</strong></∆Note><br>&emsp;**Valid:**&ensp;`∆F '{"abc""def"}'`
 </span>
 If you wish to include a traditional delimiting quote (`'` or `"`) or the closing quote of a quote pair (`«`&ensp;`»`) within the **Quoted string**, you must double it.
 You may _not_ use an escape sequence (e.g. `` `" ``) for this purpose.
@@ -1603,7 +1603,7 @@ Note that the opening quote `«` is treated as an ordinary character within the 
 
 ## **Serialise** Shortcut Expressions: Details
 
-Serialise ( `` `S ``) uses Dyalog _APL_'s Array Notation (APLAN)<∆N>**APLAN**: _⎕SE.Dyalog.Array.Serialise_.</∆N> to display the object to its right. It is intended to have roughly the same behaviour as displaying an object
+Serialise ( `` `S ``) uses Dyalog _APL_'s Array Notation (APLAN)<∆Note>**APLAN**: _⎕SE.Dyalog.Array.Serialise_.</∆Note> to display the object to its right. It is intended to have roughly the same behaviour as displaying an object
 with `]APLAN.output on`. (See Dyalog documentation for details).
 
 1.  Serialise displays objects of classes 2 and 9&mdash; data arrays and namespaces&mdash; in Array Notation, as long as they contain **_no_** functions or operators. 
@@ -1622,9 +1622,9 @@ with `]APLAN.output on`. (See Dyalog documentation for details).
 
 ## Session Library Shortcut: Details
 
-1. If <∆N>The search **path** depends on settings. Here, we assume the default `auto` option and `]load`-time par&shy;a&shy;meters. See [Lib&shy;rary Parameters](#session-library-shortcut-parameters) and [File&shy;types of Lib&shy;rary Source Files](#session-library-shortcut-filetypes-of-source-files) below.</∆N>
+1. If <∆Note>The search **path** depends on settings. Here, we assume the default `auto` option and `]load`-time par&shy;a&shy;meters. See [Lib&shy;rary Parameters](#session-library-shortcut-parameters) and [File&shy;types of Lib&shy;rary Source Files](#session-library-shortcut-filetypes-of-source-files) below.</∆Note>
    an object `£.name` is referenced, but not yet defined in `£`, an attempt is made&mdash; during **∆F**'s left-to-right _scanning_ phase&mdash; to copy it to `£` from (in order) directory **./MyDyalogLib**, workspace **dfns**, and the current directory **./**,
-   _unless_ it is being assigned (via a simple `←`) or has <∆N>Once a name is seen, no attempt will be made to load it.</∆N>already been seen in this **∆F** call. It will be available for the duration of the *APL* session.
+   _unless_ it is being assigned (via a simple `←`) or has <∆Note>Once a name is seen, no attempt will be made to load it.</∆Note>already been seen in this **∆F** call. It will be available for the duration of the *APL* session.
 
 1. If a name is a *qualified* name, i.e. if it is of the form `£.nm1.nm2`, `£.nm1.nm2.nm3`, etc., 
 then **∆F** attempts to load the name ***nm1***, presumed to be a namespace (or a 
@@ -1643,7 +1643,7 @@ specified.
 
 ### Session Library Shortcut: Filetypes of Source Files
 
-<∆N><br><br><br><br><br><br><br><br><br><br><br>**apla:** Encoded using _APL_ Array Notation (Dyalog 20).<br><br><br>**txt:** Each line of file is converted to a Unicode char. vector.</∆N>
+<∆Note><br><br><br><br><br><br><br><br><br><br><br>**apla:** Encoded using _APL_ Array Notation (Dyalog 20).<br><br><br>**txt:** Each line of file is converted to a Unicode char. vector.</∆Note>
 
 <a id="table-library-filetypes" class="scroll-target"></a>
 
@@ -1665,8 +1665,8 @@ Table: 5g. <strong>Library Filetypes: Meaning</strong>
 
 ### Session Library Shortcut: Parameters
 
-The <∆N>If the automatic search feature is enabled&mdash; the default&mdash;, the _first_ time each name is used there is the potential for substantial overhead in searching for, loading, and fixing it
-in the session library.</∆N>
+The <∆Note>If the automatic search feature is enabled&mdash; the default&mdash;, the _first_ time each name is used there is the potential for substantial overhead in searching for, loading, and fixing it
+in the session library.</∆Note>
 Session Library shortcut (`£` or `` `L ``) is deceptively simple, but
 the code to support it is a tad complex.
 The complex components run only when **∆F** is loaded. If the **auto** parameter is `1`, there is a modest
@@ -1687,9 +1687,9 @@ In addition, there are user parameters settable in the file **.∆F** in the use
 - **verbose:** providing limited information on parameters, object loading, _etc._;
 - **path:** listing what directories to search for the object definitions;
 - **prefix:** literal character vectors to prefix to each file name during the object search;
-- **suffix:** <∆N>More details appear below.<br>Don't forget the '.' prefix!</∆N>filetypes that indicate the types of objects in our "library," along with any expected conversions.
+- **suffix:** <∆Note>More details appear below.<br>Don't forget the '.' prefix!</∆Note>filetypes that indicate the types of objects in our "library," along with any expected conversions.
 
-The built-in _(default)_ parameter file <∆N>Additional doc&shy;ument&shy;ation
+The built-in _(default)_ parameter file <∆Note>Additional doc&shy;ument&shy;ation
 is need&shy;ed, should this go forward.</span>
 is documented _below_.
 
@@ -1782,26 +1782,26 @@ is documented _below_.
 
 ### ∆F Option for Dfn Source Code
 
-If the [**_dfn_** option](#f-option-details) is `¯1`, _equivalently_ `(dfn: ¯1)`<∆N>In simple terms, this option returns the character representation of the
+If the [**_dfn_** option](#f-option-details) is `¯1`, _equivalently_ `(dfn: ¯1)`<∆Note>In simple terms, this option returns the character representation of the
 _dfn_ returned via the **_dfn_** option.
-</∆N>, then **∆F** returns a character vector that contains the source code for the _dfn_ returned via `(dfn: 1)`.
+</∆Note>, then **∆F** returns a character vector that contains the source code for the _dfn_ returned via `(dfn: 1)`.
 If **_verbose_** is also set, newlines from `` `◇ `` are shown as visible `␤`. However, since this option _returns_ the code string, the **_verbose_** option won't also _display_ the code string.
 
 ### Future Behaviours
 
 There are three future behaviours of APL primitives optionally supported by **∆F**: an extension to
 circle diaeresis (⍥), the right shoe underscore (⊇), and the ellipsis (…). Each is available
-if included in the value of <∆N>See below</∆N>load-time parameter, `FUTURES`. By default,
+if included in the value of <∆Note>See below</∆Note>load-time parameter, `FUTURES`. By default,
 `FUTURES← '⍥⊇…'`.
 
 #### Future Behaviour of ⍥ (Circle Diaeresis) Here Today
 
-As a load-time option, **∆F** adds <∆N>See **abrudz
-dyalog-apl-extended /CircleDiaeresis.dyalog** on Github [retrieved 2026-02-13].</∆N>
+As a load-time option, **∆F** adds <∆Note>See **abrudz
+dyalog-apl-extended /CircleDiaeresis.dyalog** on Github [retrieved 2026-02-13].</∆Note>
 Adám Brudzewsky's **Depth operator** 
 extension to circle diaeresis (⍥), which works similarly to rank (⍤), but selects
 array components based on depth rather than rank.  If the value of the load-time 
-parameter <∆N>See `FUTURES` global variable in ∆F/FString.dyalog.</∆N> `FUTURES` includes `'⍥'`,
+parameter <∆Note>See `FUTURES` global variable in ∆F/FString.dyalog.</∆Note> `FUTURES` includes `'⍥'`,
 then this fun *future* feature will be 
 recognized within code fields, without impacting other capabilities of `⍥`. 
 For more information, see <a id="displayText" href="javascript:linkAlert();"><span class="linkNote">https:\/\/aplwiki.com\/wiki\/Depth_(operator)</span></a>.
@@ -1810,14 +1810,14 @@ For more information, see <a id="displayText" href="javascript:linkAlert();"><sp
 
 As a load-time option, **∆F** adds the "future" **Select** function (also known as **Sane indexing**)
 if the value of the load-time 
-parameter <∆N>See `FUTURES` global variable in ∆F/FString.dyalog.</∆N> `FUTURES` includes `'⍥'`.
+parameter <∆Note>See `FUTURES` global variable in ∆F/FString.dyalog.</∆Note> `FUTURES` includes `'⍥'`.
 For more information, see <a id="displayText" href="javascript:linkAlert();"><span class="linkNote">https:\/\/aplwiki.com\/wiki\/From</span></a>.
 
 #### Future Behaviour of … (Ellipsis ["range" function]) Here Today
 
 As a load-time option, **∆F** adds the "future" **Ellipsis** function, which is a "range" function 
-similar <∆N>See **abrudz**
-dyalog-apl-extended  on Github [retrieved 2026-02-13].</∆N>
+similar <∆Note>See **abrudz**
+dyalog-apl-extended  on Github [retrieved 2026-02-13].</∆Note>
 to function **to** in the *dfns* workspace, extended to handle characters
 as well as integers (see discussion
 at https://dfns.dyalog.com/n_to.htm).  E.g. `'a' … 'j'` is the same as 'abcdefghij', just 
@@ -1825,11 +1825,11 @@ as `1 … 10` is the same as `1 2 3 4 5 6 7 8 9 10'.  This is similar to Python'
 
 ### ∆F Help's Secret Variant
 
-`∆F⍨'help'` has a secret variant: <∆N>_synonym:_ `∆F⍨'help-n'`.</∆N>`∆F⍨'help-narrow'`.
+`∆F⍨'help'` has a secret variant: <∆Note>_synonym:_ `∆F⍨'help-n'`.</∆Note>`∆F⍨'help-narrow'`.
 With this variant, the help
 session will start up in a narrower window _without_ side notes. If the user widens the
 window, the side notes will appear, as in the default
-case: <∆N>_synonym:_ `∆F⍨'help-wide'`.</∆N>`∆F⍨'help'`.
+case: <∆Note>_synonym:_ `∆F⍨'help-wide'`.</∆Note>`∆F⍨'help'`.
 
 ### ∆F's Library Parameter Option: 'parms'
 
@@ -1873,7 +1873,7 @@ For more information on Python f-strings, _see_:
 <a id="inside-index" class="scroll-target"></a>
 
 
-<∆N><big><big>&emsp;<strong>KEY</strong></big><br><strong><big><span class="red"><strong><big>■</big> Major topic</strong></∆N></big><br><span class="green"><strong><big>■</big> Topic in table or figure</strong></span><br><big>■</big> Regular entry</strong></big></∆N>
+<∆Note><big><big>&emsp;<strong>KEY</strong></big><br><strong><big><span class="red"><strong><big>■</big> Major topic</strong></∆Note></big><br><span class="green"><strong><big>■</big> Topic in table or figure</strong></span><br><big>■</big> Regular entry</strong></big></∆Note>
 
 <div class="multi-column-text" style="font-size:85%;">
 <!-- INDEX_BEGIN --><!-- Generated by ∆F_toc: 2025-12-31T14:15:45 -->
