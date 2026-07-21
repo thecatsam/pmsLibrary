@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>∆F Formatted String Literals (v.0.4.4)</title>
+  <title>∆F Formatted String Literals (v.0.4.5)</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -507,7 +507,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">∆F Formatted String Literals (v.0.4.4)</h1>
+<h1 class="title">∆F Formatted String Literals (v.0.4.5)</h1>
 </header>
 <nav id="TOC" role="doc-toc">
 
@@ -2208,9 +2208,9 @@ load/create any Session Library objects for use with the £ or
 <code>`L</code> shortcuts.<br><span class="red"><strong>If
 <strong><em>auto: 1</em></strong> (default),</strong></span> honors the
 default and user-defined settings for
-<code>auto</code>.<br><big>👉</big> Depends on (i) user parameter file
-<strong>./.∆F</strong> and (ii) the namespace <strong>FString</strong>
-created during the <code>]load</code> process.</td>
+<code>auto</code>.<br><big>👉</big> Depends on (1) the system parameter
+file <strong><em>∆F/ParmDefs.apla</em></strong> and (ii) the user
+parameter file <strong><em>./.∆F</em></strong>.</td>
 </tr>
 <tr>
 <td style="text-align: center;"><strong>inline</strong></td>
@@ -2304,7 +2304,7 @@ elements will trigger a <strong><em>DOMAIN ERROR.</em></strong></li>
 <li><strong>Keyword-style options:</strong> If the left argument is a
 <span class="margin-note">Dyalog 20 and later. See docu­ment­ation on
 <em>APL</em> Ar­ray Not­ation.</span>namespace, it is assumed to contain
-option names (in any order) with their non-default
+option names (in any order) with their desired
 values,<br>  e.g. <code>(verbose: 1 ◇ auto: 0)</code>;<br />
 Keyword options are new for Dyalog 20. They are sometimes clearer and
 more convenient than positional keywords.</li>

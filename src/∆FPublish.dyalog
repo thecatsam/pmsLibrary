@@ -31,7 +31,7 @@
 ⍝ Key settable parameters...
   productionCode← 1
   copyright←     '2026'
-  ⎕← version← { (0 ⎕FIX ⍵).VERSION } '∆F/Globals.aplns'
+  version← { (0 ⎕FIX ⍵).VERSION } '∆F/Globals.aplns'        ⍝ Get version from the Globals file...
 
 ⍝ Constants
   timestamp←     ∊⎕SE.FString.∆F'{ `⍵1 `T ⎕TS}' (productionCode⊃ '%ISO%' 'YYYY-MM-DD') 
@@ -79,8 +79,11 @@
 
 ⍝ File specs 
   privF pubF priv pub temp← 0 1 2 3 9
-  PrivF←privF,⊂    ⋄   PubF←pubF,⊂  ⋄ Priv← priv,⊂     
-  Pub← pub,⊂       ⋄   Temp← temp,⊂
+  PrivF←  privF,⊂    
+  PubF←   pubF,⊂  
+  Priv←   priv,⊂     
+  Pub←    pub,⊂       
+  Temp←   temp,⊂
 
 ⍝ File pseudo-class-- generates FULL filename
   Fi←{
@@ -99,7 +102,8 @@
 ⍝    for each file pair <p> in ⍵, 
 ⍝      whether (⊃p) was created after (⊃⌽p) or if one or the other does NOT exist.
   NeedsUpdate←{
-    NotAfter← ≤{ a b←Fi¨⍺ ⍵
+    NotAfter← ≤ { 
+        a b←Fi¨⍺ ⍵
         t←⎕NEXISTS¨a b ⋄ 0∊t:0
         t←20 ⎕DT¨3 ⎕NINFO¨a b
         ⍺⍺/t
@@ -111,7 +115,7 @@
     _←Hr
     1⊣_←¯1 Say'Updating ',⍺,'. This dependency not met: (',')',⍨(Tp bef),' ≤ ',Tp aft
   }
-⍝ Copy file in into out. If ⍺ is 0, ONLY if out is newer (even if (NeedsdUpdate ⍵) is true).
+⍝ Copy file in into out. If ⍺ is 0, copy ONLY if out is newer (even if (NeedsdUpdate ⍵) is true).
   CopyFi←{ ⍺←0 ⋄ optIn(in out)←⍺ ⍵
       optOut←optIn⊃'ReplaceIfNewer' 'Replace'
       _←(Fi out)⎕NCOPY⍠('IfExists'optOut)⊢Fi in
@@ -136,7 +140,7 @@
       ⍝ Miscellany: Remove button HTML
       ⍝             set all <details> to <details open>, except leave the TOC details as is.
         src snk← ↓⍉↑(
-          ('<button.*?</button>'         '⍠⍠⍠')   
+          ('<button.*?</button>'         '☺☺☺')   
           ('<details +id="TOC">'         '&' )    
           ('<details>'                   '<details open>')    
           ('\n(<pTbr>\s*\n)+'            '')
@@ -156,28 +160,27 @@
         ⍝    The footnote text: [^1]: This is the source of the information.
         SideN2FN←⍺⍺{
             _←¯1 Say'Converting sidenotes to footnotes in ',Tp ⍺⍺
-            NL←⎕UCS 10
+            NL← ⎕UCS 10
             fnCtr←1
-            fnList←NL,'## Footnotes',NL,NL
-            in←'<∆Note>(.*?)</∆Note>'
-            out←{
+            notes← '<∆Note>(.*?)</∆Note>' ⎕R {
                 fnCur← fnCtr
                 fnCtr+←1
                 fnIn← ⍵.Lengths[1]↑⍵.Offsets[1]↓⍵.Block
-                fnOut←'^\s*(?:<br>)*\s*' '\s*(?:<br>)*\s*$'⎕R'' _OptsM fnIn
-                fnList,←'[^',fnCur,']: ',fnOut,NL
+                fnOut←   '^\s*(?:<br>)*\s*' '\s*(?:<br>)*\s*$' ⎕R  '' _OptsM fnIn
+                fnList,← '[^', fnCur, ']: ', fnOut, NL
                 '[^',⍕fnCur,'] '
-            }
-            fnList,⍨in ⎕R out _OptsM ⍵ 
+            } _OptsM ⍵ 
+            notes, NL, '## Footnotes', NL, NL
         }
-      sideN2FN:SideN2FN   Miscellany ⍵ 
-               SideN2Null Miscellany ⍵ 
+      sideN2FN: SideN2FN   Miscellany ⍵ 
+                SideN2Null Miscellany ⍵ 
     }
     ⍝ ml: Common macro list, for ALL md files, INCLUDING (b) readme.md.
     ⍝     For those ONLY for Git "readme.md" files, see GitReadmeOnly above.
-    ml←{ ⍝ ml: match list.
-        ⍝ ∆Link are links that we won't follow, but will tell the user how to do it.
-        ⍝ Why not follow-- in htmlRenderer, we can't return to HELP without bother. 
+    ml← { 
+      ⍝ ml: match list.
+      ⍝ ∆Link are links that we won't follow, but will tell the user how to do it.
+      ⍝ Why not follow-- in htmlRenderer, we can't return to HELP without bother. 
         ∆Link←  ∊(
            '<a id="displayText" href="javascript:linkAlert();">'
            '<span class="linkNote">'
@@ -187,36 +190,20 @@
            ( '___TIMESTAMP___'          timestamp)
            ( '___COPYRIGHT___'          copyright)
            ( '___VERSION___'            version)
-           ( 'v(\.\d+){3,5}'            version)     ⍝ v.0.1.2
+           ( 'v(\.\d+){3,5}'            version)     
            ( 'VERSION\h*←\h*''.*?'''    ('VERSION← ','''',version,''''))
            ( '<GIT\h*>(.*?)</GIT\h*>'   '')
            ( '</?NOGIT\h*>'             '')
-           ( '<∆Red>'                   '<span class="red"><strong>')
-           ( '</∆Red>'                  '</strong></span>')
-           ( '<∆Blue>'                  '<span class="blue"><strong>')
-           ( '</∆Blue>'                 '</strong></span>')
-           ( '<∆Green>'                 '<span class="green"><strong>')
-           ( '</∆Green>'                '</strong></span>')
-           ( '<∆Gr[ea]y>'               '<span class="grey"><strong>')
-           ( '</∆Gr[ea]y>'              '</strong></span>')
-           ( '<∆Sum>'                   '<summary class="summary">')
-           ( '</∆Sum>'                  '</summary>')
-           ( '<∆Fade>'                  '<span style="opacity:0.6;">')
-           ( '</∆Fade>'                 '</span>')
            ( '<∆Note>'                  '<span class="margin-note">')
-           ( '</∆Note>'                 '</span>')
-           ( '<∆Link>'                  ∆Link)
-           ( '</∆Link>'                 ∆Link0)
-           ( '<∆Targ ([^>]+)>'         '<a id="\1" class="scroll-target"></a>')
-           ( '&RHAND;'                 '<big>👉</big>\&nbsp;')        
+           ( '</∆Note>'                 '</span>')  
         )
-    }0
+    } 0
     ⍝ Common: Common macros
     Common← ml { src snk←↓⍉↑⍺⍺ ⋄ src ⎕R snk _OptsM ⍵ }
 
     ⍝ Apply Common and Git Readme-specific macros based on type
     txt← Common GitReadmeOnly ⊃⎕NGET Fi io
-    _←Say(⍕≢ml),' macros applied to  ',Tp io
+    _←Say (⍕≢ml),' macros applied to  ',Tp io
     ⍝ Write the result out
   1:_←(Fi io)1 ⎕NPUT⍨⊂txt
   }
@@ -225,7 +212,7 @@
       io← ⍵
       txt← ⊃⎕NGET (Fi io)
       txt← 'v(\.\d+){2,5}' ⎕R  version⊣ txt
-    1: _← (Fi io)1 ⎕NPUT⍨⊂txt
+    1: _← (Fi io)1 ⎕NPUT⍨ ⊂txt
   }
 ⍝ Convert diamonds from (⍺=1) Apl to Html-friendly forms and (⍺=0) vice versa
 ⍝    [forward←1] Diamonds io.   
@@ -254,7 +241,7 @@
       fiTyp← ∆ ' -f markdown '                     ⍝ pandoc format markdown
       opts← ∆ (    
       ⍝ mDoc: omit default css: -M document-css=false
-          '-M document-css=false'              ⍝ -M 
+          '-M document-css=false'               ⍝ -M 
           ''                                    ⍝ 'title="',title,'"' if not in doc.
           ''                                    ⍝ refLoc:  Use default for --reference-location=...'
           '-N'                                  ⍝ number sections                        
@@ -275,9 +262,9 @@
   }
 ⍝ Delete the temp file-- won't delete if file doesn't have 'tmp' in its nm.
   Delete← { in← ⍵ ⋄ del← 1  ⍝ If del=0, leave the file for debugging...
-      ok← 1∊ 'tmp'⍷⍥⎕C Fi ⍵ 
+        ok← 1∊ 'tmp'⍷⍥⎕C Fi ⍵ 
       ~ok: ⎕←'Unable to delete file ',(Tp ⍵),'. It must have TMP or tmp in its name'
-      _← 1 Say⍣del⊢ 'Deleting temporary file ',Tp in 
+        _← 1 Say⍣del⊢ 'Deleting temporary file ',Tp in 
       1:  _← ⎕NDELETE⍣del⊣ Fi ⍵ 
   }
 ⍝ HtmlMacro: Force generated html tables to use justification, not left alignment.
@@ -321,11 +308,11 @@ sideN2FN←Parm'^'
 :EndIf
 Hr
 Say'∘ Directories:'
-Say'    PRIV:  ', homeDir Fi Priv ⍬
+Say'    PRIV:  ', homeDir Fi Priv  ⍬
 Say'    PRIVF: ', homeDir Fi PrivF ⍬
-Say'    PUB:   ', homeDir Fi Pub ⍬
-Say'    PUBF:  ', homeDir Fi PubF ⍬
-Say'    TEMP:  ', homeDir Fi Temp ⍬
+Say'    PUB:   ', homeDir Fi Pub   ⍬
+Say'    PUBF:  ', homeDir Fi PubF  ⍬
+Say'    TEMP:  ', homeDir Fi Temp  ⍬
 Hr
 
 pgmDep←  ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) 
@@ -340,19 +327,24 @@ pgmDep,← ((PrivF cd)(PubF cd))((PrivF el)(PubF el))((PrivF globFi)(PubF globFi
     anyUpdts∨←1
     _←¯1 Say'Updating ∆F utility ',Tp PubF pgm
     _←¯1 Say'Updating ∆F loader  ',Tp Pub loader
-    UpdatePgm PrivF pgm 
-    UpdatePgm PrivF libra 
-    UpdatePgm Priv loader 
+    UpdatePgm¨ (PrivF pgm)(PrivF libra)(Priv loader)
     :FOR itemF :in cd el parmFi globFi 
         CopyFi(PrivF itemF )(PubF itemF)
     :EndFor 
-    CopyFi(Priv loader)(Pub loader)
-    CopyFi(PrivF libra)(PubF libra)
-    force CopyFi(PrivF pgm)(PubF pgm)                    ⍝ Make ∆F library public
+    0 0 force CopyFi¨(
+        ((Priv loader)(Pub loader))
+        ((PrivF libra)(PubF libra)) 
+        ((PrivF pgm)(PubF pgm))    
+    )              
 :EndIf
 
-docDep←  ((PrivF md)(PubF md))  ((PrivF md)(PrivF html))  ((PrivF hdr)(PrivF html))
-docDep,← ((PrivF html)(PubF html)) ((PrivF md)(PubF readme)) 
+docDep←  (
+    ((PrivF md)(PubF md)) 
+    ((PrivF md)(PrivF html))  
+    ((PrivF hdr)(PrivF html))
+    ((PrivF html)(PubF html)) 
+    ((PrivF md)(PubF readme)) 
+)
 :If force
 :OrIf 'Documentation' NeedsUpdate docDep
     Hr
@@ -363,14 +355,14 @@ docDep,← ((PrivF html)(PubF html)) ((PrivF md)(PubF readme))
     Hr 
       MacrosInSrc PrivF md 
       CopyFi (PrivF md)(Temp mdTmp)
-      Macros Temp mdTmp                            ⍝ Expand macros in Git    README.md
+      Macros Temp mdTmp                              ⍝ Expand macros in Git    README.md
       MdPandoc2Git (Temp mdTmp)(Pub readme) 
       Delete Temp mdTmp  
     Hr 
-    Macros PubF md                                ⍝ Expand macros in public markdown md
-    Md2Html(PubF md)(PrivF hdr)(PrivF html)       ⍝ Generate private HTML from public markdown
-    HtmlMacro PrivF html 
-    CopyFi(PrivF html)(PubF html)                 ⍝ Copy private HTML to public
+      Macros PubF md                                ⍝ Expand macros in public markdown md
+      Md2Html(PubF md)(PrivF hdr)(PrivF html)       ⍝ Generate private HTML from public markdown
+      HtmlMacro PrivF html 
+      CopyFi(PrivF html)(PubF html)                 ⍝ Copy private HTML to public
 :EndIf
 
 :If anyUpdts

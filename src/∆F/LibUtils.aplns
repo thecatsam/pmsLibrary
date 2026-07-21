@@ -1,4 +1,4 @@
-⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-07-14') 
+⍝ ∆FLibUtils.dyalog      (UPDATE_TIME: '2026-07-21') 
 :Namespace libUtils
 ⍝ ===================================================================================
 ⍝ This namespace handles Library (£ or `L) shortcut automatic loading.
@@ -61,13 +61,14 @@
     '←'= ⊃w~ '∘ ':           ûLibTok                ⍝ If assignment, →Return.
         _← ⍺ LoadObj nm                             ⍝ Try to load obj definition
                              ûLibTok                ⍝ →Return.                                       
-  }
+  } 
   ⍝ Support Fns: NoLB, NmSpan
     NoLB← {(∨\' '≠⍵)/⍵}                             ⍝ Fast Idiom. 
     ⍝ NmSpan: Find longest left-anchored span of symbols valid in APL simple user names.
     ⍝         We ensure the sequence is an actual valid name in a later step (see above).
-    ⍝         For the fast span, it just needs to include (among other things) valid names.
-      nmSym← ⎕D{ 0=≢⍵: ⍺~'⍺⍵∇' ⋄ ¯1=⎕NC f←⊃⍵: ⍺ ∇ 1↓⍵ ⋄ (⍺,f) ∇ 1↓⍵ } ⎕AV   
+    ⍝         For the fast span, it just needs to include all chars that appear in valid simple names.
+    ⍝         ⎕D inserted before '⍙'
+      nmSym← ''{ 0=≢⍵: '⍺⍵∇'~⍨(↑∘⍺,⎕D,↓∘⍺)⍺⍳'⍙' ⋄ ¯1=⎕NC f←⊃⍵: ⍺ ∇ 1↓⍵ ⋄ (⍺,f) ∇ 1↓⍵ } ⎕AV   
     NmSpan← 0⍳⍨∊∘nmSym
  
   ⍝ ======================================================================================
