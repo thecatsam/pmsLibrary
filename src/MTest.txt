@@ -5,10 +5,12 @@
   '<b>',⍵,'</b>'
   ⍝  Comment
  }}  
+
+ {{def: yellow {{green ⍬}}}}
  
 {{macros: on}}
 
 
-This is {{red One two {{bold three}} three four}}.
+This is {{red One two {{bold three}} three {{yellow}} four}}.
 
 This is {{red Some more {{bold three {{pink and}} {{green four}}}} three four}}.
