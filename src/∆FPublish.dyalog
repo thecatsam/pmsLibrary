@@ -1,4 +1,4 @@
-﻿∆FPublish parms
+∆FPublish parms
   ; anyUpdts; cd; copyright; docDep; force; globFi; hdr; html; itemF; libDir      
   ; libra; loader; md; mdTmp; ns; pandocBin; parmFi; pdf; pgm; pgmDep; priv
   ; privF; privFdir; privdir; productionCode; pub; pubF; pubFdir; pubdir   
@@ -55,34 +55,32 @@
 ⍝ Directories...
   homeDir←  '/Users/petermsiegel/' ⎕R '~/'
   libDir←   '/Users/petermsiegel/MyDyalogLibrary/'
-  tempdir←  '/Users/petermsiegel/Desktop/'             ⍝ Not currrently used!
+  tempdir←  '/Users/petermsiegel/Desktop/'                  ⍝ Not currrently used!
   privFdir← libDir,'pmsLibrary/src/∆F/'
   privdir←  libDir,'pmsLibrary/src/'
   pubFdir←  libDir,'f-string-apl/∆F/'
   pubdir←   libDir,'f-string-apl/'
 
 ⍝ Our files (sans directory names)
-  pgm←       'FString.aplns'         ⍝ ∆F lib
-  html←      'Help.html'             ⍝ html
-  md←        'Help.md'               ⍝ markdown
-  mdTmp←     'tmp_README.md'         ⍝ A temporary file!
-  readme←    'README.md'             ⍝ Git README file
-  hdr←       'Help_Hdr.html'         ⍝ local header file.
-  loader←    '∆F.dyalog'             ⍝ ∆F bootstrap utility
-  libra←     'LibUtils.aplns'        ⍝ £ library
-  parmFi←    'ParmDefs.apla'         ⍝ 
+  pgm←       'FString.aplns'                                ⍝ ∆F lib
+  html←      'Help.html'                                    ⍝ html
+  md←        'Help.md'                                      ⍝ markdown
+  mdTmp←     'tmp_README.md'                                ⍝ A temporary file!
+  readme←    'README.md'                                    ⍝ Git README file
+  hdr←       'Help_Hdr.html'                                ⍝ local header file.
+  loader←    '∆F.dyalog'                                    ⍝ ∆F bootstrap utility
+  libra←     'LibUtils.aplns'                               ⍝ £ library
+  parmFi←    'ParmDefs.apla'                                ⍝ 
   globFi←    'Globals.aplns'
-  pdf←       'Help.pdf'            ⍝ PDF 
-  cd←        'Futures/CircleDiaeresis.aplo' ⍝ Adam B's ⍥ with depth emulation
+  pdf←       'Help.pdf'                                     ⍝ PDF 
+  cd←        'Futures/CircleDiaeresis.aplo'                 ⍝ Adam B's ⍥ with depth emulation
   el←        'Futures/Ellipsis.aplf'
 
 
 ⍝ File specs 
   privF pubF priv pub temp← 0 1 2 3 9
-  PrivF←  privF,⊂    
-  PubF←   pubF,⊂  
-  Priv←   priv,⊂     
-  Pub←    pub,⊂       
+  PrivF← privF,⊂ ⋄ PubF← pubF,⊂  
+  Priv←  priv,⊂  ⋄ Pub←  pub,⊂  
   Temp←   temp,⊂
 
 ⍝ File pseudo-class-- generates FULL filename
@@ -94,25 +92,21 @@
   }
 ⍝ Type (brief file) pseudo-class-- generates a displayable compact filename
   Tp←{
-    typ nm←⍵ ⋄ typ=privF:'PRIVF/',nm   ⋄ typ=pubF: 'PUBF/',nm ⋄ typ=priv: 'PRIV/',nm 
-               typ=pub:  'PUB/',nm     ⋄ typ≡temp: 'TEMP/',nm
+    typ nm←⍵ ⋄ 
+    typ=privF:'PRIVF/',nm ⋄ typ=pubF: 'PUBF/',nm 
+    typ=priv: 'PRIV/',nm  ⋄ typ=pub:  'PUB/',nm     
+    typ≡temp: 'TEMP/',nm
   }
 
 ⍝ Determines 
 ⍝    for each file pair <p> in ⍵, 
 ⍝      whether (⊃p) was created after (⊃⌽p) or if one or the other does NOT exist.
   NeedsUpdate←{
-    NotAfter← ≤ { 
-        a b←Fi¨⍺ ⍵
-        t←⎕NEXISTS¨a b ⋄ 0∊t:0
-        t←20 ⎕DT¨3 ⎕NINFO¨a b
-        ⍺⍺/t
-    }
+    NotAfter← ≤ { a b←Fi¨⍺ ⍵ ⋄ t←⎕NEXISTS¨a b ⋄ 0∊t:0 ⋄ t←20 ⎕DT¨3 ⎕NINFO¨a b ⋄ ⍺⍺/t }
     3=|≡⍵:⍺ ∇⊂⍵
-    0=≢⍵:0⊣_←1 Say'Dependencies met for ',⍺⊣Hr
+    0=≢⍵:0⊣_←1 Say 'Dependencies met for ',⍺⊣Hr
     bef aft←⊃⍵
-    bef NotAfter aft:⍺ ∇ 1↓⍵
-    _←Hr
+    bef NotAfter aft: ⍺ ∇ 1↓⍵ ⋄ _←Hr
     1⊣_←¯1 Say'Updating ',⍺,'. This dependency not met: (',')',⍨(Tp bef),' ≤ ',Tp aft
   }
 ⍝ Copy file in into out. If ⍺ is 0, copy ONLY if out is newer (even if (NeedsdUpdate ⍵) is true).
@@ -126,93 +120,91 @@
 ⍝ Macros:  Process macros for std markdown and for readme.md for Github.
 ⍝ Macros decides to use isReadme mode if the filename includes 'readme.md' (ignore case).
   Macros←{
-    io← ⍵    ⍝ Get file to read and then write
-
+    ⍝ Get file to read and then write
+      io← ⍵   
     ⍝ extern: sideN2FN
     ⍝ - See sideN2FN definition below. 
     ⍝ - sideN2FN is ignored if ~isReadme.
-    isReadme←'readme.md' (1∊⍷⍥⎕C) ⊃⌽⍵
+      isReadme←'readme.md' (1∊⍷⍥⎕C) ⊃⌽⍵
     ⍝ GitReadmeOnly: If a README.md for Github
     ⍝ This will run only if isReadme is true
-    GitReadmeOnly←io {
-      ~isReadme: ⍵
-      ⍝ ============================================
-      ⍝ Miscellany: Remove button HTML
-      ⍝             set all <details> to <details open>, except leave the TOC details as is.
-        src snk← ↓⍉↑(
-          ('<button.*?</button>'         '☺☺☺')   
-          ('<details +id="TOC">'         '&' )    
-          ('<details>'                   '<details open>')    
-          ('\n(<pTbr>\s*\n)+'            '')
-          ('<GIT\h*>(.*?)</GIT\h*>'      '\1' )                         
-          ('<NOGIT\h*>.*?</NOGIT\h*>'    '' )
-        )
-        Miscellany← src ⎕R snk _OptsM 
-        ⍝ SideN2Null: Remove sidenotes.
-        SideN2Null←⍺⍺{
-            _←¯1 Say'Removing sidenotes in ',Tp ⍺⍺
-            in←'<∆Note>.*?</∆Note>'
-            out←''
-            in ⎕R out _OptsM ⍵
-        }
-        ⍝ SideN2FN: Convert sidenotes to footnotes.
-        ⍝    The footnote:      [^1]
-        ⍝    The footnote text: [^1]: This is the source of the information.
-        SideN2FN←⍺⍺{
-            _←¯1 Say'Converting sidenotes to footnotes in ',Tp ⍺⍺
-            NL← ⎕UCS 10
-            fnCtr←1
-            notes← '<∆Note>(.*?)</∆Note>' ⎕R {
-                fnCur← fnCtr
-                fnCtr+←1
-                fnIn← ⍵.Lengths[1]↑⍵.Offsets[1]↓⍵.Block
-                fnOut←   '^\s*(?:<br>)*\s*' '\s*(?:<br>)*\s*$' ⎕R  '' _OptsM fnIn
-                fnList,← '[^', fnCur, ']: ', fnOut, NL
-                '[^',⍕fnCur,'] '
-            } _OptsM ⍵ 
-            notes, NL, '## Footnotes', NL, NL
-        }
-      sideN2FN: SideN2FN   Miscellany ⍵ 
-                SideN2Null Miscellany ⍵ 
-    }
+      GitReadmeOnly←io {
+        ~isReadme: ⍵
+        ⍝ ============================================
+        ⍝ Miscellany: Remove button HTML
+        ⍝             set all <details> to <details open>, except leave the TOC details as is.
+          src snk← ↓⍉↑(
+            ('<button.*?</button>'         '☺☺☺')   
+            ('<details +id="TOC">'         '&' )    
+            ('<details>'                   '<details open>')    
+            ('\n(<pTbr>\s*\n)+'            '')
+            ('<GIT\h*>(.*?)</GIT\h*>'      '\1' )                         
+            ('<NOGIT\h*>.*?</NOGIT\h*>'    '' )
+          )
+          ⍝ SideN2Null: Remove sidenotes.
+          SideN2Null←⍺⍺{
+              _←¯1 Say'Removing sidenotes in ',Tp ⍺⍺
+              in←'<∆Note>.*?</∆Note>'
+              out←''
+              in ⎕R out _OptsM ⍵
+          }
+          ⍝ SideN2FN: Convert sidenotes to footnotes.
+          ⍝    The footnote:      [^1]
+          ⍝    The footnote text: [^1]: This is the source of the information.
+          SideN2FN←⍺⍺{
+              _←¯1 Say'Converting sidenotes to footnotes in ',Tp ⍺⍺
+              NL← ⎕UCS 10
+              fnCtr←1
+              notes← '<∆Note>(.*?)</∆Note>' ⎕R {
+                  fnCur← fnCtr
+                  fnCtr+←1
+                  fnIn← ⍵.Lengths[1]↑⍵.Offsets[1]↓⍵.Block
+                  fnOut←   '^\s*(?:<br>)*\s*' '\s*(?:<br>)*\s*$' ⎕R  '' _OptsM fnIn
+                  fnList,← '[^', fnCur, ']: ', fnOut, NL
+                  '[^',⍕fnCur,'] '
+              } _OptsM ⍵ 
+              notes, NL, '## Footnotes', NL, NL
+          }
+          misc← src ⎕R snk _OptsM ⍵ 
+        sideN2FN: SideN2FN misc ⋄ SideN2Null misc 
+      }                                                     ⍝ End: GitReadmeOnly
     ⍝ ml: Common macro list, for ALL md files, INCLUDING (b) readme.md.
     ⍝     For those ONLY for Git "readme.md" files, see GitReadmeOnly above.
-    ml← { 
+      ml← { 
       ⍝ ml: match list.
       ⍝ ∆Link are links that we won't follow, but will tell the user how to do it.
       ⍝ Why not follow-- in htmlRenderer, we can't return to HELP without bother. 
         ∆Link←  ∊(
-           '<a id="displayText" href="javascript:linkAlert();">'
-           '<span class="linkNote">'
+            '<a id="displayText" href="javascript:linkAlert();">'
+            '<span class="linkNote">'
         )
         ∆Link0←  '</span></a>'
         (
-           ( '___TIMESTAMP___'          timestamp)
-           ( '___COPYRIGHT___'          copyright)
-           ( '___VERSION___'            version)
-           ( 'v(\.\d+){3,5}'            version)     
-           ( 'VERSION\h*←\h*''.*?'''    ('VERSION← ','''',version,''''))
-           ( '<GIT\h*>(.*?)</GIT\h*>'   '')
-           ( '</?NOGIT\h*>'             '')
-           ( '<∆Note>'                  '<span class="margin-note">')
-           ( '</∆Note>'                 '</span>')  
+            ( '___TIMESTAMP___'          timestamp)
+            ( '___COPYRIGHT___'          copyright)
+            ( '___VERSION___'            version)
+            ( 'v(\.\d+){3,5}'            version)     
+            ( 'VERSION\h*←\h*''.*?'''    ('VERSION← ','''',version,''''))
+            ( '<GIT\h*>(.*?)</GIT\h*>'   '')
+            ( '</?NOGIT\h*>'             '')
+            ( '<∆Note>'                  '<span class="margin-note">')
+            ( '</∆Note>'                 '</span>')  
         )
     } 0
     ⍝ Common: Common macros
-    Common← ml { src snk←↓⍉↑⍺⍺ ⋄ src ⎕R snk _OptsM ⍵ }
-
+      Common← ml { src snk←↓⍉↑⍺⍺ ⋄ src ⎕R snk _OptsM ⍵ }
     ⍝ Apply Common and Git Readme-specific macros based on type
-    txt← Common GitReadmeOnly ⊃⎕NGET Fi io
-    _←Say (⍕≢ml),' macros applied to  ',Tp io
+      txt← Common GitReadmeOnly ⊃⎕NGET Fi io
+      _←Say (⍕≢ml),' macros applied to  ',Tp io
     ⍝ Write the result out
-  1:_←(Fi io)1 ⎕NPUT⍨⊂txt
+    1:_← txt ⊂⍛⎕NPUT (Fi io) 1 
   }
 
   MacrosInSrc←{
       io← ⍵
       txt← ⊃⎕NGET (Fi io)
       txt← 'v(\.\d+){2,5}' ⎕R  version⊣ txt
-    1: _← (Fi io)1 ⎕NPUT⍨ ⊂txt
+    1: _← txt ⊂⍛⎕NPUT (Fi io) 1
   }
 ⍝ Convert diamonds from (⍺=1) Apl to Html-friendly forms and (⍺=0) vice versa
 ⍝    [forward←1] Diamonds io.   
@@ -221,7 +213,7 @@
       txt←⊃⎕NGET Fi io
       (((∊txt)∊dmndIn)/∊txt)←dmndOut
       _←Say'Converting to ',(forward⊃'Html' 'APL'),'-friendly diamond selection in "',(Tp io)
-    1:_←(Fi io)1 ⎕NPUT⍨⊂txt
+    1:_← txt ⊂⍛⎕NPUT (Fi io) 1 
     1:_←io Write txt
   }
   UpdatePgm←{
@@ -229,24 +221,22 @@
       src←   'VERSION\h*←\h*''.*?'''      'UPDATE_TIME\h*:\h*''.*?'''
       snk←  ('VERSION← ',q,version,q)    ('UPDATE_TIME: ',q,timestamp,q) 
       txt←  src ⎕R snk ⊃⎕NGET io
-    1: _← io 1 ⎕NPUT⍨ ⊂txt 
+    1: _← txt ⊂⍛⎕NPUT io 1   
   }
   ⍝ Md2Html: Run pandoc on the md file, using pandoc-style markdown, generating Html
   ⍝ Avoid pandoc's css (except min). It messes with tables.
   ⍝ Begin every option/spec var. for Pandoc with a space, unless empty.
   Md2Html←{
-      in hdr out←⍵
-      ∆← { ∊' ',¨ ⊆⍵ }
-
-      fiTyp← ∆ ' -f markdown '                     ⍝ pandoc format markdown
+      in hdr out←⍵ ⋄ ∆← { ∊' ',¨ ⊆⍵ }
+      fiTyp← ∆ ' -f markdown '                              ⍝ pandoc format markdown
       opts← ∆ (    
       ⍝ mDoc: omit default css: -M document-css=false
-          '-M document-css=false'               ⍝ -M 
-          ''                                    ⍝ 'title="',title,'"' if not in doc.
-          ''                                    ⍝ refLoc:  Use default for --reference-location=...'
-          '-N'                                  ⍝ number sections                        
-          ''                                    ⍝ tableNos: '--filter pandoc-tablenos'
-          ''                                    ⍝ toc: Doesn't work as expected: -s --toc --toc-depth=2'
+          '-M document-css=false'                           ⍝ -M 
+          ''                                                ⍝ 'title="',title,'"' if not in doc.
+          ''                                                ⍝ refLoc:  Use default for --reference-location=...'
+          '-N'                                              ⍝ number sections                        
+          ''                                                ⍝ tableNos: '--filter pandoc-tablenos'
+          ''                                                ⍝ toc: Doesn't work as expected: -s --toc --toc-depth=2'
       )
       _Fis←{i h o←⍺⍺¨⍵ ⋄ ∆ i '-H' h '-o' o}
       _←Say'pandoc $opts' fiTyp (Tp _Fis in hdr out)
@@ -256,12 +246,12 @@
   }
 ⍝ MdPanDoc2Git: Convert pandoc-style markdown to Git format for readme.md ONLY.
   MdPandoc2Git←{ in out← ⍵ 
-    _← Say 'pandoc -f markdown -t gfm ',(Tp in),' -o ',Tp out 
-    cmd← pandocBin,' -f markdown -t gfm ',(Fi in),' -o ',Fi out 
-    ⎕SH cmd 
+      _← Say 'pandoc -f markdown -t gfm ',(Tp in),' -o ',Tp out 
+      cmd← pandocBin,' -f markdown -t gfm ',(Fi in),' -o ',Fi out 
+      ⎕SH cmd 
   }
 ⍝ Delete the temp file-- won't delete if file doesn't have 'tmp' in its nm.
-  Delete← { in← ⍵ ⋄ del← 1  ⍝ If del=0, leave the file for debugging...
+  Delete← { in← ⍵ ⋄ del← 1                                  ⍝ If del=0, leave the file for debugging...
         ok← 1∊ 'tmp'⍷⍥⎕C Fi ⍵ 
       ~ok: ⎕←'Unable to delete file ',(Tp ⍵),'. It must have TMP or tmp in its name'
         _← 1 Say⍣del⊢ 'Deleting temporary file ',Tp in 
@@ -269,16 +259,16 @@
   }
 ⍝ HtmlMacro: Force generated html tables to use justification, not left alignment.
   HtmlMacro← {
-    io← Fi ⍵
-    txt← ⊃⎕NGET io 
-    txt← '<td style="text-align: left;">' ⎕R '<td style="text-align: justify;">'⊣txt 
-    io 1 ⎕NPUT⍨ ⊂txt 
+      io← Fi ⍵
+      txt← ⊃⎕NGET io 
+      txt← '<td style="text-align: left;">' ⎕R '<td style="text-align: justify;">'⊣txt 
+      txt ⊂⍛⎕NPUT io 1 
   }
 
 ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝  EXECUTIVE ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝ ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝
 ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝            ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝ ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝
 
-:If Parm'p'  ⍝ Prompt mode...
+:If Parm'p'                                                 ⍝ Prompt mode...
     'Please select Publishing Option:'
     '  Update [Quiet] [^]  Update based on dependencies. Default ''Update''.'
     '  Force  [Quiet] [^]  Force an update of all files.'
@@ -295,8 +285,8 @@
 :EndIf
 :If Parm'e' ⋄ :Return ⋄ :EndIf
 
-anyUpdts←0        ⍝ No udpates yet
-force←Parm'f'     ⍝ If 1, force updates
+anyUpdts←0                                                  ⍝ No udpates yet
+force←Parm'f'                                               ⍝ If 1, force updates
 ⍝ sideN2FN: See Macros.
 ⍝     Set to 1: sidenotes are converted to footnotes in README.md;
 ⍝     Default:  sidenotes will be removed (ignored) in README.md.
@@ -350,19 +340,19 @@ docDep←  (
     Hr
     anyUpdts∨←1
     ¯1 Say'Updating private and public documentation files'
-    force CopyFi(PrivF md)(PubF md)                ⍝ Copy private md to public md. Force if force=1.
+    force CopyFi(PrivF md)(PubF md)                         ⍝ Copy private md to public md. Force if force=1.
   ⍝ We use pandoc-format markdown, but need to have README.md in github-format markdown.
     Hr 
       MacrosInSrc PrivF md 
       CopyFi (PrivF md)(Temp mdTmp)
-      Macros Temp mdTmp                              ⍝ Expand macros in Git    README.md
+      Macros Temp mdTmp                                     ⍝ Expand macros in Git    README.md
       MdPandoc2Git (Temp mdTmp)(Pub readme) 
       Delete Temp mdTmp  
     Hr 
-      Macros PubF md                                ⍝ Expand macros in public markdown md
-      Md2Html(PubF md)(PrivF hdr)(PrivF html)       ⍝ Generate private HTML from public markdown
+      Macros PubF md                                        ⍝ Expand macros in public markdown md
+      Md2Html(PubF md)(PrivF hdr)(PrivF html)               ⍝ Generate private HTML from public markdown
       HtmlMacro PrivF html 
-      CopyFi(PrivF html)(PubF html)                 ⍝ Copy private HTML to public
+      CopyFi(PrivF html)(PubF html)                         ⍝ Copy private HTML to public
 :EndIf
 
 :If anyUpdts
