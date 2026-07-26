@@ -1,71 +1,93 @@
 Tidy←{
   ⍝ Tidy
-  ⍝ Try to align comments nicely in dfn or tradfn source. 
+  ⍝ Try to align comments nicely in dfn or tradfn source.
   ⍝ ---------
-  ⍝ Syntax: @cvv← [(tab: 65 ⋄ inc: 5  ⋄ min: 15  ⋄ fi: 0 )] ∇ source@cvv|sourceFn@cv 
-  ⍝      tab: column in which to put comments if possible.
-  ⍝      inc: If text extends to <tab> or beryond, place comments multiples of <inc> 
-  ⍝           to the right of position <tab>
-  ⍝      min: Keep any comments before column <min> where they are.
-  ⍝      fi:  If 1 and ⍵ has depth ≤1, treats ⍵ as the name of a file to update in place (see below).
+  ⍝ Syntax:
+  ⍝ @cvv← [(tab: 65 ⋄ inc: 5  ⋄ min: 15  ⋄ pairs: 0 ⋄ fi: 0 )] ∇ [source | sourceFnOp | sourceFi]
+  ⍝ ⍵:
+  ⍝   source:      the source document to format.   @cvv: a char vector of vectors.
+  ⍝   sourceFnOp:  the name of a function or operator with the code to format, with (fi:0).  @cv: a char vector.
+  ⍝   sourceFi:    the name of a file with the code to format, with (fi:1). @cv: a char vector, (fi: 1).
+  ⍝ ⍺:
+  ⍝   tab:   column in which to put comments if possible.
+  ⍝   inc:   If text extends to <tab> or beryond, place comments multiples of <inc>
+  ⍝          to the right of position <tab>
+  ⍝   min:   Keep any comments before column <min> where they are.
+  ⍝   fi:    If 1 and ⍵ has depth ≤1, treats ⍵ as the name of a file to update in place (see below).
+  ⍝          Otherwise, a char vector right arg is treated as a fn or operator name.
+  ⍝   pairs: If 1, will recognize pairs of comments on line line, 
+  ⍝            - the first a left-side comment and
+  ⍝            - the other aligned with the right-hand side comments. 
+  ⍝          - The two must be have at least 5 blanks in between. 
+  ⍝          If 0, only one comment is allowed.
+  ⍝ Example of pairs: 
+  ⍝|   ⍝ this is the left-side comment                      ⍝ And this is the right-side comment
+  ⍝|                                                        ⍝ This is only a right-side comment
   ⍝
-  ⍝ 1. If source is a char vector of vectors, it is treated as the representation of a function.
-  ⍝    a.  Return the source with comments aligned per options. 
-  ⍝    b.  The function is NOT refixed-- that's up to you.
+  ⍝ Description
+  ⍝ 1. If source is a char vector of vectors, it is treated as multiline APL code (a fn, op, etc.)
+  ⍝    a.  Return the source with comments aligned per options.
+  ⍝    b.  The object is NOT refixed-- that's up to you.
   ⍝ 2. If source is a char. vector, and...
-  ⍝    a.  if fi is 0, 
+  ⍝    a.  if fi is 0,
   ⍝        - ⍵ refers to the name of a visible function;
   ⍝        - its source representation (verbatim if possible) is formatted and...
   ⍝          - returned as a shy value;
   ⍝    b.  if fi is 1,
   ⍝        - ⍵ refers to a file, which is read;
   ⍝        - its source is formatted and...
-  ⍝          - rewritten to the file (in place) and 
+  ⍝          - rewritten to the file (in place) and
   ⍝          - returned as a shy value.
-  ⍝ 
-    ⎕IO ⎕ML←0 1 
-  11 22:: ⎕SIGNAL ⊂⎕DMX.(('EN' EN) ('Message' Message))
-    ⍺←() 
-    def← (                                                  ⍝ Load the default and user options.
-      tab:  60                                          
-      inc:   5                                          
-      min:  20 
-      fi:    0
-    )  
-    0∊ ⊃∊/(⍺ def).⎕NL ¯2: ⎕SIGNAL ⊂('EN' 11)('Message' (∊'Valid options:',' ',¨def.⎕NL ¯2))
-    opts← ⎕NS def ⍺ 
-  1≥ ≡⍵:  opts ∇ {  
-    ~⍺.fi: _← ⍺ ∇ { 
-      ~⍵ ⎕NC⍛∊ 3 4: ⎕SIGNAL ⊂('EN' 11)('Message',⍥⊂ '"',⍵,'" is not a fn or op. For files, use option (fi: 1)')
-        ⍺ ⍺⍺ 62 ⎕ATX ⍵
-      } ⍵
-        ⍺.fi← 0 
-        ll← ⍺ ⍺⍺ ⊃⎕NGET ⍵ 1
-    1:  _← ll⊣ ll ⊂⍛⎕NPUT ⍵ 1  
-  } ,⍵      
-    Align← { (t i) p← ⍺ ⍵ ⋄ p≤ t: ''⍴⍨ t- p ⋄ ''⍴⍨ i| p- t }
-  ⍝ p:    our position on this line.
-  ⍝ cs:   If 1, we have seen only comments and spaces on this line.
-  ⍝       If 0, we've seen code (incl. guards, quotes, :directives, etc.) on this line. 
-  ⍝     
-    p cs← 0 1 
-    startB codeB cmB spB← ⍳≢pats← ( 
-         '^'                                                ⍝ start    (of line)
-         '''[^'']*''|[^⍝''\h]+'                             ⍝ code     (fragments)
-         '\h*⍝.*$'                                          ⍝ comment  (w/ preceding spaces)
-         '\h+'                                              ⍝ spaces   (otherwise)
-    )
-    pats ⎕R{  
-            m← ⍵.Match 
-            startB codeB cmB spB← ⍵.PatternNum= ⍳4
-          startB: ''⊣ p⊢←0   ⊣ cs⊢← 1                       ⍝ Start of line
-          codeB:  m⊣  p+← ≢m ⊣ cs⊢← 0                       ⍝ Code found   
-          spB:    m⊣  p+← ≢m                                ⍝ Spaces (not foll by comment)
-        ⍝ cmB: code follows...
-            nsp← +/ ∧\ m= ' '      
-            asis← cs∧ opts.min> p+ nsp                      ⍝ If comment is near start of line (<min), ...
-          asis:  m                                          ⍝ ... keep leading spaces
-                 m← ' ', nsp↓ m                             ⍝ Not <min, so keep only 1 leading space 
-                 m,⍨ opts.(tab inc) Align p+1               ⍝ Align at "next" tab stop (per inc), if >tab already.  
-    }⊣⍵
+  ⍝
+  11 22::⎕SIGNAL⊂⎕DMX.('EN'EN ⋄ 'Message'Message)
+      ⎕IO ⎕ML←0 1
+      ⍺←()
+      fnOpÊ←('EN' 11 ⋄ 'Message' 'Unknown function or operator')
+      optÊ←('EN' 11 ⋄ 'Message' 'Unknown option(s)')
+      ∆Tidy←∇                                               ⍝ Recurse Tidy
+      opts←(                                                ⍝ Default options
+        tab: 60 ⋄ inc: 5 ⋄ min: 20 ⋄ pairs: 0 ⋄ fi: 0 
+      )
+      FnOrFi←opts∘{
+        ~⍺.fi:_←⍺{
+            ~⍵ ⎕NC⍛∊3 4:⎕SIGNAL⊂fnOpÊ
+              ⍺ ∆Tidy 62 ⎕ATX ⍵
+        }⍵
+            ⍺.fi←0
+            ll←⍺ ∆Tidy⊃⎕NGET ⍵ 1
+        1:_←ll⊣ll⊂⍛⎕NPUT ⍵ 1
+      }
+      Align←{(t i)p←⍺ ⍵ ⋄ p≤t:''⍴⍨t-p ⋄ ''⍴⍨i|p-t}
+
+      ×≢⊃~/(⍺ opts).⎕NL ¯2:⎕SIGNAL⊂optÊ
+      _←opts ⎕NS ⍺                                          ⍝ Add user options
+  1≥≡⍵:FnOrFi,⍵                                             ⍝ If ⍵ is CV, see of a fn (fi:0) or a file (fi:1)?
+      pos←0                                                 ⍝ pos:     Our position on this line.
+      noCod←1                                               ⍝ noCod:   Just code on the line of ⍵?
+      stI cdI _ cmI spI← ⍳≢pats← (
+          '^'                                               ⍝ start    (of line)
+          '''[^'']*''|[^⍝''\h]+'                            ⍝ code     (fragments)
+          '(*F)' '^(\h*⍝[^⍝]*)\h{5,}(⍝.*)$'⊃⍨ opts.pairs    ⍝ double comments:  Nop unless opts.pairs.
+          '\h*⍝.*$'                                         ⍝ comment  (w/ preceding spaces)
+          '\h+'                                             ⍝ spaces   (not before comment)
+      )
+      pats ⎕R{
+          m←⍵.Match
+          Case←⍵.PatternNum∘=
+        Case stI:m⊣pos⊢←0⊣noCod⊢←1                          ⍝ Start of line
+        Case cdI:m⊣pos+←≢m⊣noCod⊢←0                         ⍝ Code found
+        Case spI:m⊣pos+←≢m                                  ⍝ Spaces (not foll by comment)
+      ⍝ Case cmI, cm2I ↓↓↓                                  ⍝ Comments (poss. preceded by spaces)
+          asis←noCod∧opts.min>pos+nsp←+/∧\m=' '             ⍝ If comment is near start of line (<min), ...
+        asis:{
+          Case cmI: m                                       ⍝ ... keep leading spaces
+        ⍝ (pairs: 1)?                                       ⍝ Pairs of comments handled here ↓↓↓                                      
+            cm1 cm2←⍵.{ Lengths[⍵]↑ Offsets[⍵]↓ Block}¨ 1 2
+            pos+← ≢cm1 
+            m← cm1, opts.(tab inc)Align pos+1
+            m, ' ', cm2 
+        } ⍵                                             
+          m←' ', nsp↓ m                                     ⍝ Not <min>. Guarantee 1 leading space
+          m,⍨opts.(tab inc)Align pos+1                      ⍝ Align at "next" tab stop (per inc), if >tab already.
+      }⊣⍵
 }
