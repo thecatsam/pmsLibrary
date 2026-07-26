@@ -134,12 +134,12 @@
         ⍝ Miscellany: Remove button HTML
         ⍝             set all <details> to <details open>, except leave the TOC details as is.
           src snk← ↓⍉↑(
-            ('<button.*?</button>'         '☺☺☺')   
-            ('<details +id="TOC">'         '&' )    
-            ('<details>'                   '<details open>')    
-            ('\n(<pTbr>\s*\n)+'            '')
-            ('<GIT\h*>(.*?)</GIT\h*>'      '\1' )                         
-            ('<NOGIT\h*>.*?</NOGIT\h*>'    '' )
+            '<button.*?</button>'         '☺☺☺'   
+            '<details +id="TOC">'         '&'   
+            '<details>'                   '<details open>'   
+            '\n(<pTbr>\s*\n)+'            ''
+            '<GIT\h*>(.*?)</GIT\h*>'      '\1'                          
+            '<NOGIT\h*>.*?</NOGIT\h*>'    '' 
           )
           ⍝ SideN2Null: Remove sidenotes.
           SideN2Null←⍺⍺{
@@ -180,15 +180,15 @@
         )
         ∆Link0←  '</span></a>'
         (
-            ( '___TIMESTAMP___'          timestamp)
-            ( '___COPYRIGHT___'          copyright)
-            ( '___VERSION___'            version)
-            ( 'v(\.\d+){3,5}'            version)     
-            ( 'VERSION\h*←\h*''.*?'''    ('VERSION← ','''',version,''''))
-            ( '<GIT\h*>(.*?)</GIT\h*>'   '')
-            ( '</?NOGIT\h*>'             '')
-            ( '<∆Note>'                  '<span class="margin-note">')
-            ( '</∆Note>'                 '</span>')  
+             '___TIMESTAMP___'          timestamp
+             '___COPYRIGHT___'          copyright
+             '___VERSION___'            version
+             'v(\.\d+){3,5}'            version  
+             'VERSION\h*←\h*''.*?'''    ('VERSION← ','''',version,'''')
+             '<GIT\h*>(.*?)</GIT\h*>'   ''
+             '</?NOGIT\h*>'             ''
+             '<∆Note>'                  '<span class="margin-note">'
+             '</∆Note>'                 '</span>' 
         )
     } 0
     ⍝ Common: Common macros

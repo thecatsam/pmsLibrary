@@ -182,9 +182,9 @@
   ⍝ Validate all options passed in ûsr (⍺).  dfn∊ ¯1 0 1; others ∊ 0 1. cache handled in fsc.Get.
     core← |ûsr.( dfn verbose box auto inline )                   ⍝ For cache, see fsc.Get.
   11≠ ⎕DR core: ⎕SIGNAL êOpt                                     ⍝ Are core opts bool?
-    VMsg← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                           ⍝ Verbose option message (returns ⍵) 
+    VTell← (⎕∘←)⍣(ûsr.(verbose∧¯1≠dfn))                          ⍝ Verbose option message (returns ⍵) 
     key code← ûsr.cache fsc.Get ⍵ core                           ⍝ Have we cached code ...  
-  ⍬≢ code: VMsg code                                             ⍝ ... for this arg & core opts? 
+  ⍬≢ code: VTell code                                            ⍝ ... for this arg & core opts? 
 ⍝   Shortcuts used explicitly (not just via esc+alphabetic). See LoadShortcutCalls.
     scA scCD scEl scÐ scF scM scSel← ûsr.inline⊃ shortcuts.byVar 
     ûsr.lîbObjs← ⍬                                               ⍝ £ibrary shortcut "autoload" cache...
@@ -193,13 +193,13 @@
     ûsr.omC←  0                                                  ⍝ initialise omega counter to 0 (see `⍵)
     ûsr.auto∧← libUtils.pârms.auto                               ⍝ auto can usefully be 1 only if pârms.auto is 1.     
 ⍝   *** START THE SCAN ***                                       ⍝ ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑            
-    flds← '' ScanAll⊢ fstr← ∊⍵                                   ⍝    fstr: char vec of vecs => char vec                     
+    flds← '' ScanAll⊢ fstr← ∊⍵                                   ⍝    fstr: char vec of vecs => char vec                    
 ⍝   *** SCAN COMPLETE ***                                        ⍝ ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-  0= ≢flds: VMsg '(1 0⍴⍬)', '⍨'/⍨ ûsr.dfn≠0                      ⍝ If there are no flds, return 1 by 0 matrix
+  0= ≢flds: VTell '(1 0⍴⍬)', '⍨'/⍨ ûsr.dfn≠0                     ⍝ If there are no flds, return 1 by 0 matrix
     code← CFDfn (ûsr.box⊃ scM scÐ), OrderFlds flds               ⍝ Order fields R-to-L so they will be evaluated L-to-R in ∆F.           
-  0=ûsr.dfn: VMsg key fsc.Set code                               ⍝ Emit code ready to execute
+  0=ûsr.dfn: VTell key fsc.Set code                              ⍝ Emit code ready to execute
     fstrQ← ',⍨⊂', AplQt fstr                                     ⍝ Is ûsr.dfn (1,¯1): add quoted fmt string (`⍵0)
-    VMsg key fsc.Set lb, code, fstrQ, rb                         ⍝ Emit ûsr.dfn-based str ready to cvt to ûsr.dfn in caller
+    VTell key fsc.Set lb, code, fstrQ, rb                        ⍝ Emit ûsr.dfn-based str ready to cvt to ûsr.dfn in caller
   }                                                              ⍝ ScanFStr 
 ⍝ === End of ScanFStr ========================================================  
 
