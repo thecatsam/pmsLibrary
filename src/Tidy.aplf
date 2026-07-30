@@ -3,12 +3,15 @@ Tidy← {
   ⍝ Try to align comments nicely in dfn or tradfn source.
   ⍝ ---------
   ⍝ Syntax:
-  ⍝ @cvv← [(tab: 65 ⋄ inc: 5  ⋄ min: 20  ⋄ pairs: 1 ⋄ fi: 0 )] ∇ [source | sourceFnOp | sourceFi]
-  ⍝ ⍵:
-  ⍝   source:      the source document to format.   @cvv: a char vector of vectors.
+  ⍝ @cvv← [opts] ∇ source
+  ⍝   source: [sourceDoc | sourceFnOp | sourceFi]
+  ⍝   opts:   (tab: 65 ⋄ inc: 5  ⋄ min: 20  ⋄ pairs: 1 ⋄ fi: 0 )
+  ⍝ ------
+  ⍝ source: 
+  ⍝   sourceDoc:   the source document to format.   @cvv: a char vector of vectors.
   ⍝   sourceFnOp:  the name of a function or operator with the code to format, with (fi:0).  @cv: a char vector.
   ⍝   sourceFi:    the name of a file with the code to format, with (fi:1). @cv: a char vector, (fi: 1).
-  ⍝ ⍺:
+  ⍝ opts: 
   ⍝   tab:   column in which to put comments if possible.
   ⍝   inc:   If text extends to <tab> or beryond, place comments multiples of <inc>
   ⍝          to the right of position <tab>
@@ -21,8 +24,8 @@ Tidy← {
   ⍝          - The two must be have at least 5 blanks in between. 
   ⍝          If 0, only one comment is allowed.
   ⍝ Example of pairs: 
-  ⍝|   ⍝ this is the left-side comment                      ⍝ And this is the right-side comment
-  ⍝|                                                        ⍝ This is only a right-side comment
+  ⍝⍝   ⍝ this is the left-side comment                      ⍝ And this is the right-side comment
+  ⍝⍝                                             ⍝ This is only a right-side comment
   ⍝
   ⍝ Description
   ⍝ 1. If source is a char vector of vectors, it is treated as multiline APL code (a fn, op, etc.)
@@ -44,8 +47,8 @@ Tidy← {
       ⍺← ()
       fnOpÊ← ⊂( 'EN' 11 ⋄ 'Message' 'Unknown function or operator' )
       optÊ←  ⊂( 'EN' 11 ⋄ 'Message' 'Unknown option(s)' )
-      ∆Tidy← ∇                                              ⍝ Recurse Tidy
-      o← (                                                  ⍝ Default options
+      ∆Tidy← ∇                                             ⍝ Recurse Tidy
+      o← (                                                 ⍝ Default options
         tab: 60 ⋄ inc: 5 ⋄ min: 20 ⋄ pairs: 1 ⋄ fi: 0 
       )
       FnOrFi← o∘{
@@ -58,41 +61,49 @@ Tidy← {
         1: _← ll⊣ ll⊂⍛⎕NPUT ⍵ 1
       }
       Align← { 
-            ( t i ) p← ⍺ ⍵ 
-         p≤t: ''⍴⍨ 1⌈ t- p                                  ⍝ Always add at least 1 space
-              ''⍴⍨ 1⌈ i| p- t                               ⍝ -- Ditto --
+            ( t i ) p← ⍺.(tab inc) ⍵ 
+         p≤t: ''⍴⍨ 1⌈ ¯1+ t- p                             ⍝ Always add at least 1 space
+              ''⍴⍨ 1⌈ ¯1+ i| p- t                          ⍝ -- Ditto --
       }
+      TB← { +/∧\' '= ⌽⍵ }
+      LB← { +/∧\' '=  ⍵ }
+      F← { ⍺.Lengths[⍵]↑ ⍺.Offsets[⍵]↓ ⍺.Block }
 
       ×≢⊃~/(⍺ o).⎕NL ¯2: ⎕SIGNAL optÊ
-      _← o ⎕NS ⍺                                            ⍝ Add user options
-  1≥≡⍵: FnOrFi ,⍵                                           ⍝ If ⍵ is CV, see of a fn (fi:0) or a file (fi:1)?
-      pos← 0                                                ⍝ pos:     Our position on this line.
-      noCod← 1                                              ⍝ noCod:   Just code on the line of ⍵?
-      nopP← '(*F)'                                          ⍝ nop pattern
-      dblP← '^(\h{,','}⍝[^⍝]*)\h{5,}(⍝.*)$',⍨ ⍕0⌈¯1+o.min   ⍝ double comments!
-      stI cdI _ cmI spI← ⍳≢pats← (
-          '^'                                               ⍝ start    (of line)
-          '''[^'']*''|[^⍝''\h]+'                            ⍝ code     (fragments)
-          o.pairs⊃ nopP dblP                                ⍝ double comments (see patterns and doc at top)
-          '\h*⍝.*$'                                         ⍝ comment  (w/ preceding spaces)
-          '\h+'                                             ⍝ spaces   (not before comment)
+      _← o ⎕NS ⍺                                           ⍝ Add user options
+  1≥≡⍵: FnOrFi ,⍵                                          ⍝ If ⍵ is CV, see of a fn (fi:0) or a file (fi:1)?
+      pos← 0                                               ⍝ pos:     Our position on this line.
+      noCod← 1                                             ⍝ noCod:   Just code on the line of ⍵?
+      stI cdI _ lcI cmI spI← ⍳≢pats← (
+          '^'                                              ⍝ start    (of line)
+          '''[^'']*''|[^⍝''\h]+'                           ⍝ code     (fragments)
+        ⍝ double comments (see patterns and doc at top)
+          o.pairs⊃ (
+            '(*F)'                                      ⍝ nop pattern
+            '^(\h{,', (⍕0⌈¯1+o.min ), '}⍝[^⍝]*)\h{5,}(⍝.*)$'
+          )          
+          '\h*⍝⍝.*$'                                       ⍝ literal comment (don't format)
+          '\h*⍝.*$'                                        ⍝ comment  (w/ preceding spaces)
+          '\h+'                                            ⍝ spaces   (not before comment)
       )
-      pats ⎕R{
+      pats ⎕R{  
           m← ⍵.Match
           Case← ⍵.PatternNum∘=
-        Case stI: m⊣ pos⊢← 0  ⊣ noCod⊢← 1                   ⍝ Start of line
-        Case cdI: m⊣ pos+← ≢m ⊣ noCod⊢← 0                   ⍝ Code found
-        Case spI: m⊣ pos+← ≢m                               ⍝ Spaces (not foll by comment)
-      ⍝ Case cmI, cm2I ↓↓↓                                  ⍝ Comments (poss. preceded by spaces)
-          nsp← +/∧\m= ' '          
-        noCod∧ o.min> pos+ nsp: {                           ⍝ If comment is near start of line (<min), ...
-          Case cmI: m                                       ⍝ ... keep leading spaces
-      ⍝ We have a pair of comments                          ⍝ Pairs of comments handled here ↓↓↓                                      
-            cm1 cm2← ⍵.{ Lengths[⍵]↑ Offsets[⍵]↓ Block }¨ 1 2
-            pad← o.( tab inc ) Align pos+ ≢cm1 
+        Case stI: m⊣ pos⊢← 0  ⊣ noCod⊢← 1                  ⍝ Start of line
+        Case cdI: m⊣ pos+← ≢m ⊣ noCod⊢← 0                  ⍝ Code found
+        Case lcI: m⊣ pos+← ≢m                              ⍝ literal comment '⍝⍝'
+        Case spI: m⊣ pos+← ≢m                              ⍝ Spaces (not foll by comment)
+      ⍝ Case cmI, cm2I ↓↓↓                                 ⍝ Comments (poss. preceded by spaces)
+          nsp← LB m           
+        noCod∧ o.min> pos+ nsp: {                          ⍝ If comment is near start of line (<min), ...
+          Case cmI: m                                      ⍝ ... keep leading spaces
+      ⍝ We have a pair of comments                         ⍝ Pairs of comments handled here ↓↓↓                                      
+            cm1 cm2← ⍵ F¨ 1 2
+            cm1↓⍨← -TB cm1 
+            pad← o Align pos+ ≢cm1 
             cm1, pad, cm2 
         } ⍵                                             
-          m←   nsp↓ m                                       ⍝ Not <min>. Guarantee 1 leading space
-          m,⍨ o.( tab inc ) Align pos                       ⍝ Align at a valid tab stop...
+          m←   nsp↓ m                                      ⍝ Not <min>. Guarantee 1 leading space
+          m,⍨ o Align pos                                  ⍝ Align at a valid tab stop...
       }⊣⍵
 }
