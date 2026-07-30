@@ -72,6 +72,7 @@
   libra←     'LibUtils.aplns'                               ⍝ £ library
   parmFi←    'ParmDefs.apla'                                ⍝ 
   globFi←    'Globals.aplns'
+  shortFi←   'Shortcuts.dyalog'
   pdf←       'Help.pdf'                                     ⍝ PDF 
   cd←        'Futures/CircleDiaeresis.aplo'                 ⍝ Adam B's ⍥ with depth emulation
   el←        'Futures/Ellipsis.aplf'
@@ -305,9 +306,16 @@ Say'    PUBF:  ', homeDir Fi PubF  ⍬
 Say'    TEMP:  ', homeDir Fi Temp  ⍬
 Hr
 
-pgmDep←  ((PrivF pgm)(PubF pgm))  ((PrivF libra)(PubF libra)) 
-pgmDep,← ((Priv loader)(Pub loader))((PrivF parmFi)(PubF parmFi))
-pgmDep,← ((PrivF cd)(PubF cd))((PrivF el)(PubF el))((PrivF globFi)(PubF globFi))
+pgmDep← (
+  (PrivF pgm)(PubF pgm)  
+  (PrivF libra)(PubF libra)
+  (Priv loader)(Pub loader)
+  (PrivF parmFi)(PubF parmFi)
+  (PrivF shortFi)(PubF shortFi) 
+  (PrivF cd)(PubF cd)
+  (PrivF el)(PubF el)
+  (PrivF globFi)(PubF globFi)
+)
 :IF 4< |≡pgmDep
     11 ⎕SIGNAL⍨ 'DOMAIN ERROR: pgmDep improperly defined'
  :EndIf 
@@ -318,7 +326,7 @@ pgmDep,← ((PrivF cd)(PubF cd))((PrivF el)(PubF el))((PrivF globFi)(PubF globFi
     _←¯1 Say'Updating ∆F utility ',Tp PubF pgm
     _←¯1 Say'Updating ∆F loader  ',Tp Pub loader
     UpdatePgm¨ (PrivF pgm)(PrivF libra)(Priv loader)
-    :FOR itemF :in cd el parmFi globFi 
+    :FOR itemF :in cd el parmFi globFi shortFi  
         CopyFi(PrivF itemF )(PubF itemF)
     :EndFor 
     0 0 force CopyFi¨(
