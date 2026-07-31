@@ -1,18 +1,29 @@
 Tidy← {
   ⍝ Tidy
-  ⍝ Try to align comments nicely in dfn or tradfn source.
+  ⍝ Try to align comments nicely in dfn or tradfn source (and code files generally).
   ⍝ ---------
   ⍝ Syntax:
   ⍝ @cvv← [opts] ∇ source
   ⍝   source: [sourceDoc | sourceFnOp | sourceFi]
-  ⍝   opts:   (tab: 65 ⋄ inc: 5  ⋄ min: 20  ⋄ pairs: 1 ⋄ fi: 0 )
+  ⍝   opts:   (tab: 65 ⋄ rel: ⍬ ⋄ inc: 5  ⋄ min: 20  ⋄ pairs: 1 ⋄ fi: 0 )
   ⍝ ------
   ⍝ source: 
   ⍝   sourceDoc:   the source document to format.   @cvv: a char vector of vectors.
   ⍝   sourceFnOp:  the name of a function or operator with the code to format, with (fi:0).  @cv: a char vector.
   ⍝   sourceFi:    the name of a file with the code to format, with (fi:1). @cv: a char vector, (fi: 1).
   ⍝ opts: 
-  ⍝   tab:   column in which to put comments if possible.
+  ⍝   tab:   column in which to put comments if possible; defaults to 60.
+  ⍝          - If rel is defined, the user <tab> setting is ignored.
+  ⍝            See <rel> below.
+  ⍝   rel:   Sets the tab (where rhs comments go)
+  ⍝          RELATIVE to the longest line, ignoring any <tab> setting.
+  ⍝          - If undefined (default), rel is ignored.
+  ⍝          - If defined, tab is set relative to the longest line
+  ⍝            (ignoring comments and trailing blanks):
+  ⍝          If rel is an integer:
+  ⍝              tab← (≢longest) + rel
+  ⍝          If rel is a positive fraction:
+  ⍝              tab← (≢longest) × rel 
   ⍝   inc:   If text extends to <tab> or beryond, place comments multiples of <inc>
   ⍝          to the right of position <tab>
   ⍝   min:   Keep any comments before column <min> where they are.
@@ -43,67 +54,81 @@ Tidy← {
   ⍝          - returned as a shy value.
   ⍝
   11 22:: ⎕SIGNAL⊂⎕DMX.('EN'EN ⋄ 'Message'Message)
+    ⍝ Initialise
       ⎕IO ⎕ML← 0 1
       ⍺← ()
+    ⍝ Variable defs  
       fnOpÊ← ⊂( 'EN' 11 ⋄ 'Message' 'Unknown function or operator' )
       optÊ←  ⊂( 'EN' 11 ⋄ 'Message' 'Unknown option(s)' )
-      ∆Tidy← ∇                                             ⍝ Recurse Tidy
-      o← (                                                 ⍝ Default options
-        tab: 60 ⋄ inc: 5 ⋄ min: 20 ⋄ pairs: 1 ⋄ fi: 0 
-      )
-      FnOrFi← o∘{
-        ~⍺.fi: _← ⍺{
+      o← (                       ⍝ Default options
+        tab: 60 ⋄ inc: 5 ⋄ min: 20 ⋄ pairs: 1 ⋄ fi: 0  
+      ) 
+      valid← 'rel'⊂⍛, o.⎕NL ¯2  
+    ⍝ Function defs  
+      ∆Tidy← ∇                   ⍝ this function ("me")
+      FOF← o∘{                   ⍝ Is it an in-core fn/op or a file
+        ~⍺.fi: _← ⍺{             ⍝ File with code of any type
             ~⍵ ⎕NC⍛∊ 3 4: ⎕SIGNAL fnOpÊ
-              ⍺ ∆Tidy 62 ⎕ATX ⍵
+              ⍺ ∆Tidy 62 ⎕ATX ⍵  ⍝ Get and process. Don't re-fix 
         }⍵
-            ⍺.fi← 0
-            ll← ⍺ ∆Tidy ⊃⎕NGET ⍵ 1
-        1: _← ll⊣ ll⊂⍛⎕NPUT ⍵ 1
+            ⍺.fi← 0              ⍝ In-core function
+            ll← ⍺ ∆Tidy ⊃⎕NGET ⍵ 1 ⍝ Get and process
+        1: _← ll⊣ ll⊂⍛⎕NPUT ⍵ 1  ⍝ Rewrite in place 
       }
-      Align← { 
+      AL← {                      ⍝ Align line
             ( t i ) p← ⍺.(tab inc) ⍵ 
-         p≤t: ''⍴⍨ 1⌈ ¯1+ t- p                             ⍝ Always add at least 1 space
-              ''⍴⍨ 1⌈ ¯1+ i| p- t                          ⍝ -- Ditto --
+         p≤t: ''⍴⍨ 1⌈ ¯1+ t- p   ⍝ Always add at least 1 space
+              ''⍴⍨ 1⌈ ¯1+ i| p- t ⍝ -- Ditto --
       }
-      TB← { +/∧\' '= ⌽⍵ }
-      LB← { +/∧\' '=  ⍵ }
-      F← { ⍺.Lengths[⍵]↑ ⍺.Offsets[⍵]↓ ⍺.Block }
+      WL←{                       ⍝ Length of Widest Line 
+        ⌈/≢¨'''[^'']*''' '\h*⍝.*$' '\h*$' ⎕R '&' '' ''⊣ ⍵ 
+      }
+      TB← { +/∧\' '= ⌽⍵ }        ⍝ Trailing blanks
+      LB← { +/∧\' '=  ⍵ }        ⍝ Leading blanks 
+      RF← {                      ⍝ Regex Field
+        ⍺.Lengths[⍵]↑ ⍺.Offsets[⍵]↓ ⍺.Block 
+      } 
+      CT← +{ (0∘≥ ∨ 1∘≤)⍺: ⍺ ⍺⍺ ⍵ ⋄ ⌈⍺ ⍵⍵ ⍵ }× ⍝ Calculate the tab
 
-      ×≢⊃~/(⍺ o).⎕NL ¯2: ⎕SIGNAL optÊ
-      _← o ⎕NS ⍺                                           ⍝ Add user options
-  1≥≡⍵: FnOrFi ,⍵                                          ⍝ If ⍵ is CV, see of a fn (fi:0) or a file (fi:1)?
-      pos← 0                                               ⍝ pos:     Our position on this line.
-      noCod← 1                                             ⍝ noCod:   Just code on the line of ⍵?
+⍝ Execute Main 
+      ×≢valid~⍨ ⍺.⎕NL ¯2: ⎕SIGNAL optÊ   ⍝ Only valid options?
+      _← o ⎕NS ⍺                 ⍝ Add user options
+  1≥≡⍵: FOF ,⍵                   ⍝ If ⍵ is CV, see of a fn (fi:0) or a file (fi:1)?
+⍝ Ignore user tab if rel is set.  
+  0≠ ⎕NC 'o.rel': o ∇ ⍵ ⊣ ⎕EX 'o.rel'⊣o.tab← o.rel CT WL ⍵ 
+    ⍝ Prepare to pattern match
+      pos← 0                     ⍝ pos:     Our position on this line.
+      noCod← 1                   ⍝ noCod:   Just code on the line of ⍵?
       stI cdI _ lcI cmI spI← ⍳≢pats← (
-          '^'                                              ⍝ start    (of line)
-          '''[^'']*''|[^⍝''\h]+'                           ⍝ code     (fragments)
-        ⍝ double comments (see patterns and doc at top)
-          o.pairs⊃ (
-            '(*F)'                                      ⍝ nop pattern
+          '^'                    ⍝ start    (of line)
+          '''[^'']*''|[^⍝''\h]+' ⍝ code     (fragments)
+          o.pairs⊃ (             ⍝ double comments
+            '(*F)'               ⍝ nop pattern, i.e. ignore
             '^(\h{,', (⍕0⌈¯1+o.min ), '}⍝[^⍝]*)\h{5,}(⍝.*)$'
           )          
-          '\h*⍝⍝.*$'                                       ⍝ literal comment (don't format)
-          '\h*⍝.*$'                                        ⍝ comment  (w/ preceding spaces)
-          '\h+'                                            ⍝ spaces   (not before comment)
+          '\h*⍝⍝.*$'             ⍝ literal comment (don't format)
+          '\h*⍝.*$'              ⍝ comment  (w/ preceding spaces)
+          '\h+'                  ⍝ spaces   (not before comment)
       )
+    ⍝ Pattern matching scan
       pats ⎕R{  
           m← ⍵.Match
           Case← ⍵.PatternNum∘=
-        Case stI: m⊣ pos⊢← 0  ⊣ noCod⊢← 1                  ⍝ Start of line
-        Case cdI: m⊣ pos+← ≢m ⊣ noCod⊢← 0                  ⍝ Code found
-        Case lcI: m⊣ pos+← ≢m                              ⍝ literal comment '⍝⍝'
-        Case spI: m⊣ pos+← ≢m                              ⍝ Spaces (not foll by comment)
-      ⍝ Case cmI, cm2I ↓↓↓                                 ⍝ Comments (poss. preceded by spaces)
-          nsp← LB m           
-        noCod∧ o.min> pos+ nsp: {                          ⍝ If comment is near start of line (<min), ...
-          Case cmI: m                                      ⍝ ... keep leading spaces
-      ⍝ We have a pair of comments                         ⍝ Pairs of comments handled here ↓↓↓                                      
-            cm1 cm2← ⍵ F¨ 1 2
-            cm1↓⍨← -TB cm1 
-            pad← o Align pos+ ≢cm1 
-            cm1, pad, cm2 
-        } ⍵                                             
-          m←   nsp↓ m                                      ⍝ Not <min>. Guarantee 1 leading space
-          m,⍨ o Align pos                                  ⍝ Align at a valid tab stop...
+        Case stI: m⊣ pos⊢← 0  ⊣ noCod⊢← 1 ⍝ Start of line
+        Case cdI: m⊣ pos+← ≢m ⊣ noCod⊢← 0 ⍝ Code found
+        Case lcI: m⊣ pos+← ≢m    ⍝ literal comment '⍝⍝'
+        Case spI: m⊣ pos+← ≢m    ⍝ Spaces (not foll by comment)
+      ⍝ Comment patterns, cmI and double comment pattern
+          nsp← LB m  
+        noCod∧ o.min> pos+ nsp: { ⍝ If LHS comment...
+          Case cmI: m            ⍝ ... If std comment, return w/ leading spaces
+                                 ⍝ ... If "double" comment, ...                                    
+            cm1 cm2← ⍵ RF¨ 1 2   ⍝ ... get LHS and RHS comments
+            cm1↓⍨← -TB cm1       ⍝ ... Remove trail. blanks from LHS...
+            pad← o AL pos+ ≢cm1  ⍝ ... align "2nd" comment on RHS
+            cm1, pad, cm2        ⍝ Return
+        } ⍵                                            
+          m↓⍨← nsp               ⍝ If RHS comment 
+          m,⍨  o AL pos          ⍝ ... align at a valid tab stop.
       }⊣⍵
 }
