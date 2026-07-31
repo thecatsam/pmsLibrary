@@ -81,9 +81,14 @@ Fig. 4.21 ⋄ table-library-parameters     ⋄ File, of library parameters (.∆
 4.21 ⋄ the-session-library-shortcut      ⋄ `L (library)
 4.21 ⋄ the-session-library-shortcut      ⋄ £ (library)
 4.21 ⋄ the-session-library-shortcut      ⋄ library shortcut, session 
-4.22 ⋄ precomputed-fstrings-with-the-dfn-option⋄ Precomputed F‑strings 
-4.22 ⋄ precomputed-fstrings-with-the-dfn-option⋄ dfn option, precomputed F-strings
-4.23 ⋄ multiline-F-strings-in-dyalog-20  ⋄ Multiline f-strings, Dyalog 20
+4.22 ⋄ getting-url-text-via-the-geturl-shortcut ⋄ getting URL text 
+4.22 ⋄ getting-url-text-via-the-geturl-shortcut ⋄ retrieving URL text 
+4.22 ⋄ getting-url-text-via-the-geturl-shortcut ⋄ URLs, retrieving text contents from
+4.22 ⋄ getting-url-text-via-the-geturl-shortcut ⋄ `G (geturl)
+4.22 ⋄ getting-url-text-via-the-geturl-shortcut ⋄ GetUrl shortcut
+4.23 ⋄ precomputed-fstrings-with-the-dfn-option⋄ Precomputed F‑strings 
+4.23 ⋄ precomputed-fstrings-with-the-dfn-option⋄ dfn option, precomputed F-strings
+4.24 ⋄ multiline-F-strings-in-dyalog-20  ⋄ Multiline f-strings, Dyalog 20
 5.  ⋄ inside-reference                   ⋄ ∆F reference section
 5.  ⋄ inside-reference                   ⋄ Syntax (∆F reference)
 5.1 ⋄ f-call-syntax-overview             ⋄ ∆F call syntax overview

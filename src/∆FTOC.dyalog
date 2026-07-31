@@ -62,9 +62,9 @@
   Load ⋄ Sort ⋄ Fmt
 
   nl← ⎕UCS 10 
-  fi← '∆F/∆FHelp.md' 
-  ⎕SH 'cp ∆F/∆FHelp.md TEMP/∆FHelp_tmp.md'
-  fo← '∆F/∆FHelp.md'
+  fi← '∆F/Help.md' 
+  ⎕SH 'cp ∆F/Help.md TEMP/Help_tmp.md'
+  fo← '∆F/Help.md'
 
   data← ∊ edited,¨nl 
 
