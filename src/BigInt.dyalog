@@ -744,54 +744,56 @@
   ⍝   for 2-adic fns: (##.⎕OR 'Er2'
   ⍝
   ⍝ e1: Monadic...
-    e1← ⍬       
-    e1,←⊂ '+' 'Imp'     1  1
-    e1,←⊂ '-' 'Neg'     1  1
-    e1,←⊂ '×' 'Sig'     1  1
-    e1,←⊂ '÷' 'Recip'   1  1
-    e1,←⊂ '|' 'Abs'     1  1
-    e1,←⊂ '⍟' 'Log'     1  1
-    e1,←⊂ '⍕' 'BI2Str'  0  0
-    e1,←⊂ '⍎' 'BI2Apl'  1  0
-    e1,←⊂ '≢' 'NLimbs'  1  0
-    e1,←⊂ '→' 'Imp'     1  0
-    e1,←⊂ '<' 'Dec'     1  1
-    e1,←⊂ '≤' 'Dec'     1  1
-    e1,←⊂ '≥' 'Inc'     1  1
-    e1,←⊂ '>' 'Inc'     1  1
-    e1,←⊂ '!' 'Fact'    1  1
-    e1,←⊂ '?' 'Roll'    1  1
-    e1,←⊂ '√' 'Root'    1  1
-    e1,←⊂ 'Root'   'Root'    1  1
-    e1,←⊂ 'Sqrt'   'Root'    1  1
-    e1,←⊂ 'Log10'  'Log10'   1  1
-    e1,←⊂  ¯1      'Er1'     1 ¯1         ⍝ Entry for missing 1-adic opCodes
+    e1← (     
+         '+' 'Imp'     1  1
+         '-' 'Neg'     1  1
+         '×' 'Sig'     1  1
+         '÷' 'Recip'   1  1
+         '|' 'Abs'     1  1
+         '⍟' 'Log'     1  1
+         '⍕' 'BI2Str'  0  0
+         '⍎' 'BI2Apl'  1  0
+         '≢' 'NLimbs'  1  0
+         '→' 'Imp'     1  0
+         '<' 'Dec'     1  1
+         '≤' 'Dec'     1  1
+         '≥' 'Inc'     1  1
+         '>' 'Inc'     1  1
+         '!' 'Fact'    1  1
+         '?' 'Roll'    1  1
+         '√' 'Root'    1  1
+         'Root'   'Root'    1  1
+         'Sqrt'   'Root'    1  1
+         'Log10'  'Log10'   1  1
+          ¯1      'Er1'     1 ¯1         ⍝ Entry for missing 1-adic opCodes
+    )
   ⍝ e2: Dyadic ...      
-    e2← ⍬             
-    e2,←⊂ '+' 'Add'     1  1
-    e2,←⊂ '-' 'Sub'     1  1
-    e2,←⊂ '×' 'Mul'     1  1
-    e2,←⊂ '÷' 'Div'     1  1
-    e2,←⊂ '*' 'Pow'     0  1
-    e2,←⊂ '|' 'Rem'     1  1
-    e2,←⊂ '∨' 'Gcd'     1  1
-    e2,←⊂ '∧' 'Lcm'     1  1
-    e2,←⊂ '⍟' 'Log'     1  1
-    e2,←⊂ '⌈' 'Max'     1  1
-    e2,←⊂ '⌊' 'Min'     1  1
-    e2,←⊂ '⍕' 'BI2Str'  0  0
-    e2,←⊂ '≡' 'Ident'   1  0
-    e2,←⊂ '≢' 'Differ'  1  0
-    e2,←⊂ '<' 'Lt'      1  0
-    e2,←⊂ '≤' 'Le'      1  0
-    e2,←⊂ '=' 'Eq'      1  0
-    e2,←⊂ '≥' 'Ge'      1  0
-    e2,←⊂ '>' 'Gt'      1  0
-    e2,←⊂ '≠' 'Ne'      1  0
-    e2,←⊂ '√' 'Root'    1  1
-    e2,←⊂ 'Root'   'Root'    1  1
-    e2,←⊂ 'DivRem' 'DivRem'  1  2
-    e2,←⊂  ¯1      'Er2'     1 ¯1         ⍝ Entry for missing 2-adic opCodes
+    e2← (             
+         '+' 'Add'     1  1
+         '-' 'Sub'     1  1
+         '×' 'Mul'     1  1
+         '÷' 'Div'     1  1
+         '*' 'Pow'     0  1
+         '|' 'Rem'     1  1
+         '∨' 'Gcd'     1  1
+         '∧' 'Lcm'     1  1
+         '⍟' 'Log'     1  1
+         '⌈' 'Max'     1  1
+         '⌊' 'Min'     1  1
+         '⍕' 'BI2Str'  0  0
+         '≡' 'Ident'   1  0
+         '≢' 'Differ'  1  0
+         '<' 'Lt'      1  0
+         '≤' 'Le'      1  0
+         '=' 'Eq'      1  0
+         '≥' 'Ge'      1  0
+         '>' 'Gt'      1  0
+         '≠' 'Ne'      1  0
+         '√' 'Root'    1  1
+         'Root'   'Root'    1  1
+         'DivRem' 'DivRem'  1  2
+          ¯1      'Er2'     1 ¯1         ⍝ Entry for missing 2-adic opCodes
+    )
 
     opCodes← (1500⌶)¨ ⎕C⊃¨¨ ¯1↓¨e1 e2    ⍝ Hash each opCode vector (1500⌶¨)
     entries← LoadDB¨¨ e1 e2 
