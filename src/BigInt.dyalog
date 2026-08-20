@@ -20,7 +20,7 @@
     ⎕IO ⎕ML ⎕PP ⎕CT ⎕DCT←  0 1 34 0 0  
   ⍝ ⎕FR as set here is used below to set constant OFL (overflow) used in multiplication.  
   ⍝ It can be either 645 or 1287, but is typically ~20% faster with 645.  
-    ⎕FR← 645                                   ⍝ Do not change ⎕FR after ]load-ing BigInt (see OFL)!    
+    ⎕FR← 645                                 ⍝ Do not change ⎕FR after ]load-ing BigInt (see OFL)!    
 :EndSection PREAMBLE
 
 :Section Constants 
@@ -42,52 +42,45 @@
   ⍝ That is, when exporting or returning from BI, BII, BIM, results will be in
   ⍝ a normalized form (either as an internal bii object or an external bi string).
   ⍝ See: BIChkZ, dLZZ, dLZ
-    NRX2←         20                           ⍝ Num bits in a "limb" (each APL integer)
-    NRX10←        ⌊10⍟2*NRX2                   ⍝ Max num of Dec digits in a limb
-    NRX2BASE←     NRX2⍴2                       ⍝ Encode/decode binary base
-    RX10BASE←     NRX10⍴10                     ⍝ Encode/decode decimal base
-    RX10←         10*NRX10                     ⍝ Actual base for each limb (each limb ⍵ < RX10)
-    RX10div2←     RX10÷2                       ⍝ (RX10÷2) For use in <Pow> (power).
-    OFL←          ⌊(2*53 93⊃⍨1287=⎕FR)÷×⍨RX10  ⍝ Overflow bits; used in MulU (unsigned multiply)
-                                               ⍝ ... depends on integer bits avail in floats (i.e. ⎕FR)                          
+    NRX2←         20                         ⍝ Num bits in a "limb" (each APL integer)
+    NRX10←        ⌊10⍟2*NRX2                 ⍝ Max num of Dec digits in a limb
+    NRX2BASE←     NRX2⍴2                     ⍝ Encode/decode binary base
+    RX10BASE←     NRX10⍴10                   ⍝ Encode/decode decimal base
+    RX10←         10*NRX10                   ⍝ Actual base for each limb (each limb ⍵ < RX10)
+    RX10div2←     RX10÷2                     ⍝ (RX10÷2) For use in <Pow> (power).
+    OFL←          ⌊(2*53 93⊃⍨1287=⎕FR)÷×⍨RX10 ⍝ Overflow bits; used in MulU (unsigned multiply)
+                                             ⍝ ... depends on integer bits avail in floats (i.e. ⎕FR)                          
   ⍝ --------------------------------------------------------------------------------------------------
   ⍝ Data field (unsigned) CONSTANTS (⊃⌽bii) for internal unsigned utilities only
-    ZERO_D←   ,0                               ⍝ data field  0, i.e. unsigned canonical ZERO
-    ONE_D←    ,1                               ⍝ data field  1,  i.e. unsigned canonical ONE
-    TWO_D←    ,2                               ⍝ data field  2
-    TEN_D←   ,10                               ⍝ data field 10
+    ZERO_D←   ,0                             ⍝ data field  0, i.e. unsigned canonical ZERO
+    ONE_D←    ,1                             ⍝ data field  1,  i.e. unsigned canonical ONE
+    TWO_D←    ,2                             ⍝ data field  2
+    TEN_D←   ,10                             ⍝ data field 10
 
   ⍝ BigInt signed CONSTANTS (bii) for users and internal utilities.
-    ZERO_BI←      0 ZERO_D                     ⍝  0
-    ONE_BI←       1  ONE_D                     ⍝  1
-    TWO_BI←       1  TWO_D                     ⍝  2
-    MINUS1_BI←   ¯1  ONE_D                     ⍝ ¯1
-    TEN_BI←       1  TEN_D                     ⍝ 10
+    ZERO_BI←      0 ZERO_D                   ⍝  0
+    ONE_BI←       1  ONE_D                   ⍝  1
+    TWO_BI←       1  TWO_D                   ⍝  2
+    MINUS1_BI←   ¯1  ONE_D                   ⍝ ¯1
+    TEN_BI←       1  TEN_D                   ⍝ 10
   
   ⍝ See ExportNewBase
     DIGITS_EXPANDED← ⎕D,(⎕C ⎕A),⎕A 
     DIGITS_EXPANDED_SHORT← ⎕D, ⎕A 
 
   :Section Error Handling 
-    ErrDmx← ⎕SIGNAL { ⊂⎕DMX.(
-        'EN' EN
-        'EM' (⍵, ' ', EM)
-        'Message' Message 
-      )
-    }
-    Err11← { 
-      ⎕SIGNAL ⊂(
-        'EN' 11 
-        'Message' ⍵ 
-      ) 
-    }
-  ⍝ Special error dfns  
-    MissM←      { Err11 monadÊ }
-    MissD←      { Err11 dyadÊ  } 
-  ⍝ Error messages. See dfn <Err11> above.
+  ⍝ Error Utilities 
+  ⍝ Dmx: ∇ op_name, where op_name is BI, BII, BIM 
+    Dmx← ⎕SIGNAL { ⊂⎕DMX.('EN' EN ⋄ 'EM' (⍵, ' ', EM) ⋄ 'Message' Message) }
+    ⍝ Domain error: ∇ msg 
+    Sig11← ⎕SIGNAL {  ⊂( 'EN' 11 ⋄ 'Message' ⍵ ) }
+  ⍝ Special error dfns: ∇ ⍬  
+    MissM←      { Sig11 monadÊ }
+    MissD←      { Sig11 dyadÊ  } 
+  ⍝ Error Functions: Sig11 ∇ string
     BaseÊ←   { '⍕ base (⍺[2+⎕IO]) must be between 2 and ',⍕⍵ }
-    ImportÊ← {'Object not a valid BigInt: "',⍵,'"' }
-  ⍝ 
+    ImportÊ← { 'Object not a valid BigInt: "',⍵,'"' }
+  ⍝ Error Strings:  Sig11 str
     monadÊ←  'Invalid or unimplemented monadic routine' 
     dyadÊ←   'Invalid or unimplemented dyadic routine'
     divZeroÊ←'Division by zero'
@@ -97,7 +90,7 @@
     logÊ←    'Unable to represent the log of an int ≤ 0'
     rootÊ←   'The base for root must be a small int between 0 and ',⍕RX10
     subÊ←    'Unsigned subtraction requires left arg ≥ right arg'
-    decUÊ←   'Unsigned decrement is invalid when the arg reaches 0' 11
+    decUÊ←   'Unsigned decrement is invalid when the arg reaches 0'  
     :EndSection Error Handling 
 :EndSection Constants 
 
@@ -111,7 +104,7 @@
     BI← { 
         ⍺← ⊢ ⋄ dyad← 2=⎕NC'⍺'  
       1000:: ⎕SIGNAL/ 'BI Interrupted' 1006
-      0/⍨ ~DEBUG::  ErrDmx 'BI'
+      0/⍨ ~DEBUG::  Dmx 'BI'  
         oper opc im ex← ⍺⍺ map.GetEntry dyad   
         Exec← oper {
           dyad: ⍺ ⍺⍺⍥(Import⍣im) ⍵ 
@@ -126,7 +119,7 @@
     BII← { 
         ⍺← ⊢ ⋄ dyad← 2=⎕NC'⍺'   
       1000:: ⎕SIGNAL/ 'BII Interrupted' 1006
-      0/⍨ ~DEBUG:: ErrDmx 'BII' 
+      0/⍨ ~DEBUG:: Dmx 'BII' 
         oper opc im ex← ⍺⍺ map.GetEntry dyad 
         Exec← oper { 
           dyad: ⍺ ⍺⍺⍥(Import⍣im)⊢ ⍵ 
@@ -142,7 +135,7 @@
   ⍝    BIM is dyadic only. 
     BIM← { 
       1006:: ⎕SIGNAL/ 'BIM Interrupted' 1006
-      0/⍨ ~DEBUG::  ErrDmx 'BIM'
+      0/⍨ ~DEBUG::  Dmx 'BIM'
           x y divisor← Import¨ ⍺ ⍵ ⍵⍵ 
           opc← 1⊃⍺⍺ map.GetEntry 1 
       opc≡ '×': Export x (divisor ModMul) y 
@@ -155,20 +148,26 @@
       ⎕PW← 120 
       null← (⎕ED⍠'ReadOnly' 1) 'h'⊣ h← '^\h*⍝H(.*)$'  ⎕S '\1' ⊢ ⎕SRC ⎕THIS 
     ∇ 
-    ⎕← ↑'For help:' ,⍥⊂ '   ',(⍕⎕THIS),'.BI_HELP' 
+    helpInfo← 'For help: ',(⍕⎕THIS),'.BI_HELP' 
  
-   ∇ proFlg← PromoteIf proFlg ;where; bim  
+   ∇ proFlg← PromoteIf proFlg ;where; bim; cr 
+    cr← ⎕UCS 13   
     :IF proFlg 
         where← ##
       ⍝ Workaround Dyalog syntactic "issue" for operators...
-        bim← 'BIM← { 0/⍨~⎕THIS.DEBUG:: ⎕SIGNAL/⎕DMX.(EM EN) ⋄ ⍺← ⊢ ⋄ ⍺ (⍺⍺ ⎕THIS.BIM ⍵⍵) ⍵}' 
-        where⍎bim '⎕THIS' ⎕R (⍕⎕THIS)⊢ bim 
+        bim← ¯1↓∊ cr,⍨¨ (
+          'BIM← { ⍺← ⊢' 
+          '  0/⍨~⎕THIS.DEBUG:: ⎕SIGNAL/⎕DMX.(EM EN) '  
+          '  ⍺ (⍺⍺ ⎕THIS.BIM ⍵⍵) ⍵' 
+          '}'
+        ) 
+        where⍎ '⎕THIS' ⎕R (⍕⎕THIS)⊢ bim 
         where.BI←  ⎕THIS.BI 
         where.BII← ⎕THIS.BII
     :Else 
         where← ⎕THIS   
     :EndIf  
-    ⎕← 'Created: ',∊' ',¨ (⊂⍕where),¨'.',¨ 'BI' 'BII' 'BIM' 
+     createdInfo← 'Created:',∊' ',¨ (⊂⍕where),¨'.',¨ 'BI,' 'BII,' 'BIM' 
     ∇
     PromoteIf PROMOTE=1
 :EndSection Main Fns 
@@ -197,19 +196,21 @@
 ⍝         ∘ sgn∊ ¯1 (neg) 0 (zero) 1 (pos) number.
 ⍝         ∘ int vector: a vector of 1 or more unsigned integers <RX10 (,0 if sgn=0).
     Import← {                    
-        ¯2=≡ ⍵:    ⍵                           ⍝ Fast: bii (depth: ¯2) are of form:  [1|0|¯1] [int vector]
+        ¯2=≡ ⍵:    ⍵                         ⍝ Fast: bii (depth: ¯2) are of form:  [1|0|¯1] [int vector]
         type← 80|⎕DR ⍵
-        type=0:   ImpStr ⍵    ⋄ type=3: ImpAplInt ⍵  
-        type∊5 7: ImpFloat ⍵  ⋄ Err11 ImportÊ ⍕⍵
+        type= 0:   ImpStr ⍵    
+        type= 3:   ImpAplInt ⍵  
+        type∊ 5 7: ImpFloat ⍵  
+        Sig11 ImportÊ ⍕⍵
     }
     Imp← Import 
   ⍝ ImpAplInt:    ∇ ⍵:I[1]
   ⍝ Import a small APL (native) integer into a bi.
   ⍝          ⍵ MUST Be an APL native (1-item) integer ⎕DR type 83 163 323.
     ImpAplInt← {
-        1≠≢⍵:  Err11 ImportÊ ⍕⍵              ⍝ singleton only...
-        RX10> u← ,|⍵: (×⍵)u                    ⍝ Small integer
-        (×⍵)(chkZ RX10⊥⍣¯1⊣u)                  ⍝ Integer
+        1≠≢⍵:  Sig11 ImportÊ ⍕⍵              ⍝ singleton only...
+        RX10> u← ,|⍵: (×⍵)u                  ⍝ Small integer
+          (×⍵)(chkZ RX10⊥⍣¯1⊣u)              ⍝ Integer
     }
   ⍝ ImpFloat: Convert an APL integer into a bi
   ⍝ Converts simple APL native numbers, as well as those with large exponents, e.g. of form:
@@ -218,8 +219,8 @@
   ⍝ If not, you must use big integer strings of any length (exponents are disallowed in BigInt strings).
   ⍝ Used in BII, BI automatically, but ImpFloat can be called by the user as well.
     ImpFloat← {⎕FR← 1287                     ⍝ 1287: to handle large exponents
-        (1=≢⍵)∧(⍵=⌊⍵): (×⍵)(chkZ RX10⊥⍣¯1⊣|⍵)
-        Err11 ImportÊ ⍕⍵
+      (1=≢⍵)∧(⍵=⌊⍵): (×⍵)(chkZ RX10⊥⍣¯1⊣|⍵)
+        Sig11 ImportÊ ⍕⍵
     }
   ⍝ ImpStr: Convert a bi in string format into a bii
   ⍝  [nullStrOk← 0]  ImpStr ⍵:S[≥1]   
@@ -230,9 +231,9 @@
     NSGNS SPCRS← '-¯' '_' 
     ImpStr← { ⍺← 0  
         str← SPCRS~⍨ ⍵↓⍨ s← NSGNS∊⍨ ⊃⍵  
-      0= ≢str: { Err11 ImportÊ '[null string]'}⍣(⍺=0)⊢ ZERO_BI 
-      10∊ dig← ⎕D⍳ str: ErrImport ⍵      ⍝ str must include only chars in ⎕D and at least one.
-        BIChkZ (s⊃1 ¯1), ⊂rep dig              ⍝ Normalize (remove leading 0s). If d is zero, return ZERO_BI.
+      0= ≢str: { Sig11 ImportÊ '[null string]'}⍣(⍺=0)⊢ ZERO_BI 
+      10∊ dig← ⎕D⍳ str: ErrImport ⍵          ⍝ str must include only chars in ⎕D and at least one.
+        BIChkZ (s⊃1 ¯1), ⊂rep dig            ⍝ Normalize (remove leading 0s). If d is zero, return ZERO_BI.
     } 
   ⍝ ---------------------------------------------------------------------
   ⍝ Export/Exp: EXPORT a SCALAR bii to external canonical bi string.
@@ -243,7 +244,10 @@
     }
     Exp← Export 
   ⍝ BI2Apl:    Convert valid bii ⍵ to APL integer, with error if Exponent too large.
-    BI2Apl← { 0:: Err11 rangeÊ ⋄ ⎕FR← 1287 ⋄  ⍎Exp Imp ⍵}
+    BI2Apl← { 
+      0:: Sig11 rangeÊ 
+      ⎕FR← 1287 ⋄ ⍎Exp Imp ⍵
+    }
    
 :EndSection Importing and Exporting
 ⍝ --------------------------------------------------------------------------------------------------
@@ -262,40 +266,40 @@
   ⍝     Root
 
   ⍝ Neg[ate]  
-    Neg← {                                     ⍝ -
+    Neg← {                                   ⍝ -
         (sw w)← ⍵
         (-sw)w
     }
   ⍝ Sig[num] 
-    Sig← {                                     ⍝ ×
+    Sig← {                                   ⍝ ×
         (sw w)← ⍵
-        sw(|sw)                                ⍝ ==> bii: ¯1 0 1
+        sw(|sw)                              ⍝ ==> bii: ¯1 0 1
     }
   ⍝ Abs: absolute value
-    Abs← {                                     ⍝ |
+    Abs← {                                   ⍝ |
         (sw w)← ⍵
         (|sw)w
     }
-  ⍝ Inc[rement]:                               ⍝ ⍵+1
+  ⍝ Inc[rement]:                             ⍝ ⍵+1
     Inc← {
         (sw w)← ⍵
-      sw=0: ONE_BI                             ⍝ ⍵=0? Return 1.
-      sw=¯1: BIChkZ sw(DecU w)                 ⍝ ⍵<0? Inc ⍵ becomes -(Dec |⍵). BIChkZ handles 0.
-        î← 1+⊃⌽w                               ⍝ trial increment (most likely path)
-      RX10>î: sw w⊣(⊃⌽w)← î                    ⍝ No overflow? Increment and we're done!
-        sw,⊂ dLZZ ndn 0,+⌿w mix 1              ⍝ Otherwise, do long way.
+      sw=0: ONE_BI                           ⍝ ⍵=0? Return 1.
+      sw=¯1: BIChkZ sw(DecU w)               ⍝ ⍵<0? Inc ⍵ becomes -(Dec |⍵). BIChkZ handles 0.
+        î← 1+⊃⌽w                             ⍝ trial increment (most likely path)
+      RX10>î: sw w⊣(⊃⌽w)← î                  ⍝ No overflow? Increment and we're done!
+        sw, ⊂ dLZZ ndn 0,+⌿w mix 1           ⍝ Otherwise, do long way.
     }
-  ⍝ Dec[rement]:                               ⍝ ⍵-1
+  ⍝ Dec[rement]:                             ⍝ ⍵-1
     Dec← {
         (sw w)← ⍵
-      sw=0: MINUS1_BI                          ⍝ ⍵ is zero? Return ¯1
-      sw=¯1: BIChkZ sw(w AddU 1)               ⍝ ⍵<0? Dec ⍵  becomes  -(Inc |⍵). BIChkZ handles 0.
-                                               ⍝ If the last digit of w>0, w-1 can't underflow.
-      0≠⊃⌽w: BIChkZ sw w⊣(⊃⌽w)-← 1             ⍝ No underflow?  Decrement and we're done!
-        sw w Sub ONE_BI                        ⍝ Otherwise, do long way.
+      sw=0: MINUS1_BI                        ⍝ ⍵ is zero? Return ¯1
+      sw=¯1: BIChkZ sw(w AddU 1)             ⍝ ⍵<0? Dec ⍵  becomes  -(Inc |⍵). BIChkZ handles 0.
+                                             ⍝ If the last digit of w>0, w-1 can't underflow.
+      0≠⊃⌽w: BIChkZ sw w⊣(⊃⌽w)-← 1           ⍝ No underflow?  Decrement and we're done!
+        sw w Sub ONE_BI                      ⍝ Otherwise, do long way.
     }
-  ⍝ Unsigned decrement.  If reaches 0, error!    (@PMS)
-  ⍝                                            ⍝ ⍵-1, ⍵ unsigned
+  ⍝ Unsigned decrement.                      ⍝ If reaches 0, error!    (@PMS)
+  ⍝                                          ⍝ ⍵-1, ⍵ unsigned
   ⍝ Used in Fact below.
     DecU← { 
       0≤ (⊃⌽w2)← ¯1+ ⊃⌽w2← ⍵: w2 
@@ -305,14 +309,15 @@
   ⍝ Fact: compute factorial
   ⍝       r@bii←  Fact ⍵@bii
   ⍝ We allow ⍵ to be of any size, but numbers larger than NRX10 are impractical.
-    Fact← {                                    ⍝ !⍵
+    Fact← {                                  ⍝ !⍵
         (sw w)← ⍵
-      sw=0: ONE_BI ⋄ sw=¯1: Err11 factorÊ                         
-        FactSmall← {                           ⍝ !11 ≡ 39916800  
+      sw=0: ONE_BI ⋄ sw=¯1: Sig11 factorÊ                         
+        FactSmall← {                         ⍝ !11 ≡ 39916800  
           ⍵≤9: 1 (⍺ MulU !⍵) ⋄ (⍺ MulU ⍵)∇ ⍵-1 
         } 
-        1 {  ⍝⍝ Skip to FactSmall when ≢⍵ is 1 limb.
-          1=≢⍵: ⍺ FactSmall ⍵ ⋄ (⍺ MulU ⍵)∇ DecU ⍵ 
+        1 {  
+          1=≢⍵: ⍺ FactSmall ⍵                ⍝ When ≢⍵ is 1 limb, use faster code.
+            (⍺ MulU ⍵)∇ DecU ⍵ 
         } w
     }
   ⍝ Roll ⍵: Compute a random number between 0 and ⍵-1, given ⍵>0.
@@ -322,12 +327,12 @@
         (sw w)← ⍵
         ⎕FR ⎕PP← 645 34                          
       sw=0: ∇ Import 1E100 
-      sw≠1: Err11 randÊ
+      sw≠1: Sig11 randÊ
         rand← len⍴ ⊃,/¯17↑∘⍕¨?1E17⍴⍨ ⌈17÷⍨ len← ≢Exp sw w  
         rand← '0'@(=∘' ')⊢ rand  
-        i← ImpStr rand                         ⍝ result is then truncated to exactly count digits   
-      '0'=⊃rand: i                             ⍝ If leading 0, guaranteed (ImpStr r) < ⍵.
-        ⍵ Rem i                                ⍝ Otherwise, compute remainder Rem r: 0 ≤ r < ⍵.
+        i← ImpStr rand                       ⍝ result is then truncated to exactly count digits   
+      '0'=⊃rand: i                           ⍝ If leading 0, guaranteed (ImpStr r) < ⍵.
+        ⍵ Rem i                              ⍝ Otherwise, compute remainder Rem r: 0 ≤ r < ⍵.
     }
   ⍝ BI2Str: [0 [0] [0]] BI2Str bii 
   ⍝    Convert bi to string. ⍺ defaults to 0 0 0
@@ -342,7 +347,7 @@
         base← base dBase⊃⍨ base=0
         sepCh← sepCh  dSepCh⊃⍨  sepCh=0
         arg← base ExportNewBase⊢ Import⍣ (base≠10)⊢ ⍵
-      (sepN<0)∨ sepN≠⌊sepN: Err11 'Invalid specification (⍺) to BI2Str (⍕)'
+      (sepN<0)∨ sepN≠⌊sepN: Sig11 'Invalid specification (⍺) to BI2Str (⍕)'
       0:: ErrImport ⍕⍵
         str← sepN sepCh { n c← ⍺ 
           0=n: ⍵ 
@@ -362,7 +367,7 @@
     ExportNewBase← { alignBits← 0  
         ⎕IO← 0 ⋄ ⍺← 16 ⋄ base← ⍺   
       10= base: ⍵ 
-      (⍺<2)∨⍺>≢DIGITS_EXPANDED: Err11 BaseÊ ≢DIGITS_EXPANDED
+      (⍺<2)∨⍺>≢DIGITS_EXPANDED: Sig11 BaseÊ ≢DIGITS_EXPANDED
         digStr← DIGITS_EXPANDED_SHORT DIGITS_EXPANDED ⊃⍨ base>16
         (sw w)← ⍵
         dig← { ⍺← ''
@@ -394,32 +399,34 @@
     Root← {
       ⍝ Check radix in  N*÷radix
       ⍝ We work with bigInts here for convenience. Could be done unsigned...
-        ⍺← TWO_BI                              ⍝ Sqrt by default... 
+        ⍺← TWO_BI                            ⍝ Sqrt by default... 
         sgn rdx←  ⍺
-      sgn=0: Err11 rootÊ                    ⍝ 0th root undefined
-      1<≢rdx: Err11 rootÊ                   ⍝ require a small, single limb, radix                  
-      sgn<0: 0                                 ⍝  ⌊N*÷nth ≡ 0, if nth<0 (nth a small int)
+      sgn=0: Sig11 rootÊ                     ⍝ 0th root undefined
+      1<≢rdx: Sig11 rootÊ                    ⍝ require a small, single limb, radix                  
+      sgn<0: 0                               ⍝  ⌊N*÷nth ≡ 0, if nth<0 (nth a small int)
       ⍝ Check ⍵ => N. Domain: non-negative integer
         sN N← ⍵                
-      0=sN: sN N                               ⍝ 0: Root(0) <=> 0
-      ¯1=sN: Err11 rootÊ                    ⍝ Negative: error
+      0=sN: sN N                             ⍝ 0: Root(0) <=> 0
+      ¯1=sN: Sig11 rootÊ                     ⍝ Negative: error
         rootU← *∘(÷rdx)
         ⍝ N small? Let APL calc value
         1=ndig← ≢N: 1(,⌊rootU N)      
       ⍝ Initial estimate for N*÷nth must be ≥ the actual solution, else this will terminate prematurely.
       ⍝ Initial estimate (x):
       ⍝   DECIMAL est: ¯1+10*⌈num_dec_digits(N)÷2       <== We use this one.
-        x← { 
-          0:: (⌈rootU⊃⍵),(RX10-1)⍴⍨⌈0.5×ndig-1 ⍝ Too big for APL est. Use DECIMAL est. above.
-            ⎕FR← 1287
-            ⊃⌽Imp 1+⌈rootU⍎Exp 1 ⍵             ⍝ Est via APL: works for ⍵ ≤ ⌊/⍬  (⍵≤1E6145) given ⎕FR=1287
-        }N
+        EstX← { ⎕FR← 1287
+        ⍝ Too big for APL est. Use DECIMAL est. above.
+          0:: ( ⌈rootU⊃⍵ ), ( RX10-1 )⍴⍨ ⌈0.5× ndig- 1
+        ⍝ Est via APL: works for ⍵ ≤ ⌊/⍬  (⍵≤1E6145) given ⎕FR=1287
+            ⊃⌽Imp 1+ ⌈rootU⍎Exp 1 ⍵          
+        } 
       ⍝ Given unsigned x, y, N, rdx, refine x (aka ⍵), until y ≥ x, then return pos Root (1 (,x)).
-        {   x← ⍵
-            y← (x AddU N QuotientU x)QuotientU rdx ⍝ y is next guess: y← ⌊((x+⌊(N÷x))÷nth)
-            ≥cmp y mix x: 1(,x)                ⍝ y ≥ x? Return x
-            ∇ y                                ⍝ y is smaller than ⍵. Set x← y and try another.
-        }x
+        PosRt← { x← ⍵
+            y← (x AddU N QuotientU x) QuotientU rdx ⍝ y← ⌊((x+⌊(N÷x))÷nth)
+          ≥cmp y mix x: 1(,x)                ⍝ y ≥ x? Return x
+            ∇ y                              ⍝ y<⍵. Set x← y and try another.
+        }
+        PosRt EstX N  
     }
     Sqrt← Root
  
@@ -438,19 +445,19 @@
   ⍝ dyad:    compute all supported dyadic functions
     Add← {
         (sa a)(sw w)← ⍺ ⍵    
-      sa=0: ⍵ ⋄ sw=0: ⍺                        ⍝ optim: ⍺+0 → ⍺,  0+⍵ → ⍵
+      sa=0: ⍵ ⋄ sw=0: ⍺                      ⍝ optim: ⍺+0 → ⍺,  0+⍵ → ⍵
         amixw← a mix w 
-      sa=sw: sa (ndnZ 0,+⌿amixw)               ⍝ 5 + 10 or ¯5 + ¯10
+      sa=sw: sa (ndnZ 0,+⌿amixw)             ⍝ 5 + 10 or ¯5 + ¯10
       <cmp amixw: BIChkZ (sw)(nupZ-⌿dck ⊖amixw) ⍝ ⍺<⍵: ⍵ Sub ⍺ 
-        BIChkZ sa(nupZ-⌿dck amixw)             ⍝ ⍺≥⍵: ⍺ Sub ⍵ 
+        BIChkZ sa(nupZ-⌿dck amixw)           ⍝ ⍺≥⍵: ⍺ Sub ⍵ 
     }
     Sub← {  
         (sa a)(sw w)← ⍺ ⍵
-      sw=0:  sa a ⋄ sa=0: (-sw)w               ⍝ optim: ⍺-0 → ⍺, 0-⍵ → -⍵
-      sa≠sw: sa(ndnZ 0,+⌿a mix w)              ⍝ 5-¯3 → 5+3 ; ¯5-3 → -(5+3)
+      sw=0:  sa a ⋄ sa=0: (-sw)w             ⍝ optim: ⍺-0 → ⍺, 0-⍵ → -⍵
+      sa≠sw: sa(ndnZ 0,+⌿a mix w)            ⍝ 5-¯3 → 5+3 ; ¯5-3 → -(5+3)
         amixw← a mix w 
       <cmp amixw: BIChkZ (-sw)(nupZ-⌿dck ⊖amixw) ⍝ a<w: 3-5 →  -(5-3)
-        BIChkZ sa(nupZ-⌿dck amixw)             ⍝ a≥w:          5-3
+        BIChkZ sa(nupZ-⌿dck amixw)           ⍝ a≥w:          5-3
     }
   ⍝ See Mul, Div here.
     Mul← {
@@ -469,7 +476,7 @@
   ⍝ Div: For special cases (except ⍵ multiples of 10), see DivU.
     Div← { 
         (sa a)(sw w)← ⍺ ⍵
-      sw=0: Err11 divZeroÊ                   ⍝ Don't allow division by 0.
+      sw=0: Sig11 divZeroÊ                   ⍝ Don't allow division by 0.
     ⍝ Some clear advantage to this optimization...
     ⍝ (1 ImpStr...) ensures empty string is allowed and returns 0.
       0≠p10← -ExactPow10U w: 1 ImpStr p10↓ Exp (sa×sw) a 
@@ -482,11 +489,11 @@
   ⍝ For other special cases, see DivU.
     DivRem← {
         (sa a)(sw w)←  ⍺ ⍵
-      sw=0: Err11 divZeroÊ 
+      sw=0: Sig11 divZeroÊ 
     ⍝ Some clear advantage to this optimization...
     ⍝ (1 ImpStr¨...) ensures empty strings are allowed and return 0.
       0≠p10← -ExactPow10U w: 1 ImpStr¨ p10(↓,⍥⊂↑) Exp (sa×sw) a 
-        BIChkZ¨ (sa 1× sw),¨ a DivU w          ⍝ return: (quotient remainder)
+        BIChkZ¨ (sa 1× sw),¨ a DivU w        ⍝ return: (quotient remainder)
     }
   ⍝ ⍺ Pow ⍵:
   ⍝   I. General case, i.e. ⍵ not a special case as in II below  
@@ -510,22 +517,22 @@
             IZ S2N 1↓⍵ 
       } 
       Pow← {                                  
-        0≠rt← RootZ ⍵: rt Root Imp ⍺           ⍝ Root? Handle here.
+        0≠rt← RootZ ⍵: rt Root Imp ⍺         ⍝ Root? Handle here.
           (sa a)(sw w)← Imp¨ ⍺ ⍵
-        ∨/sa sw=0 ¯1: ZERO_BI                  ⍝ r← ⍺*¯⍵ is 0≤r<1, so truncates to 0.
-          p← a PowU w                          ⍝ Special cases ⍺*2, ⍺*1, ⍺*0 handled in PowU.
+        ∨/sa sw=0 ¯1: ZERO_BI                ⍝ r← ⍺*¯⍵ is 0≤r<1, so truncates to 0.
+          p← a PowU w                        ⍝ Special cases ⍺*2, ⍺*1, ⍺*0 handled in PowU.
         sa= 1: 1 p               
-        0=2|⊃⌽w:1 p ⋄ ¯1 p                     ⍝ sa=¯1, so result is pos. if ⍵ is even.
+        0=2|⊃⌽w:1 p ⋄ ¯1 p                   ⍝ sa=¯1, so result is pos. if ⍵ is even.
       }
-    ⍝ Rem: Remainder/residue.                  ⍝ Use APL's definition.
+    ⍝ Rem: Remainder/residue.                ⍝ Use APL's definition.
       Rem← {                        
           (sa a)(sw w)← ⍺ ⍵
         sw=0:ZERO_BI
         sa=0:sw w
-          r← ,a RemU w                         ⍝ RemU is fast if a>w
-        sa=sw: BIChkZ sa r                     ⍝ sa=sw:       return (R)       R← sa r
-        ZERO_D≡ r: ZERO_BI                     ⍝ sa≠sw ∧ R≡ 0: return 0
-          BIChkZ sa a Sub sa r                 ⍝ sa≠sw:       return (A - R')  A← sa a; R'← sa r
+          r← ,a RemU w                       ⍝ RemU is fast if a>w
+        sa=sw: BIChkZ sa r                   ⍝ sa=sw:       return (R)       R← sa r
+        ZERO_D≡ r: ZERO_BI                   ⍝ sa≠sw ∧ R≡ 0: return 0
+          BIChkZ sa a Sub sa r               ⍝ sa≠sw:       return (A - R')  A← sa a; R'← sa r
       }
   
   ⍝ ∨ Greatest Common Divisor
@@ -554,9 +561,9 @@
     Log10← { 1, ⊂¯1+≢Exp ⍵ } 
     Log← {
         ⍺← TEN_BI ⋄ B N← ⍺ ⍵
-      0≥⊃N: Err11 logÊ                       ⍝ N ≤ 0
-      TEN_BI≡ B: 1, ⊂¯1+≢Exp N
-        ZERO_BI { ⍵ Le ONE_BI: ⍺ ⋄ (Inc ⍺)∇ ⍵ Div B } N  
+      0≥⊃N: Sig11 logÊ                       ⍝ N ≤ 0
+      TEN_BI≡ B: 1, ⊂¯1+≢Exp N               ⍝ Base 10 handled as char. "trick"
+        ZERO_BI { ⍵ Le ONE_BI: ⍺ ⋄ (Inc ⍺)∇ ⍵ Div B } N   ⍝ Slow!
     }
   ⍝ ≡ This is the same as =, except that Import doesn't force normalisation 
   ⍝   of arguments (to be presented to Ident) that are already big integers...
@@ -576,10 +583,10 @@
     ⍝       This is for use in other fns like ⌈ Max and ⌊ Min. 
       Bool← {
           (sa a)(sw w)← ⍺ ⍵  
-        0∊sa sw: sa ⍺⍺ sw                      ⍝ ⍺, ⍵, or both are 0
-        sa≠sw: sa ⍺⍺ sw                        ⍝ ⍺, ⍵ different signs
-        sa=¯1: ⍺⍺ cmp w mix a                  ⍝ ⍺, ⍵ both Neg
-          ⍺⍺ cmp a mix w                       ⍝ ⍺, ⍵ both Pos
+        0∊sa sw: sa ⍺⍺ sw                    ⍝ ⍺, ⍵, or both are 0
+        sa≠sw: sa ⍺⍺ sw                      ⍝ ⍺, ⍵ different signs
+        sa=¯1: ⍺⍺ cmp w mix a                ⍝ ⍺, ⍵ both Neg
+          ⍺⍺ cmp a mix w                     ⍝ ⍺, ⍵ both Pos
       }
       Lt← <Bool ⋄ Le← ≤Bool ⋄ Eq← =Bool 
       Gt← >Bool ⋄ Ge← ≥Bool ⋄ Ne← ≠Bool 
@@ -609,17 +616,18 @@
       r← ONE_BI ⋄ s← m Rem a
       mModMul← m ModMul 
       :While ZERO_BI Lt n
-          :If ONE_BI Eq TWO_BI Rem n           ⍝ r← m| r×s
+          :If ONE_BI Eq TWO_BI Rem n         ⍝ r← m| r×s
             r mModMul← s 
           :EndIf   
-          s mModMul← s                         ⍝ s← m| s×s
+          s mModMul← s                       ⍝ s← m| s×s
           n Div← TWO_BI
       :EndWhile
     ∇
 :EndSection Special Functions/Operations (More than 2 Args)
 
 :Section Unsigned Utility Math Routines
-  ⍝ These are the workhorses of bigInt; most are from dfns:nats (handling unsigned bigInts).
+  ⍝ These are the workhorses of bigInt; 
+  ⍝       most are from dfns:nats (handling unsigned bigInts).
   ⍝ Note: ⍺ and ⍵ are guaranteed by BII and BI to be vectors, but not
   ⍝       by internal functions or if called directly.
   ⍝       So tests for 2, 1, 0 (TWO_D etc) use ravel:  (TWO_D≡ ,⍺)
@@ -634,8 +642,8 @@
   ⍝        [2] signal an error...
     SubU← { 
           amixw← ⍺ mix ⍵ 
-        <cmp amixw:Err11 subÊ                ⍝ [opt 2] 3-5 →  -(5-3)
-          dLZZ nup-⌿dck amixw                  ⍝ a≥w: 5-3 → +(5-3). ⍺<⍵: 0 [opt 1]
+        <cmp amixw:Sig11 subÊ                ⍝ [opt 2] 3-5 →  -(5-3)
+          dLZZ nup-⌿dck amixw                ⍝ a≥w: 5-3 → +(5-3). ⍺<⍵: 0 [opt 1]
     }
   ⍝ MulU:  multiply ⍺ × ⍵  for unsigned Big Integers ⍺ and ⍵
   ⍝ r:bii←  ⍺:bii ∇ ⍵:bii
@@ -644,31 +652,31 @@
   ⍝ even for larger numbers (up to xtimes smallish design limit)
   ⍝ We call ndnZ to remove extra zeros, esp. so zero is exactly ,0 and 1 is ,1.
     MulU← {
-        dLZZ ⍺{                                ⍝ product.
-            ndnZ 0,↑⍵{                         ⍝ canonicalised vector.
-                digit take← ⍺                  ⍝ next digit and shift.
-              +⌿⍵ mix digit×take↑⍺⍺            ⍝ accumulated product.
-            }/(⍺,¨(≢⍵)+⌽⍳≢⍺),⊂,0               ⍝ digit-shift pairs.
-        }{                                     ⍝ guard against overflow:
-            m n← ≢¨ ⍺ ⍵                        ⍝ numbers of limbs (RX10-digits) in each arg.
-          m>n: ⍺ ∇⍨⍵                           ⍝ quicker if larger number on right.
-          n<OFL: ⍺ ⍺⍺ ⍵                        ⍝ ⍵ won't overflow: proceed.
-            s← ⌊n÷2                            ⍝ digit-split for large ⍵.
-            p q← ⍺∘∇¨(s↑⍵)(s↓⍵)                ⍝ Sub-products (see notes).
-            ndnZ 0,+⌿(p,s↓n⍴0)mix q            ⍝ sum of Sub-products.
+        dLZZ ⍺{                              ⍝ product.
+            ndnZ 0,↑⍵{                       ⍝ canonicalised vector.
+                digit take← ⍺                ⍝ next digit and shift.
+              +⌿⍵ mix digit×take↑⍺⍺          ⍝ accumulated product.
+            }/(⍺,¨(≢⍵)+⌽⍳≢⍺),⊂,0             ⍝ digit-shift pairs.
+        }{                                   ⍝ guard against overflow:
+            m n← ≢¨ ⍺ ⍵                      ⍝ numbers of limbs (RX10-digits) in each arg.
+          m>n: ⍺ ∇⍨⍵                         ⍝ quicker if larger number on right.
+          n<OFL: ⍺ ⍺⍺ ⍵                      ⍝ ⍵ won't overflow: proceed.
+            s← ⌊n÷2                          ⍝ digit-split for large ⍵.
+            p q← ⍺∘∇¨(s↑⍵)(s↓⍵)              ⍝ Sub-products (see notes).
+            ndnZ 0,+⌿(p,s↓n⍴0)mix q          ⍝ sum of Sub-products.
         }⍵
     }
   ⍝ PowU: compute ⍺*⍵ for unsigned ⍺ and ⍵. (⍺ may not be omitted).
   ⍝       Note: ⍺ and ⍵ must be vectors!!!
   ⍝ RX10div2: (Defined above.)
       PowU← {Case← (,⍵)∘≡ 
-    ⍝ (1≠⍴⍴⍵)∨1≠⍴⍴⍺:  Err11 'PowU: ⍺ and ⍵ must be vectors'
-    Case ZERO_D: ONE_D                         ⍝ =cmp ⍵ mix,0:,1 ⍝ ⍺*0 → 1
-    Case ONE_D:  ,⍺                            ⍝ =cmp ⍵ mix,1:⍺  ⍝ ⍺*1 → ⍺. Return "odd," i.e. use sa in caller.
-    Case TWO_D:  ⍺ MulU ⍺                      ⍝ ⍺×⍺
-        hlf← {,ndn(⌊⍵÷2)+0,¯1↓RX10div2×2|⍵}    ⍝ quick ⌊⍵÷2.
-        evn← ndnZ{⍵ MulU ⍵}ndn ⍺ ∇ hlf ⍵       ⍝ even power
-    0=2|¯1↑⍵: evn                              ⍝ even or odd power.
+    ⍝ (1≠⍴⍴⍵)∨1≠⍴⍴⍺:  Sig11 'PowU: ⍺ and ⍵ must be vectors'
+    Case ZERO_D: ONE_D                       ⍝ =cmp ⍵ mix,0:,1 ⍝ ⍺*0 → 1
+    Case ONE_D:  ,⍺                          ⍝ =cmp ⍵ mix,1:⍺  ⍝ ⍺*1 → ⍺. Return "odd," i.e. use sa in caller.
+    Case TWO_D:  ⍺ MulU ⍺                    ⍝ ⍺×⍺
+        hlf← {,ndn(⌊⍵÷2)+0,¯1↓RX10div2×2|⍵}  ⍝ quick ⌊⍵÷2.
+        evn← ndnZ{⍵ MulU ⍵}ndn ⍺ ∇ hlf ⍵     ⍝ even power
+    0=2|¯1↑⍵: evn                            ⍝ even or odd power.
         ndnZ ⍺ MulU evn           
     }
   ⍝ DivU/: unsigned division
@@ -679,38 +687,38 @@
   ⍝   r:bii[2]←  ⍺:bii ∇ ⍵:bii
     DivU← {     
         a w← dLZZ¨⍺ ⍵
-      a≡ w:  ONE_D ZERO_D                      ⍝ ⍺≡ ⍵: Quot=1, Rem=0. including ⍺÷⍵ is 0÷0.
-      ZERO_D≡ w: Err11 divZeroÊ              ⍝ If ⍵=0 (exc. 0÷0), then ERROR!, for all ⍺, except ⍺=0.
-        svec← (≢w)+⍳0⌈1+(≢a)-≢w                ⍝ shift vector.
-        _divOver← {                            ⍝ fold along dividend.
-            r p← ⍵                             ⍝ result & dividend.
-            q← ⍺↑⍺⍺                            ⍝ shifted divisor.
-            ppqq← RX10⊥⍉2 2↑p mix q            ⍝ 2 most signif. digits of p & q.
-            cnvrg← {                           ⍝ next RX10-digit of result.
-                (p q)(lo hi)← ⍺ ⍵              ⍝ Div and high-low test.
-              lo=hi-1: p {                     ⍝ convergence:
-                lo hi⊃⍨≥cmp ⍺ mix ⍵            ⍝ low or high.
-              } dLZ ndn 0,hi×q                 ⍝ multiple.
-                mid← ⌊0.5×lo+hi                ⍝ mid-point.
-                nxt← dLZ ndn 0,q×mid           ⍝ next multiplier.
-                gt← >cmp p mix nxt             ⍝ greater than:
-                ⍺ ∇ gt⊃2,/lo mid hi            ⍝ choose upper or lower interval.
+      a≡ w:  ONE_D ZERO_D                    ⍝ ⍺≡ ⍵: Quot=1, Rem=0. including ⍺÷⍵ is 0÷0.
+      ZERO_D≡ w: Sig11 divZeroÊ              ⍝ If ⍵=0 (exc. 0÷0), then ERROR!, for all ⍺, except ⍺=0.
+        svec← (≢w)+⍳0⌈1+(≢a)-≢w              ⍝ shift vector.
+        _divOver← {                          ⍝ fold along dividend.
+            r p← ⍵                           ⍝ result & dividend.
+            q← ⍺↑⍺⍺                          ⍝ shifted divisor.
+            ppqq← RX10⊥⍉2 2↑p mix q          ⍝ 2 most signif. digits of p & q.
+            cnvrg← {                         ⍝ next RX10-digit of result.
+                (p q)(lo hi)← ⍺ ⍵            ⍝ Div and high-low test.
+              lo=hi-1: p {                   ⍝ convergence:
+                lo hi⊃⍨≥cmp ⍺ mix ⍵          ⍝ low or high.
+              } dLZ ndn 0,hi×q               ⍝ multiple.
+                mid← ⌊0.5×lo+hi              ⍝ mid-point.
+                nxt← dLZ ndn 0,q×mid         ⍝ next multiplier.
+                gt← >cmp p mix nxt           ⍝ greater than:
+                ⍺ ∇ gt⊃2,/lo mid hi          ⍝ choose upper or lower interval.
             }
           ⍝ lower and upper bounds of ratio.
             r∆← p q cnvrg⌊0 1+↑÷/ppqq+(0 1)(1 0)        
-            mpl← dLZ ndn 0,q×r∆                ⍝ multiple.
-            p∆← dLZ nup-⌿p mix mpl             ⍝ remainder.
-            (r,r∆)p∆                           ⍝ result & remainder.
+            mpl← dLZ ndn 0,q×r∆              ⍝ multiple.
+            p∆← dLZ nup-⌿p mix mpl           ⍝ remainder.
+            (r,r∆)p∆                         ⍝ result & remainder.
         }
-        dLZZ¨ ↑w _divOver/ svec,⊂⍬ a           ⍝ fold-accumulated result.
+        dLZZ¨ ↑w _divOver/ svec,⊂⍬ a         ⍝ fold-accumulated result.
   }
   QuotientU← ⊃DivU
-  GcdU← {ZERO_D≡ ,⍵: ⍺ ⋄ ⍵ ∇⊃⌽⍺ DivU ⍵}        ⍝ greatest common divisor.
-  LcmU← {⍺ MulU⊃⍵ DivU ⍺ GcdU ⍵}               ⍝ least common multiple.
-  RemU← {                                      ⍝ RemU: ⍺, ⍵ unsigned; calcs and returns unsigned ⍺|⍵.
-        TWO_D≡ ,⍺: 2|⊃⌽⍵                       ⍝ fast (short-circuit) path for ⍺=2 (2|⍵). Check only last "limb".
-        <cmp ⍵ mix ⍺:⍵                         ⍝ ⍵ < ⍺? remainder is ⍵
-        ⊃⌽⍵ DivU ⍺                             ⍝ Otherwise, do full divide and return 2nd element, the remainder.
+  GcdU← {ZERO_D≡ ,⍵: ⍺ ⋄ ⍵ ∇⊃⌽⍺ DivU ⍵}      ⍝ greatest common divisor.
+  LcmU← {⍺ MulU⊃⍵ DivU ⍺ GcdU ⍵}             ⍝ least common multiple.
+  RemU← {                                    ⍝ RemU: ⍺, ⍵ unsigned; calcs and returns unsigned ⍺|⍵.
+        TWO_D≡ ,⍺: 2|⊃⌽⍵                     ⍝ fast (short-circuit) path for ⍺=2 (2|⍵). Check only last "limb".
+        <cmp ⍵ mix ⍺: ⍵                      ⍝ ⍵ < ⍺? remainder is ⍵
+        ⊃⌽⍵ DivU ⍺                           ⍝ Otherwise, do full divide and return 2nd element, the remainder.
   }
 :Endsection Unsigned Utility Math Routines
 
@@ -718,25 +726,28 @@
 ⍝ BIChkZ ⍵:bi   
 ⍝    If ⊃⌽⍵ is zero after removing leading 0's, return ZERO_BI;
 ⍝    Otherwise return ⍵ w/o leading zeroes.
-  BIChkZ← { ZERO_D≡ w← dLZZ ⊃⌽⍵: ZERO_BI ⋄ (⊃⍵) w }
+  BIChkZ← { 
+    ZERO_D≡ w← dLZZ ⊃⌽⍵: ZERO_BI 
+      (⊃⍵) w 
+  }
 
 ⍝-----------------------------------------------------------------------------------+
 ⍝ Note: These Service Functions are                                                 +
-⍝       ∘ directly from (or tweaks of) dfns::nats,                                  +
+⍝       ∘ directly from (or variants of) dfns::nats,                                  +
 ⍝       ∘ in lower camel case, per the originals                                    +
 ⍝-----------------------------------------------------------------------------------+
 ⍝ These routines operate on unsigned big int data unless documented…  
-  dLZ← { ⍵↓⍨0=⊃⍵}                              ⍝ drop FIRST leading zero.
-  dLZZ← {0≠ ≢w← ,⍵↓⍨ +/∧\⍵=0: w ⋄ ZERO_D}      ⍝ drop RUN of leading zeros plus PMS extension to make sure at least one 0
-  chkZ← {0≠≢⍵:,⍵ ⋄ ZERO_D}                     ⍝ ⍬ → ,0. Ensure canonical Bii, so even 0 has one digit (,0).
-  ndn← {+⌿1 0⌽0 RX10⊤⍵}⍣≡                      ⍝ normalise down: 3 21 → 5 1 (RH).
-  ndnZ← dLZ ndn                                ⍝ ndn, then remove (earlier added) leading zero, if still 0.
-  nup← {⍵++⌿0 1⌽RX10 ¯1∘.×⍵<0}⍣≡               ⍝ normalise up:   3 ¯1 → 2 9
-  nupZ← dLZ nup                                ⍝ PMS extension of nup
-  mix← {↑(-⍺⌈⍥≢⍵)↑¨⍺ ⍵}                        ⍝ right-aligned mix.
-  dck← {⍵⌿⍨2 1+0 ¯1⌽⍨≥cmp ⍵}                   ⍝ difference check (equiv.)
-  rep← {10⊥⍵{⍉⍵⍴⍺↑⍨-×/⍵}NRX10,⍨⌈NRX10÷⍨≢⍵}     ⍝ radix RX10 rep of number.
-  cmp← {⍺⍺/,(<\≠⌿⍵)/⍵}                         ⍝ compare first different digit of ⍺ and ⍵.
+  dLZ←  {⍵↓⍨0=⊃⍵}                            ⍝ drop FIRST leading zero.
+  dLZZ← {0≠ ≢w← ,⍵↓⍨ +/∧\⍵=0: w ⋄ ZERO_D}    ⍝ drop RUN of leading zeros plus PMS extension to make sure at least one 0
+  chkZ← {0≠≢⍵:,⍵ ⋄ ZERO_D}                   ⍝ ⍬ → ,0. Ensure canonical Bii, so even 0 has one digit (,0).
+  ndn←  {+⌿1 0⌽0 RX10⊤⍵}⍣≡                   ⍝ normalise down: 3 21 → 5 1 (RH).
+  ndnZ← dLZ ndn                              ⍝ ndn, then remove (earlier added) leading zero, if still 0.
+  nup←  {⍵++⌿0 1⌽RX10 ¯1∘.×⍵<0}⍣≡            ⍝ normalise up:   3 ¯1 → 2 9
+  nupZ← dLZ nup                              ⍝ PMS extension of nup
+  mix←  {↑(-⍺⌈⍥≢⍵)↑¨⍺ ⍵}                     ⍝ right-aligned mix.
+  dck←  {⍵⌿⍨2 1+0 ¯1⌽⍨≥cmp ⍵}                ⍝ difference check (equiv.)
+  rep←  {10⊥⍵{⍉⍵⍴⍺↑⍨-×/⍵}NRX10,⍨⌈NRX10÷⍨≢⍵}  ⍝ radix RX10 rep of number.
+  cmp←  {⍺⍺/,(<\≠⌿⍵)/⍵}                      ⍝ compare first different digit of ⍺ and ⍵.
 :Endsection Service Functions
 ⍝ --------------------------------------------------------------------------------------------------
 
@@ -753,9 +764,9 @@
   ⍝ Runtime routine
   ⍝ GetEntry:    
   ⍝   entry← opCode GetEntry valence
-    GetEntry← { f← ⍺⍺   
-      3=⎕NC 'f': entries⊃⍨ ⍵, (⍵⊃ opCodes)⍳ ⎕NR'f'
-                 entries⊃⍨ ⍵, (⍵⊃ opCodes)⍳ ⊂⎕C f  
+    GetEntry← { 
+      Select← { f← ⍺⍺ ⋄ 3= ⎕NC 'f': ⎕NR 'f' ⋄ ⊂⎕C f }  
+      entries⊃⍨ ⍵, (⍵⊃ opCodes)⍳ ⍺⍺ Select ⍬  
     }
 
   ⍝ opCode:  List of operation codes
@@ -777,56 +788,56 @@
   ⍝
   ⍝ e1: Monadic...
     e1← (     
-         '+' 'Imp'     1  1
-         '-' 'Neg'     1  1
-         '×' 'Sig'     1  1
-         '÷' 'Recip'   1  1
-         '|' 'Abs'     1  1
-         '⍟' 'Log'     1  1
-         '⍕' 'BI2Str'  0  0
-         '⍎' 'BI2Apl'  1  0
-         '≢' 'NLimbs'  1  0
-         '→' 'Imp'     1  0
-         '<' 'Dec'     1  1
-         '≤' 'Dec'     1  1
-         '≥' 'Inc'     1  1
-         '>' 'Inc'     1  1
-         '!' 'Fact'    1  1
-         '?' 'Roll'    1  1
-         '√' 'Root'    1  1
+         '+'      'Imp'     1  1
+         '-'      'Neg'     1  1
+         '×'      'Sig'     1  1
+         '÷'      'Recip'   1  1
+         '|'      'Abs'     1  1
+         '⍟'      'Log'     1  1
+         '⍕'      'BI2Str'  0  0
+         '⍎'      'BI2Apl'  1  0
+         '≢'      'NLimbs'  1  0
+         '→'      'Imp'     1  0
+         '<'      'Dec'     1  1
+         '≤'      'Dec'     1  1
+         '≥'      'Inc'     1  1
+         '>'      'Inc'     1  1
+         '!'      'Fact'    1  1
+         '?'      'Roll'    1  1
+         '√'      'Root'    1  1
          'Root'   'Root'    1  1
          'Sqrt'   'Root'    1  1
          'Log10'  'Log10'   1  1
-          ¯1      'MissM'     1 ¯1              ⍝ Entry for missing 1-adic opCodes
+         ¯1       'MissM'   1 ¯1             ⍝ Entry for missing 1-adic opCodes
     )
   ⍝ e2: Dyadic ...      
     e2← (             
-         '+' 'Add'     1  1
-         '-' 'Sub'     1  1
-         '×' 'Mul'     1  1
-         '÷' 'Div'     1  1
-         '*' 'Pow'     0  1
-         '|' 'Rem'     1  1
-         '∨' 'Gcd'     1  1
-         '∧' 'Lcm'     1  1
-         '⍟' 'Log'     1  1
-         '⌈' 'Max'     1  1
-         '⌊' 'Min'     1  1
-         '⍕' 'BI2Str'  0  0
-         '≡' 'Ident'   1  0
-         '≢' 'Differ'  1  0
-         '<' 'Lt'      1  0
-         '≤' 'Le'      1  0
-         '=' 'Eq'      1  0
-         '≥' 'Ge'      1  0
-         '>' 'Gt'      1  0
-         '≠' 'Ne'      1  0
-         '√' 'Root'    1  1
+         '+'      'Add'     1  1
+         '-'      'Sub'     1  1
+         '×'      'Mul'     1  1
+         '÷'      'Div'     1  1
+         '*'      'Pow'     0  1
+         '|'      'Rem'     1  1
+         '∨'      'Gcd'     1  1
+         '∧'      'Lcm'     1  1
+         '⍟'      'Log'     1  1
+         '⌈'      'Max'     1  1
+         '⌊'      'Min'     1  1
+         '⍕'      'BI2Str'  0  0
+         '≡'      'Ident'   1  0
+         '≢'      'Differ'  1  0
+         '<'      'Lt'      1  0
+         '≤'      'Le'      1  0
+         '='      'Eq'      1  0
+         '≥'      'Ge'      1  0
+         '>'      'Gt'      1  0
+         '≠'      'Ne'      1  0
+         '√'      'Root'    1  1
          'Root'   'Root'    1  1
          'DivRem' 'DivRem'  1  2
-          ¯1      'MissD'     1 ¯1              ⍝ Entry for missing 2-adic opCodes
+         ¯1       'MissD'   1 ¯1             ⍝ Entry for missing 2-adic opCodes
     )
-    opCodes← (1500⌶)¨ ⎕C⊃¨¨ ¯1↓¨e1 e2          ⍝ Hash each opCode vector (1500⌶¨)
+    opCodes← (1500⌶)¨ ⎕C⊃¨¨ ¯1↓¨e1 e2        ⍝ Hash each opCode vector (1500⌶¨)
     entries← LoadDB¨¨ e1 e2 
     
   ⍝ Keep only the list here:
@@ -836,7 +847,8 @@
   
   :EndSection Opcode Mapping
       _← 1 ⎕EXPORT 'BI' 'BII' 'BIM' 'BI_HELP'⊣ 0 ⎕EXPORT ⎕NL 3 4
-
+    ⍝ Display form (displayed during ]load...)
+      _← ⎕DF createdInfo,'. ',helpInfo
 :Section Help Documentation
 ⍝H The BigInt Library
 ⍝H ¯¯¯ ¯¯¯¯¯¯ ¯¯¯¯¯¯¯
@@ -879,11 +891,11 @@
 ⍝H            28776
 ⍝H              a (*BIM m)b    ⍝ Final modulo result of m| a* b?
 ⍝H            1
-⍝H              ⍝*** BIM is 1450 times faster here! 
-⍝H              ⍝*** Most of the time is spent in the modulo of the 28776-digit number. 
+⍝H            *** BIM is currently ~700 times faster here! 
+⍝H            *** Most of the time is spent in the modulo of the 28776-digit number. 
 ⍝H              cmpx 'a (*BIM m)b' 'm |BI a *BI b'   
-⍝H            a (*BIM m)b   → 4.0E¯3 |       0%                                         
-⍝H            m |BI a *BI b → 5.8E0  | +144325% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
+⍝H            a (*BIM m)b   → 3.0E¯3 |      0%                                         
+⍝H            m |BI a *BI b → 2.1E0  | +69866% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
 ⍝H  BigInt.BI_HELP
 ⍝H       ∘ Display this "help" information.
 ⍝H       ∘ Syntax:  BigInt.BI_HELP
