@@ -50,19 +50,20 @@ Tidy← {
 ⍝ Phase I - Potential Recursion ⍝
 ⍝-------------------------------⍝         
   ⍝ Fns (Phase I)
-      ∆Tidy← ∇                                     ⍝ This function ("me")
-      FOF← {                                       ⍝ FOF: in-ws Fn/Op or File?
-        ~o.fi: _← {                                ⍝ In-ws fn or op
+      ∆Tidy← ∇                                          ⍝ This function ("me")
+      FOF← {                                            ⍝ FOF: in-ws Fn/Op or File?
+        ¯2= ≡⍵: ∇ w⊣ w o.fi← ⍵                          ⍝ Alt way to set o.fi← 1...
+        ~o.fi: _← {                                     ⍝ In-ws fn or op
           ~⍵ ⎕NC⍛∊ 3 4: ⎕SIGNAL fnOpÊ
-            ll← o ∆Tidy 62 ⎕ATX ⍵                  ⍝ Get fn/op lines & then tidy. 
-          ~o.updt: _← ll                           ⍝ No update here. Return the lines.
-          0≠ ⊃0⍴⎕FX ll: _← ll                      ⍝ Update the fn/op. Return the lines..
+            ll← o ∆Tidy 62 ⎕ATX ⍵                       ⍝ Get fn/op lines & then tidy. 
+          ~o.updt: _← ll                                ⍝ No update here. Return the lines.
+          0≠ ⊃0⍴⎕FX ll: _← ll                           ⍝ Update the fn/op. Return the lines..
             ⎕SIGNAL fixÊ 
         }⍵
         ⍝ File with code of any type
-          ll← o ∆Tidy ⊃⎕NGET ⍵ 1                   ⍝ Get file lines & then tidy
-          _← ll⊂⍛⎕NPUT⍣o.updt⊢ ⍵ 1                 ⍝ Update the file. (if o.updt=1) 
-        1: _← ll                                   ⍝ Return shyly.
+          ll← o ∆Tidy ⊃⎕NGET ⍵ 1                        ⍝ Get file lines & then tidy
+          _← ll⊂⍛⎕NPUT⍣o.updt⊢ ⍵ 1                      ⍝ Update the file. (if o.updt=1) 
+        1: _← ll                                        ⍝ Return shyly.
       }
   ⍝ Phase I Errors
       optÊ←   ⊂( 'EN'  11 ⋄ 'Message' 'Unknown option(s)' )
@@ -73,8 +74,8 @@ Tidy← {
         col: 'best' ⋄ min: 20 ⋄ fi: 0 ⋄ updt: 1 ⋄ double: 1 ⋄ inc: 5     
         pctile: 95 ⋄ compact: 50 ⋄ marg: 3 5 ⋄ refmt: 0  
       )
-    ×≢⊃~/(⍺ o).⎕NL ¯2: ⎕SIGNAL optÊ                ⍝ Ensure all user-specified options are valid.   
-      _← o ⎕NS ⍺                                   ⍝ Now merge user options into o.
+    ×≢⊃~/(⍺ o).⎕NL ¯2: ⎕SIGNAL optÊ                     ⍝ Ensure all user-specified options are valid.   
+      _← o ⎕NS ⍺                                        ⍝ Now merge user options into o.
   ⍝ If ⍵ is a fn or file name, recurse back to Tidy via FOF.
     1≥ ≡⍵: FOF ,⍵  
 ⍝--------------------------⍝
@@ -85,63 +86,63 @@ Tidy← {
     ⍝ Apply refmt, but without impacting LHS comments.
     ⍝ Only useful for dfns, not tradfns or namespaces.
       CRefmt← {  
-        0=⊃o.refmt: ⍵                              ⍝ Nop if 0=⊃o.refmt (default).
-          refmt← ⊢ ⋄ _← 'refmt' ⎕CY 'dfns'         ⍝ Retrieve private copy of refmt
-          Hide← '''[^'']*''' '\h*⍝' ⎕R '\0' '\x{00}⍝\0'  ⍝ Hide comments from refmt
-          Unhide←   '\x{00}\h*⍝(.*)$' ⎕R '\1'      ⍝ Unhide comments 
-          Unhide o.refmt refmt Hide ⍵              ⍝ Go!
+        0=⊃o.refmt: ⍵                                   ⍝ Nop if 0=⊃o.refmt (default).
+          refmt← ⊢ ⋄ _← 'refmt' ⎕CY 'dfns'              ⍝ Retrieve private copy of refmt
+          Hide← '''[^'']*''' '\h*⍝' ⎕R '\0' '\x{00}⍝\0' ⍝ Hide comments from refmt
+          Unhide←   '\x{00}\h*⍝(.*)$' ⎕R '\1'           ⍝ Unhide comments 
+          Unhide o.refmt refmt Hide ⍵                   ⍝ Go!
       }
-      AL← {                                        ⍝ AL: Align line
-          ∆ p← ⍺ ⍵                                 ⍝ ∆: Pad by at least ∆ spaces. 
+      AL← {                                             ⍝ AL: Align line
+          ∆ p← ⍺ ⍵                                      ⍝ ∆: Pad by at least ∆ spaces. 
         p≤o.col: ''⍴⍨ ∆⌈ ¯1+ o.col- p        
           ''⍴⍨ ∆⌈ ¯1+ o.inc| p- o.col       
       }
-      AC← (⌊0.5∘+){                                ⍝ AC: Generate Absolute col  
-        0=⊃0⍴⍺: ⍺                                  ⍝ Fast-- col is a number 
-          LL← {                                    ⍝ LL: adjusted line length for RHS comments
+      AC← (⌊0.5∘+){                                     ⍝ AC: Generate Absolute col  
+        0=⊃0⍴⍺: ⍺                                       ⍝ Fast-- col is a number 
+          LL← {                                         ⍝ LL: adjusted line length for RHS comments
               P← { i←100÷⍨p×¯1+≢⍵ ⋄ R 0.5× ⍵[⌊i]+ ⍵[⌈i] } ⍝ Pctile (rounded)
-              R← ⌊0.5∘+                            ⍝ Round
-              S← ⊂∘⍋⍛⌷                             ⍝ Sort 
-              ⍺← 100                               ⍝ ⍺/p: What %age of ll. 
-              p isB← ⍺ ⍺⍺                          ⍝ p: position, isB: 'best' option 
+              R← ⌊0.5∘+                                 ⍝ Round
+              S← ⊂∘⍋⍛⌷                                  ⍝ Sort 
+              ⍺← 100                                    ⍝ ⍺/p: What %age of ll. 
+              p isB← ⍺ ⍺⍺                               ⍝ p: position, isB: 'best' option 
               trimI trimO← ↓⍉↑(       
                 '''[^'']*''' '&'
               ⍝ ('\s{,',(⍕0⌈o.min-2),'}⍝.*$') '&'  ⍝ Include comments in the %ile calc?
                 '\s*⍝.*$'    ''
                 '\s*$'       ''
               )                             
-              max← ⌈/ll← ≢¨trimI ⎕R trimO⊢ ⍵       ⍝ trimmed line lengths 
-            ~isB: max                              ⍝ Abs. position needed. Else isBest ↓↓↓
-              isC← max≤ o.compact                  ⍝ Is the object compact?
+              max← ⌈/ll← ≢¨trimI ⎕R trimO⊢ ⍵            ⍝ trimmed line lengths 
+            ~isB: max                                   ⍝ Abs. position needed. Else isBest ↓↓↓
+              isC← max≤ o.compact                       ⍝ Is the object compact?
               marg← isC⊃ 2⍴o.marg 
-            isC: marg+ max                         ⍝ Obj is compact, "best" is on the right.
-            p≥ 100: marg+ R 0.01× p× max           ⍝ % (not %ile) if above 100% 
-              marg+ P S ll                         ⍝ Actual interpolated percentile + margin
+            isC: marg+ max                              ⍝ Obj is compact, "best" is on the right.
+            p≥ 100: marg+ R 0.01× p× max                ⍝ % (not %ile) if above 100% 
+              marg+ P S ll                              ⍝ Actual interpolated percentile + margin
           } 
-          V←  ⊃∘⌽∘⎕VFI                             ⍝ Value
+          V←  ⊃∘⌽∘⎕VFI                                  ⍝ Value
         ⍝ "Best" line length is  o.pctile-th %ile of input line lengths.
-          f← ⊃⍺                                    ⍝ Selector is first char...
-        f∊ 'bB': o.pctile (1 LL) ⍵                 ⍝ col set to "best" line length plus margin.
-        f∊ '+-×': ((0 LL) ⍵) (⍎f) V 1↓⍺            ⍝ col is relative to exact max line length.
+          f← ⊃⍺                                         ⍝ Selector is first char...
+        f∊ 'bB': o.pctile (1 LL) ⍵                      ⍝ col set to "best" line length plus margin.
+        f∊ '+-×': ((0 LL) ⍵) (⍎f) V 1↓⍺                 ⍝ col is relative to exact max line length.
         0∊⊃⎕VFI ⍺: ⎕SIGNAL colÊ
-          V ⍺                                      ⍝ Absolute positioning
+          V ⍺                                           ⍝ Absolute positioning
       }
-      TB← { +/∧\' '= ⌽⍵ }                          ⍝ TB: Trailing blanks
-      LB← { +/∧\' '=  ⍵ }                          ⍝ LB: Leading blanks 
-      RF← {                                        ⍝ RF: Regex Field value
+      TB← { +/∧\' '= ⌽⍵ }                               ⍝ TB: Trailing blanks
+      LB← { +/∧\' '=  ⍵ }                               ⍝ LB: Leading blanks 
+      RF← {                                             ⍝ RF: Regex Field value
         ⍺.Lengths[⍵]↑ ⍺.Offsets[⍵]↓ ⍺.Block 
       } 
   ⍝ Helper Functions for fn FmtComments             
       CmProc← { m← ⍵    
-          nsp← LB m                                ⍝ cmI:  Std comments 
-        o.min> cur+ nsp: m                         ⍝ LHS cm: return as is
-          (1 AL cur), nsp↓ m                       ⍝ RHS cm: align and pad
+          nsp← LB m                                     ⍝ cmI:  Std comments 
+        o.min> cur+ nsp: m                              ⍝ LHS cm: return as is
+          (1 AL cur), nsp↓ m                            ⍝ RHS cm: align and pad
       }
-      Cm2Proc← { ns← ⍵                             ⍝ "Double" comments (see doc)
-          cm1 cm2← ns RF¨ 1 2                      ⍝ ... Get LHS and RHS comments
-          cm1↓⍨← -TB cm1                           ⍝ ... Remove trail. blanks from LHS...
-          pad← 5 AL cur+ ≢cm1                      ⍝ ... Align "2nd" comment on RHS
-          cm1, pad, cm2                            ⍝ ... and pad 
+      Cm2Proc← { ns← ⍵                                  ⍝ "Double" comments (see doc)
+          cm1 cm2← ns RF¨ 1 2                           ⍝ ... Get LHS and RHS comments
+          cm1↓⍨← -TB cm1                                ⍝ ... Remove trail. blanks from LHS...
+          pad← 5 AL cur+ ≢cm1                           ⍝ ... Align "2nd" comment on RHS
+          cm1, pad, cm2                                 ⍝ ... and pad 
       }
 ⍝-----------------------------⍝
 ⍝ Main Executive (Phase IIa)  ⍝
@@ -150,30 +151,30 @@ Tidy← {
     ⍝ Phase IIa errors        
       colÊ←   ⊂( 'EN'  11 ⋄ 'Message' 'Invalid column value' )
       logicÊ← ⊂( 'EN' 911 ⋄ 'Message' 'Logic error' )
-      cur← 0                                       ⍝ cur:     Our cur pos'n on this line.                                 
-      o.col← o.col AC ⍵                            ⍝ Calculate the absolute col pos'n.
-      nlI cdI lcI cm2I cmI spI← ⍳≢pats← (          ⍝ Our patterns...
-        '^'                                        ⍝ nlI:  start    (of line)
-        '''[^'']*''|[^⍝''\s]+'                     ⍝ cdI:  code     (fragments)
-        '\s*⍝\S.*$'                                ⍝ lcI:  literal comment (don't format)
-        o.double⊃ (                                ⍝ cm2I: double comments
-          '(*F)'                                   ⍝    ← nop pattern, i.e. ignore                      
-          '(\s*⍝.+?\s{5,})((?<!⍝)⍝(?!\S).*)$'      ⍝    ← active pattern. ≥5 spaces between   
+      cur← 0                                            ⍝ cur:     Our cur pos'n on this line.                                 
+      o.col← o.col AC ⍵                                 ⍝ Calculate the absolute col pos'n.
+      nlI cdI lcI cm2I cmI spI← ⍳≢pats← (               ⍝ Our patterns...
+        '^'                                             ⍝ nlI:  start    (of line)
+        '''[^'']*''|[^⍝''\s]+'                          ⍝ cdI:  code     (fragments)
+        '\s*⍝\S.*$'                                     ⍝ lcI:  literal comment (don't format)
+        o.double⊃ (                                     ⍝ cm2I: double comments
+          '(*F)'                                        ⍝    ← nop pattern, i.e. ignore                      
+          '(\s*⍝.+?\s{5,})((?<!⍝)⍝(?!\S).*)$'           ⍝    ← active pattern. ≥5 spaces between   
         )      
-        '\s*⍝.*$'                                  ⍝ cmI:  comment  (w/ preceding spaces)
-        '\s+(?!⍝)'                                 ⍝ spI:  spaces (not before comments)
+        '\s*⍝.*$'                                       ⍝ cmI:  comment  (w/ preceding spaces)
+        '\s+(?!⍝)'                                      ⍝ spI:  spaces (not before comments)
       )
     ⍝ Executive - Pattern Matching Scan 
       FmtComments← pats ⎕R {  
           m← ⍵.Match 
           Case← ⍵.PatternNum∘=
-        Case nlI:  m ⊣ cur⊢← 0                     ⍝ Start of new line
-        Case cdI:  m ⊣ cur+← ≢m                    ⍝ Code found
-        Case lcI:  m ⊣ cur+← ≢m                    ⍝ literal comment '⍝⍝'
-        Case spI:  m ⊣ cur+← ≢m                    ⍝ Spaces (not foll by comment)
-        Case cm2I: Cm2Proc ⍵                       ⍝ Double comment. ⍵=this ns 
-        Case cmI:  CmProc m                        ⍝ Simple comment. ⍵=current match
-          ⎕SIGNAL logicÊ                           ⍝  →→  Error!
+        Case nlI:  m ⊣ cur⊢← 0                          ⍝ Start of new line
+        Case cdI:  m ⊣ cur+← ≢m                         ⍝ Code found
+        Case lcI:  m ⊣ cur+← ≢m                         ⍝ literal comment '⍝⍝'
+        Case spI:  m ⊣ cur+← ≢m                         ⍝ Spaces (not foll by comment)
+        Case cm2I: Cm2Proc ⍵                            ⍝ Double comment. ⍵=this ns 
+        Case cmI:  CmProc m                             ⍝ Simple comment. ⍵=current match
+          ⎕SIGNAL logicÊ                                ⍝  →→  Error!
       } 
       FmtComments CRefmt ⍵
   ⍝  Rest of "help" information
