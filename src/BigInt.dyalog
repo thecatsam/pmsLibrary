@@ -12,24 +12,22 @@
 ⍝ 
 ⍝  FOR HELP information, see :SECTION HELP or call BigInt.BI_HELP.
 
-:Section PREAMBLE
-  ⍝ Set PROMOTE← 1 to allow BI, BII, BIM to be promoted one namespace above BigInt
-    PROMOTE← 1 
-  ⍝ Set DEBUG← 1 to disable signal trapping.
-    DEBUG← 0                          
+:Section PREAMBLE     
+    PROMOTE← 1                               ⍝ PROMOTE=1: BI, BII, BIM move to BigInt.##
+    DEBUG← 0                                 ⍝ DEBUG=1:   Disables signal trapping.     
     ⎕IO ⎕ML ⎕PP ⎕CT ⎕DCT←  0 1 34 0 0  
   ⍝ ⎕FR as set here is used below to set constant OFL (overflow) used in multiplication.  
-  ⍝ It can be either 645 or 1287, but is typically ~20% faster with 645.  
-    ⎕FR← 645                                 ⍝ Do not change ⎕FR after ]load-ing BigInt (see OFL)!    
+  ⍝ Do not change ⎕FR after ]load-ing BigInt (see OFL)!    
+    ⎕FR← 645                                 ⍝ ⎕FR=645 ~20% faster than ⎕FR=1287
 :EndSection PREAMBLE
 
 :Section Constants 
   ⍝+------------------------------------------------------------------------------+⍝
   ⍝+-- BI INITIALIZATIONS                            BI INITIALIZATIONS         --+⍝
   ⍝-------------------------------------------------------------------------------+⍝
-
   ⍝ Key Bigint constants...
-  ⍝ There's little reason to play with these; perhaps in the future different numbers will have performance impact.
+  ⍝ There's little reason to play with these; perhaps in the future different numbers 
+  ⍝ will have performance impact.
   ⍝ Internal big integer (bii) format in normalized format:
   ⍝    sign   data_field
   ⍝    sign =>       1 (pos), ¯1 (neg), 0 (zero)
@@ -49,20 +47,20 @@
     RX10←         10*NRX10                   ⍝ Actual base for each limb (each limb ⍵ < RX10)
     RX10div2←     RX10÷2                     ⍝ (RX10÷2) For use in <Pow> (power).
     OFL←          ⌊(2*53 93⊃⍨1287=⎕FR)÷×⍨RX10 ⍝ Overflow bits; used in MulU (unsigned multiply)
-                                             ⍝ ... depends on integer bits avail in floats (i.e. ⎕FR)                          
+                                             ⍝ ... depends on integer bits avail in floats given ⎕FR.                          
   ⍝ --------------------------------------------------------------------------------------------------
-  ⍝ Data field (unsigned) CONSTANTS (⊃⌽bii) for internal unsigned utilities only
-    ZERO_D←   ,0                             ⍝ data field  0, i.e. unsigned canonical ZERO
-    ONE_D←    ,1                             ⍝ data field  1,  i.e. unsigned canonical ONE
-    TWO_D←    ,2                             ⍝ data field  2
-    TEN_D←   ,10                             ⍝ data field 10
+  ⍝ Unsigned (data field) CONSTANTS (⊃⌽bii) for internal unsigned utilities only
+    ZERO_U←   ,0                             ⍝  0 unsigned
+    ONE_U←    ,1                             ⍝  1 unsigned
+    TWO_U←    ,2                             ⍝  2 unsigned
+    TEN_U←   ,10                             ⍝ 10 unsigned 
 
   ⍝ BigInt signed CONSTANTS (bii) for users and internal utilities.
-    ZERO_BI←      0 ZERO_D                   ⍝  0
-    ONE_BI←       1  ONE_D                   ⍝  1
-    TWO_BI←       1  TWO_D                   ⍝  2
-    MINUS1_BI←   ¯1  ONE_D                   ⍝ ¯1
-    TEN_BI←       1  TEN_D                   ⍝ 10
+    ZERO_BI←      0 ZERO_U                   ⍝  0 signed
+    ONE_BI←       1  ONE_U                   ⍝  1 signed
+    TWO_BI←       1  TWO_U                   ⍝  2 signed
+    MINUS1_BI←   ¯1  ONE_U                   ⍝ ¯1 signed
+    TEN_BI←       1  TEN_U                   ⍝ 10 signed
   
   ⍝ See ExportNewBase
     DIGITS_EXPANDED← ⎕D,(⎕C ⎕A),⎕A 
@@ -371,7 +369,7 @@
         digStr← DIGITS_EXPANDED_SHORT DIGITS_EXPANDED ⊃⍨ base>16
         (sw w)← ⍵
         dig← { ⍺← ''
-            ZERO_D≡ ⍵: ⍺ '0'⊃⍨0=≢⍺   
+            ZERO_U≡ ⍵: ⍺ '0'⊃⍨0=≢⍺   
             dec rem← ⍵ DivU base
             dec ∇⍨ digStr[rem],⍺
         }w
@@ -433,8 +431,8 @@
   ⍝ Recip:  ÷⍵← → 1÷⍵. Effectively useless, since ÷⍵ is 0 unless ⍵ is 1 or ¯1.
     Recip← { 
         sw w← (⊃⍵) (dLZZ ⊃⌽⍵) 
-      ONE_D≡w: sw (ONE_D) 
-      ZERO_D≢w: ZERO_BI ⋄ ÷0  
+      ONE_U≡w: sw (ONE_U) 
+      ZERO_U≢w: ZERO_BI ⋄ ÷0  
     }
 
 :EndSection Monadic Functions/Operations
@@ -463,10 +461,10 @@
     Mul← {
         (sa a)(sw w)←  ⍺ ⍵
       0∊sa,sw: ZERO_BI
-      TWO_D≡ a: (sa×sw)(AddU⍨w) 
-      TWO_D≡ w: (sa×sw)(AddU⍨a)
-      ONE_D≡ a: (sa×sw)w        
-      ONE_D≡ w: (sa×sw)a
+      TWO_U≡ a: (sa×sw)(AddU⍨w) 
+      TWO_U≡ w: (sa×sw)(AddU⍨a)
+      ONE_U≡ a: (sa×sw)w        
+      ONE_U≡ w: (sa×sw)a
         (sa×sw)(a MulU w)
     }
   ⍝ ExactPow10U: Helper Fn in Div. (Not enabled in Mul)
@@ -531,7 +529,7 @@
         sa=0:sw w
           r← ,a RemU w                       ⍝ RemU is fast if a>w
         sa=sw: BIChkZ sa r                   ⍝ sa=sw:       return (R)       R← sa r
-        ZERO_D≡ r: ZERO_BI                   ⍝ sa≠sw ∧ R≡ 0: return 0
+        ZERO_U≡ r: ZERO_BI                   ⍝ sa≠sw ∧ R≡ 0: return 0
           BIChkZ sa a Sub sa r               ⍝ sa≠sw:       return (A - R')  A← sa a; R'← sa r
       }
   
@@ -630,7 +628,7 @@
   ⍝       most are from dfns:nats (handling unsigned bigInts).
   ⍝ Note: ⍺ and ⍵ are guaranteed by BII and BI to be vectors, but not
   ⍝       by internal functions or if called directly.
-  ⍝       So tests for 2, 1, 0 (TWO_D etc) use ravel:  (TWO_D≡ ,⍺)
+  ⍝       So tests for 2, 1, 0 (TWO_U etc) use ravel:  (TWO_U≡ ,⍺)
 
   ⍝ AddU:   ⍺ + ⍵
   ⍝ We use dLZZ in case ⍺ or ⍵ have multiple leading 0s. If not, use ndnZ
@@ -671,9 +669,9 @@
   ⍝ RX10div2: (Defined above.)
       PowU← {Case← (,⍵)∘≡ 
     ⍝ (1≠⍴⍴⍵)∨1≠⍴⍴⍺:  Sig11 'PowU: ⍺ and ⍵ must be vectors'
-    Case ZERO_D: ONE_D                       ⍝ =cmp ⍵ mix,0:,1 ⍝ ⍺*0 → 1
-    Case ONE_D:  ,⍺                          ⍝ =cmp ⍵ mix,1:⍺  ⍝ ⍺*1 → ⍺. Return "odd," i.e. use sa in caller.
-    Case TWO_D:  ⍺ MulU ⍺                    ⍝ ⍺×⍺
+    Case ZERO_U: ONE_U                       ⍝ =cmp ⍵ mix,0:,1 ⍝ ⍺*0 → 1
+    Case ONE_U:  ,⍺                          ⍝ =cmp ⍵ mix,1:⍺  ⍝ ⍺*1 → ⍺. Return "odd," i.e. use sa in caller.
+    Case TWO_U:  ⍺ MulU ⍺                    ⍝ ⍺×⍺
         hlf← {,ndn(⌊⍵÷2)+0,¯1↓RX10div2×2|⍵}  ⍝ quick ⌊⍵÷2.
         evn← ndnZ{⍵ MulU ⍵}ndn ⍺ ∇ hlf ⍵     ⍝ even power
     0=2|¯1↑⍵: evn                            ⍝ even or odd power.
@@ -687,8 +685,8 @@
   ⍝   r:bii[2]←  ⍺:bii ∇ ⍵:bii
     DivU← {     
         a w← dLZZ¨⍺ ⍵
-      a≡ w:  ONE_D ZERO_D                    ⍝ ⍺≡ ⍵: Quot=1, Rem=0. including ⍺÷⍵ is 0÷0.
-      ZERO_D≡ w: Sig11 divZeroÊ              ⍝ If ⍵=0 (exc. 0÷0), then ERROR!, for all ⍺, except ⍺=0.
+      a≡ w:  ONE_U ZERO_U                    ⍝ ⍺≡ ⍵: Quot=1, Rem=0. including ⍺÷⍵ is 0÷0.
+      ZERO_U≡ w: Sig11 divZeroÊ              ⍝ If ⍵=0 (exc. 0÷0), then ERROR!, for all ⍺, except ⍺=0.
         svec← (≢w)+⍳0⌈1+(≢a)-≢w              ⍝ shift vector.
         _divOver← {                          ⍝ fold along dividend.
             r p← ⍵                           ⍝ result & dividend.
@@ -713,10 +711,10 @@
         dLZZ¨ ↑w _divOver/ svec,⊂⍬ a         ⍝ fold-accumulated result.
   }
   QuotientU← ⊃DivU
-  GcdU← {ZERO_D≡ ,⍵: ⍺ ⋄ ⍵ ∇⊃⌽⍺ DivU ⍵}      ⍝ greatest common divisor.
+  GcdU← {ZERO_U≡ ,⍵: ⍺ ⋄ ⍵ ∇⊃⌽⍺ DivU ⍵}      ⍝ greatest common divisor.
   LcmU← {⍺ MulU⊃⍵ DivU ⍺ GcdU ⍵}             ⍝ least common multiple.
   RemU← {                                    ⍝ RemU: ⍺, ⍵ unsigned; calcs and returns unsigned ⍺|⍵.
-        TWO_D≡ ,⍺: 2|⊃⌽⍵                     ⍝ fast (short-circuit) path for ⍺=2 (2|⍵). Check only last "limb".
+        TWO_U≡ ,⍺: 2|⊃⌽⍵                     ⍝ fast (short-circuit) path for ⍺=2 (2|⍵). Check only last "limb".
         <cmp ⍵ mix ⍺: ⍵                      ⍝ ⍵ < ⍺? remainder is ⍵
         ⊃⌽⍵ DivU ⍺                           ⍝ Otherwise, do full divide and return 2nd element, the remainder.
   }
@@ -727,7 +725,7 @@
 ⍝    If ⊃⌽⍵ is zero after removing leading 0's, return ZERO_BI;
 ⍝    Otherwise return ⍵ w/o leading zeroes.
   BIChkZ← { 
-    ZERO_D≡ w← dLZZ ⊃⌽⍵: ZERO_BI 
+    ZERO_U≡ w← dLZZ ⊃⌽⍵: ZERO_BI 
       (⊃⍵) w 
   }
 
@@ -738,8 +736,8 @@
 ⍝-----------------------------------------------------------------------------------+
 ⍝ These routines operate on unsigned big int data unless documented…  
   dLZ←  {⍵↓⍨0=⊃⍵}                            ⍝ drop FIRST leading zero.
-  dLZZ← {0≠ ≢w← ,⍵↓⍨ +/∧\⍵=0: w ⋄ ZERO_D}    ⍝ drop RUN of leading zeros plus PMS extension to make sure at least one 0
-  chkZ← {0≠≢⍵:,⍵ ⋄ ZERO_D}                   ⍝ ⍬ → ,0. Ensure canonical Bii, so even 0 has one digit (,0).
+  dLZZ← {0≠ ≢w← ,⍵↓⍨ +/∧\⍵=0: w ⋄ ZERO_U}    ⍝ drop RUN of leading zeros plus PMS extension to make sure at least one 0
+  chkZ← {0≠≢⍵:,⍵ ⋄ ZERO_U}                   ⍝ ⍬ → ,0. Ensure canonical Bii, so even 0 has one digit (,0).
   ndn←  {+⌿1 0⌽0 RX10⊤⍵}⍣≡                   ⍝ normalise down: 3 21 → 5 1 (RH).
   ndnZ← dLZ ndn                              ⍝ ndn, then remove (earlier added) leading zero, if still 0.
   nup←  {⍵++⌿0 1⌽RX10 ¯1∘.×⍵<0}⍣≡            ⍝ normalise up:   3 ¯1 → 2 9
