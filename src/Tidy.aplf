@@ -43,10 +43,13 @@ Tidy← {
 ⍝H                        refmt: 4 
 ⍝H                     The value is passed to refmt as its first option, 
 ⍝H                     its tab setting (see dfns notes.refmt).
+⍝H      pms: 0         If 1, calls pmsFmt, which formats code just
+⍝H                     as pms wants it. Yay.
 ⍝H   res: returns the modified source document as a shy char vector of vectors. 
 ⍝H        See (updt: 1) for side effect.
 ⍝⍝ For the rest of this HELP info, see bottom of this function or do Tidy⍨'help' 
-  11 22 911:: ⎕SIGNAL⊂⎕DMX.('EN'EN ⋄ 'Message'Message)
+      DEBUG← 1 
+  11 22 911/⍨ ~DEBUG:: ⎕SIGNAL⊂⎕DMX.('EN'EN ⋄ 'Message'Message)
     ⍝ Initialise
       ⎕IO ⎕ML← 0 1
       ⍺← ()
@@ -58,6 +61,7 @@ Tidy← {
       o← (                                          
         col: 'best' ⋄ min: 20     ⋄ fi: 0       ⋄ updt: 1   ⋄ double: 1  
         inc: 5      ⋄ pctile: 95  ⋄ compact: 50 ⋄ marg: 3 5 ⋄ refmt: 0  
+        pms: 0 
       ) 
     ⍝ Phase I Errors
       optÊ←   ⊂( 'EN'  11 ⋄ 'Message' 'Unknown option(s)' )
@@ -93,13 +97,13 @@ Tidy← {
 ⍝ Phase II Constants
 ⍝ Error Msgs         
       colÊ←   ⊂( 'EN'  11 ⋄ 'Message' 'Invalid column value' )
-      logicÊ← ⊂( 'EN' 911 ⋄ 'Message' 'Logic error' )   
+      logicÊ← ⊂( 'EN' 911 ⋄ 'Message' 'Logic error (Tidy)' )   
 ⍝ Phase II Functions  
 ⍝ CRefmt: conditional call to dfns ¨refmt¨
 ⍝ Apply refmt, but without impacting LHS comments.
 ⍝ Only useful for dfns, not tradfns or namespaces.
       CRefmt← {  
-        0=⊃o.refmt: ⍵                         ⍝ Nop if 0=⊃o.refmt (default).⊢                                    
+        0=⊃o.refmt: ⍵                         ⍝ Nop if 0=⊃o.refmt (default).                                    
           refmt← ⊢                            ⍝ Ensure refmt is local
           _← 'refmt' ⎕CY 'dfns'               ⍝ Retrieve copy 
           qtP← '''[^'']*''' '\0'              ⍝ Skip quotes
@@ -112,6 +116,67 @@ Tidy← {
           )
           XO← xoL ⎕R xoR                      ⍝ XO: Transform Out
           XO o.refmt∘refmt XI ⍵   
+      }
+    ⍝ Special PMS-specific formatting
+      PmsFmt← {                       
+          0 =o.pms: ⍵                         ⍝ Nop if 0=⊃o.refmt (default).⊢  
+        ⍝ Tab position for different match types
+        ⍝ "tradfn" "indent of code" "indent of code w/in ctrl structures'
+        ⍝ "exdent of code with guards", "LHS comments", "else stmts", "case stmts"
+          mul cur← () ()
+          mul.( ind  gardLn cmLn   trad ctrl elseLn caseLn )← (
+                4 ⋄  ¯2  ⋄  ¯2  ⋄  3 ⋄  3 ⋄  ¯3 ⋄   ¯1
+          ) 
+          cur.( trad ind gardLn cmLn ctrl elseLn caseLn )← 0 
+        ⍝ Generate key patterns and their names (pattern #s)  
+          lhCmP←    '^\h{0,', o.min⍕⍛, '}⍝.*'  
+          ctrlBegP← '(?i):(Namespace|Section|If|For|Select|While|Trap).*'  
+          pats pNames← ↓⍉↑(             ⍝⍝  Pattern            Pat Name
+            lhCmP              'lhCm'    ⋄  '^\h*'             'nl'     
+            ctrlBegP           'ctrlBeg' ⋄  '(?i):Else.*'      'else'    
+            '(?i):Case.*'      'case'    ⋄  '(?i):End.*'       'ctrlEnd'
+            '''[^'']*'''       'qt'      ⋄  '⍝.*'              'cm'  
+            '^\h*∇\h*$'        'tradEnd' ⋄  '^\h*∇'            'tradBeg' 
+            '[[{(]'            'brkBeg'  ⋄  '[]})]'            'brkEnd' 
+            ':'                'guard'   ⋄  '←(?!\h)'          'assign'  
+          )
+        ⍝ pn: Pattern "names" refer to their pattern numbers. 
+          pn← ().⎕VSET (↑pNames) (⍳≢pats) 
+          noColon← 0 
+          ind← pad← ⍬ 
+          Scan← pats ⎕R {
+              Case← ⍵.PatternNum∘∊
+              f0← ⍵.Match
+            Case pn.lhCm:     (LB↓⊢)f0⊣ New⍬⊣ cur.cmLn⊢← 1 
+            Case pn.nl:       ''⊣ New⍬
+            Case pn.(qt cm):  f0
+            Case pn.assign:   f0, ' ' 
+            Case pn.tradBeg:  f0⊣ cur.trad⊢← 1    ⊣ Cur⍬ 
+            Case pn.ctrlBeg:  f0⊣ cur.ctrl+← 1    ⊣ Cur⍬ 
+            Case pn.brkBeg:   f0⊣ cur.ind+←  1    ⊣ Cur⍬ 
+            Case pn.ctrlEnd:  f0⊣ Cur⍬            ⊣ cur.ctrl-←   1
+            Case pn.brkEnd:   f0⊣ Cur⍬            ⊣ cur.ind-←    1
+            Case pn.tradEnd:  f0⊣ Cur⍬            ⊣ cur.trad⊢←   0 
+            Case pn.guard:    f0⊣ Cur⍬            ⊣ cur.gardLn⊢← ~noColon
+            Case pn.else:     f0⊣ Cur⍬            ⊣ cur.elseLn⊢← 1  
+            Case pn.case:     f0⊣ Cur⍬            ⊣ cur.caseLn⊢← 1  
+              'Logic Error (PmsFmt)' ⎕SIGNAL 911
+          }  
+          New←{
+            noColon⊢← 0                  ⍝ Turned off after 1 line!
+            0⊣ ind,← ⊂Indent ⍬
+          } 
+          Cur← {
+            ⍬⊣ (⊃⌽ind)⊢← Indent ⍬
+          }
+          Indent←{
+            posN← cur.( trad ind gardLn cmLn ctrl elseLn caseLn )
+            noColon∨← 1∊ cur.(cmLn elseLn caseLn)
+            cur.( gardLn cmLn elseLn caseLn )⊢← 0 0 0 0
+            ∧/ 0= posN: ''
+              ''⍴⍨ 0⌈ +/ posN × mul.( trad ind gardLn cmLn ctrl elseLn caseLn)
+          }
+          ind,¨Scan ⍵ 
       }
       AL← {                                   ⍝ AL: Align line
           ∆ p← ⍺ ⍵                            ⍝ ∆: Pad by at least ∆ spaces. 
@@ -198,7 +263,7 @@ Tidy← {
         Case cmI:  CmProc m                   ⍝ Simple comment. ⍵=current match
           ⎕SIGNAL logicÊ                      ⍝  →→  Error!
       } 
-      FmtComments CRefmt ⍵
+      FmtComments PmsFmt CRefmt ⍵
 
   ⍝  Rest of "help" information
   ⍝H ---------------------------------
