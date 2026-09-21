@@ -142,8 +142,9 @@
       ∇ 
       helpInfo← 'For help: ',(⍕⎕THIS),'.BI_HELP' 
    :EndSection Main Fns 
+
    :Section Load Time Utility 
-      ∇ proFlg← PromoteIf proFlg ;where; bim; cr 
+      ∇ proFlg← PromoteIf proFlg; where; bim; cr 
          cr← ⎕UCS 13   
          :IF proFlg 
             where← ##
@@ -226,9 +227,9 @@
    ⍝     nullStrOk=1: ⍵ has 0 digits? Return ZERO_BI.
    ⍝  Note: by default, we don't allow spaces, to avoid confusion with multiple BIs. 
    ⍝  By default, _ is used as a spacer on input and in "pretty" mode (1⍕...).
-      NSGNS SPCRS← '-¯' '_' 
+      NEGSIGNS SPACERS← '-¯' '_' 
       ImpStr← { ⍺← 0  
-         str← SPCRS~⍨ ⍵↓⍨ s← NSGNS∊⍨ ⊃⍵  
+         str← SPACERS~⍨ ⍵↓⍨ s← NEGSIGNS∊⍨ ⊃⍵  
         0= ≢str: { Sig11 ImportÊ '[null string]'}⍣(⍺=0)⊢ ZERO_BI 
         10∊ dig← ⎕D⍳ str: ErrImport ⍵  ⍝ str must include only chars in ⎕D and at least one.
          BIChkZ (s⊃1 ¯1), ⊂rep dig     ⍝ Normalize (remove leading 0s). If d is zero, return ZERO_BI.
@@ -343,7 +344,7 @@
          hi2lo sepN base sepCh← 4↑⍺   
          base← base dBase⊃⍨ base=0
          sepCh← sepCh  dSepCh⊃⍨  sepCh=0
-         arg← base ExportNewBase⊢ Import⍣ (base≠10)⊢ ⍵
+         arg← base ExportNewBase⊢ Import⍣(base≠10)⊢ ⍵
         (sepN<0)∨ sepN≠⌊sepN: Sig11 'Invalid specification (⍺) to BI2Str (⍕)'
         0:: ErrImport ⍕⍵
          str← sepN sepCh { n c← ⍺ 
@@ -361,14 +362,14 @@
          ExportNewBase← { alignBits← 0  
             ⎕IO← 0 ⋄ ⍺← 16 ⋄ base← ⍺   
            10= base: ⍵ 
-           (⍺<2)∨⍺>≢DIGITS_EXPANDED: Sig11 BaseÊ ≢DIGITS_EXPANDED
+           (⍺< 2)∨ ⍺> ≢DIGITS_EXPANDED: Sig11 BaseÊ ≢DIGITS_EXPANDED
             digStr← DIGITS_EXPANDED_SHORT DIGITS_EXPANDED ⊃⍨ base>16
             (sw w)← ⍵
             dig← { ⍺← ''
               ZERO_U≡ ⍵: ⍺ '0'⊃⍨0=≢⍺   
                dec rem← ⍵ DivU base
                dec ∇⍨ digStr[rem],⍺
-            }w
+            } w
            2≠ base: dig,⍨'¯'/⍨ sw=¯1 
          ⍝ If alignBits, mantissa bits are multiples of NRX2 long, adding sign bit on left.
             (⍕sw=¯1),alignBits {
@@ -378,9 +379,8 @@
          }
       :EndSection Helper 
    ⍝  NLimbs-- how many "limbs," i.e. integers in the data portion of the bignum
-      NLimbs← {
-         ≢⊃⌽ ⍵ 
-      }
+      NLimbs← { ≢⊃⌽⍵ }
+
    ⍝ ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯  
    ⍝ Root: A fast integer nth Root.
    ⍝ Syntax:    x@bii←  nth@BIext<RX10 ∇ N@BIext
@@ -478,7 +478,7 @@
          ⍝ ExactPow10U: Helper Fn in Div. (Not enabled in Mul)
          ⍝   ⍵ is 10 or multiples of 10. 
          ⍝   Returns # of decimal digits to shift to achieve a multiply or divide by ⍵.
-            ExactPow10U← {1≠≢⍵: 0 ⋄ 0≠ 10|⍵: 0 ⋄ 10⍟⍵ }
+            ExactPow10U← { 1≠≢⍵: 0 ⋄ 0≠ 10| ⍵: 0 ⋄ 10⍟ ⍵ }
          :EndSection Helper     
       ⍝ DivRem: Divide, returning both quotient and remainder.
       ⍝  Faster when both quotient and remainder are needed. 
