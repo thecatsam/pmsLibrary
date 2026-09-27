@@ -15,9 +15,9 @@
 ⍝   SRC_FI           TRAP_ERRORS          VERBOSE_LOADTIME  VERBOSE_RUNTIME  
 ⍝   VERSION
    
-   SRC_FI← '∆F/FString.aplns'  ⍝  Typically, rendered as namespace FString as well
-   ADD_∆F_TO_PATH←  1                  ⍝  If 1, adds FString to Dyalog ⎕PATH.
-   VERSION← 'v.0.4.5'                  ⍝  Version of ∆F package. Updated by ∆F_Publish.dyalog...
+   SRC_FI← '∆F/FString.aplns'                              ⍝  Typically, rendered as namespace FString as well
+   ADD_∆F_TO_PATH←  1                                      ⍝  If 1, adds FString to Dyalog ⎕PATH.
+   VERSION← 'v.0.4.5'                                      ⍝  Version of ∆F package. Updated by ∆F_Publish.dyalog...
 ⍝  Returns 20 if Dyalog 20, 19 if 19. (∆F package [now] requires Dyalog 20 or later)
    APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion' 
    
@@ -44,19 +44,19 @@
 ⍝  QUOTES_SUPPLEMENTAL must consist of 0 or more PAIRS of left AND right quotes.
 ⍝  You might consider any of these additions among others:
    QUOTE_STYLES← (
-     FR1: '«»'                         ⍝  French     ⍝  Help doc shows only these.
+     FR1: '«»'                         ⍝  French           ⍝  Help doc shows only these.
      FR2: '“”'  
      FR3: '‘’'           
-     JP1: '「」'                        ⍝  Japanese     ⍝  "Double-wide" characters, best to use with Japanese
+     JP1: '「」'                        ⍝  Japanese         ⍝  "Double-wide" characters, best to use with Japanese
      JP2: '『』' 
-     DE1: '»«'                         ⍝  German     ⍝  Reverse of French FR1 
+     DE1: '»«'                         ⍝  German           ⍝  Reverse of French FR1 
      DE2: '„“'
      DE3: '‚‘'
-     CH1: '《》'                        ⍝  Chinese
+     CH1: '《》'                                             ⍝  Chinese
      CH2: '「」'
    ) 
 ⍝  Note: The code can support all of these (and more) at the same time.
-   QUOTES_SUPPLEMENTAL← QUOTE_STYLES.(FR1) ⍝  May be null '' or ⍬.
+   QUOTES_SUPPLEMENTAL← QUOTE_STYLES.(FR1)                 ⍝  May be null '' or ⍬.
    
 ⍝  INLINE_DEF. 
 ⍝  If 1 by default,
@@ -78,7 +78,7 @@
 ⍝     Potential future implementation of Ellipsis, Adam B's extensions to dfns:to.
 ⍝  '⊇' ∊ FUTURES
 ⍝     Potential future implementation of right shoe underbar (⊇) as Select (aka "sane indexing").
-   FUTURES← '⍥⊇…'/⍨ 1  
+   FUTURES← '⍥⊇…' 
    
 ⍝  =======================================================================
 ⍝  SESSION LIBRARY (£ or `L) VARIABLES
@@ -91,10 +91,10 @@
 ⍝                   Load default parameters ONLY, never user's. Good for a demo environment!
 ⍝               0   No.    No.
 ⍝                   No autoload features should be available.
-   LIB_AUTO←  2                        ⍝  2= Full functionality
+   LIB_AUTO←  2                                            ⍝  2= Full functionality
    LIB_PARM_FI← '∆F/ParmDefs.apla' 
-   LIB_USER_FI← '.∆F'                  ⍝  User parameters, rel. to Apl ]CD
-   LIB_SRC_FI←  '∆F/LibUtils.aplns'    ⍝  Library shortcuts (£,  `L) utilities.
+   LIB_USER_FI← '.∆F'                                      ⍝  User parameters, rel. to Apl ]CD
+   LIB_SRC_FI←  '∆F/LibUtils.aplns'                        ⍝  Library shortcuts (£,  `L) utilities.
 ⍝  HELP FILE          
 ⍝  File is loaded into FString at load-time for use by ∆F⍨'help'. 
    HELP_HTML_FI← '∆F/Help.html'                       
@@ -112,7 +112,7 @@
 ⍝  KEEP_SRC_CM: Are source comments maintained in runtime ns's FString and FString.libUtils?
    KEEP_SRC_CM← 0 
    
-   FS_CACHE_ENABLED← 1                 ⍝  Can also be turned off for a particular ∆F call: (cache: 0)
+   FS_CACHE_ENABLED← 1                                     ⍝  Can also be turned off for a particular ∆F call: (cache: 0)
 ⍝  Fstring argument cache MAX and KEEP. KEEP is how many to keep when max number of elements 
 ⍝  in the f-string cache is exceeded.  Be sure FSTR_CACHE_KEEP << FSTR_CACHE_MAX. 
    FS_CACHE_MAX←   100
@@ -130,7 +130,7 @@
 ⍝         |     (verbose:1)∆F'{0: £.pcox 12 ⋄ 3}'
 ⍝         |  ∆F DOMAIN ERROR: Object "pcox" not found on search path
 ⍝         | { ⎕SE.FString.M ⌽⍬({0: (⎕SE.FString.userLibrary).pcox 12 ⋄ 3}⍵)}⍵
-⍝         |  3                         ⍝  <== function string executed normally!
+⍝         |  3                                             ⍝  <== function string executed normally!
 ⍝    1b.  If (verbose: 0) and (VERBOSE_RUNTIME=0) 
 ⍝         no informational messages are generated.
 ⍝    2.   If the ∆F code containing any missing object is executed,
@@ -138,4 +138,4 @@
 ⍝         |      (verbose:0)∆F'{0:: £.pcox 12 ⋄ 3}'
 ⍝         |  3
    SIGNAL_LIB_ERRS← 0 
-:EndNamespace                          ⍝  ⍙FGlobals
+:EndNamespace                                              ⍝  ⍙FGlobals
