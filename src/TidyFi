@@ -1,0 +1,13 @@
+#!/usr/local/bin/dyalogscript MAXWS=64Mb
+⎕io← 0
+_← 2 ⎕FIX 'Tidy.aplf'
+files← 1↓ 2 ⎕NQ '.' 'GetCommandLineArgs'
+:For fi :In files
+    :If ⎕NEXISTS fi
+        (pms: 2 ⋄ updt: 1) Tidy fi 1
+        ⎕← 'Cleaned up "', '"',⍨ fi
+    :Else
+        ⎕← 'File',fi,'does not exist'
+    :EndIf
+:EndFor
+⎕OFF
