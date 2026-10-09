@@ -1,0 +1,152 @@
+∇ {hr}← {opts} BarChart values
+      ; defLabels; labels; missing; size; title; xl; yl
+      ; htmlHdr; JScript; jParms
+      ; ⎕IO
+⍝ Draw a bar chart, terminating when the value <hr> goes OUT of scope.
+⍝ Uses Javascript via HtmlRenderer
+⍝   options:
+⍝     An optional namespace containing several variables:
+⍝       var     description                       default
+⍝       ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯       ¯¯¯¯¯¯¯¯¯¯¯
+⍝       title   the bar chart title               'My Title'
+⍝       xl      the x-axis label                  'ITEMS'
+⍝       yl      the y-axis label                  'VALUES'
+⍝       labels  a vector containing the          '1' '2' '3' ... ≢values
+⍝               label for each bar chart item
+⍝       size    Size of the chart                 60  58
+⍝  values:
+⍝       A vector of real numbers, one per bar chart item.
+    
+    ⎕IO← 0 
+    :If 900⌶0
+        opts← ()
+    :EndIf 
+    
+    values← ,values 
+    
+    title xl yl labels size← opts ⎕VGET (
+        'title'   'My Bar Chart'
+        'xl'      'ITEMS'
+        'yl'      'VALUES'
+        'labels'  ⎕NULL                       ⍝ Null: Undefined, we'll set it below
+        'size'    (40 40)
+    )
+⍝  Set labels
+    :If  ⎕NULL≡ labels              
+        labels← ⍕¨1+ ⍳≢values                 ⍝ Values '1' ...
+    :ElseIf labels >⍥≢ values 
+        11 ⎕SIGNAL⍨ 'Too many labels'
+    :ElseIf 3 5 11∊⍨ 80|  ⎕DR labels
+        labels← ⍕¨ labels 
+    :EndIf 
+    missing← ⊂'[null]'
+    labels←  labels, missing⍴⍨ 0⌈values -⍥≢ labels  ⍝ Replicate values
+    JScript← {
+        ⎕TC[1],¨ '^\h*⍝J (.*)' ⎕S '\1'  ⎕NR ⊃⎕XSI 
+        ⍝ :Section Javascript 
+        ⍝J <script>
+        ⍝J /**
+        ⍝J  * drawBarChart(spec, containerId)
+        ⍝J  *   spec.labels : array of category names (x axis)
+        ⍝J  *   spec.values : array of numbers (bar heights)
+        ⍝J  *   spec.xLabel : legend for the x axis
+        ⍝J  *   spec.yLabel : legend for the y axis
+        ⍝J  *   spec.title  : chart title (see APL code)
+        ⍝J  *   spec.csize  : chart size
+        ⍝J */
+        ⍝J function drawBarChart(spec, containerId) {
+        ⍝J   const NS = "http://www.w3.org/2000/svg";
+        ⍝J   const labels = spec.labels, values = spec.values;
+        ⍝J   const title  = (spec.title && spec.title.length) ? spec.title : "Bar Chart";
+        ⍝J   const H = spec.size[0];
+        ⍝J   const W = spec.size[1];
+        ⍝J   const m = { top: 60, right: 30, bottom: 80, left: 80 };
+        ⍝J   const pw = W - m.left - m.right, ph = H - m.top - m.bottom;
+        ⍝J
+        ⍝J   const el = (name, attrs, text) => {
+        ⍝J     const e = document.createElementNS(NS, name);
+        ⍝J     for (const k in attrs) e.setAttribute(k, attrs[k]);
+        ⍝J     if (text !== undefined) e.textContent = text;
+        ⍝J     return e;
+        ⍝J   };
+        ⍝J
+        ⍝J   // "Nice" y-axis maximum and tick step
+        ⍝J   const vmax = Math.max(0, ...values);
+        ⍝J   const rough = vmax / 5 || 1;
+        ⍝J   const pow = Math.pow(10, Math.floor(Math.log10(rough)));
+        ⍝J   const step = [1, 2, 5, 10].map(f => f * pow).find(s => s >= rough);
+        ⍝J   const ymax = Math.ceil(vmax / step) * step || step;
+        ⍝J   const y = v => m.top + ph - (v / ymax) * ph;
+        ⍝J   const svg = el("svg", { width: "100%", height: "100%",
+        ⍝J                           viewBox: `0 0 ${W} ${H}`,
+        ⍝J                           style: "font-family:sans-serif;background:#fff;display:block" });
+        ⍝J   // Title
+        ⍝J   svg.appendChild(el("text", { x: m.left + pw / 2, y: 45, "text-anchor": "middle",
+        ⍝J                  "font-size": 25, "font-weight": "bold" }, title));
+        ⍝J 
+        ⍝J   // Gridlines and y ticks
+        ⍝J   for (let t = 0; t <= ymax + 1e-9; t += step) {
+        ⍝J     svg.appendChild(el("line", { x1: m.left, x2: m.left + pw, y1: y(t), y2: y(t),
+        ⍝J                                  stroke: "#ddd" }));
+        ⍝J     svg.appendChild(el("text", { x: m.left - 8, y: y(t) + 4, "text-anchor": "end",
+        ⍝J                                  "font-size": 12 }, +t.toPrecision(12)));
+        ⍝J   }
+        ⍝J
+        ⍝J   // Axes
+        ⍝J   svg.appendChild(el("line", { x1: m.left, x2: m.left, y1: m.top, y2: m.top + ph, stroke: "#000" }));
+        ⍝J   svg.appendChild(el("line", { x1: m.left, x2: m.left + pw, y1: m.top + ph, y2: m.top + ph, stroke: "#000" }));
+        ⍝J
+        ⍝J   // Bars and category labels
+        ⍝J   const band = pw / labels.length, bw = band * 0.7;
+        ⍝J   values.forEach((v, i) => {
+        ⍝J     const x = m.left + i * band + (band - bw) / 2;
+        ⍝J     const bar = el("rect", { x, y: y(v), width: bw, height: m.top + ph - y(v),
+        ⍝J                              fill: "#4682b4" });
+        ⍝J     bar.appendChild(el("title", {}, `${labels[i]}: ${v}`));   // hover tooltip
+        ⍝J     svg.appendChild(bar);
+        ⍝J     svg.appendChild(el("text", { x: x + bw / 2, y: m.top + ph + 18,
+        ⍝J                                  "text-anchor": "middle", "font-size": 12, "font-weight": "bold" }, labels[i]));
+        ⍝J   });
+        ⍝J
+        ⍝J   // Axis legends
+        ⍝J   svg.appendChild(el("text", { x: m.left + pw / 2, y: H - 35 , "text-anchor": "middle",
+        ⍝J                                "font-size": 14, "font-weight": "bold"}, spec.xLabel || ""));
+        ⍝J   svg.appendChild(el("text", { x: 22, y: 25 + m.top + ph / 2, "text-anchor": "middle",
+        ⍝J                                "font-size": 14,"font-weight": "bold",
+        ⍝J                                transform: `rotate(-90 22 ${m.top + ph / 2})` }, spec.yLabel || ""));
+        ⍝J
+        ⍝J   const host = document.getElementById(containerId);
+        ⍝J   host.innerHTML = "";
+        ⍝J   host.appendChild(svg);
+        ⍝J }
+        ⍝J </script>
+        ⍝ :EndSection Javascript 
+    }   
+    
+    jParms← ⎕JSON(
+        title: title
+        xLabel: xl
+        yLabel: yl
+        labels: ,⊆labels
+        values: values 
+        size:   500 800                         ⍝ pass const size to our java code as size
+    )
+    
+    'hr'⎕WC'HTMLRenderer' 
+    htmlHdr← (
+        '<!DOCTYPE html><html><head><style>'
+        'html,body{height:100%;margin:0;}'
+        '#chart{width:100vw;height:100vh;}'
+        '#chart svg{width:100%;height:100%;display:block;}'
+        '</style></head><body><div id="chart"></div>'
+    )
+    hr.HTML← ∊(
+        htmlHdr
+        JScript 0
+        '<script>drawBarChart(',jParms,',"chart");</script></body></html>'
+    )
+    hr.(Size Caption)← (2⍴size) title 
+    
+⍝   Comment this out if you want it to return hr and its contents
+    hr←  ⎕DQ'hr'                              ⍝ Return null
+    
