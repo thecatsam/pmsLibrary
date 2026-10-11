@@ -1,5 +1,5 @@
 ∇ {hr}← {opts} BarChart values
-      ; defLabels; labels; missing; size; title; xl; yl
+      ; defLabels; labels; missing; size; title; wait; xl; yl
       ; htmlHdr; JScript; jParms
       ; ⎕IO
 ⍝ Draw a bar chart, terminating when the value <hr> goes OUT of scope.
@@ -24,12 +24,13 @@
     
     values← ,values 
     
-    title xl yl labels size← opts ⎕VGET (
+    title xl yl labels size wait← opts ⎕VGET (
         'title'   'My Bar Chart'
         'xl'      'ITEMS'
         'yl'      'VALUES'
         'labels'  ⎕NULL                       ⍝ Null: Undefined, we'll set it below
         'size'    (40 40)
+        'wait'    0
     )
 ⍝  Set labels
     :If  ⎕NULL≡ labels              
@@ -39,8 +40,9 @@
     :ElseIf 3 5 11∊⍨ 80|  ⎕DR labels
         labels← ⍕¨ labels 
     :EndIf 
-    missing← ⊂'[null]'
-    labels←  labels, missing⍴⍨ 0⌈values -⍥≢ labels  ⍝ Replicate values
+      ⋄ missing← ⊂''
+    labels,←  missing⍴⍨ values -⍥≢ labels      ⍝ Missing labels are null strings.
+
     JScript← {
         ⎕TC[1],¨ '^\h*⍝J (.*)' ⎕S '\1'  ⎕NR ⊃⎕XSI 
         ⍝ :Section Javascript 
@@ -148,5 +150,7 @@
     hr.(Size Caption)← (2⍴size) title 
     
 ⍝   Comment this out if you want it to return hr and its contents
-    hr←  ⎕DQ'hr'                              ⍝ Return null
+    :IF wait 
+       hr←  ⎕DQ'hr'                              ⍝ Return null
+     :EndIf 
     
