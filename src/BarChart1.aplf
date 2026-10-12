@@ -1,6 +1,6 @@
 ∇ {hr}← {opts} BarChart values
-      ; defLabels; labels; missing; size; title; wait; xl; yl
-      ; htmlHdr; JScript; jParms
+      ; defLabels; htmlHdr; jParms; labels; missing; size; title; wait; xl; yl
+      ; Here; JScript
       ; ⎕IO
 ⍝ Draw a bar chart, terminating when the value <hr> goes OUT of scope.
 ⍝ Uses Javascript via HtmlRenderer
@@ -28,21 +28,22 @@
         'title'   'My Bar Chart'
         'xl'      'ITEMS'
         'yl'      'VALUES'
-        'labels'  ⎕NULL                       ⍝ Null: Undefined, we'll set it below
+        'labels'  ⎕NULL                      ⍝ Null: Undefined, we'll set it below
         'size'    (40 40)
         'wait'    0
     )
 ⍝  Set labels
     :If  ⎕NULL≡ labels              
-        labels← ⍕¨1+ ⍳≢values                 ⍝ Values '1' ...
+        labels← ⍕¨1+ ⍳≢values                ⍝ Values '1' ...
     :ElseIf labels >⍥≢ values 
         11 ⎕SIGNAL⍨ 'Too many labels'
     :ElseIf 3 5 11∊⍨ 80|  ⎕DR labels
         labels← ⍕¨ labels 
     :EndIf 
-      ⋄ missing← ⊂''
-    labels,←  missing⍴⍨ values -⍥≢ labels      ⍝ Missing labels are null strings.
-
+    ⋄ missing← ⊂''
+    labels,←  missing⍴⍨ values -⍥≢ labels    ⍝ Missing labels are null strings.
+    
+   Here← { pfx← ⍵ ⋄ ('^\h*⍝',pfx,' (.*)') ⎕S '\1' ⎕NR 1⊃ ⎕XSI }
     JScript← {
         ⎕TC[1],¨ '^\h*⍝J (.*)' ⎕S '\1'  ⎕NR ⊃⎕XSI 
         ⍝ :Section Javascript 
@@ -85,7 +86,7 @@
         ⍝J   // Title
         ⍝J   svg.appendChild(el("text", { x: m.left + pw / 2, y: 45, "text-anchor": "middle",
         ⍝J                  "font-size": 25, "font-weight": "bold" }, title));
-        ⍝J 
+        ⍝J
         ⍝J   // Gridlines and y ticks
         ⍝J   for (let t = 0; t <= ymax + 1e-9; t += step) {
         ⍝J     svg.appendChild(el("line", { x1: m.left, x2: m.left + pw, y1: y(t), y2: y(t),
@@ -131,7 +132,7 @@
         yLabel: yl
         labels: ,⊆labels
         values: values 
-        size:   500 800                         ⍝ pass const size to our java code as size
+        size:   500 800                      ⍝ pass const size to our java code as size
     )
     
     'hr'⎕WC'HTMLRenderer' 
@@ -150,7 +151,7 @@
     hr.(Size Caption)← (2⍴size) title 
     
 ⍝   Comment this out if you want it to return hr and its contents
-    :IF wait 
-       hr←  ⎕DQ'hr'                              ⍝ Return null
-     :EndIf 
+    :If wait 
+        hr←  ⎕DQ'hr'                         ⍝ Return null
+    :EndIf 
     
