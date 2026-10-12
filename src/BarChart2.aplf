@@ -1,7 +1,7 @@
-∇ {hr}← {opts} BarChart2 values
-      ; ev; labels; missing; size; title; wait; xl; yl
-      ; htmlHdr; htmlFtr; JScript; jParms
-      ; ⎕IO
+{hr}← {opts}BarChart2 values
+  ; ev; fn; labels; missing; parms; print; size; title; type; wait; xl; yl
+  ; Here; HtmlHdr; HtmlDraw; JScript; PrintPdf
+  ; ⎕IO
 ⍝ Draw a bar chart using Chart.js via HtmlRenderer.
 ⍝ Warning: requires Internet access when called.
 ⍝ Terminates on window close or Escape when wait=1.
@@ -11,142 +11,166 @@
 ⍝       ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯       ¯¯¯¯¯¯¯¯¯¯¯
 ⍝       values  the values, overriding those      ,values
 ⍝               presented
+⍝       type    type of chart.                    'bar'
 ⍝       title   the bar chart title               'My Title'
 ⍝       xl      the x-axis label                  'ITEMS'
 ⍝       yl      the y-axis label                  'VALUES'
 ⍝       labels  a vector containing the          '1' '2' '3' ... ≢values
 ⍝               label for each bar chart item
 ⍝       size    Size of the window                40 40
+⍝       print   Print the chart as a pdf          ''
+⍝               with name <print>.pdf.
+⍝               Ignored if '' (default).
 ⍝       wait    wait for close/Escape before      0
 ⍝               returning
 ⍝  values:
 ⍝       A vector of real numbers, one per bar chart item.
 ⍝       See also the values option.
 
-    ⎕IO← 0
-    :If 900⌶0
-        opts← ()
-    :EndIf
+⎕IO← 0
+:If 900⌶0
+      opts← ()
+:EndIf
 
-    values title xl yl labels size wait← opts ⎕VGET (
-        'values'  (,values)
-        'title'   'My Bar Chart'
-        'xl'      'ITEMS'
-        'yl'      'VALUES'
-        'labels'  ⎕NULL                ⍝ Null: Undefined, we'll set it below
-        'size'    (40 40)
-        'wait'    0
-    )
+values type title xl yl labels size print wait← opts ⎕VGET(
+      'values'   (,values)
+      'type'     'bar' 
+      'title'    'My Chart'
+      'xl'       'ITEMS'
+      'yl'       'VALUES'
+      'labels'   ⎕NULL                              ⍝ Null: Undefined, we'll set it below
+      'size'     (40 40)
+      'print'    ''                                 ⍝ If empty, nothing is printed.
+      'wait'     0
+)
 ⍝  Set labels
-    :If  ⎕NULL≡ labels
-        labels← ⍕¨1+ ⍳≢values          ⍝ Values '1' '3' etc.
-    :ElseIf labels >⍥≢ values
-        11 ⎕SIGNAL⍨ 'Too many labels'
-    :ElseIf 3 5 11∊⍨ 80| ⎕DR labels    ⍝ Numeric labels
-        labels← ⍕¨ labels
-    :EndIf
+:If ⎕NULL≡labels
+      labels← ⍕¨1+⍳≢values                          ⍝ Values '1' '3' etc.
+:ElseIf labels>⍥≢values
+      11 ⎕SIGNAL⍨'Too many labels'
+:ElseIf 3 5 11∊⍨80|⎕DR labels                       ⍝ Numeric labels
+      labels← ⍕¨labels
+:EndIf
 ⍝ If too few labels, the rest are padded with ⊂'' (a null string)
-    labels,← (values -⍥≢ labels)⍴ ⊂''
+ ⋄ missing← ⊂''
+labels,← missing⍴⍨values-⍥≢labels
 
-    JScript← {
-        ⎕TC[1],¨ '^\h*⍝J (.*)' ⎕S '\1' ⎕NR ⊃⎕XSI
-        ⍝ :Section Javascript
-        ⍝J <script>
-        ⍝J /**
-        ⍝J  * drawBarChart(spec, containerId)
-        ⍝J  *   spec.labels : array of category names (x axis)
-        ⍝J  *   spec.values : array of numbers (bar heights)
-        ⍝J  *   spec.xLabel : legend for the x axis
-        ⍝J  *   spec.yLabel : legend for the y axis
-        ⍝J  *   spec.title  : chart title
-        ⍝J  */
-        ⍝J function drawBarChart(spec, containerId) {
-        ⍝J   const host = document.getElementById(containerId);
-        ⍝J   host.innerHTML = "<canvas></canvas>";
-        ⍝J   new Chart(host.querySelector("canvas"), {
-        ⍝J     type: "bar",
-        ⍝J     data: {
-        ⍝J       labels: spec.labels,
-        ⍝J       datasets: [{
-        ⍝J         data: spec.values,
-        ⍝J         backgroundColor: "#4682b4",
-        ⍝J         borderColor: "#2f5b7a",
-        ⍝J         borderWidth: 1
-        ⍝J       }]
-        ⍝J     },
-        ⍝J     options: {
-        ⍝J       responsive: true,
-        ⍝J       maintainAspectRatio: false,
-        ⍝J       plugins: {
-        ⍝J         legend: { display: false },
-        ⍝J         title: {
-        ⍝J           display: !!spec.title,
-        ⍝J           text: spec.title || "",
-        ⍝J           font: { size: 25, weight: "bold" }
-        ⍝J         },
-        ⍝J         tooltip: {
-        ⍝J           callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed.y}` }
-        ⍝J         }
-        ⍝J       },
-        ⍝J       scales: {
-        ⍝J         x: {
-        ⍝J           title: { display: !!spec.xLabel, text: spec.xLabel || "",
-        ⍝J                    font: { size: 14, weight: "bold" } }
-        ⍝J         },
-        ⍝J         y: {
-        ⍝J           beginAtZero: true,
-        ⍝J           title: { display: !!spec.yLabel, text: spec.yLabel || "",
-        ⍝J                    font: { size: 14, weight: "bold" } }
-        ⍝J         }
-        ⍝J       }
-        ⍝J     }
-        ⍝J   });
-        ⍝J }
-        ⍝J </script>
-        ⍝ :EndSection Javascript
-    }
+⍝ :Section Support Functions 
+      Here← { ('^\h*⍝', ⍵, ' (.*)')⎕S'\1'⎕NR 1⊃⎕XSI} ⍝ ⍵: a prefix (e.g. 'H')
+      PrintPdf← { 
+          11:: _← 0⊣ ⎕← 'DOMAIN ERROR: Invalid filename: ',⍵
+            WL← 0.1∘{ ⍵≤0: 0 ⋄ hr.IsLoading: _← ⍺ ∇ ⍵- ⎕DL ⍺ ⋄ 1 } 
+            cL cR← 'Chart did not load. ' 'Created '
+            uP← cL, 'Unable to print ',⍵
+          ~WL 30: _← 1⊣ ⎕← cL, ⍵
+          hr.PrintToPDF ⍵⊣ ⎕DL 2: _← 1⊣ ⎕← cR, ⍵  
+          1: _← 0⊣ ⎕← uP 
+      }
+⍝ :EndSection Support Functions 
 
-    jParms← ⎕JSON(
-        title: title
-        xLabel: xl
-        yLabel: yl
-        labels: ,⊆labels
-        values: values
-    )
+      HCode← { case data← ⊆⍵ ⋄  Case← case∘{⍺ ≡⍥⊃⍵}
+    Case 'Hdr':   '__SRC__' ⎕R chartSrc⊣ Here 'H'
+    Case 'Def':   ⎕TC[1],¨ '__TYPE__' ⎕R data⊢ Here'D'
+    Case 'Exec':  '__PARMS__' ⎕R data⊢ Here 'E'  
+      
+   ⍝H  <!DOCTYPE html>
+   ⍝H  <html>
+   ⍝H   <head>
+   ⍝H     <script src="__SRC__"></script>
+   ⍝H     <style>
+   ⍝H       html,body{height:100%;margin:0 ;}
+   ⍝H       #chart{width:98vw;height:100vh;}
+   ⍝H     </style>
+   ⍝H   </head>
+   ⍝H   <body><div id="chart"></div>
+   ⍝-------------------
+   ⍝D <script>
+   ⍝D /**
+   ⍝D  * DrawChart(spec, containerId)
+   ⍝D  *   spec.labels : array of category names (x axis)
+   ⍝D  *   spec.values : array of numbers (bar heights)
+   ⍝D  *   spec.xLabel : legend for the x axis
+   ⍝D  *   spec.yLabel : legend for the y axis
+   ⍝D  *   spec.title  : chart title
+   ⍝D  */
+   ⍝D function DrawChart(spec, containerId) {
+   ⍝D   const host = document.getElementById(containerId);
+   ⍝D   host.innerHTML = "<canvas></canvas>";
+   ⍝D   new Chart(host.querySelector("canvas"), {
+   ⍝D     type: "__TYPE__",
+   ⍝D     data: {
+   ⍝D       labels: spec.labels,
+   ⍝D       datasets: [{
+   ⍝D         data: spec.values,
+   ⍝D         backgroundColor: "#4682b4",
+   ⍝D         borderColor: "#2f5b7a",
+   ⍝D         borderWidth: 1
+   ⍝D       }]
+   ⍝D     },
+   ⍝D     options: {
+   ⍝D       responsive: true,
+   ⍝D       maintainAspectRatio: false,
+   ⍝D       layout: {
+   ⍝D           padding: {         // Spacing in pixels
+   ⍝D             left: 10,
+   ⍝D             right: 10,
+   ⍝D             top: 5,
+   ⍝D             bottom: 5
+   ⍝D           }
+   ⍝D       },
+   ⍝D       plugins: {
+   ⍝D         legend: { display: false },
+   ⍝D         title: {
+   ⍝D           display: !!spec.title,
+   ⍝D           text: spec.title || "",
+   ⍝D           font: { size: 25, weight: "bold" }
+   ⍝D         },
+   ⍝D         tooltip: {
+   ⍝D           callbacks: { label: ctx => `${ctx.parsed.y}` }
+   ⍝D         }
+   ⍝D       },
+   ⍝D       scales: {
+   ⍝D         x: {
+   ⍝D           title: { display: !!spec.xLabel, text: spec.xLabel || "",
+   ⍝D                    font: { size: 14, weight: "bold" } }
+   ⍝D         },
+   ⍝D         y: {
+   ⍝D           beginAtZero: true,
+   ⍝D           title: { display: !!spec.yLabel, text: spec.yLabel || "",
+   ⍝D                    font: { size: 14, weight: "bold" } }
+   ⍝D         }
+   ⍝D       }
+   ⍝D     }
+   ⍝D   });
+   ⍝D }
+   ⍝D </script>
+   ⍝-------------------
+   ⍝E       <script>DrawChart(__PARMS__,"chart");</script>
+   ⍝E     </body>
+   ⍝E   </html>
+}
 
-    HtmlHdr← {
-        '^\h*⍝H (.*)' ⎕S '\1' ⎕NR ⊃⎕XSI
-    ⍝H  <!DOCTYPE html>
-    ⍝H  <html>
-    ⍝H   <head>
-    ⍝H     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    ⍝H     <style>
-    ⍝H       html,body{height:100%;margin:0;}
-    ⍝H       #chart{width:100vw;height:100vh;}
-    ⍝H     </style>
-    ⍝H   </head>
-    ⍝H   <body><div id="chart"></div>
-    }
-    htmlFtr← (
-        '     <script>drawBarChart(',jParms,',"chart");</script>'
-        '  </body>'
-        '</html>'
-    )
+chartSrc←  'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js'
+parms← ⎕JSON (
+      title: title
+      xLabel: xl
+      yLabel: yl
+      labels: ,⊆labels
+      values: values
+)
+⍝  Start up the Renderer
+'hr'⎕WC'HTMLRenderer' 
+hr.HTML← ∊( 
+      HCode 'Hdr' chartSrc 
+      HCode 'Def' type 
+      HCode 'Exec' parms 
+)
+hr.(Size Caption)← (2⍴size)title
 
-    'hr'⎕WC'HTMLRenderer'
-    hr.HTML← ∊( HtmlHdr ⍬ ⋄ JScript 0 ⋄ htmlFtr )
-    hr.(Size Caption)← (2⍴size) title
-
-    :If wait
-        :Repeat
-            ev←⎕DQ'hr'
-            :If ((2⊃ev)≡'Close')∨((2⊃ev)≡31)
-                :Leave                      ⍝ × button
-            :ElseIf ((2⊃ev)≡'KeyPress')∨((2⊃ev)≡22)
-                :If ((27=4⊃ev)∨((3⊃ev)≡⎕UCS 27))∧(0=6⊃ev)
-                    :Leave                  ⍝ plain Escape, no modifiers
-                :EndIf
-            :EndIf
-        :EndRepeat
-        hr←⎕NULL
-    :EndIf
+⍝  Terminating...
+:If ×≢print      
+      PrintPdf print,'.pdf'
+:EndIf 
+:If wait
+      hr← ⎕DQ'hr'
+:EndIf
