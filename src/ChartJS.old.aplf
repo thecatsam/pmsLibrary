@@ -1,0 +1,210 @@
+∇ {hr}← {opts}ChartJS values
+      ; chartSrcNm; chartType; chartParms; html; labels; len; posn; print
+      ; rc; size; title; type; wait; xl; yz; yl
+      ; CGet; HBuild; JZ; LoadWait; Nums; PrintToPDF; TexMix 
+      ; ⎕IO; ⎕ML
+⍝ Draw a bar chart using Chart.js via HtmlRenderer.
+⍝ Warning: requires Internet access when called.
+⍝ By default, chart terminates when the namespace returned goes out of scope.
+⍝ (See options).
+⍝   options:
+⍝     An optional namespace containing several variables:
+⍝       var     description                       default
+⍝       ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯       ¯¯¯¯¯¯¯¯¯¯¯
+⍝       values  the values, overriding those      ,values
+⍝               presented
+⍝       type    type of chart.                    'bar'
+⍝       title   the bar chart title               'My Title'
+⍝       xl      the x-axis label                  'ITEMS'
+⍝       yl      the y-axis label                  'VALUES'
+⍝       yz      does the y-axis start at 0        1  
+⍝       labels  a vector containing the           '1' '2' '3' ... ≢values
+⍝               label for each bar chart item
+⍝       size    Size of the window                40 40
+⍝       posn    upper LHS position of window       1  1
+⍝       print   Print the chart as a pdf          ''
+⍝               with name <print>.pdf.
+⍝               Ignored if '' (default).
+⍝       wait    wait for close before             0
+⍝               returning
+⍝  values:
+⍝       A vector of real numbers, one per bar chart item.
+⍝       See also the values option.
+    
+    ⎕IO ⎕ML← 0 1
+⍝  This can be in the file system as '<PATH>/chart.js', where you define <PATH>.
+    chartSrcNm←   'https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.js'
+    :If 900⌶0
+        opts← ()
+    :EndIf
+    
+    ⍝ :Section Support Functions 
+        JZ←  ⊃∘'false' 'true'                    ⍝ JZ: bool => JavaScript false/true
+        CGet← { ('^\h*⍝', ⍵, ' (.*)') ⎕S '\1' ⎕NR 1⊃ ⎕XSI }  
+        Nums← { 3 5 7 11∊⍨ 80| ⎕DR ⍵ }
+        LoadWait← { ⍺← 0.1 ⋄ ⍵≤ 0: 0 ⋄ hr.IsLoading: _← ⍺ ∇ ⍵- ⎕DL ⍺ ⋄ 1 } 
+        PrintToPDF← {  
+          11:: ⎕← 'PrintToPDF DOMAIN ERROR: Invalid filename'
+            rc← hr.PrintToPDF fi← ⍵,'.pdf'
+          1= rc: ⎕← 'Printed ',fi 
+          1: ⎕← 'Unable to print ',fi 
+        } 
+        TexMix← { 0=⊃1↑⍵: {'-'@('¯'∘=)⊢ ⍵ },⍕⍵ ⋄ ⍵ }¨,∘⊆   ⍝ Mixed CV and NS
+    ⍝ :EndSection Support Functions 
+    
+⍝ Load defaults => modify by opts => import these variables into this fn's namespace
+    ⎕THIS ⎕NS (
+    ⍝ var nm    default
+        values:   ,values
+        type:     'bar' 
+        title:    'My Chart'
+        xl:       'ITEMS'                        ⍝ x label
+        yl:       'VALUES'                       ⍝ y label
+        yz:       1                              ⍝ Begin y axis at zero?   
+        labels:   ⎕NULL                          ⍝ item labels: Null => 1+⍳≢values (below)
+        size:     40 40                          ⍝ On screen
+        posn:      1  1                          ⍝ On screen
+        print:    ''                             ⍝ If empty, nothing is printed.
+        wait:     0
+    ) opts
+    
+    chartType← type                              ⍝ Aliased
+
+    :If ~Nums values
+        11 ⎕SIGNAL⍨'Values must be numbers'
+    :EndIf 
+    
+⍝  Set labels, if needed
+    :If ⎕NULL≡labels
+        labels← 1+⍳≢values                       ⍝ Values '1' '3' etc.
+    :Else
+        :If ~Nums labels                         ⍝ Text or mixed Text/Numbers
+            labels← TexMix labels    
+        :EndIf
+        ⍝  labels← (≢values)↑ labels, (0⌈ values-⍥≢ labels)⍴ ⊂'' 
+        :Select ×len← values-⍥≢ labels
+          :Case  1 ⋄ labels,← len⍴ ⊂''            ⍝  Missing? Pad with empty string
+          :Case ¯1 ⋄ labels↑⍨← ≢values            ⍝  Extras? Truncate quietly
+        :EndSelect 
+    :EndIf
+    
+    HBuild← { 
+    ⍝ Load Html/JavaScript Code:
+    ⍝    Hdr: Define Header, Def: Define Chart Fn, Exec: Insert Parms & Execute
+        Case← ⍺∘≡ ⋄ snk← ⍵  ⋄ nl← ⎕UCS 10   
+        _Rx← ⍠'Regex' (1 0)
+        hSrc dSrc eSrc← (
+         '_SRC_NM_' ⋄ '_TYPE_' '_YZERO_' ⋄ '_PARMS_'
+        )
+      Case 'Hdr':      hSrc ⎕R snk _Rx CGet 'H'
+      Case 'Def': nl,¨ dSrc ⎕R snk _Rx CGet 'D'
+      Case 'Exec':     eSrc ⎕R snk _Rx CGet 'E' 
+        'ChartJS Logic Error' ⎕SIGNAL 911 
+        ⍝ :Section Html/JavaScript Code   
+        ⍝H  <!DOCTYPE html>
+        ⍝H  <html>
+        ⍝H   <head>
+        ⍝H     <script src="_SRC_NM_"></script>
+        ⍝H     <style>
+        ⍝H       html,body{height:100%;margin:0 ;}
+        ⍝H       #chart{width:98vw;height:100vh;}
+        ⍝H     </style>
+        ⍝H   </head>
+        ⍝H   <body><div id="chart"></div>
+            
+        ⍝D <script>
+        ⍝D /**
+        ⍝D  * DrawChart(spec, containerId)
+        ⍝D  *   spec.labels : array of category names (x axis)
+        ⍝D  *   spec.values : array of numbers (bar heights)
+        ⍝D  *   spec.xLabel : legend for the x axis
+        ⍝D  *   spec.yLabel : legend for the y axis
+        ⍝D  *   spec.title  : chart title
+        ⍝D  */
+        ⍝D function DrawChart(spec, containerId) {
+        ⍝D   const host = document.getElementById(containerId);
+        ⍝D   if (typeof Chart === "undefined") {
+        ⍝D      host.textContent = "Chart.js failed to load (is the network available?)";
+        ⍝D      return;
+        ⍝D   }
+        ⍝D   host.innerHTML = "<canvas></canvas>";
+        ⍝D   new Chart(host.querySelector("canvas"), {
+        ⍝D     type: "_TYPE_",
+        ⍝D     data: {
+        ⍝D       labels: spec.labels,
+        ⍝D       datasets: [{
+        ⍝D         data: spec.values,
+        ⍝D         backgroundColor:  "#465ab4",
+        ⍝D         borderColor: "#090631",
+        ⍝D         borderWidth: 1
+        ⍝D       }]
+        ⍝D     },
+        ⍝D     options: {
+        ⍝D       responsive: true,
+        ⍝D       animation: false,
+        ⍝D       maintainAspectRatio: false,
+        ⍝D       layout: {
+        ⍝D           padding: {         // Spacing in pixels
+        ⍝D             left: 10,
+        ⍝D             right: 10,
+        ⍝D             top: 5,
+        ⍝D             bottom: 5
+        ⍝D           }
+        ⍝D       },
+        ⍝D       plugins: {
+        ⍝D         legend: { display: false },
+        ⍝D         title: {
+        ⍝D           display: !!spec.title,
+        ⍝D           text: spec.title || "",
+        ⍝D           font: { size: 25, weight: "bold" }
+        ⍝D         },
+        ⍝D         tooltip: {
+        ⍝D           callbacks: { label: ctx => ctx.formattedValue }
+        ⍝D         }
+        ⍝D       },
+        ⍝D       scales: {
+        ⍝D         x: {
+        ⍝D           title: { display: !!spec.xLabel, text: spec.xLabel || "",
+        ⍝D                    font: { size: 14, weight: "bold" } }
+        ⍝D         },
+        ⍝D         y: {
+        ⍝D           beginAtZero: _YZERO_,
+        ⍝D           title: { display: !!spec.yLabel, text: spec.yLabel || "",
+        ⍝D                    font: { size: 14, weight: "bold" } }
+        ⍝D         }
+        ⍝D       }
+        ⍝D     }
+        ⍝D   });
+        ⍝D }
+        ⍝D </script>
+            
+        ⍝E       <script>DrawChart(_PARMS_,"chart");</script>
+        ⍝E     </body>
+        ⍝E   </html>
+        ⍝ :EndSection Html/JavaScript Code   
+    }
+    
+    chartParms← ⎕JSON (
+        title: title
+        xLabel: xl
+        yLabel: yl
+        labels: labels
+        values: values
+    )
+    html← ∊( 
+    ⍝   stage   ...    parms
+        'Hdr'  HBuild  chartSrcNm 
+        'Def'  HBuild (chartType ⋄ JZ yz)  
+        'Exec' HBuild  chartParms 
+    )
+⍝  Start up the Renderer
+    'hr' ⎕WC (
+        'HTMLRenderer'  ⋄ 'Visible' 0 
+        'Size'⊂⍛, size  ⋄ 'Posn'⊂⍛, posn
+        'Caption' title ⋄ 'HTML'    html 
+    )
+    0.05 LoadWait 1 ⋄ hr.Visible← 1              ⍝ Prevents flashing screen.
+    
+⍝  Our work is done...
+    {}PrintToPDF⍣(×≢print)⊢ print                ⍝ Print the PDF?
+    {}⎕DQ⍣wait⊢ 'hr'                             ⍝ If wait, stop until chart page is closed.
