@@ -105,7 +105,7 @@ help← (
     mix: 1 
   )
 ⍝ localisable system names
-  sysVars← ,(
+  sysVars← ⊃,/(
     '⎕CT' '⎕DIV' '⎕IO' '⎕ML' '⎕PP' '⎕RL' 
     '⎕RTL' '⎕WX' '⎕USING' '⎕AVU' '⎕DCT' '⎕FR'
   )
@@ -161,7 +161,8 @@ help← (
       cntrlI dfnI parI nameI← ⍳≢catsP← cntrlP dfnP  parP nameP 
       bN⊣ catsP ⎕R{
         ⍵.PatternNum∊ cntrlI dfnI parI:''  
-          var← ⍵ F 1 
+      ⍝ Matching nameP: 
+            var← ⍵ F 1 
           ':'∊var: ''                                  ⍝ Skip name in (name: val)
         '⎕'≠⊃var:''⊣ bN,← ⊂var                         ⍝ Not a system var.
           var←1 ⎕C var
@@ -231,9 +232,11 @@ help← (
     }
     S2CV←  '\A' ⎕R ''                                  ⍝ Split into APL Char Vec
     lists← S2CV Fmt1¨ ⍵ 
-  opts.sort≠êSort.group: lists 
-   ⍝  Disabled: NoXBL← ((-1+opts.blanks)∘↓) 
-    lists           
+    NoNull←  {⍵/⍨ 0≠ ≢¨⍵} 
+    NoNull lists 
+⍝ This next part is ignored...
+⍝  opts.sort≠êSort.group: lists 
+⍝   lists           
   }
 
 ⍝⍝⍝ ----------------------------------------------------------

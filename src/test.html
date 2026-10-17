@@ -1,0 +1,79 @@
+<!DOCTYPE html> <html>  <head>    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>    <style>      html,body{height:100%;margin:0 ;}      #chart{width:98vw;height:100%;}    </style>  </head>  <body><div id="chart"></div>
+  <script>
+  /**
+   * DrawChart(spec, containerId)
+   *   spec.labels : array of category names (x axis)
+   *   spec.values : array of numbers (bar heights)
+   *   spec.xLabel : legend for the x axis
+   *   spec.yLabel : legend for the y axis
+   *   spec.title  : chart title
+   *   spec.type   : Chart.js chart type
+   *   spec.yZero  : 1 => y axis begins at zero
+   *   spec.anim   : build animation time in ms (0 = none)
+   */
+  function DrawChart(spec, containerId) {
+    const host = document.getElementById(containerId);
+    if (typeof Chart === "undefined") {
+       host.textContent = "Chart.js failed to load (is the network available?)";
+       return;
+    }
+    host.innerHTML = "<canvas></canvas>";
+      const bgColors = [];
+      const borderColors = [];
+      const totalItems = spec.values.length;
+      for (let i = 0; i < totalItems; i++) {
+        const hue = Math.floor((i * 360) / totalItems);
+        bgColors.push(`hsl(${hue}, 65%, 55%)`);
+        borderColors.push(`hsl(${hue}, 65%, 40%)`);
+      }
+      const noXY = ["pie","doughnut","polarArea","radar"].includes(spec.type);
+      const scales = noXY ? {} : {
+        x: { title: { display: !!spec.xLabel, text: spec.xLabel || "",
+                      font: { size: 14, weight: "bold" } } },
+        y: { beginAtZero: spec.yZero === 1,
+             title: { display: !!spec.yLabel, text: spec.yLabel || "",
+                      font: { size: 14, weight: "bold" } } }
+      };
+      const pad = { left: 10, right: 10, top: 5, bottom: noXY ? 30 : 10 };
+      let delayed = false;
+      const perItem = spec.anim / Math.max(totalItems, 1);
+    new Chart(host.querySelector("canvas"), {
+      type: spec.type,
+      data: {
+        labels: spec.labels,
+        datasets: [{
+          data: spec.values,
+          backgroundColor: bgColors,
+          borderColor: borderColors,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: spec.anim > 0 ? {
+          duration: spec.anim,
+          easing: "easeOutQuart",
+          delay: ctx => (ctx.type === "data" && ctx.mode === "default" && !delayed)
+                          ? ctx.dataIndex * perItem : 0,
+          onComplete: () => { delayed = true; }
+        } : false,
+        maintainAspectRatio: false,
+        layout: {
+           padding: pad
+        },
+        plugins: {
+          legend: { display: ["pie","doughnut"].includes(spec.type) },
+          title: {
+            display: !!spec.title,
+            text: spec.title || "",
+            font: { size: 25, weight: "bold" }
+          },
+          tooltip: {
+            callbacks: { label: ctx => ctx.formattedValue }
+          }
+        },
+        scales: scales
+      }
+    });
+  }
+  </script>      <script>        var spec = {"anim":1000,"labels":[1,2,3,4,5],"startDelay":1250,"title":"My Chart","type":"line","values":[0.9571475967026074,0.163480816143328,0.238578798545661,0.2227937248941411,0.2325025860896369],"xLabel":"ITEMS","yLabel":"VALUES","yZero":1};        if (spec.startDelay) { setTimeout(function(){ DrawChart(spec,"chart"); }, spec.startDelay); }        else { DrawChart(spec,"chart"); }      </script>  </body> </html>

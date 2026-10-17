@@ -1,8 +1,9 @@
 ∇ {hr}← {opts}ChartJS values
-      ; chartSrcNm; chartType; chartParms; html; labels; len; posn; print
-      ; rc; size; title; type; wait; xl; yz; yl; anim
-      ; HBuild; JZ; WaitForLoad; NumObj; PrintToPDF; TexMix
-      ; ⎕IO; ⎕ML
+      ; anim; chartParms; chartSrcNm; chartType; hr; html; labels; len; opts
+      ; posn; print; rc; size; title; type; wait; xl; yl; yz                
+      ; HBuild; NumObj; PrintToPDF; TexMix; WaitForLoad 
+      ; ⎕IO; ⎕ML 
+
 ⍝ Draw a bar chart using Chart.js via HtmlRenderer.
 ⍝ Warning: requires Internet access when called.
 ⍝ By default, chart terminates when the namespace returned goes out of scope.
@@ -10,26 +11,27 @@
 ⍝   options:
 ⍝     An optional namespace containing several variables:
 ⍝       var     description                       default
-⍝       ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯       ¯¯¯¯¯¯¯¯¯¯¯
-⍝       values  the values, overriding those      ,values
-⍝               presented as the fn rt arg.
-⍝       type    type of chart.                    'bar'
+⍝       ¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯       ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+⍝       values  the values, if set, replace       ,values
+⍝               those presented as the right
+⍝               argument to ChartJS.
+⍝       type    type of chart, e.g. bar,          'bar'
+⍝               line, pie, doughnut, etc.
 ⍝       title   the bar chart title               'My Title'
 ⍝       xl      the x-axis label                  'ITEMS'
 ⍝       yl      the y-axis label                  'VALUES'
 ⍝       yz      does the y-axis start at 0        1
-⍝       labels  a vector containing the           '1' '2' '3' ... ≢values
-⍝               label for each bar chart item
+⍝       labels  a vector containing the           1 2 3 ... ≢values
+⍝               label for each chart item.
 ⍝       size    Size of the window                40 40
-⍝       posn    upper LHS position of window       1  1
-⍝       anim    animation time (ms) to build      1000
-⍝               the chart; 0 turns it off.
-⍝               Forced to 0 if (×≢print).
+⍝       posn    upper LHS corner of window        1  1
 ⍝       print   Print the chart as a pdf          ''
 ⍝               with name <print>.pdf.
 ⍝               Ignored if '' (default).
-⍝       wait    wait for close before             0
-⍝               returning
+⍝       wait    wait for close before returning.  0
+⍝       anim    animation time (in ms) to build   1000
+⍝               the chart; 0 turns it off.
+⍝               If (×≢print), anim defaults to 0.
 ⍝  values:
 ⍝       A vector of real numbers, one per bar chart item.
 ⍝       Will be replaced by opts.values if defined.
@@ -39,35 +41,34 @@
     chartSrcNm← 'https://cdn.jsdelivr.net/npm/chart.js'
     :If 900⌶0 ⋄ opts← () ⋄ :EndIf
     
-    ⍝  :Section Support Functions
-        JZ← ⊃∘'false' 'true'               ⍝ JZ: bool => JavaScript false/true
-        NumObj← {3 5 7 11∊⍨80|⎕DR ⍵}
-        WaitForLoad← {⍺← 0.1 ⋄ ⍵≤ 0: _← 0 ⋄ hr.IsLoading: _← ⍺ ∇ ⍵-⎕DL ⍺ ⋄ _← 1}
-        PrintToPDF← {
-          11:: ⎕← 'PrintToPDF DOMAIN ERROR: Invalid filename'
-            rc← hr.PrintToPDF fi← ⍵,'.pdf'
-          1=rc: ⎕← 'Printed ',fi
-          1: ⎕← 'Unable to print ',fi
-        }
-        TexMix← {0= ⊃0⍴ ⍵: {'-'@ ('¯'∘=)⊢ ⍵},⍕⍵ ⋄ ⍵}¨,∘⊆ ⍝ Mixed CV and NS
-    ⍝ :EndSection Support Functions
+⍝  Support Functions
+    NumObj← {3 5 7 11∊⍨80|⎕DR ⍵}
+    WaitForLoad← { ⍵≤ 0: _← 0 ⋄ hr.IsLoading: _← ⍺ ∇ ⍵-⎕DL ⍺ ⋄ _← 1}
+    PrintToPDF← {
+      11:: ⎕← 'PrintToPDF DOMAIN ERROR: Invalid filename'
+        rc← hr.PrintToPDF fi← ⍵,'.pdf'
+      1=rc: ⎕← 'Printed ',fi
+      1: ⎕← 'Unable to print ',fi
+    }
+    TexMix← { 0= ⊃0⍴ ⍵: ⍵ ⋄ '-'@ ('¯'∘=) ,⍕⍵ }¨,∘⊆  ⍝ Mixed CV and NS
+⍝ End Support Functions
     
 ⍝ Load defaults => modify by opts => import these variables into this fn's namespace
-    ⎕THIS ⎕NS(
+    ⎕THIS ⎕NS (
     ⍝   var_nm:  default                   ⍝ type descr
         values: ,values                    ⍝ NV   Overridden by opts.values, if specified.
         type: 'bar'                        ⍝ CV 
         title: 'My Chart'                  ⍝ CV
         xl: 'ITEMS'                        ⍝ CV   x label
         yl: 'VALUES'                       ⍝ CV   y label
-        yz: 1                              ⍝ B    Begin y axis at zero?
+        yz: 1                              ⍝ BS   Begin y axis at zero?
         labels: ⎕NULL  ⍝ (1+ ⍳≢values)     ⍝ CVV  item labels:  
         size: 40 40                        ⍝ I2   On screen
         posn: 1 1                          ⍝ I2   On screen
-        anim: 1000                         ⍝ I    Build time in ms. 0 = no animation
+        anim: 1000                         ⍝ IS   Build time in ms. 0 = no animation
         print: ''                          ⍝ CV   If empty, nothing is printed.
-        wait: 0                            ⍝ B    If 1, wait until window closes to exit.
-    )opts
+        wait: 0                            ⍝ BS   If 1, wait until window closes to exit.
+    ) opts
     
     chartType← type                        ⍝ Aliased
     
@@ -99,9 +100,10 @@
         Case← ⍺∘≡ ⋄ snk← ⍵  
         _Rx← ⍠'Regex'(1 0)
         code← { ('^\h*⍝', ⍵, ' (.*)') ⎕S '\1' ⎕NR 1⊃ ⎕XSI } ⊃⍺ 
-      Case'Hdr': '_SRC_NM_' ⎕R snk _Rx code 
-      Case'Def': (⎕UCS 10),¨           code 
-      Case'Exec': '_PARMS_' ⎕R snk _Rx code
+        NLn← (⎕UCS 10)∘,¨
+      Case'Hdr':  NLn '_SRC_NM_' ⎕R snk _Rx code 
+      Case'Def':  NLn          code 
+      Case'Exec': NLn '_PARMS_' ⎕R snk _Rx code
         'ChartJS Logic Error'⎕SIGNAL 911
         ⍝ :Section Html/JavaScript Code
         ⍝H <!DOCTYPE html>
@@ -134,103 +136,104 @@
         ⍝D        return;
         ⍝D     }
         ⍝D     host.innerHTML = "<canvas></canvas>";
-        ⍝D       const bgColors = [];
-        ⍝D       const borderColors = [];
-        ⍝D       const totalItems = spec.values.length;
-        ⍝D       for (let i = 0; i < totalItems; i++) {
+        ⍝D     const bgColors = [];
+        ⍝D     const borderColors = [];
+        ⍝D     const totalItems = spec.values.length;
+        ⍝D     for (let i = 0; i < totalItems; i++) {
         ⍝D         const hue = Math.floor((i * 360) / totalItems);
         ⍝D         bgColors.push(`hsl(${hue}, 65%, 55%)`);
         ⍝D         borderColors.push(`hsl(${hue}, 65%, 40%)`);
-        ⍝D       }
-        ⍝D       const noXY = ["pie","doughnut","polarArea","radar"].includes(spec.type);
-        ⍝D       const scales = noXY ? {} : {
-        ⍝D         x: { title: { display: !!spec.xLabel, text: spec.xLabel || "",
+        ⍝D     }
+        ⍝D     const noXY = ["pie","doughnut","polarArea","radar"].includes(spec.type);
+        ⍝D     const scales = noXY ? {} : {
+        ⍝D       x: { title: { display: !!spec.xLabel, text: spec.xLabel || "",
         ⍝D                       font: { size: 14, weight: "bold" } } },
-        ⍝D         y: { beginAtZero: spec.yZero === 1,
+        ⍝D       y: { beginAtZero: spec.yZero === 1,
         ⍝D              title: { display: !!spec.yLabel, text: spec.yLabel || "",
         ⍝D                       font: { size: 14, weight: "bold" } } }
-        ⍝D       };
-        ⍝D       const pad = { left: 10, right: 10, top: 5, bottom: noXY ? 30 : 10 };
-        ⍝D       let delayed = false;
-        ⍝D       const perItem = spec.anim / Math.max(totalItems, 1);
-        ⍝D       const replay = spec.anim > 0;
-        ⍝D       if (replay) host.style.visibility = "hidden";
-        ⍝D       const chart = new Chart(host.querySelector("canvas"), {
-        ⍝D       type: spec.type,
-        ⍝D       data: {
-        ⍝D         labels: spec.labels,
-        ⍝D         datasets: [{
-        ⍝D           data: spec.values,
-        ⍝D           backgroundColor: bgColors,
-        ⍝D           borderColor: borderColors,
-        ⍝D           borderWidth: 1
-        ⍝D         }]
-        ⍝D       },
-        ⍝D       options: {
-        ⍝D         responsive: true,
-        ⍝D         animation: spec.anim > 0 ? {
-        ⍝D           duration: spec.anim,
-        ⍝D           easing: "easeOutQuart",
-        ⍝D           delay: ctx => (ctx.type === "data" && ctx.mode === "default" && !delayed)
-        ⍝D                           ? ctx.dataIndex * perItem : 0,
-        ⍝D           onComplete: () => { delayed = true; }
-        ⍝D         } : false,
-        ⍝D         maintainAspectRatio: false,
-        ⍝D         layout: {
-        ⍝D            padding: pad
+        ⍝D     };
+        ⍝D     const pad = { left: 10, right: 10, top: 5, bottom: noXY ? 30 : 10 };
+        ⍝D     let delayed = false;
+        ⍝D     const perItem = spec.anim / Math.max(totalItems, 1);
+        ⍝D     const replay = spec.anim > 0;
+        ⍝D     if (replay) host.style.visibility = "hidden";
+        ⍝D     const chart = new Chart(host.querySelector("canvas"), {
+        ⍝D         type: spec.type,
+        ⍝D         data: {
+        ⍝D           labels: spec.labels,
+        ⍝D           datasets: [{
+        ⍝D             data: spec.values,
+        ⍝D             backgroundColor: bgColors,
+        ⍝D             borderColor: borderColors,
+        ⍝D             borderWidth: 1
+        ⍝D           }]
         ⍝D         },
-        ⍝D         plugins: {
-        ⍝D           legend: { display: ["pie","doughnut"].includes(spec.type) },
-        ⍝D           title: {
-        ⍝D             display: !!spec.title,
-        ⍝D             text: spec.title || "",
-        ⍝D             font: { size: 25, weight: "bold" }
+        ⍝D         options: {
+        ⍝D           responsive: true,
+        ⍝D           animation: spec.anim > 0 ? {
+        ⍝D             duration: spec.anim,
+        ⍝D             easing: "easeOutQuart",
+        ⍝D             delay: ctx => (ctx.type === "data" && ctx.mode === "default" && !delayed)
+        ⍝D                            ? ctx.dataIndex * perItem : 0,
+        ⍝D             onComplete: () => { delayed = true; }
+        ⍝D           } : false,
+        ⍝D           maintainAspectRatio: false,
+        ⍝D           layout: {
+        ⍝D              padding: pad
         ⍝D           },
-        ⍝D           tooltip: {
-        ⍝D             callbacks: { label: ctx => ctx.formattedValue }
-        ⍝D           }
-        ⍝D         },
-        ⍝D         scales: scales
-        ⍝D       }
+        ⍝D           plugins: {
+        ⍝D             legend: { display: ["pie","doughnut"].includes(spec.type) },
+        ⍝D             title: {
+        ⍝D               display: !!spec.title,
+        ⍝D               text: spec.title || "",
+        ⍝D               font: { size: 25, weight: "bold" }
+        ⍝D             },
+        ⍝D             tooltip: {
+        ⍝D               callbacks: { label: ctx => ctx.formattedValue }
+        ⍝D             }
+        ⍝D           },
+        ⍝D           scales: scales
+        ⍝D         }
         ⍝D     });
         ⍝D     if (replay) {
-        ⍝D        setTimeout(() => {
-        ⍝D          delayed = false;
-        ⍝D          chart.reset();
-        ⍝D          host.style.visibility = "visible";
-        ⍝D          chart.update();
-        ⍝D        }, 150);
+        ⍝D          setTimeout(() => {
+        ⍝D            delayed = false;
+        ⍝D            chart.reset();
+        ⍝D            host.style.visibility = "visible";
+        ⍝D            chart.update();
+        ⍝D          }, 150);
         ⍝D     }
         ⍝D   }
         ⍝D   </script>
             
-        ⍝E       <script>
-        ⍝E         var spec = _PARMS_;
-        ⍝E         if (spec.startDelay) { 
-        ⍝E             setTimeout(function(){ 
-        ⍝E                 DrawChart(spec,"chart"); 
-        ⍝E             }, spec.startDelay); 
-        ⍝E         }
-        ⍝E         else { 
-        ⍝E             DrawChart(spec,"chart"); 
-        ⍝E         }
-        ⍝E       </script>
+        ⍝E    <script>
+        ⍝E      var spec = _PARMS_;
+        ⍝E      if (spec.startDelay) {
+        ⍝E          setTimeout(function(){
+        ⍝E              DrawChart(spec,"chart");
+        ⍝E          }, spec.startDelay);
+        ⍝E      }
+        ⍝E      else {
+        ⍝E          DrawChart(spec,"chart");
+        ⍝E      }
+        ⍝E    </script>
         ⍝E   </body>
         ⍝E  </html>
         ⍝ :EndSection Html/JavaScript Code
     }
-    
-    chartParms← ⎕JSON(
-        title: title
+      
+    chartParms← ⎕JSON ⍠'Compact' 0 ⊣ (
+        title:  title
         xLabel: xl
         yLabel: yl
-        yZero: yz 
-        anim: anim
-        startDelay: 5× anim> 0   ⍝ ms.     ⍝ Let the window become visible before animating
+        yZero:  yz 
+        anim:   anim
         labels: labels
-        type: chartType 
+        type:   chartType 
         values: values
-    )
+     ⍝ Let the window become visible before animating
+        startDelay: 5× anim> 0             ⍝ ms.     
+    ) 
     html← ∊(
     ⍝   stage   ...    parms
         'Hdr' HBuild chartSrcNm
