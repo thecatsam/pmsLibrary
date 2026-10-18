@@ -39,7 +39,7 @@
          ⊃⍣(1=≢⍵)⊢ w  
       } 
    ⍝ Ð: Internal box display (internal only)
-      Ð← ⍎Ð_Str← '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' 
+      Ð← ⍎Ð_src← '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' 
       
    ⍝ Date: Time and Date are aliases
       D← {
@@ -48,7 +48,7 @@
       }
       
    ⍝ F: Format
-      F← ⍎F_Str← '⎕FMT' 
+      F← ⍎F_src← '⎕FMT' 
       
    ⍝ G: GetUrlText
    ⍝   lines@CVV ← [⍺←1] ∇ url
@@ -183,9 +183,9 @@
    ⍝ ==================================================================================
       
       
-   ⍝ RtShoeUnder =>Î   (Indexing and Last)
-      Î← {
-        0≠⎕NC'⍺': ⍺⊂⍛⌷⍤99⊢ ⍵ ⋄                            ⍝ Sane Indexing 
+   ⍝ ⊇ RtShoeUnder =>Î   (Indexing and Last)
+      Î← { ⍺← ⊢ 
+        0≢ ⍺ 0: ⍺⊂⍛⌷⍤99⊢ ⍵                                ⍝ Sane Indexing 
          ⎕IO← 1                                           ⍝ Last...
         0= ≢⍴⍵: ⍵                                         ⍝ If scalar, return itself
         0= ≢⍵:  ⍵                                         ⍝ If empty array, return itself (or an empty prototype)
