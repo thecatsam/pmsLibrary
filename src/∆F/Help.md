@@ -1232,7 +1232,7 @@ The website **www.random.org** generates a variety of random numbers.
 Here <∆Note>Each call will retrieve a new set of numbers!</∆Note>
 we use it to generate 10 numbers between 0 and 9, print them, and average them.
 
-```
+```skip
      rand← ∊(
         'https://www.random.org/integers/?'
         'num=10&min=0&max=9&col=1&base=10&'

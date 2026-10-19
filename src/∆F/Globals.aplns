@@ -22,7 +22,7 @@
    APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion' 
    
 ⍝  TRAP_ERRORS: If 0, turns off error trapping in ∆F utility.
-   TRAP_ERRORS← 1           
+   TRAP_ERRORS← 1          
 ⍝
 ⍝  VERBOSE_RUNTIME: Run-time verbosity flag
 ⍝  (verbose: 1) is ∆F-settable (user) run-time verbosity flag-- which
