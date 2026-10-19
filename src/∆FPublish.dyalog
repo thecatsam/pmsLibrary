@@ -1,5 +1,5 @@
-∆FPublish parms
-  ; anyUpdts; cd; copyright; docDep; force; globFi; hdr; html; itemF; libDir      
+﻿∆FPublish parms
+  ; anyUpdts; copyright; docDep; force; globFi; hdr; html; itemF; libDir      
   ; libra; loader; md; mdTmp; ns; pandocBin; parmFi; pdf; pgm; pgmDep; priv
   ; privF; privFdir; privdir; productionCode; pub; pubF; pubFdir; pubdir   
   ; quiet; readme; sideN2FN; temp; tempdir; timestamp; title; version; _   
@@ -72,11 +72,9 @@
   libra←     'LibUtils.aplns'                               ⍝ £ library
   parmFi←    'ParmDefs.apla'                                ⍝ 
   globFi←    'Globals.aplns'
-  shortFi←   'Shortcuts.dyalog'
+  shortFi←   'Shortcuts.aplf'
   pdf←       'Help.pdf'                                     ⍝ PDF 
-  cd←        'Futures/CircleDiaeresis.aplo'                 ⍝ Adam B's ⍥ with depth emulation
-  el←        'Futures/Ellipsis.aplf'
-
+  
 
 ⍝ File specs 
   privF pubF priv pub temp← 0 1 2 3 9
@@ -312,8 +310,6 @@ pgmDep← (
   (Priv loader)(Pub loader)
   (PrivF parmFi)(PubF parmFi)
   (PrivF shortFi)(PubF shortFi) 
-  (PrivF cd)(PubF cd)
-  (PrivF el)(PubF el)
   (PrivF globFi)(PubF globFi)
 )
 :IF 4< |≡pgmDep
@@ -326,7 +322,7 @@ pgmDep← (
     _←¯1 Say'Updating ∆F utility ',Tp PubF pgm
     _←¯1 Say'Updating ∆F loader  ',Tp Pub loader
     UpdatePgm¨ (PrivF pgm)(PrivF libra)(Priv loader)
-    :FOR itemF :in cd el parmFi globFi shortFi  
+    :FOR itemF :in parmFi globFi shortFi  
         CopyFi(PrivF itemF )(PubF itemF)
     :EndFor 
     0 0 force CopyFi¨(
