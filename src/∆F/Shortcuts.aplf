@@ -11,7 +11,7 @@
    ⍝ This X_src should be identical in operation to the function X, but may be far more
    ⍝ concise than a naive rendering.
    ⍝ See internal function Ð/Ð_src below for an example.
-
+      
    ⍝ A: Above
    ⍝        a ∇ b: "obj a above obj b"
    ⍝          ∇ b: "blank line above obj b"
@@ -208,11 +208,11 @@
    ⍝ ==================================================================================
       
       
-   ⍝ Î:  RtShoeUnder   (Indexing and Last)
+   ⍝ Î:  RtShoeUnder   (Indexing and Last)  (Def. by PMS)
    ⍝     [⍺] ⊇ ⍵
       Î← { 
          ⍺← ⊢ 
-        0≢ ⍺ 0: ⍺⊂⍛⌷⍤99⊢ ⍵                        ⍝ Sane Indexing 
+        0≢ ⍺ 0: ⍺⊂⍛⌷⍤0 99⊢ ⍵                      ⍝ Sane Indexing  ⌷⍨∘⊃⍨⍤0 99
          ⎕IO← 1                                   ⍝ Last...
         0= ≢⍴⍵: ⍵                                 ⍝ If scalar, return itself
         0= ≢⍵:  ⍵                                 ⍝ If empty array, return itself (or an empty prototype)

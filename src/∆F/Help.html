@@ -1,594 +1,594 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http: //www.w3.org/1999/xhtml" lang="" xml: lang="">
 <head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>∆F Formatted String Literals (v.0.4.5)</title>
-  <style>
-    /* Default styles provided by pandoc.
-    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-    */
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
-  </style>
-  <!-- 
-   ∆F Help function Header  -- PMS Style and Javascript 
-  -->
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+<title>∆F Formatted String Literals (v.0.4.5)</title>
+<style>
+/* Default styles provided by pandoc.
+** See https: //pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+/* The extra [class] is a hack that increases specificity enough to
+override a similar rule in reveal.js */
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  font-size: inherit;
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+<!-- 
+∆F Help function Header  -- PMS Style and Javascript 
+-->
 
-  <style>
-    /* ======================================================== */
-    /* Special styles for PMS attributes */
+<style>
+/* ======================================================== */
+/* Special styles for PMS attributes */
 
-    /* A fancy text box class */
-    .marquee {
-      width: 100%;
-      /* ..% of the viewport width */
-      font-size: 105%;
-      text-align: center;
-      line-height: 1.2;
-      color: white;
-      background-color: #062f7c;
-      border: 1px solid white;
-      box-shadow: 0 0 0 2px #062f7c;
-      border-width: 3px;
-      padding: 0px 15px;
-      box-sizing: border-box;
-      /* Includes padding and border within the defined width/height */
-    }
+/* A fancy text box class */
+.marquee {
+  width: 100%;
+   /* ..% of the viewport width */
+  font-size: 105%;
+  text-align: center;
+  line-height: 1.2;
+  color: white;
+  background-color: #062f7c;
+  border: 1px solid white;
+  box-shadow: 0 0 0 2px #062f7c;
+  border-width: 3px;
+  padding: 0px 15px;
+  box-sizing: border-box;
+   /* Includes padding and border within the defined width/height */
+}
 
-    typewriter {
-      font-family: "American Typewriter", "Courier New", monospace;
-    }
+typewriter {
+  font-family: "American Typewriter", "Courier New", monospace;
+}
 
-    /* <details><pSummary>  */
-    details>summary {
-      list-style-type: '▶️';
-    }
+/* <details><pSummary>  */
+details>summary {
+  list-style-type: '▶️';
+}
 
-    details summary::marker {
-      color: darkgreen;
-      opacity: 1;
-    }
+details summary:: marker {
+  color: darkgreen;
+  opacity: 1;
+}
 
-    details[open]>summary {
-      color: darkgreen;
-      opacity: 0.3;
-      list-style-type: '🔽';
-    }
+details[open]>summary {
+  color: darkgreen;
+  opacity: 0.3;
+  list-style-type: '🔽';
+}
 
-    .summary {
-      margin: 0px;
-    }
+.summary {
+  margin: 0px;
+}
 
-    /* For red things! */
-    .red {
-      color: red;
-    }
+/* For red things! */
+.red {
+  color: red;
+}
 
-    /* For red things! */
-    .green {
-      color: green;
-    }
+/* For red things! */
+.green {
+  color: green;
+}
 
-    .grey {
-      color: grey;
-    }
+.grey {
+  color: grey;
+}
 
-    .blue {
-      color: rgb(7, 40, 208);
-    }
+.blue {
+  color: rgb(7, 40, 208);
+}
 
-    .blink {
-      color: black;
-      animation: blinker 3s ease-in-out 20;
-    }
+.blink {
+  color: black;
+  animation: blinker 3s ease-in-out 20;
+}
 
-    @keyframes blinker {
-      50% {
-        opacity: 50%;
-        color: red;
-      }
-    }
+@keyframes blinker {
+   50% {
+     opacity: 50%;
+     color: red;
+   }
+}
 
-    /* for <pNote> margin notes (side notes  */
-    .margin-note {
-      font-family: 'Times New Roman', Tahoma, sans-serif;
-      float: right;
+/* for <pNote> margin notes (side notes  */
+   .margin-note {
+     font-family: 'Times New Roman', Tahoma, sans-serif;
+     float: right;
       /* Aligns the note to the right */
-      width: 220px;
+     width: 220px;
       /*  The negative margin-right value should be at least equal to the width of the note */
-      margin-right: -300px;
+     margin-right: -300px;
       /* Shifts the note out of the main content flow */
-      font-size: 0.70em;
+     font-size: 0.70em;
       /* Adjust font size for readability */
-      line-height: 1.2;
+     line-height: 1.2;
       /* Adjust line height for readability */
-      margin-bottom: 10px;
-      text-align: justify;
-      clear: right;
+     margin-bottom: 10px;
+     text-align: justify;
+     clear: right;
       /* Ensures the note doesn't overlap with other floated elements */
-    }
-
-    /* For the line separating main text from the margin notes */
-    .right-margin-bar {
-      border-right: 2px solid rgb(244, 230, 227);
+   }
+   
+   /* For the line separating main text from the margin notes */
+   .right-margin-bar {
+     border-right: 2px solid rgb(244, 230, 227);
       /* Adjust color and thickness as needed */
-      padding-right: 55px;
+     padding-right: 55px;
       /* Space between the bar and content */
-      margin-right: 55px;
-      /* Optional: Space from the right edge of the page */
-      height: auto;
+     margin-right: 55px;
+     /* Optional: Space from the right edge of the page */
+     height: auto;
       /* Or set a fixed height, *e.g.*, 200px */
-      /* overflow: hidden; Do not use w/ margin notes. */
-    }
-
-    /* Suppress margin notes if screen is narrow (1000 px or less) */
-    @media screen and (max-width: 1000px) {
+     /* overflow: hidden; Do not use w/ margin notes. */
+   }
+   
+   /* Suppress margin notes if screen is narrow (1000 px or less) */
+   @media screen and (max-width: 1000px) {
       body {
         width: 100%;
       }
-
+      
       .margin-note {
         width: 0px;
         margin-right: 0px;
         visibility: hidden;
       }
-
+      
       .right-margin-bar {
         overflow: hidden;
       }
-    }
-
-    /* In your main CSS file or a dedicated print.css */
-    @media not screen {
+   }
+   
+   /* In your main CSS file or a dedicated print.css */
+   @media not screen {
       .page-break {
         /* Place in: <div class="page-break-after">...</div> */
         break-after: page;
       }
-
+      
       th {
         color: black !important;
         background-color: white !important;
       }
-
+      
       details[open]>summary {
         display: none !important;
       }
-
+      
       .marquee {
         color: black !important;
         background-color: white !important;
       }
-
+      
       .button-container {
         display: none !important;
       }
-    }
-
-    /* For links you don't want followed outside the Help html*-- a msg appears instead.
-       See <pLink>...</pLink>                         * bc you can't get back!
-    */
-    .linkNote {
-      font-size: 20px;
-    }
-
-    .multi-column-text {
-      margin-left: 0px;
-      margin-right: 0px;
-      column-count: 2;
+   }
+   
+   /* For links you don't want followed outside the Help html*-- a msg appears instead.
+   See <pLink>...</pLink>                         * bc you can't get back!
+   */
+   .linkNote {
+     font-size: 20px;
+   }
+   
+   .multi-column-text {
+     margin-left: 0px;
+     margin-right: 0px;
+     column-count: 2;
       /* Divides the content into two columns */
-      column-gap: 25px;
+     column-gap: 25px;
       /* Adds space between the columns */
-      /* column-rule:  1px solid #ccc;  */
-    }
-
-    /* ======================================================== */
-    /* Regular markdown styles follow */
-
-    /* The main body style */
-    body {
-      background-color: #fffef4;
+     /* column-rule:  1px solid #ccc;  */
+   }
+   
+   /* ======================================================== */
+   /* Regular markdown styles follow */
+   
+   /* The main body style */
+   body {
+     background-color: #fffef4;
       /* Off-white */
-      font-family: Georgia, serif;
-      font-size: 15pt;
-      text-align: justify;
-      padding: 1% 4%;
-      margin-left: 25px;
-      margin-right: 175px;
-      margin-bottom: 0.5in;
-      max-width: 1200px;
+     font-family: Georgia, serif;
+     font-size: 15pt;
+     text-align: justify;
+     padding: 1% 4%;
+     margin-left: 25px;
+     margin-right: 175px;
+     margin-bottom: 0.5in;
+     max-width: 1200px;
       /* Sets a maximum width */
-    }
-
-    /* For document title, passed via pandoc */
-    .title {
-      text-align: center;
-      margin: 5px 10px;
-    }
-
-    /* Inline code */
-    code {
-      font-size: 88%;
-      background-color: #ddfafaff;
-      padding: 2px 4px;
-      border-radius: 3px;
-      font-family: "APL386 Unicode", APL386, "APL385 Unicode", APL385,
-        "Courier New", Courier, Lucida Console", " Consolas", monospace;
-
-    }
-
-    /* Code blocks */
-    pre {
-      background-color: #ddfafaff;
-      color: #0a0a0aff;
-      font-size: 13pt;
-      line-height: 110%;
-      padding: 15px;
-      border-radius: 5px;
-      overflow-x: auto;
-      font-family: "APL386 Unicode", APL386, "APL385 Unicode", APL385,
-        "Courier New", Courier, "Lucida Console", "Consolas", monospace;
-    }
-
-    /* Tables */
-    table {
-      background-color: #ffffffff;
-      line-height: 1.2;
-      font-size: 90%;
+   }
+   
+   /* For document title, passed via pandoc */
+   .title {
+     text-align: center;
+     margin: 5px 10px;
+   }
+   
+   /* Inline code */
+   code {
+     font-size: 88%;
+     background-color: #ddfafaff;
+     padding: 2px 4px;
+     border-radius: 3px;
+     font-family: "APL386 Unicode", APL386, "APL385 Unicode", APL385,
+      "Courier New", Courier, Lucida Console", " Consolas", monospace;
+      
+   }
+   
+   /* Code blocks */
+   pre {
+     background-color: #ddfafaff;
+     color: #0a0a0aff;
+     font-size: 13pt;
+     line-height: 110%;
+     padding: 15px;
+     border-radius: 5px;
+     overflow-x: auto;
+     font-family: "APL386 Unicode", APL386, "APL385 Unicode", APL385,
+      "Courier New", Courier, "Lucida Console", "Consolas", monospace;
+   }
+   
+   /* Tables */
+   table {
+     background-color: #ffffffff;
+     line-height: 1.2;
+     font-size: 90%;
       /* 100%; */
-      border: 2px solid #210074ff;
-      vertical-align: top;
-      font-family: "APL386 Unicode", APL386, "APL385 Unicode", APL385,
-        "Courier New", Courier, "Lucida Console", "Consolas", monospace;
-    }
-
-    th {
+     border: 2px solid #210074ff;
+     vertical-align: top;
+     font-family: "APL386 Unicode", APL386, "APL385 Unicode", APL385,
+      "Courier New", Courier, "Lucida Console", "Consolas", monospace;
+   }
+   
+   th {
       /* Table header */
-      font-family: Georgia, "Courier New", Courier, "Lucida Console", "Consolas", monospace;
-      font-weight: 900;
-      line-height: 1.1;
-      padding: 7px 7px;
-      vertical-align: top;
-      background-color: #25027eff;
-      color: #ffffffff;
-      border: 1px solid black;
-    }
-
-    td {
+     font-family: Georgia, "Courier New", Courier, "Lucida Console", "Consolas", monospace;
+     font-weight: 900;
+     line-height: 1.1;
+     padding: 7px 7px;
+     vertical-align: top;
+     background-color: #25027eff;
+     color: #ffffffff;
+     border: 1px solid black;
+   }
+   
+   td {
       /* Table data */
-      font-family: Georgia, "Courier New", Courier, "Lucida Console", "Consolas", monospace;
-      font-weight: 200;
-      padding: 5px 7px;
-      text-align: justify;
-      vertical-align: top;
-      border: 1px solid black;
-    }
-
-    tr:nth-child(odd) {
-      background-color: #ebebebff;
+     font-family: Georgia, "Courier New", Courier, "Lucida Console", "Consolas", monospace;
+     font-weight: 200;
+     padding: 5px 7px;
+     text-align: justify;
+     vertical-align: top;
+     border: 1px solid black;
+   }
+   
+   tr: nth-child(odd) {
+     background-color: #ebebebff;
       /* Light grey for odd rows */
-    }
-
-    tr:nth-child(even) {
-      background-color: #ffffffff;
+   }
+   
+   tr: nth-child(even) {
+     background-color: #ffffffff;
       /* White for even rows */
-    }
-
-    blockquote {
-      font-size: 110%;
-      background-color: #f4f5f5ff;
-    }
-
-    ul,
-    li {
-      font-size: 100%;
-      line-height: 130%;
+   }
+   
+   blockquote {
+     font-size: 110%;
+     background-color: #f4f5f5ff;
+   }
+   
+   ul,
+   li {
+     font-size: 100%;
+     line-height: 130%;
       /* Was 120%; */
-    }
-
-    /* # headers: Make h1 headers (#...) the same size as h2 (##...) */
-    h1 {
-      font-size: 1.5em;
-    }
-
-    /* scroll-target: Allow a target inside the scope of a <details>
-       that forces open the details, but scrolling to just above (1.3in above)
-    */
-    .scroll-target {
-      scroll-margin-top: 1.3in;
-    }
-
-    /* Optional: Add smooth scrolling to the whole page */
-    html {
-      scroll-behavior: smooth;
-    }
-
-    /* links-- make them less obtrusive */
-    a:link {
+   }
+   
+   /* # headers: Make h1 headers (#...) the same size as h2 (##...) */
+   h1 {
+     font-size: 1.5em;
+   }
+   
+   /* scroll-target: Allow a target inside the scope of a <details>
+   that forces open the details, but scrolling to just above (1.3in above)
+   */
+   .scroll-target {
+     scroll-margin-top: 1.3in;
+   }
+   
+   /* Optional: Add smooth scrolling to the whole page */
+   html {
+     scroll-behavior: smooth;
+   }
+   
+   /* links-- make them less obtrusive */
+   a: link {
       /* link not visited */
-      color: black;
-      font-size: 100%;
-      text-decoration: underline darkred dotted;
-    }
-
-    a:visited {
+     color: black;
+     font-size: 100%;
+     text-decoration: underline darkred dotted;
+   }
+   
+   a: visited {
       /* visited link */
-      color: black;
-      text-decoration: underline darkred dashed;
-    }
-
-    a:hover {
-      color: red;
-      font-weight: 750;
-      text-decoration: underline red solid;
-      transition: color 0.5s, font-size 1s;
+     color: black;
+     text-decoration: underline darkred dashed;
+   }
+   
+   a: hover {
+     color: red;
+     font-weight: 750;
+     text-decoration: underline red solid;
+     transition: color 0.5s, font-size 1s;
       /* font-size 2.0s ease; /* Smooth transition */
-    }
-
-    /* For the fixed navigation footer we set up */
-    .doc-footer {
-      position: fixed;
-      font-size: 90%;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      background-color: #e7e7e7ff;
-      color: black;
-      text-align: center;
-      padding: 0 0 0 0;
-    }
-
-    .button-container {
-      display: flex;
-      flex-wrap: wrap;
+   }
+   
+   /* For the fixed navigation footer we set up */
+   .doc-footer {
+     position: fixed;
+     font-size: 90%;
+     left: 0;
+     bottom: 0;
+     width: 100%;
+     background-color: #e7e7e7ff;
+     color: black;
+     text-align: center;
+     padding: 0 0 0 0;
+   }
+   
+   .button-container {
+     display: flex;
+     flex-wrap: wrap;
       /* Allows items to wrap to the next line */
-    }
-
-    /* Fixed size white on green button in navig footer */
-    .happy-button {
-      font-size: 90%;
-      color: white;
-      background-color: rgb(43, 122, 61);
-    }
-
-    /* Fixed size white on red button in navig footer */
-    .warn-button {
-      /* width: 150px; */
-      font-size: 90%;
-      color: white;
-      background-color: red;
-    }
-
-    /* Fixed size white on blue button in navig footer */
-    .normal-button {
-      /* width: 175px; */
-      font-size: 90%;
-      color: white;
-      background-color: rgb(104, 98, 187);
-    }
-
-    /* For updating user on page resizing, etc. See JS code */
-    .pAlertMsg {
-      display: none;
-      position: fixed;
-      text-align: center;
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: black;
-      background-color: #cecac4;
-      padding: 5px;
-      border: 10px double black;
-      white-space: pre-wrap;
+   }
+   
+   /* Fixed size white on green button in navig footer */
+   .happy-button {
+     font-size: 90%;
+     color: white;
+     background-color: rgb(43, 122, 61);
+   }
+   
+   /* Fixed size white on red button in navig footer */
+   .warn-button {
+     /* width: 150px; */
+     font-size: 90%;
+     color: white;
+     background-color: red;
+   }
+   
+   /* Fixed size white on blue button in navig footer */
+   .normal-button {
+     /* width: 175px; */
+     font-size: 90%;
+     color: white;
+     background-color: rgb(104, 98, 187);
+   }
+   
+   /* For updating user on page resizing, etc. See JS code */
+   .pAlertMsg {
+     display: none;
+     position: fixed;
+     text-align: center;
+     top: 40%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     color: black;
+     background-color: #cecac4;
+     padding: 5px;
+     border: 10px double black;
+     white-space: pre-wrap;
       /* honor \n */
-    }
-  </style>
-
-  <script>
-    //  Handle Expand/Collapse button at bottom of Help page 
-    document.addEventListener('DOMContentLoaded', () => {
-      const toggleButton = document.getElementById('toggleDetails');
-      toggleButton.addEventListener('click', () => {
-        // Select all <details> elements that do NOT have the pPeek id (id="pPeek").
-        const detailsToToggle = document.querySelectorAll('details:not(#pPeek)');
-        // Check if the button should expand or collapse - based on button text.
-        const expandNow = toggleButton.textContent.includes('Expand');
-
-        detailsToToggle.forEach(detail => {
-          if (expandNow) {
-            detail.setAttribute('open', '');  // Expand: add 'open' attr.
-          } else {
-            detail.removeAttribute('open');   // Collapse: remove 'open' attr.
-          }
-        });
-        if (expandNow) {
-          toggleButton.textContent = 'Collapse All';
-        } else {
-          toggleButton.textContent = 'Expand All';
-        }
-      });
-    });
-
-
-    // Close the Help window
-    // - for the Close Window button at bottom of Help page
-    function closeWindowNow() {
+   }
+   </style>
+   
+   <script>
+   //  Handle Expand/Collapse button at bottom of Help page 
+      document.addEventListener('DOMContentLoaded', () => {
+         const toggleButton = document.getElementById('toggleDetails');
+            toggleButton.addEventListener('click', () => {
+               // Select all <details> elements that do NOT have the pPeek id (id="pPeek").
+               const detailsToToggle = document.querySelectorAll('details:not(#pPeek)');
+               // Check if the button should expand or collapse - based on button text.
+               const expandNow = toggleButton.textContent.includes('Expand');
+               
+                  detailsToToggle.forEach(detail => {
+                     if (expandNow) {
+                       detail.setAttribute('open', '');  // Expand: add 'open' attr.
+                     } else {
+                       detail.removeAttribute('open');   // Collapse: remove 'open' attr.
+                     }
+               });
+               if (expandNow) {
+                  toggleButton.textContent = 'Collapse All';
+               } else {
+                  toggleButton.textContent = 'Expand All';
+               }
+         });
+   });
+   
+   
+   // Close the Help window
+   // - for the Close Window button at bottom of Help page
+   function closeWindowNow() {
       showAlert("Closing Window...", 1000, 1);
       setTimeout(window.close, 1000);
-    }
-
-    function sleep(howLong) {
+   }
+   
+   function sleep(howLong) {
       return new Promise(resolve => setTimeout(resolve, howLong));
-    }
-
-    function myPrint() {
+   }
+   
+   function myPrint() {
       const toggleButton = document.getElementById('toggleDetails');
       const detailsToToggle = document.querySelectorAll('details');
       const notOpen = toggleButton.textContent.includes('Expand');
       const myPrintPause = 2000;
-
+      
       // Open all details (some may have been already), including pPeek details.
-      detailsToToggle.forEach(detail => {
-        detail.setAttribute('open', '');
+         detailsToToggle.forEach(detail => {
+            detail.setAttribute('open', '');
       });
       showAlert("To print, set Scaling to ~62%", myPrintPause - 250, 0);
-      sleep(myPrintPause).then(() => {
-        window.print();    // Pause until window is printed or cancelled.
-        // if notOpen, simply close all details (some may have been open).
-        if (notOpen) {
-          detailsToToggle.forEach(detail => {
-            detail.removeAttribute('open');
-          })
-        };
+         sleep(myPrintPause).then(() => {
+            window.print();    // Pause until window is printed or cancelled.
+            // if notOpen, simply close all details (some may have been open).
+            if (notOpen) {
+                  detailsToToggle.forEach(detail => {
+                     detail.removeAttribute('open');
+               })
+            };
       });
-    }
-
-    // Informational Alert 
-    // showAlert( text, howLong in ms to show, urgent)
-    // urgent: 1= show ⚠️; 0= show ℹ️  
-    function showAlert(displayMe, howLong, urgent) {
+   }
+   
+   // Informational Alert 
+   // showAlert( text, howLong in ms to show, urgent)
+   // urgent: 1= show ⚠️; 0= show ℹ️  
+   function showAlert(displayMe, howLong, urgent) {
       var alertBox = document.getElementById("pAlertMsg");
       var alertPfx = document.getElementById("pAlertPfx");
       var alertTxt = document.getElementById("pAlertText");
       alertBox.style.display = "block"; // Show the alert
       if (urgent == 1) {
-        alertPfx.textContent = "⚠️ ";
+         alertPfx.textContent = "⚠️ ";
       } else {
-        alertPfx.textContent = "ℹ️ ";
+         alertPfx.textContent = "ℹ️ ";
       }
       alertTxt.textContent = displayMe;
-      sleep(howLong).then(() => {
-        alertBox.style.display = "none";  // Hide me
+         sleep(howLong).then(() => {
+            alertBox.style.display = "none";  // Hide me
       });
-    }
-    function linkAlert() {
+   }
+   function linkAlert() {
       showAlert("Use regular browser to explore link. Select link text and ctrl-click (right-click) to copy.", 2000, 1);
-    }
-
-    // Listener for narrow/wide text
-    // (triggered when text crosses width boundary specified) 
-    const mediaQuery = window.matchMedia("screen and (max-width: 1000px)");
-    mediaQuery.addEventListener('change', (event) => {
-      if (event.matches) {
-        showAlert("Omitting Margin Notes...", 2000, 1);
-      } else {
-        showAlert("Showing Margin Notes...", 2000, 0);
-      }
-    });
-
-    // Listener for copy: Cmd-C, Meta-C; quit: Cmd-Q, Meta-Q
-    document.addEventListener('keydown', (event) => {
-      // Check for a specific key combination, e.g., Ctrl + C (event.ctrlKey || 
-      if (event.ctrlKey || event.metaKey) {
-        if (event.key === 'c') { // We can't seem to copy onto clipboard directly
-          showAlert("To copy, ctrl-click (right-click) and select the copy option.", 1500, 1);
-        } else if (event.key === 'q') {
-          closeWindowNow();
-        }
-      }
-    });
-
-    // (C) 2025 Sam the Cat Foundation 
-  </script>
-</head>
-<body>
-<header id="title-block-header">
-<h1 class="title">∆F Formatted String Literals (v.0.4.5)</h1>
-</header>
-<nav id="TOC" role="doc-toc">
-
-</nav>
-<h2 class="unnumbered" id="introduction">0 Introduction</h2>
-<div class="right-margin-bar">
-<p><span class="margin-note">Short for “<strong>format­ted string
-lit­er­als</strong>, <em>f‑strings</em> were introduced in Python in 2016.
-<strong>∆F</strong> <em>f‑strings</em> and Python’s are
-<strong>not</strong> compatible.</span></p>
-<p><a id="intro" class="scroll-target"></a></p>
-<div class="marquee">
-<center>
-<strong><em>∆F</em></strong> is a function for <em>Dyalog</em>
-<em>APL</em> that interprets <em>f‑strings</em>, a concise, yet powerful
-way to display multiline <em>APL</em> text, arbitrary <em>APL</em>
-expressions, and multi­dimensional objects using extensions to
-<em>dfns</em> and other familiar tools.
-</center>
-</div>
-<h3 class="unnumbered" id="major-headings">Major Headings</h3>
-<details id="TOC" open>
-<!-- option: open  Set id="TOC" here only. -->
-<summary class="summary">
- <span style="opacity:0.6;">Show/Hide</span> <em>Major Headings</em>
-</summary>
-<span class="margin-note"><br><br><br> <strong>Quick Start:</strong> If
-you want the minimum before diving in. </span>
-<div class="multi-column-text" style="font-size:80%;">
-<p><big >1. <a href="#inside-preparing"         >Preparing to Run
-<strong>∆F</strong></a> <br  >2.
-<a href="#inside-overview"          >Overview</a> <br  >3.
-<a href="#inside-quick-start"       ><span class="blink"><strong>Quick
-Start</strong></span></a> <br  >4.
-<a href="#inside-examples"          ><strong>∆F</strong> Examples: A
-Primer</a><br />
-<br  >5. <a href="#inside-reference"         ><strong>∆F</strong>
-Reference</a> <br  >6.
-<a href="#inside-appendices"        >Appendices</a> <br  >7.
-<a href="#inside-index"             >Index of Topics</a> </big></p>
-</div>
-<hr />
-</details>
-<!-- <div class="page-break"></div>  -->
-<h1 data-number="1" id="preparing-to-run-f"><span
-class="header-section-number">1</span> Preparing to Run
-<strong>∆F</strong></h1>
-<details>
-<!-- option: open -->
-<summary class="summary">
- <span style="opacity:0.6;">Show/Hide</span> <em>Preparing to Run
-<bold>∆F</bold></em>
-</summary>
-<p><a id="inside-preparing" class="scroll-target"></a></p>
-<h2 data-number="1.1" id="f-installation"><span
-class="header-section-number">1.1</span> <strong>∆F</strong>
-Installation</h2>
-<ol type="1">
-<li>Via your browser, go to Github URL
-<mark><a id="displayText" href="javascript:linkAlert();"><span
-class="linkNote">https://github.com/thecatsam/f-string-apl.git</span></a></mark>.</li>
-<li>Make a note of <span class="margin-note">Dyalog user command
-<code>]cd</code> will show you your current working
-directory.</span>your current (or desired) working directory.</li>
-<li><span class="margin-note"><strong>Download:</strong> E.g. via the
-Github <strong>Code</strong> button, use download ZIP to place in the
-desired directory .</span>Download and copy the file
-<strong>∆F.dyalog</strong> and directory <strong>∆F</strong> (which
-contains several files) into the current working directory, ensuring
-they are peers, <em>i.e.</em> at the same directory level.</li>
-</ol>
-<p><big>👉</big> Now, <strong>∆F</strong> is available to load and use.
-Continue in the <a href="#loading-and-running-f">next section</a>.</p>
-<h2 data-number="1.2" id="loading-and-running-f"><span
-class="header-section-number">1.2</span> Loading and Running
-<strong>∆F</strong></h2>
-<ol type="1">
-<li>Confirm that your current directory remains as before.</li>
-<li>From your Dyalog session<span
-class="margin-note"><em>Or,</em> <code>⎕SE.⎕FIX'∆F.Dyalog'</code><br><strong><em>⎕SE:</em></strong>
-Or any <em>target</em> namespace you desire.</span>, enter:
+   }
+   
+   // Listener for narrow/wide text
+   // (triggered when text crosses width boundary specified) 
+      const mediaQuery = window.matchMedia("screen and (max-width: 1000px)");
+      mediaQuery.addEventListener('change', (event) => {
+         if (event.matches) {
+            showAlert("Omitting Margin Notes...", 2000, 1);
+         } else {
+            showAlert("Showing Margin Notes...", 2000, 0);
+         }
+   });
+   
+   // Listener for copy: Cmd-C, Meta-C; quit: Cmd-Q, Meta-Q
+      document.addEventListener('keydown', (event) => {
+         // Check for a specific key combination, e.g., Ctrl + C (event.ctrlKey || 
+            if (event.ctrlKey || event.metaKey) {
+               if (event.key === 'c') { // We can't seem to copy onto clipboard directly
+                  showAlert("To copy, ctrl-click (right-click) and select the copy option.", 1500, 1);
+               } else if (event.key === 'q') {
+                  closeWindowNow();
+               }
+            }
+      });
+      
+      // (C) 2025 Sam the Cat Foundation 
+      </script>
+      </head>
+      <body>
+      <header id="title-block-header">
+      <h1 class="title">∆F Formatted String Literals (v.0.4.5)</h1>
+      </header>
+      <nav id="TOC" role="doc-toc">
+      
+      </nav>
+      <h2 class="unnumbered" id="introduction">0 Introduction</h2>
+      <div class="right-margin-bar">
+      <p><span class="margin-note">Short for “<strong>format­ted string
+      lit­er­als</strong>, <em>f‑strings</em> were introduced in Python in 2016.
+      <strong>∆F</strong> <em>f‑strings</em> and Python’s are
+      <strong>not</strong> compatible.</span></p>
+      <p><a id="intro" class="scroll-target"></a></p>
+      <div class="marquee">
+      <center>
+      <strong><em>∆F</em></strong> is a function for <em>Dyalog</em>
+      <em>APL</em> that interprets <em>f‑strings</em>, a concise, yet powerful
+      way to display multiline <em>APL</em> text, arbitrary <em>APL</em>
+      expressions, and multi­dimensional objects using extensions to
+      <em>dfns</em> and other familiar tools.
+      </center>
+      </div>
+      <h3 class="unnumbered" id="major-headings">Major Headings</h3>
+      <details id="TOC" open>
+      <!-- option: open  Set id="TOC" here only. -->
+      <summary class="summary">
+      <span style="opacity: 0.6;">Show/Hide</span> <em>Major Headings</em>
+      </summary>
+      <span class="margin-note"><br><br><br> <strong>Quick Start: </strong> If
+      you want the minimum before diving in. </span>
+      <div class="multi-column-text" style="font-size: 80%;">
+      <p><big >1. <a href="#inside-preparing"         >Preparing to Run
+      <strong>∆F</strong></a> <br  >2.
+      <a href="#inside-overview"          >Overview</a> <br  >3.
+      <a href="#inside-quick-start"       ><span class="blink"><strong>Quick
+      Start</strong></span></a> <br  >4.
+      <a href="#inside-examples"          ><strong>∆F</strong> Examples: A
+      Primer</a><br />
+      <br  >5. <a href="#inside-reference"         ><strong>∆F</strong>
+      Reference</a> <br  >6.
+      <a href="#inside-appendices"        >Appendices</a> <br  >7.
+      <a href="#inside-index"             >Index of Topics</a> </big></p>
+      </div>
+      <hr />
+      </details>
+      <!-- <div class="page-break"></div>  -->
+      <h1 data-number="1" id="preparing-to-run-f"><span
+      class="header-section-number">1</span> Preparing to Run
+      <strong>∆F</strong></h1>
+      <details>
+      <!-- option: open -->
+      <summary class="summary">
+      <span style="opacity: 0.6;">Show/Hide</span> <em>Preparing to Run
+      <bold>∆F</bold></em>
+      </summary>
+      <p><a id="inside-preparing" class="scroll-target"></a></p>
+      <h2 data-number="1.1" id="f-installation"><span
+      class="header-section-number">1.1</span> <strong>∆F</strong>
+      Installation</h2>
+      <ol type="1">
+      <li>Via your browser, go to Github URL
+      <mark><a id="displayText" href="javascript: linkAlert();"><span
+      class="linkNote">https: //github.com/thecatsam/f-string-apl.git</span></a></mark>.</li>
+      <li>Make a note of <span class="margin-note">Dyalog user command
+   <code>]cd</code> will show you your current working
+   directory.</span>your current (or desired) working directory.</li>
+   <li><span class="margin-note"><strong>Download: </strong> E.g. via the
+   Github <strong>Code</strong> button, use download ZIP to place in the
+   desired directory .</span>Download and copy the file
+   <strong>∆F.dyalog</strong> and directory <strong>∆F</strong> (which
+   contains several files) into the current working directory, ensuring
+   they are peers, <em>i.e.</em> at the same directory level.</li>
+   </ol>
+   <p><big>👉</big> Now, <strong>∆F</strong> is available to load and use.
+   Continue in the <a href="#loading-and-running-f">next section</a>.</p>
+   <h2 data-number="1.2" id="loading-and-running-f"><span
+   class="header-section-number">1.2</span> Loading and Running
+   <strong>∆F</strong></h2>
+   <ol type="1">
+   <li>Confirm that your current directory remains as before.</li>
+   <li>From your Dyalog session<span
+   class="margin-note"><em>Or,</em> <code>⎕SE.⎕FIX'∆F.Dyalog'</code><br><strong><em>⎕SE: </em></strong>
+   Or any <em>target</em> namespace you desire.</span>, enter: 
 <br> <code>]load ∆F -target=⎕SE</code><br> Now, the target directory
 (<code>⎕SE</code>) will contain the namespace <code>FString</code>,
 containing <code>∆F</code> and supporting services and objects.</li>
@@ -632,7 +632,7 @@ type: <code>∆F⍨ 'help'</code>.</p>
 class="header-section-number">2</span> Overview</h1>
 <details open>
 <summary class="summary">
- <span style="opacity:0.6;">Show/Hide</span> <em>Overview</em>
+<span style="opacity: 0.6;">Show/Hide</span> <em>Overview</em>
 </summary>
 <p><a id="inside-overview" class="scroll-target"></a></p>
 <p><span class="margin-note">The current version of <strong>∆F</strong>
@@ -645,7 +645,7 @@ character vector, which may reference objects in the environment,
 additional function arguments, or both.</p>
 <p><span class="margin-note">For <em>f-string</em> formats, see <a
 href="#f-call-syntax-overview"><strong>∆F</strong> Call Syn­tax
-Over­view</a>.</span> <strong>∆F</strong> <em>f‑strings</em> include:</p>
+Over­view</a>.</span> <strong>∆F</strong> <em>f‑strings</em> include: </p>
 <ul>
 <li>The abstraction of 2-dimensional character
 <strong><em>fields</em></strong>, generated one-by-one from the user’s
@@ -667,12 +667,12 @@ dfn logic. Each <strong>Code</strong> field must return a value, simple
 or otherwise, which will be catenated with other fields and returned
 from <strong>∆F</strong>;</p>
 <p><strong>Code</strong> fields also provide a number of concise,
-convenient extensions, such as:</p>
+convenient extensions, such as: </p>
 <ul>
 <li><p><strong>Quoted strings</strong> <span class="margin-note">Quoted
 strings, like <strong>Text</strong> fields, allow easy entry of newlines
 via the sequence <code>`◇</code>.</span> in <strong>Code</strong>
-fields, with several quote styles:</p>
+fields, with several quote styles: </p>
 <ul>
 <li><strong>double-quotes</strong><br> <code>∆F '{"like this"}'</code>
 or <code>∆F '{"on`◇""three""`◇lines"}'</code></li>
@@ -681,7 +681,7 @@ class="margin-note"><big><strong>«</strong></big> and
 <big><strong>»</strong></big>: Also known as
 <em>guillemets</em>.</span><br>
 <code>∆F '{«with internal quotes like "this" or ''this''»}'</code>,<br>
-<em>not to mention:</em></li>
+<em>not to mention: </em></li>
 <li><em>APL</em>’s tried-and-true embedded
 <strong>single-quotes</strong>,<br>
 <code>∆F '{''shown ''''right'''' here''}'</code></li>
@@ -692,35 +692,35 @@ document.</span> for</p>
 <ul>
 <li><strong>format</strong>ting numeric arrays, <strong>$</strong>
 (short for
-<strong>⎕FMT</strong>):<br><code>∆F '{"F7.5" $ ?0 0}'</code></li>
+<strong>⎕FMT</strong>): <br><code>∆F '{"F7.5" $ ?0 0}'</code></li>
 <li>putting a <strong>box</strong> around a specific expression,
-<strong>`B</strong>:<br><code>∆F '{`B ⍳2 2}'</code></li>
+<strong>`B</strong>: <br><code>∆F '{`B ⍳2 2}'</code></li>
 <li>placing the output of one expression <strong>above</strong> another,
-<strong>%</strong>:<br><code>∆F '{"Pi"% ○1}'</code></li>
+<strong>%</strong>: <br><code>∆F '{"Pi"% ○1}'</code></li>
 <li>formatting <strong>date</strong> and <strong>time</strong>
 expressions from <em>APL</em> timestamps (<strong>⎕TS</strong>) using
 <strong>`T</strong><span class="margin-note"><code>`T</code>
 combines <strong>1200⌶</strong> and
-<strong>⎕DT</strong></span>:<br><code>∆F '{"hh:mm:ss" `T ⎕TS}'</code></li>
+<strong>⎕DT</strong></span>: <br><code>∆F '{"hh:mm:ss" `T ⎕TS}'</code></li>
 <li>calling <span class="margin-note"><strong>£</strong> stands for
 <em>library</em>.</span>arbitrary functions on the fly from the
 <strong>dfns</strong> workspace or a user
-file:<br><code>∆F '{41=£.pco 12}' ⍝ Is 41 the 12th prime?</code></li>
+file: <br><code>∆F '{41=£.pco 12}'                                      ⍝ Is 41 the 12th prime?</code></li>
 <li><em>and more</em>;</li>
 </ul></li>
 <li><p>Simple mechanisms for concisely formatting and displaying data
 from</p>
 <ul>
 <li>user arrays of any shape and
-dimensionality:<br><code>tempC← 10 110 40 ◇ ∆F '{tempC}'</code>
+dimensionality: <br><code>tempC← 10 110 40 ◇ ∆F '{tempC}'</code>
 <br></li>
 <li>arbitrary <span class="margin-note"><br>£ quietly finds
 <code>dec</code> and <code>hex</code> in the <strong>dfns</strong>
 workspace.</span><em>dfn</em>-style
-code:<br><code>∆F '{ 223423 ≡⊃£.dec £.hex 223423: "Checks out" ◇ "Bad"}'</code>
+code: <br><code>∆F '{ 223423 ≡⊃£.dec £.hex 223423: "Checks out" ◇ "Bad"}'</code>
 <br></li>
 <li>arguments to <strong>∆F</strong> that follow the format
-string:<br><code>∆F '{32+`⍵1×9÷5}' (10 110 40)</code><span
+string: <br><code>∆F '{32+`⍵1×9÷5}' (10 110 40)</code><span
 class="margin-note"><code>`⍵1</code>: shortcut for
 <code>(⍵⊃⍨1+⎕IO)</code></span></li>
 <li><em>and more</em>;</li>
@@ -733,11 +733,11 @@ where needed;</p>
 <ul>
 <li>one space: <code>{ }</code>; five spaces: <code>{     }</code>; or
 even, zero spaces: <code>{}</code>;</li>
-<li>1000 spaces? Use a <strong>Code</strong> field instead:
+<li>1000 spaces? Use a <strong>Code</strong> field instead: 
 <code>{1000⍴""}</code>.</li>
 </ul></li>
 <li><p>Use of <span class="margin-note">These options are
-equi­valent:<br>∘ <code>0 1 1</code> <br>∘
+equi­valent: <br>∘ <code>0 1 1</code> <br>∘
 <code>(verbose: 1 ◇ box: 1)</code></span> <em>either</em> <a
 href="#f-option-details"><strong>positional</strong></a> or <a
 href="#f-option-details"><strong>keyword</strong></a> (namespace-based)
@@ -764,7 +764,7 @@ using Dyalog functions and operators.</p>
 <details>
 <!-- option: open -->
 <summary class="summary">
- Recap: <em>The Three Field Types</em>
+Recap: <em>The Three Field Types</em>
 </summary>
 <p><a id="table-field-types" class="scroll-target"></a></p>
 <table>
@@ -822,7 +822,7 @@ class="header-section-number">3</span> Quick Start</h1>
 <details>
 <!-- option: open -->
 <summary class="summary">
- <span style="opacity:0.6;">Show/Hide</span> <em>Quick Start</em>
+<span style="opacity: 0.6;">Show/Hide</span> <em>Quick Start</em>
 </summary>
 <p><a id="inside-quick-start" class="scroll-target"></a></p>
 <h3 class="unnumbered"
@@ -832,45 +832,45 @@ class="blue"><strong>Here’s a quick start for the
 didn’t read</span>crowd. </strong></span></h3>
 <p><strong>3.1: Embed variables</strong></p>
 <pre><code>   n← ⍪1+⍳3 ◇ nPi← ⍪○n  
-   ∆F &#39;For n={ n }, n×Pi={ nPi }&#39;  
+∆F &#39;For n={ n }, n×Pi={ nPi }&#39;  
 For n=1, n×Pi=3.141592653589793
-      2       6.283185307179586
-      3       9.42477796076938 </code></pre>
+2       6.283185307179586
+3       9.42477796076938 </code></pre>
 <p><strong>3.2: Embed expressions</strong></p>
 <pre><code>   ∆F &#39;For n={ ⍪1+⍳3 }, n×Pi={ ⍪○1+⍳3 }&#39;  
 For n=1, n×Pi=3.141592653589793
-      2       6.283185307179586
-      3       9.42477796076938 </code></pre>
+2       6.283185307179586
+3       9.42477796076938 </code></pre>
 <p><strong>3.3: Build multiline text fields and code fields</strong></p>
-<pre><code>⍝      &lt;----  text field  ----&gt;   &lt;- text field -&gt;    &lt;- code field str -&gt;
-   ∆F &#39;Cats`◇Elephants`◇Monkeys{ }like`◇enjoy`◇eat{ }{&quot;toys.`◇tv.`◇fruit.&quot;}&#39;
+<pre><code>                                                             ⍝      &lt;----  text field  ----&gt;   &lt;- text field -&gt;    &lt;- code field str -&gt;
+∆F &#39;Cats`◇Elephants`◇Monkeys{ }like`◇enjoy`◇eat{ }{&quot;toys.`◇tv.`◇fruit.&quot;}&#39;
 Cats      like  toys. 
 Elephants enjoy tv.   
 Monkeys   eat   fruit.</code></pre>
 <p><strong>3.4: Apply the Format shortcut $</strong></p>
 <pre><code>   ∆F &#39;For n={ ⍪1 2 3 }, n×Pi={ &quot;F7.5&quot;$ ○1 2 3 }&#39;  
 For n=1, n×Pi=3.14159
-      2       6.28319
-      3       9.42478</code></pre>
+2       6.28319
+3       9.42478</code></pre>
 <p><strong>3.5: Add Omega shortcut expressions</strong></p>
-<pre><code>⍝  `⍵1 ==&gt; (⍵⊃⍨ 1+⎕IO), i.e. ⎕IO-independently
-   ∆F &#39;For n={ ⍪`⍵2 }, n×Pi={ `⍵1 $ ○`⍵2 }&#39; &#39;F7.5&#39; (1 2 3)
+<pre><code>                                                             ⍝  `⍵1 ==&gt; (⍵⊃⍨ 1+⎕IO), i.e. ⎕IO-independently
+∆F &#39;For n={ ⍪`⍵2 }, n×Pi={ `⍵1 $ ○`⍵2 }&#39; &#39;F7.5&#39; (1 2 3)
 For n=1, n×Pi=3.14159
-      2       6.28319
-      3       9.42478</code></pre>
+2       6.28319
+3       9.42478</code></pre>
 <p><strong>3.6: Add the Box shortcut</strong></p>
 <pre><code>   ∆F &#39;For n={ `B ⍪`⍵1 }, n×Pi={ `B &quot;F7.5&quot;$ ○`⍵1 }&#39; (1 2 3)
 For n=┌─┐, n×Pi=┌───────┐
-      │1│       │3.14159│
-      │2│       │6.28319│
-      │3│       │9.42478│
-      └─┘       └───────┘</code></pre>
+│1│       │3.14159│
+│2│       │6.28319│
+│3│       │9.42478│
+└─┘       └───────┘</code></pre>
 <p><strong>3.7: Use Self-Documenting Code Fields and the Box
 option</strong></p>
 <pre class="dyalog20"><code>   names←  ⍪&#39;Ted&#39; &#39;Mary&#39; &#39;Sam&#39;
-   scores← ⍪(70 66 44) (82 88 92) (90 77 83)
-   Ave← +/÷≢
-   (box: 1) ∆F &#39;{names↓}{scores↓}{1⍕Ave¨scores↓}&#39;
+scores← ⍪(70 66 44) (82 88 92) (90 77 83)
+Ave← +/÷≢
+(box: 1) ∆F &#39;{names↓}{scores↓}{1⍕Ave¨scores↓}&#39;
 ┌──────┬──────────┬─────────────┐
 │names↓│ scores↓  │1⍕Ave¨scores↓│
 │ Ted  │ 70 66 44 │     60.0    │
@@ -881,19 +881,19 @@ option</strong></p>
 
 </div>
 <p><strong>3.8: Serialise an object in Array Notation</strong></p>
-<pre><code>   anim←(cat: 1 ◇ dog: 2 ◇ mouse: 3)
-   ∆F &#39;{`⍵1 `S anim ↓} { `⍵2 `S anim↓}&#39; 1 0    
-  `⍵1 `S anim ↓        `⍵2 `S anim↓ 
-(cat:1◇dog:2◇mouse:3◇)  (        
-                         cat:1   
-                         dog:2   
-                         mouse:3 
-                       )          </code></pre>
+<pre><code>   anim← (cat: 1 ◇ dog: 2 ◇ mouse: 3)
+∆F &#39;{`⍵1 `S anim ↓} { `⍵2 `S anim↓}&#39; 1 0    
+`⍵1 `S anim ↓        `⍵2 `S anim↓ 
+(cat: 1◇dog: 2◇mouse: 3◇)  (        
+   cat: 1   
+   dog: 2   
+   mouse: 3 
+)          </code></pre>
 <p><strong>3.9: Grab utility automagically from</strong>
 <strong><em>dfns</em></strong> <strong>workspace (or from a
 file)</strong></p>
-<pre><code>   ∆F&#39;{ £.hex 57005 48879 51966}&#39;   ⍝ Get hex fn to convert dec to hexadecimal!
- dead  beef  cafe                   ⍝ Yes, those are ordinary hexadecimal numbers!</code></pre>
+<pre><code>   ∆F&#39;{ £.hex 57005 48879 51966}&#39;                    ⍝ Get hex fn to convert dec to hexadecimal!
+dead  beef  cafe                                                        ⍝ Yes, those are ordinary hexadecimal numbers!</code></pre>
 <h3 class="unnumbered"
 id="thats-80-of-what-you-need.-read-on-for-more"><span
 class="blue"><strong>That’s 80% of what you need. Read on for
@@ -907,7 +907,7 @@ class="header-section-number">4</span> ∆F Examples: A Primer</h1>
 <details>
 <!-- option: open -->
 <summary class="summary">
- <span style="opacity:0.6;">Show/Hide</span> <em>Examples: A Primer</em>
+<span style="opacity: 0.6;">Show/Hide</span> <em>Examples: A Primer</em>
 </summary>
 <p><a id="inside-examples" class="scroll-target"></a></p>
 <p>Before providing information on <strong>∆F</strong> syntax and other
@@ -915,7 +915,7 @@ details, <em>let’s start with some examples</em>…</p>
 <p>First, let’s set some context for the examples. (You can set these
 however you want.)</p>
 <p><span class="margin-note">All examples in this document assume
-<code>⎕IO←0 ◇ ⎕ML←1</code>.</span></p>
+<code>⎕IO← 0 ◇ ⎕ML← 1</code>.</span></p>
 <pre><code>   ⎕IO ⎕ML← 0 1</code></pre>
 <h2 data-number="4.1" id="code-fields"><span
 class="header-section-number">4.1</span> Code Fields</h2>
@@ -923,7 +923,7 @@ class="header-section-number">4.1</span> Code Fields</h2>
 <p><span class="margin-note">So far, this is like everybody else’s
 <em>f‑strings</em>. </span></p>
 <pre><code>   name← &#39;Fred&#39; ◇ age← 43
-   ∆F &#39;The patient&#39;&#39;s name is {name}. {name} is {age} years old.&#39;
+∆F &#39;The patient&#39;&#39;s name is {name}. {name} is {age} years old.&#39;
 The patient&#39;s name is Fred. Fred is 43 years old.</code></pre>
 <p><strong>Code</strong> fields can contain arbitrary expressions. With
 default options, <strong>∆F</strong> always returns a single character
@@ -932,34 +932,34 @@ columns.</p>
 <p><span class="margin-note"> Now we’re taking advantage of
 <em>APL</em>’s array-oriented style. </span></p>
 <pre><code>   tempC← ⍪35 85
-   ⍴⎕← ∆F &#39;The temperature is {tempC}{2 2⍴&quot;°C&quot;} or {32+tempC×9÷5}{2 2⍴&quot;°F&quot;}&#39;
+⍴⎕← ∆F &#39;The temperature is {tempC}{2 2⍴&quot;°C&quot;} or {32+tempC×9÷5}{2 2⍴&quot;°F&quot;}&#39;
 The temperature is 35°C or  95°F.
-                   85°C    185°F
+85°C    185°F
 2 32</code></pre>
 <p>Here, we assign the <em>f‑string</em> to an <em>APL</em> variable,
 then call <strong>∆F</strong> twice!</p>
 <p><span class="margin-note">Setting <code>⎕RL</code> ensures our random
 numbers aren’t random! </span></p>
 <pre><code>   ⎕RL← 2342342
-   n← ≢names← &#39;Mary&#39; &#39;Jack&#39; &#39;Tony&#39;
-   prize← 1000
-   f← &#39;Customer {names⊃⍨ ?n} wins £{?prize}!&#39;
-   ∆F f
+n← ≢names← &#39;Mary&#39; &#39;Jack&#39; &#39;Tony&#39;
+prize← 1000
+f← &#39;Customer {names⊃⍨ ?n} wins £{?prize}!&#39;
+∆F f
 Customer Jack wins £80!
-   ∆F f
+∆F f
 Customer Jack wins £230!</code></pre>
 <p>Isn’t Jack lucky, winning twice in a row!</p>
 <details id="pPeek">
 <summary class="summary">
- View a fancier example…
+View a fancier example…
 </summary>
 <p><span class="margin-note"><br><a href="#winner2">See a different
 method using the <strong>Wrap</strong> shortcut</a>. </span></p>
 <div id="winner1">
-<pre><code> ⍝ Be sure everyone wins something.
-   n← ≢names← &#39;Mary&#39; &#39;Jack&#39; &#39;Tony&#39;
-   prize← 1000
-   ∆F &#39;{ ↑names }{ ⍪n⍴ ⊂&quot;wins&quot; }{ &quot;£&quot;, ⍕⍪?n⍴ prize}&#39;
+<pre><code>                                                             ⍝ Be sure everyone wins something.
+n← ≢names← &#39;Mary&#39; &#39;Jack&#39; &#39;Tony&#39;
+prize← 1000
+∆F &#39;{ ↑names }{ ⍪n⍴ ⊂&quot;wins&quot; }{ &quot;£&quot;, ⍕⍪?n⍴ prize}&#39;
 Mary wins £711
 Jack wins £298
 Tony wins £242</code></pre>
@@ -994,9 +994,9 @@ class="header-section-number">4.3</span> Null Space Fields</h2>
 <p>Two adjacent <strong>Text</strong> fields can be separated by a null
 <strong>Space</strong> field <code>{}</code>, for example when at least
 one field contains multiline input that you want formatted separately
-from others, keeping each field in its own rectangular space:</p>
-<pre><code>⍝  Extra space here ↓
-   ∆F &#39;Cat`◇Elephant `◇Mouse{}Felix`◇Dumbo`◇Mickey&#39;
+from others, keeping each field in its own rectangular space: </p>
+<pre><code>                                                             ⍝  Extra space here ↓
+∆F &#39;Cat`◇Elephant `◇Mouse{}Felix`◇Dumbo`◇Mickey&#39;
 Cat      Felix
 Elephant Dumbo
 Mouse    Mickey</code></pre>
@@ -1007,9 +1007,9 @@ animal name, <em>Elephant</em>, so it wouldn’t run into the next word,
 <p>Here, you surely want the lefthand field to be guaranteed to have a
 space after <em>each</em> word without fiddling; a
 <strong>Space</strong> field with at least one space will solve the
-problem:</p>
-<pre><code>⍝                          ↓↓↓
-   ∆F &#39;Cat`◇Elephant`◇Mouse{ }Felix`◇Dumbo`◇Mickey&#39;
+problem: </p>
+<pre><code>                                                             ⍝                          ↓↓↓
+∆F &#39;Cat`◇Elephant`◇Mouse{ }Felix`◇Dumbo`◇Mickey&#39;
 Cat      Felix
 Elephant Dumbo
 Mouse    Mickey</code></pre>
@@ -1026,7 +1026,7 @@ Elephant Dumbo
 Mouse    Mickey</code></pre>
 <p>Here’s a similar example with double quote-delimited strings in
 <strong>Code</strong> fields with the newline sequence,
-<code>`◇</code>:</p>
+<code>`◇</code>: </p>
 <pre><code>   ∆F &#39;{&quot;This`◇is`◇an`◇example&quot;} {&quot;Of`◇Multiline&quot;} {&quot;Strings`◇in`◇Code`◇Fields&quot;}&#39;
 This    Of         Strings
 is      Multiline  in
@@ -1038,10 +1038,10 @@ fields.</p>
 <em>APL</em> <em>mix</em> <code>↑</code> to generate multiline objects
 (matrices).</span></p>
 <pre><code>   fNm←  &#39;John&#39; &#39;Mary&#39; &#39;Ted&#39;
-   lNm←  &#39;Smith&#39; &#39;Jones&#39; &#39;Templeton&#39;
-   addr← &#39;24 Mulberry Ln&#39; &#39;22 Smith St&#39; &#39;12 High St&#39;
+lNm←  &#39;Smith&#39; &#39;Jones&#39; &#39;Templeton&#39;
+addr← &#39;24 Mulberry Ln&#39; &#39;22 Smith St&#39; &#39;12 High St&#39;
 
-   ∆F &#39;{↑fNm} {↑lNm} {↑addr}&#39;
+∆F &#39;{↑fNm} {↑lNm} {↑addr}&#39;
 John Smith     24 Mulberry Ln
 Mary Jones     22 Smith St
 Ted  Templeton 12 High St</code></pre>
@@ -1055,10 +1055,10 @@ remind you what Dyalog’s <code>⎕FMT</code> can do! </span></p>
 numbers to the nearest whole degree and Fahrenheit numbers to the
 nearest tenth of a degree.</p>
 <pre><code>   cv← 11.3 29.55 59.99
-   ∆F &#39;The temperature is {&quot;I2&quot; $ cv}°C or {&quot;F5.1&quot;$ 32+9×cv÷5}°F&#39;
+∆F &#39;The temperature is {&quot;I2&quot; $ cv}°C or {&quot;F5.1&quot;$ 32+9×cv÷5}°F&#39;
 The temperature is 11°C or  52.3°F
-                   30       85.2
-                   60      140.0</code></pre>
+30       85.2
+60      140.0</code></pre>
 <h2 data-number="4.5" id="the-box-shortcut"><span
 class="header-section-number">4.5</span> The Box Shortcut</h2>
 <p><strong>∆F</strong> shortcuts are concise <em>names</em> for useful
@@ -1068,12 +1068,12 @@ Let’s introduce shortcuts through <code>`B</code>, the
 boxes around key objects in <strong>Code</strong> fields, building on
 the previous example.</p>
 <pre><code>   cv← 11.3 29.55 59.99
-   ∆F &#39;`◇The temperature is {`B &quot;I2&quot; $ cv}`◇°C or {`B &quot;F5.1&quot; $ 32+9×cv÷5}`◇°F&#39;
-                   ┌──┐      ┌─────┐
+∆F &#39;`◇The temperature is {`B &quot;I2&quot; $ cv}`◇°C or {`B &quot;F5.1&quot; $ 32+9×cv÷5}`◇°F&#39;
+┌──┐      ┌─────┐
 The temperature is │11│°C or │ 52.3│°F
-                   │30│      │ 85.2│
-                   │60│      │140.0│
-                   └──┘      └─────┘</code></pre>
+│30│      │ 85.2│
+│60│      │140.0│
+└──┘      └─────┘</code></pre>
 <p>For full information on all of the current shortcuts, see <a
 href="#code-field-shortcuts"><strong>Section 5.5</strong></a> in the <a
 href="#f-reference"><strong>∆F</strong> <em>Reference</em></a> below.
@@ -1081,10 +1081,10 @@ For an abridged preview, look no further.</p>
 <details>
 <!-- option: open -->
 <summary class="summary">
- A Preview of <em>Code Field Shortcuts</em>
+A Preview of <em>Code Field Shortcuts</em>
 </summary>
 <p><strong>Code</strong> field <strong><em>Shortcuts</em></strong>
-include:</p>
+include: </p>
 <p><a id="inside-brief-shortcuts" class="scroll-target"></a></p>
 <table>
 <caption>3a. <strong>Brief Summary of Code Field
@@ -1224,11 +1224,11 @@ the <strong>box</strong> mode option!</p>
 <strong><em>each</em></strong> field (<em>regardless</em> of type) by
 setting <strong>∆F</strong>’s <a
 href="#f-option-details"><strong>box</strong> mode</a> option, <span
-class="margin-note"><strong>box mode:</strong> <code>0 0 1</code>
-<em>or</em> <code>(box: 1)</code></span>to <code>1</code>:</p>
+class="margin-note"><strong>box mode: </strong> <code>0 0 1</code>
+<em>or</em> <code>(box: 1)</code></span>to <code>1</code>: </p>
 <pre><code>   cv← 11.3 29.55 59.99
 ⍝   ↓¯¯¯ box mode,  or:  0 0 1
-   (box: 1) ∆F &#39;`◇The temperature is {&quot;I2&quot; $ cv}`◇°C or {&quot;F5.1&quot; $ 32+9×cv÷5}`◇°F&#39;
+(box: 1) ∆F &#39;`◇The temperature is {&quot;I2&quot; $ cv}`◇°C or {&quot;F5.1&quot; $ 32+9×cv÷5}`◇°F&#39;
 ┌───────────────────┬──┬──────┬─────┬──┐
 │                   │11│      │ 52.3│  │
 │The temperature is │30│°C or │ 85.2│°F│
@@ -1240,11 +1240,11 @@ exception. Null <strong>Space</strong> fields <code>{}</code>,
 they’ve done their work of ensuring adjacent fields (typically,
 <strong>Text</strong> fields) are displayed in their own rectangular
 space.</p>
-<p>Try evaluating this expression on your own:</p>
+<p>Try evaluating this expression on your own: </p>
 <pre><code>    (box: 1) ∆F &#39;abc{}def{}{}ghi{&quot;&quot;}jkl{ }mno&#39;   </code></pre>
 <details id="pPeek">
 <summary class="summary">
- Peek at answer
+Peek at answer
 </summary>
 <pre><code>   (box: 1) ∆F &#39;abc{}def{}{}ghi{&quot;&quot;}jkl{ }mno&#39;
 ┌───┬───┬───┬┬───┬─┬───┐
@@ -1257,7 +1257,7 @@ values—like <code>{""}</code> above— <em>will</em> be displayed!</p>
 class="header-section-number">4.7</span> Omega Shortcuts (Explicit)</h2>
 <p><span class="margin-note"><code>`⍵1</code>: Or its equivalent,
 <code>⍹1</code>.<br><strong>⍹</strong> is ⍵-underscore.</span>
-  <strong>Referencing <strong>∆F</strong> arguments after the
+<strong>Referencing <strong>∆F</strong> arguments after the
 <em>f‑string</em>: <strong>Omega</strong> shortcut expressions (like
 <code>`⍵1</code>).</strong></p>
 <p><span class="margin-note">And <code>(⍵⊃⍨ 1+⎕IO)</code> is, of course,
@@ -1272,10 +1272,10 @@ href="#omega-shortcuts-implicit">below</a>, we discuss bare
 <code>`⍵</code> (<em>i.e.</em> without an appended non-negative
 integer).</p>
 <pre><code>   C2F← 32+9×÷∘5
-   ∆F &#39;The temperature is {&quot;I2&quot; $ `⍵1}°C or {&quot;F5.1&quot; $ C2F `⍵1}°F&#39; (11 15 20)
+∆F &#39;The temperature is {&quot;I2&quot; $ `⍵1}°C or {&quot;F5.1&quot; $ C2F `⍵1}°F&#39; (11 15 20)
 The temperature is 11°C or 51.8°F
-                   15      59.0
-                   20      68.0</code></pre>
+15      59.0
+20      68.0</code></pre>
 <h2 data-number="4.8" id="referencing-the-fstring-itself"><span
 class="header-section-number">4.8</span> Referencing the f‑string
 Itself</h2>
@@ -1283,19 +1283,19 @@ Itself</h2>
 <em>f‑string</em>, independent of the the number of elements in the
 right argument to <strong>∆F</strong> (<em>effectively</em>,
 <code>⊆⍵</code>). </span> The expression <code>`⍵0</code> always refers
-to the <em>f‑string</em> itself. Try this:</p>
-<pre><code>   bL bR← &#39;«»&#39;                     ⍝ ⎕UCS 171 187
-   ∆F &#39;Our string {bL, `⍵0, bR} has {≢`⍵0} characters.&#39;</code></pre>
+to the <em>f‑string</em> itself. Try this: </p>
+<pre><code>   bL bR← &#39;«»&#39;                                       ⍝ ⎕UCS 171 187
+∆F &#39;Our string {bL, `⍵0, bR} has {≢`⍵0} characters.&#39;</code></pre>
 <details id="pPeek">
 <summary class="summary">
- Peek at answer
+Peek at answer
 </summary>
-<pre><code>   bL bR← &#39;«»&#39;                     ⍝ ⎕UCS 171 187
-   ∆F &#39;Our string {bL, `⍵0, bR} has {≢`⍵0} characters.&#39;
+<pre><code>   bL bR← &#39;«»&#39;                                       ⍝ ⎕UCS 171 187
+∆F &#39;Our string {bL, `⍵0, bR} has {≢`⍵0} characters.&#39;
 Our string «Our string {bL, `⍵0, bR} has {≢`⍵0} characters» has 47 characters.</code></pre>
 <details id="pPeek">
 <summary class="summary">
- Let’s check our work…
+Let’s check our work…
 </summary>
 <pre><code>   ≢&#39;Our string {bL, `⍵0, bR} has {≢`⍵0} characters.&#39;
 47</code></pre>
@@ -1315,9 +1315,9 @@ you in most cases. </span></p>
 <code>$</code> to add appropriate commas to the temperatures!</p>
 <p><span
 class="margin-note"><br><br><code>C2F← 32+9×÷∘5</code></span></p>
-<pre><code>⍝  The temperature of the sun at its core in degrees C.
-   sun_core← 15E6                   ⍝ 15000000 is a bit hard to parse!
-   ∆F &#39;The sun&#39;&#39;s core is at {&quot;CI10&quot; $ sun_core}°C or {&quot;CI10&quot; $ C2F sun_core}°F&#39;
+<pre><code>                                                             ⍝  The temperature of the sun at its core in degrees C.
+sun_core← 15E6                                                          ⍝ 15000000 is a bit hard to parse!
+∆F &#39;The sun&#39;&#39;s core is at {&quot;CI10&quot; $ sun_core}°C or {&quot;CI10&quot; $ C2F sun_core}°F&#39;
 The sun&#39;s core is at 15,000,000°C or 27,000,032°F</code></pre>
 <h2 data-number="4.10" id="the-shortcut-for-numeric-commas"><span
 class="header-section-number">4.10</span> The Shortcut for Numeric
@@ -1333,8 +1333,8 @@ require you to guesstimate field widths.</p>
 <p>Let’s use the <code>`C</code> shortcut to add the commas to the
 temperatures!</p>
 <p><span class="margin-note"><br>Cool! OK, not literally. </span></p>
-<pre><code>   sun_core← 15E6               ⍝ 15000000 is a bit hard to parse!
-   ∆F &#39;The sun&#39;&#39;s core is at {`C sun_core}°C or {`C C2F sun_core}°F.&#39;
+<pre><code>   sun_core← 15E6                                            ⍝ 15000000 is a bit hard to parse!
+∆F &#39;The sun&#39;&#39;s core is at {`C sun_core}°C or {`C C2F sun_core}°F.&#39;
 The sun&#39;s core is at 15,000,000°C or 27,000,032°F.</code></pre>
 <p>And for a bit of a twist, let’s display either degrees Centigrade or
 Fahrenheit under user control (<code>1</code> =&gt; F, <code>0</code>
@@ -1342,9 +1342,9 @@ Fahrenheit under user control (<code>1</code> =&gt; F, <code>0</code>
 first, then pass it to <strong>∆F</strong> with an additional right
 argument.</p>
 <pre><code>   sunFC← &#39;The sun&#39;&#39;s core is at {`C C2F⍣`⍵1⊢ sun_core}°{ `⍵1⊃ &quot;CF&quot;}.&#39;
-   ∆F sunFC 1
+∆F sunFC 1
 The sun&#39;s core is at 27,000,032°F.
-   ∆F sunFC 0
+∆F sunFC 0
 The sun&#39;s core is at 15,000,000°C.</code></pre>
 <p>Now, let’s move on to Self-documenting <strong>Code</strong>
 fields.</p>
@@ -1381,9 +1381,9 @@ href="#the-above-shortcut">the next section</a>.</span> for a
 <p>as the <strong><em>last non-space</em></strong> character in the
 <strong>Code</strong> field, before the <em>final</em> right brace.</p>
 <p>Here’s an example of a horizontal SDCF, <em>i.e.</em> using
-<code>→</code>:</p>
-<pre><code>   name←&#39;John Smith&#39; ◇ age← 34
-   ∆F &#39;Current employee: {name→}, {age→}.&#39;
+<code>→</code>: </p>
+<pre><code>   name← &#39;John Smith&#39; ◇ age← 34
+∆F &#39;Current employee: {name→}, {age→}.&#39;
 Current employee: name→John Smith, age→34.</code></pre>
 <p>As a useful formatting feature, whatever spaces are just
 <strong><em>before</em></strong> or <strong><em>after</em></strong> the
@@ -1391,20 +1391,20 @@ symbol <strong>→</strong> or <strong>↓</strong> are preserved
 <strong><em>verbatim</em></strong> in the output.</p>
 <p>Here’s an example with such spaces: see how the spaces adjacent to
 the symbol <code>→</code> are mirrored in the output!</p>
-<pre><code>   name←&#39;John Smith&#39; ◇ age← 34
-   ∆F &#39;Current employee: {name → }, {age→ }.&#39;
+<pre><code>   name← &#39;John Smith&#39; ◇ age← 34
+∆F &#39;Current employee: {name → }, {age→ }.&#39;
 Current employee: name → John Smith, age→ 34.</code></pre>
 <p>Now, let’s look at an example of a vertical SDCF, <em>i.e.</em> using
-<code>↓</code>:</p>
-<pre><code>   name←&#39;John Smith&#39; ◇ age← 34
-   ∆F &#39;Current employee: {name↓} {age↓}.&#39;
+<code>↓</code>: </p>
+<pre><code>   name← &#39;John Smith&#39; ◇ age← 34
+∆F &#39;Current employee: {name↓} {age↓}.&#39;
 Current employee:  name↓     age↓.
-                  John Smith  34</code></pre>
+John Smith  34</code></pre>
 <p>To make it easier to see, here’s the same result, but with a box
 around each field—using the <strong>Box</strong> <a
 href="#f-option-details">option</a>, <em>namespace</em> style.</p>
-<pre class="dyalog20"><code>⍝  Box all fields
-   (box: 1) ∆F &#39;Current employee: {name↓} {age↓}.&#39;
+<pre class="dyalog20"><code>                                            ⍝  Box all fields
+(box: 1) ∆F &#39;Current employee: {name↓} {age↓}.&#39;
 ┌──────────────────┬──────────┬─┬────┬─┐
 │Current employee: │ name↓    │ │age↓│.│
 │                  │John Smith│ │ 34 │ │
@@ -1440,13 +1440,13 @@ Shortcut</h2>
 argument as a character array, justifying each line to the left
 (<code>⍺∊"L" ¯1</code>, the default), to the right
 (<code>⍺∊"R" 1</code>), or centered (<code>⍺∊"C" 0</code>). <span
-class="margin-note"><strong>maximum <code>⎕PP</code>:</strong> the
+class="margin-note"><strong>maximum <code>⎕PP</code>: </strong> the
 maximum <code>⎕PP</code> is <code>17</code> for 64-bit floats, and
 <code>34</code> for 128-bit floats. </span> If its right argument
 contains floating point numbers, they will be displayed with the maximum
 print precision <code>⎕PP</code> available.</p>
 <pre><code>   a← ↑&#39;elephants&#39; &#39;cats&#39; &#39;rhinoceroses&#39;
-   ∆F &#39;{&quot;L&quot; `J a}  {&quot;C&quot; `J a}  {&quot;R&quot; `J a}&#39;
+∆F &#39;{&quot;L&quot; `J a}  {&quot;C&quot; `J a}  {&quot;R&quot; `J a}&#39;
 elephants      elephants       elephants
 cats              cats              cats
 rhinoceroses  rhinoceroses  rhinoceroses</code></pre>
@@ -1454,7 +1454,7 @@ rhinoceroses  rhinoceroses  rhinoceroses</code></pre>
 <pre><code>   ∆F &#39;{¯1 `J `⍵1} {0 `J `⍵1} { 1`J `⍵1  }&#39; (⍪10*2×⍳4)</code></pre>
 <details id="pPeek">
 <summary class="summary">
- Peek at answer
+Peek at answer
 </summary>
 <pre><code>   ∆F &#39;{¯1 `J `⍵1} {0 `J `⍵1} { 1`J `⍵1  }&#39; (⍪10*2×⍳4)
 1          1          1
@@ -1491,17 +1491,17 @@ right, starting with <code>`⍵1</code>, the first, <em>i.e.</em>
 <code>`⍵1</code>, <code>`⍵2</code>, and <code>`⍵3</code>.</p>
 <p><span class="margin-note"><em>Easy peasy.</em></span></p>
 <pre><code>   ∆F &#39;{(⍳2⍴`⍵) % (⍳2⍴`⍵) % (⍳2⍴`⍵)}&#39; 1 2 3
-    0 0
-  0 0 0 1
-  1 0 1 1
+0 0
+0 0 0 1
+1 0 1 1
 0 0 0 1 0 2
 1 0 1 1 1 2
 2 0 2 1 2 2</code></pre>
 <p>Here’s a useful example, where the formatting option for each text
 justification <code>`J</code> is determined by an argument to
-<strong>∆F</strong>:</p>
+<strong>∆F</strong>: </p>
 <pre><code>   a← ↑&#39;elephants&#39; &#39;cats&#39; &#39;rhinoceroses&#39;
-   ∆F &#39;{`⍵ `J a}  {`⍵ `J a}  {`⍵ `J a}&#39; ¯1 0 1
+∆F &#39;{`⍵ `J a}  {`⍵ `J a}  {`⍵ `J a}&#39; ¯1 0 1
 elephants      elephants       elephants
 cats              cats              cats
 rhinoceroses  rhinoceroses  rhinoceroses</code></pre>
@@ -1514,11 +1514,11 @@ ordinary <em>APL</em> functions; since they are just that— ordinary
 <em>APL</em> functions— under the covers. Here, we display one boxed
 value above the other.</p>
 <pre><code>   ∆F &#39;{(`B ⍳`⍵1) % `B ⍳`⍵2}&#39; (2 2)(3 3)
-  ┌───┬───┐
-  │0 0│0 1│
-  ├───┼───┤
-  │1 0│1 1│
-  └───┴───┘
+┌───┬───┐
+│0 0│0 1│
+├───┼───┤
+│1 0│1 1│
+└───┴───┘
 ┌───┬───┬───┐
 │0 0│0 1│0 2│
 ├───┼───┼───┤
@@ -1528,11 +1528,11 @@ value above the other.</p>
 └───┴───┴───┘</code></pre>
 <details id="pPeek">
 <summary class="summary">
- Peek: Shortcuts are just Functions
+Peek: Shortcuts are just Functions
 </summary>
 <p>While not for the faint of heart, the expression above can be recast
-as this concise <span class="margin-note"><strong>concise:</strong>
-somewhat hard to read. </span>alternative:</p>
+as this concise <span class="margin-note"><strong>concise: </strong>
+somewhat hard to read. </span>alternative: </p>
 <pre><code>   ∆F &#39;{%/ `B∘⍳¨ `⍵1 `⍵2}&#39; (2 2)(3 3)</code></pre>
 </details
 
@@ -1558,11 +1558,11 @@ specification string).</p>
 current time (now).</p>
 <p><span class="margin-note">The time displayed in practice will be the
 <em>true</em> current time.</span></p>
-<pre><code>   ∆F &#39;It is now {&quot;t:mm pp&quot; `T ⎕TS}.&#39;
-It is now 8:08 am.</code></pre>
+<pre><code>   ∆F &#39;It is now {&quot;t: mm pp&quot; `T ⎕TS}.&#39;
+It is now 8: 08 am.</code></pre>
 <p>Here’s a fancier example<span class="margin-note">The power is in the
 capabilities of <code>1200⌶</code> and <code>⎕DT</code>.</span>. (We’ve
-added the <em>truncated</em> timestamp <code>2025 01 01</code> right
+   added the <em>truncated</em> timestamp <code>2025 01 01</code> right
 into the <em>f‑string</em>.)</p>
 <pre><code>   ∆F &#39;{ &quot;D MMM YYYY &#39;&#39;was a&#39;&#39; Dddd.&quot;`T 2025 01 01}&#39;
 1 JAN 2025 was a Wednesday.</code></pre>
@@ -1581,7 +1581,7 @@ parentheses.</p>
 21 Jan 2025 was a Tuesday.</code></pre>
 <p>We could also pass the time stamp via a sequence of
 <strong>Omega</strong> expressions: <code>`⍵ `⍵ `⍵</code>. This is
-equivalent to the <em>slightly</em> verbose expression:
+equivalent to the <em>slightly</em> verbose expression: 
 <code>`⍵1 `⍵2 `⍵3</code>.</p>
 <pre><code>   ∆F &#39;{ &quot;D Mmm YYYY &#39;&#39;was a&#39;&#39; Dddd.&quot; `T `⍵ `⍵ `⍵}&#39; 2025 1 21
 21 Jan 2025 was a Tuesday.</code></pre>
@@ -1589,7 +1589,7 @@ equivalent to the <em>slightly</em> verbose expression:
 <pre><code>   ∆F &#39;{ &quot;D Mmm YYYY &#39;&#39;was a&#39;&#39; Dddd.&quot; `T `⍵1}&#39; (⍪(2025 1 21)(2024 1 21))</code></pre>
 <details id="pPeek">
 <summary class="summary">
- Peek: It’s <code>`T</code> time for multiple timestamps!
+Peek: It’s <code>`T</code> time for multiple timestamps!
 </summary>
 <pre><code>   ∆F &#39;{ `B &quot;D Mmm YYYY &#39;&#39;was a&#39;&#39; Dddd.&quot; `T `⍵1}&#39; (⍪(2025 1 21)(2024 1 21))
 ┌──────────────────────────┐
@@ -1612,39 +1612,39 @@ character vectors, and character scalars, doubling internal single
 quotes and placing single quotes around the items found.</p>
 <p>Non-character data is returned as is. This is useful, for example,
 when you wish to clearly distinguish character from numeric data.</p>
-<p>Let’s look at a couple of simple examples:</p>
+<p>Let’s look at a couple of simple examples: </p>
 <p>First, let’s use the <code>`Q</code> shortcut to place quotes around
 the simple character arrays in its right argument, <code>⍵</code>. This
 is useful when you want to distinguish between character output that
 might include numbers and <em>actual</em> numeric output.</p>
 <pre><code>   ∆F &#39;{`Q 1 2 &quot;three&quot; 4 5 (⍪1 &quot;2&quot;) (⍪&quot;cats&quot; &quot;dogs&quot;)}&#39;
 1 2  &#39;three&#39;  4 5     1    &#39;cats&#39;
-                    &#39;2&#39;    &#39;dogs&#39;</code></pre>
+&#39;2&#39;    &#39;dogs&#39;</code></pre>
 <p>And here’s an example with a simple, mixed vector (<em>i.e.</em> a
 mix of character and numeric scalars only). We’ll call the object
 <code>iv</code>, but we won’t disclose its definition yet.</p>
 <p>Let’s display <code>iv</code> without using the
 <strong>Quote</strong> shortcut.</p>
 <pre class="skip"><code>   iv← ...
-   ∆F &#39;{iv}&#39;
+∆F &#39;{iv}&#39;
 1 2 3 4 5</code></pre>
 <p>Are you <strong><em>sure</em></strong> which elements of
 <code>iv</code> are numeric and which character scalars?</p>
 <details id="pPeek">
 <summary class="summary">
- Peek to see the example with <code>iv</code> defined.
+Peek to see the example with <code>iv</code> defined.
 </summary>
 <pre><code>   iv← 1 2 &#39;3&#39; 4 &#39;5&#39;
-   ∆F &#39;{iv}&#39;
+∆F &#39;{iv}&#39;
 1 2 3 4 5</code></pre>
 </details>
 <p>Now, we’ll show the variable <code>iv</code> using the
 <strong>Quote</strong> <code>`Q</code> shortcut.</p>
 <pre><code>   iv← 1 2 &#39;3&#39; 4 &#39;5&#39;
-   ∆F &#39;{`Q iv}&#39;</code></pre>
+∆F &#39;{`Q iv}&#39;</code></pre>
 <details id="pPeek">
 <summary class="summary">
- Take a peek at the <bold>∆F</bold> output.
+Take a peek at the <bold>∆F</bold> output.
 </summary>
 <pre><code>1 2 &#39;3&#39; 4 &#39;5&#39;</code></pre>
 </details>
@@ -1656,39 +1656,39 @@ class="header-section-number">4.19</span> The Serialise Shortcut</h2>
 in <em>APL</em> Array Notation. These include arrays <span
 class="margin-note">NB. See Dyalog documentation for what is in the
 domain of Array Notation.</span>of any depth and shape that contain only
-data arrays (nameclass: <code>2</code>) and namespaces (nameclass:
+data arrays (nameclass: <code>2</code>) and namespaces (nameclass: 
 <code>9</code>). The shortcut allows both a
 <strong><em>tabular</em></strong> (multiline) form (default or
 <code>0 `S</code>) and a <strong><em>compact</em></strong> format
 (<code>1 `S</code>). If an object cannot be displayed in Array Notation,
 it is typically displayed unformatted, <em>i.e.</em> as is.</p>
 <p>Here’s a brief example showing a scalar, vector, matrix, and vector
-of (character) vectors:</p>
-<pre class="dyalog20"><code>   ∆F &#39;{ `S (scal: 3 ◇ vec: ⍳3 ◇ mx: 3 3⍴⎕A ◇ vv: &quot;cats&quot; &quot;dogs&quot; )}&#39;
+of (character) vectors: </p>
+   <pre class="dyalog20"><code>   ∆F &#39;{ `S (scal: 3 ◇ vec: ⍳3 ◇ mx: 3 3⍴⎕A ◇ vv: &quot;cats&quot; &quot;dogs&quot; )}&#39;
 (
-  mx:[
-   &#39;ABC&#39;
-   &#39;DEF&#39;
-   &#39;GHI&#39;
-  ]
-  scal:3
-  vec:0 1 2
-  vv:(
-   &#39;cats&#39;
-   &#39;dogs&#39;
-  )
+   mx: [
+      &#39;ABC&#39;
+      &#39;DEF&#39;
+      &#39;GHI&#39;
+   ]
+   scal: 3
+   vec: 0 1 2
+   vv: (
+      &#39;cats&#39;
+      &#39;dogs&#39;
+   )
 )
    ∆F &#39;{ 1 `S (scal: 3 ◇ vec: ⍳3 ◇ mx: 3 3⍴⎕A ◇ vv: &quot;cats&quot; &quot;dogs&quot; )}&#39;
-(mx:[◇&#39;ABC&#39;◇&#39;DEF&#39;◇&#39;GHI&#39;◇]◇scal:3◇vec:0 1 2◇vv:(&#39;cats&#39;◇&#39;dogs&#39;◇)◇)</code></pre>
+(mx: [◇&#39;ABC&#39;◇&#39;DEF&#39;◇&#39;GHI&#39;◇]◇scal: 3◇vec: 0 1 2◇vv: (&#39;cats&#39;◇&#39;dogs&#39;◇)◇)</code></pre>
 <p>Here’s another example, highlighting the similarity between
 <em>JSON5</em> format and <em>APL</em> Array Notation. In each case, the
-object displayed is an <em>APL</em> namespace:</p>
-<pre><code>   j←&#39;{fred:[1,2,3],jack:9,name:{a:1,b:2}}&#39;
-   JSON← ⎕JSON⍠(&#39;Dialect&#39; &#39;JSON5&#39;)
+object displayed is an <em>APL</em> namespace: </p>
+<pre><code>   j← &#39;{fred: [1,2,3],jack: 9,name: {a: 1,b: 2}}&#39;
+JSON← ⎕JSON⍠(&#39;Dialect&#39; &#39;JSON5&#39;)
 
-   ∆F &#39;JSON:`◇APL:  {j % 1`S JSON j} &#39;
-JSON:  {fred:[1,2,3],jack:9,name:{a:1,b:2}}
-APL:   (fred:1 2 3◇jack:9◇name:(a:1◇b:2◇)◇)</code></pre>
+∆F &#39;JSON: `◇APL:  {j % 1`S JSON j} &#39;
+JSON:  {fred: [1,2,3],jack: 9,name: {a: 1,b: 2}}
+APL:   (fred: 1 2 3◇jack: 9◇name: (a: 1◇b: 2◇)◇)</code></pre>
 <h2 data-number="4.20" id="the-wrap-shortcut"><span
 class="header-section-number">4.20</span> The Wrap Shortcut</h2>
 <div>
@@ -1718,39 +1718,39 @@ each row of a table <code>⍪`⍵2</code>, or <strong>[b]</strong> after
 each simple vector in <code>,¨`⍵2</code>. We indicate that is no
 <em>left</em> decorator here using <code>""</code> or <code>⍬</code>, as
 here.</p>
-<pre><code>⍝         ... [a] ...       .... [b] ....
-    ∆F &#39;{ `⍵1 `W ⍪`⍵2 } ...{ `⍵1 `W ,¨`⍵2 }&#39; (⍬ &#39;°C&#39;)(18 22 33)
+<pre><code>                                                             ⍝         ... [a] ...       .... [b] ....
+∆F &#39;{ `⍵1 `W ⍪`⍵2 } ...{ `⍵1 `W ,¨`⍵2 }&#39; (⍬ &#39;°C&#39;)(18 22 33)
 18°C ... 18°C 22°C 33°C
 22°C
 33°C</code></pre>
 <p>In this next example, we place brackets around the lines of each
 simple array in a complex array.</p>
 <pre><code>   ∆F &#39;{&quot;[]&quot; `W (&quot;cats&quot;)(⍳2 2 1)(2 2⍴⍳4)(3 3⍴⎕A) }&#39;
- [cats]   [0 0 0]   [0 1]  [ABC]
-          [0 1 0]   [2 3]  [DEF]
-                           [GHI]
-          [1 0 0]
-          [1 1 0]</code></pre>
+[cats]   [0 0 0]   [0 1]  [ABC]
+[0 1 0]   [2 3]  [DEF]
+[GHI]
+[1 0 0]
+[1 1 0]</code></pre>
 <div id="winner2">
 <p>Now, let’s try recasting an <em>earlier</em> example—reshown here— to
-use <strong>Wrap</strong> <code>`W</code>:</p>
+use <strong>Wrap</strong> <code>`W</code>: </p>
 <h4 data-number="4.20.0.1" id="the-earlier-example"><span
 class="header-section-number">4.20.0.1</span> <a href="#winner1">The
 earlier example</a>…</h4>
 <pre><code>   n← ≢names← &#39;Mary&#39; &#39;Jack&#39; &#39;Tony&#39;
-   prize← 1000
-   ∆F &#39;{ ↑names }{ ⍪n⍴ ⊂&quot;wins&quot; }{ &quot;£&quot;, ⍕⍪?n⍴ prize }&#39;</code></pre>
+prize← 1000
+∆F &#39;{ ↑names }{ ⍪n⍴ ⊂&quot;wins&quot; }{ &quot;£&quot;, ⍕⍪?n⍴ prize }&#39;</code></pre>
 </div>
 <details id="pPeek">
 <summary class="summary">
- Peek to see the solution with <strong>Wrap</strong>…
+Peek to see the solution with <strong>Wrap</strong>…
 </summary>
 <p><span class="margin-note"><br><br>The string <code>"wins "</code> is
 the left prefix to <strong>Wrap</strong>, and <code>""</code> the
 right.</span></p>
 <pre><code>   n← ≢names← &#39;Mary&#39; &#39;Jack&#39; &#39;Tony&#39;
-   prize← 1000
-   ∆F &#39;{ ↑names } { &quot;wins &quot; &quot;&quot; `W &quot;£&quot;, ⍕⍪?n⍴ prize }&#39;
+prize← 1000
+∆F &#39;{ ↑names } { &quot;wins &quot; &quot;&quot; `W &quot;£&quot;, ⍕⍪?n⍴ prize }&#39;
 Mary wins £201
 Jack wins £ 73
 Tony wins £349</code></pre>
@@ -1761,7 +1761,7 @@ class="header-section-number">4.21</span> The Session Library
 Shortcut</h2>
 <div>
 <p>The shortcut (Session) <strong>Library</strong> <code>£</code>
-denotes <span class="margin-note"><strong>£ alias:</strong>
+denotes <span class="margin-note"><strong>£ alias: </strong>
 <code>`L</code>. £ is from the first letter of the Latin <em>lībra</em>,
 “pound”, very apt for a
 <em>libra</em>-ry.<br><br><strong>FString</strong>: <em>See <a
@@ -1797,9 +1797,9 @@ on success, <em>i.e.</em> an <em>invisible</em>, 0-width
 <pre><code>    ∆F &#39;{&quot;sieve&quot; &quot;to&quot; £.⎕CY &quot;dfns&quot;}{£.sieve 2 £.to 100}&#39;
 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97</code></pre>
 <p>On subsequent calls, <code>sieve</code> and <code>to</code> are
-already available, as we can see here:</p>
+already available, as we can see here: </p>
 <pre><code>    ∆F &#39;{ £.⎕NL ¯3 }&#39;
- sieve  to</code></pre>
+sieve  to</code></pre>
 <h3 data-number="4.21.2" id="automatically-copied-library-objects"><span
 class="header-section-number">4.21.2</span> Automatically Copied Library
 Objects</h3>
@@ -1814,7 +1814,7 @@ href="#code-field-shortcuts">Code Field Shortcuts</a> below.</em>
 attempt is made to copy that name into the library either from a text
 file in a user directory or from the <strong><em>dfns</em></strong>
 workspace; if the name appears on the left-side of a
-<strong>simple</strong> assigment <code>←</code>, it is
+<strong>simple</strong> assigment <code>← </code>, it is
 <strong>not</strong> copied in (since the user is defining it).</p>
 <p><big>👉</big>  If <strong>∆F</strong> is unable to find the item
 during its search, a standard <em>APL</em> error will be signaled when
@@ -1827,17 +1827,17 @@ specified).</p>
 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97</code></pre>
 <details id="pPeek">
 <summary class="summary">
- Peek: Using the <em><strong>verbose</strong></em> option
+Peek: Using the <em><strong>verbose</strong></em> option
 </summary>
 <p><big>👉</big> To understand <em>when</em> an object is automatically
 copied into a £ibrary, and to see <em>where</em> it’s copied from, use
-<strong>∆F</strong>’s <strong><em>verbose</em></strong> option:</p>
+<strong>∆F</strong>’s <strong><em>verbose</em></strong> option: </p>
 <p><span class="margin-note"><br>First use of <code>£.pco</code> this
 <em>session.</em> Since subsequent uses will use the <code>£.pco</code>
 already copied into the library, they are
 <strong><em>quiet</em></strong>.</span></p>
-<pre><code>   (verbose: 1) ∆F &#39;{ ⍸ 1 £.pco ⍳100 }&#39;    ⍝ (verbose: 1) &lt;==&gt; 0 1 </code></pre>
-<pre class="skip"><code>∆F: Copied &quot;pco&quot; into £=[⎕SE.FString.library] from &quot;ws:dfns&quot;
+<pre><code>   (verbose: 1) ∆F &#39;{ ⍸ 1 £.pco ⍳100 }&#39;              ⍝ (verbose: 1) &lt;==&gt; 0 1 </code></pre>
+<pre class="skip"><code>∆F: Copied &quot;pco&quot; into £=[⎕SE.FString.library] from &quot;ws: dfns&quot;
 { ⎕SE.FString.M ⌽⍬({⍸ 1 (⎕SE.FString.library).pco ⍳100}⍵)}⍵
 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97</code></pre>
 <p><big>👉</big> With the default <em>verbose</em> setting,
@@ -1856,15 +1856,15 @@ exists, it must be in the same class as its new value, consistent with
 <p>Here is an example where we define a local session variable
 <code>ctr</code>, a counter of the number of times a particular
 statement is executed. Since we define the counter,
-<code>£.ctr←0</code>, <strong>∆F</strong> makes
+<code>£.ctr← 0</code>, <strong>∆F</strong> makes
 <strong><em>no</em></strong> attempt to copy it from the
 <code>dfns</code> workspace or a file.</p>
-<pre><code>   ∆F &#39;{ ⍬⊣£.ctr←0 }&#39;         ⍝ Initialise £.ctr.
-   t← &#39;We&#39;&#39;ve been called {£.ctr← £.ctr+1} times.&#39;
+<pre><code>   ∆F &#39;{ ⍬⊣£.ctr← 0 }&#39;                               ⍝ Initialise £.ctr.
+t← &#39;We&#39;&#39;ve been called {£.ctr← £.ctr+1} times.&#39;
 ⍝  ...
-   ∆F t
+∆F t
 We&#39;ve been called 1 times.
-   ∆F t
+∆F t
 We&#39;ve been called 2 times.</code></pre>
 <p>This may be sensible when ∆F is called from a variety of namespaces
 and/or if the user doesn’t wish to clutter the active namespace.</p>
@@ -1873,11 +1873,11 @@ for the the <span class="margin-note">Remember: <strong>∆F</strong>
 evaluates fields left-to-right.</span> template variable
 <code>£.dt</code> used during the <strong>∆F</strong> <span
 class="margin-note"><br><br><br>NB. <code>£.dt</code> hangs around after
-execution!</span> call:</p>
+execution!</span> call: </p>
 <pre><code>   d1← ⍪(2025 1 21)(2024 1 21)   ◇   d2← (2100 1 1)
-   ∆F &#39;{(£.dt← &quot;D Mmm YYYY &#39;&#39;was a&#39;&#39; Dddd.&quot;) `T `⍵1 }{£.dt`T `⍵2}&#39; d1 d2
- 21 Jan 2025 was a Tuesday. 1 Jan 2100 was a Friday.
- 21 Jan 2024 was a Sunday.</code></pre>
+∆F &#39;{(£.dt← &quot;D Mmm YYYY &#39;&#39;was a&#39;&#39; Dddd.&quot;) `T `⍵1 }{£.dt`T `⍵2}&#39; d1 d2
+21 Jan 2025 was a Tuesday. 1 Jan 2100 was a Friday.
+21 Jan 2024 was a Sunday.</code></pre>
 </div>
 <h2 data-number="4.22"
 id="getting-url-text-via-the-geturl-shortcut"><span
@@ -1888,11 +1888,11 @@ random numbers. Here <span class="margin-note">Each call will retrieve a
 new set of numbers!</span> we use it to generate 10 numbers between 0
 and 9, print them, and average them.</p>
 <pre class="skip"><code>     rand← ∊(
-        &#39;https://www.random.org/integers/?&#39;
-        &#39;num=10&amp;min=0&amp;max=9&amp;col=1&amp;base=10&amp;&#39;
-        &#39;format=plain&amp;rnd=new&#39;
-     )
-     ∆F &#39;{r← ⊃⌽⎕VFI ∊&quot; &quot;,¨`G rand ⋄ &quot;Nums:&quot;,r,&quot; Ave:&quot;,(+/÷≢) r }&#39;    
+   &#39;https: //www.random.org/integers/?&#39;
+   &#39;num=10&amp;min=0&amp;max=9&amp;col=1&amp;base=10&amp;&#39;
+   &#39;format=plain&amp;rnd=new&#39;
+)
+∆F &#39;{r← ⊃⌽⎕VFI ∊&quot; &quot;,¨`G rand ⋄ &quot;Nums: &quot;,r,&quot; Ave: &quot;,(+/÷≢) r }&#39;    
 Nums: 4 9 6 5 9 8 9 1 5 7  Ave: 6.3</code></pre>
 <h2 data-number="4.23"
 id="precomputed-fstrings-with-the-dfn-option"><span
@@ -1917,7 +1917,7 @@ conditions, of course.</span> if <a
 href="#f-option-details"><em>dfn</em></a> is set to <code>1</code>, then
 <strong>∆F</strong> returns a <strong>dfn</strong> that— when called
 later— will return the identical character expression.</p>
-<table style="width:69%;">
+<table style="width: 69%;">
 <caption>3a. <strong>Using the <em>dfn Option</em></strong>
 <br></caption>
 <colgroup>
@@ -1947,7 +1947,7 @@ later— will return the identical character expression.</p>
 </tr>
 </tbody>
 </table>
-<p><span class="margin-note"><br><strong>standalone:</strong>
+<p><span class="margin-note"><br><strong>standalone: </strong>
 <em>i.e.</em> via the <em>inline</em> option. See <a
 href="#f-option-details">option details</a> (be­low) re­gard­ing the
 <em>inline</em> option and ex­ceptions.</span> The <em>dfn</em> option is
@@ -1963,32 +1963,32 @@ heavily used <strong>∆F</strong> string is important.</p>
 <p>First, let’s grab <code>cmpx</code> and set the variable
 <code>cv</code>, so we can compare the performance…</p>
 <pre><code>   &#39;cmpx&#39; ⎕CY &#39;dfns&#39;
-   cv← 11 30 60</code></pre>
+cv← 11 30 60</code></pre>
 <p>Now, let’s proceed. Here’s our <strong>∆F</strong> String
-<code>t</code>:</p>
-<pre><code>   t←&#39;The temperature is {&quot;I2&quot; $ cv}°C or {&quot;F5.1&quot; $ 32+9×cv÷5}°F&#39;</code></pre>
+<code>t</code>: </p>
+<pre><code>   t← &#39;The temperature is {&quot;I2&quot; $ cv}°C or {&quot;F5.1&quot; $ 32+9×cv÷5}°F&#39;</code></pre>
 <details id="pPeek">
 <summary class="summary">
- Evaluate <code>∆F t</code>
+Evaluate <code>∆F t</code>
 </summary>
 <pre><code>   ∆F t
 The temperature is 11°C or  51.8°F
-                   30       86.0
-                   60      140.0</code></pre>
+30       86.0
+60      140.0</code></pre>
 </details>
 <p>Let’s precompute a dfn <code>T</code>, given the string
 <code>t</code>. <code>T</code> has everything needed to generate the
 output (given the same definition of the vector <code>cv</code>, when
 <code>T</code> is evaluated).</p>
-<pre><code>   T← 1 ∆F t       ⍝ Or (dfn: 1) ∆F ...</code></pre>
+<pre><code>   T← 1 ∆F t                                                 ⍝ Or (dfn: 1) ∆F ...</code></pre>
 <details id="pPeek">
 <summary class="summary">
- Evaluate <code>T ⍬</code>
+Evaluate <code>T ⍬</code>
 </summary>
 <pre><code>   T ⍬
 The temperature is 11°C or  51.8°F
-                   30       86.0
-                   60      140.0</code></pre>
+30       86.0
+60      140.0</code></pre>
 </details>
 <p>Now, let’s compare the performance of the two formats, when caching
 of input fstrings is <strong><em>not</em></strong> enabled; this
@@ -1996,8 +1996,8 @@ simulates the relative performance the <em>first</em> time an fstring is
 encountered. <span class="margin-note"><br><br><br>Both <code>t</code>
 and <code>T</code> will reference <code>cv</code>. </span></p>
 <pre><code>   cmpx &#39;∆F t&#39; &#39;T ⍬&#39;
-  ∆F t → 1.5E¯4 |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-  T ⍬  → 1.1E¯5 | -93% ⎕⎕⎕</code></pre>
+∆F t → 1.5E¯4 |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
+T ⍬  → 1.1E¯5 | -93% ⎕⎕⎕</code></pre>
 <p>The precomputed version is <mark>much</mark> faster than the first
 use of <code>∆F t</code>. At the same time it is only about <em>3 times
 faster</em> on average than a repeated use of <code>∆F t</code>.</p>
@@ -2012,23 +2012,23 @@ above.</p>
 <p>Let’s share the Centigrade values <code>cv</code> from our current
 example, not as a <em>variable</em>, but as the <em>first argument</em>
 to <strong>∆F</strong>. We’ll access the value as <code>`⍵1</code>.</p>
-<pre><code>   cv←11 30 60
-   t←&#39;The temperature is {&quot;I2&quot; $ `⍵1}°C or {&quot;F5.1&quot; $ 32+9×`⍵1÷5}°F&#39;
-   T← 1 ∆F t       ⍝ Or  (dfn: 1)
+<pre><code>   cv← 11 30 60
+t← &#39;The temperature is {&quot;I2&quot; $ `⍵1}°C or {&quot;F5.1&quot; $ 32+9×`⍵1÷5}°F&#39;
+T← 1 ∆F t                                                               ⍝ Or  (dfn: 1)
 
-   ∆F t cv
+∆F t cv
 The temperature is 11°C or  51.8°F
-                   30       86.0
-                   60      140.0
+30       86.0
+60      140.0
 
-   T ⊂cv
+T ⊂cv
 The temperature is 11°C or  51.8°F
-                   30       86.0
-                   60      140.0
+30       86.0
+60      140.0
 
-   cmpx &#39;∆F t cv&#39; &#39;T ⊂cv&#39;
-  ∆F t cv → 1.8E¯4 |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-  T ⊂cv   → 1.1E¯5 | -95% ⎕⎕⎕</code></pre>
+cmpx &#39;∆F t cv&#39; &#39;T ⊂cv&#39;
+∆F t cv → 1.8E¯4 |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
+T ⊂cv   → 1.1E¯5 | -95% ⎕⎕⎕</code></pre>
 <p>The precomputed version again shows a <mark>substantial</mark>
 speedup over the default <em>uncached</em> version.</p>
 <h2 data-number="4.24" id="multiline-f-strings-in-dyalog-20"><span
@@ -2043,23 +2043,23 @@ across multiple (parenthesized) character vectors, each on a separate
 line.<span class="margin-note"><br><br><br><br><br><br>Note that APL
 handles the comments in multi-line strings!</span></p>
 <pre><code>   lastNm firstNm MI← &#39;Smith&#39; &#39;Mary&#39; &#39;J&#39;
-   street city state← &#39;5108 Grover St.&#39; &#39;Omaha&#39; &#39;Nebraska&#39;
+street city state← &#39;5108 Grover St.&#39; &#39;Omaha&#39; &#39;Nebraska&#39;
 
-   ∆F (                              ⍝ Copious explanatory comments!
-     &#39;Name: &#39;
-     &#39;{lastNm}, &#39;                    ⍝ The last name
-     &#39;{firstNm} {MI}. &#39;              ⍝ The first name and middle initial
-     &#39;Address is: &#39;
-     &#39;{street} in {city}, {state}.&#39;  ⍝ US address.
-  ) ⍬                                ⍝ ⍬ is a dummy argument
+∆F (                                                                    ⍝ Copious explanatory comments!
+   &#39;Name: &#39;
+   &#39;{lastNm}, &#39;                                                 ⍝ The last name
+   &#39;{firstNm} {MI}. &#39;                                           ⍝ The first name and middle initial
+   &#39;Address is: &#39;
+   &#39;{street} in {city}, {state}.&#39;                               ⍝ US address.
+) ⍬                                                                     ⍝ ⍬ is a dummy argument
 Name: Smith, Mary J. Address is: 5108 Grover St. in Omaha, Nebraska.</code></pre>
 <p>In any case, <strong>∆F</strong> treats a multiline <em>f-string</em>
 as its single-line (<code>∊</code>) equivalent. The above
-<strong>∆F</strong> call produces the very same output as this one:</p>
+<strong>∆F</strong> call produces the very same output as this one: </p>
 <pre><code>   ∆F &#39;Name: {lastNm}, {firstNm} {MI}. Address is: {street} in {city}, {state}.&#39;</code></pre>
 <p><big>👉</big> To ensure multiple adjacent character vectors are
 interpreted as part of the <em>f-string</em> when there are no following
-arguments, consider:</p>
+arguments, consider: </p>
 <ul>
 <li>enclosing the vectors, as in <code>∆F ⊂(...)</code>, or</li>
 <li>placing any dummy argument (<em>e.g.</em> <code>⍬</code>) after the
@@ -2077,7 +2077,7 @@ class="header-section-number">5</span> ∆F Reference</h1>
 <details>
 <!-- option: open -->
 <summary class="summary">
- <span style="opacity:0.6;">Show/Hide</span> <em>Syntax Info</em>
+<span style="opacity: 0.6;">Show/Hide</span> <em>Syntax Info</em>
 </summary>
 <p><a id="inside-reference" class="scroll-target"></a></p>
 <h2 data-number="5.1" id="f-call-syntax-overview"><span
@@ -2111,7 +2111,7 @@ style="text-align: left;"><strong>∆F</strong> <strong><em>f‑string</em></s
 environment or in the string itself. Returns a character matrix.
 <br><strong><span class="red"><strong>Single or </strong></span><a
 href="#multiline-f-strings-in-dyalog-20"><span
-class="red"><strong>multi­line f-string:</strong></span></a></strong> An
+class="red"><strong>multi­line f-string: </strong></span></a></strong> An
 <strong><em>f-string</em></strong> must be a character vector of any
 length or a <a href="#multiline-f-strings-in-dyalog-20">vector of
 character vectors</a>. If the latter, it will be converted (via
@@ -2167,7 +2167,7 @@ class="header-section-number">5.2</span> ∆F Option Details</h2>
 <th style="text-align: center;"><br>Mode</th>
 <th
 style="text-align: center;">Positional<br>Option<br><small>[<em>index</em>]</small></th>
-<th style="text-align: center;">Keyword<br>Option<br><small>(<em>kw:
+<th style="text-align: center;">Keyword<br>Option<br><small>(<em>kw: 
 def</em>)</th>
 <th style="text-align: left;"><br>Description</th>
 </tr>
@@ -2176,21 +2176,21 @@ def</em>)</th>
 <tr>
 <td style="text-align: center;"><strong>dfn</strong></td>
 <td style="text-align: center;"><strong><em>[0]</em></strong></td>
-<td style="text-align: center;"><strong><em>dfn: 0</em></strong></td>
+<td style="text-align: center;"><strong><em>dfn:    0</em></strong></td>
 <td style="text-align: justify;"><span class="red"><strong>If
-<strong><em>dfn: 1</em></strong>,</strong></span> <strong>∆F</strong>
+<strong><em>dfn:    1</em></strong>,</strong></span> <strong>∆F</strong>
 returns a dfn, which (upon execution) produces the same output as the
 default mode.<br><span class="red"><strong>If
-<strong><em>dfn: 0</em></strong> (default),</strong></span>
+<strong><em>dfn:    0</em></strong> (default),</strong></span>
 <strong>∆F</strong> returns a char. matrix.</td>
 </tr>
 <tr>
 <td style="text-align: center;"><strong>verbose</strong></td>
 <td style="text-align: center;"><strong><em>[1]</em></strong></td>
 <td
-style="text-align: center;"><strong><em>verbose: 0</em></strong></td>
+style="text-align: center;"><strong><em>verbose:    0</em></strong></td>
 <td style="text-align: justify;"><span class="red"><strong>If
-<strong><em>verbose: 1</em></strong>,</strong></span> Renders newline
+<strong><em>verbose:    1</em></strong>,</strong></span> Renders newline
 characters from <code>`◇</code> as the visible <code>␤</code> character.
 Displays the source code that the <em>f‑string</em>
 <strong><em>actually</em></strong> generates; <span
@@ -2200,7 +2200,7 @@ embedded <em>f‑string</em> source (accessed as <code>`⍵0</code>). After
 the source code is displayed, it will be executed or converted to a
 <em>dfn</em> and returned (see the <strong><em>dfn</em></strong> option
 above).<br><span class="red"><strong>If
-<strong><em>verbose: 0</em></strong> (default),</strong></span> newline
+<strong><em>verbose:    0</em></strong> (default),</strong></span> newline
 characters from <code>`◇</code> are rendered normally as carriage
 returns, <code>⎕UCS 13</code>; the <strong><em>dfn</em></strong> source
 code is not displayed.</td>
@@ -2208,11 +2208,11 @@ code is not displayed.</td>
 <tr>
 <td style="text-align: center;"><strong>box</strong></td>
 <td style="text-align: center;"><strong><em>[2]</em></strong></td>
-<td style="text-align: center;"><strong><em>box: 0</em></strong></td>
+<td style="text-align: center;"><strong><em>box:    0</em></strong></td>
 <td style="text-align: justify;"><span class="red"><strong>If
-<strong><em>box: 1</em></strong>,</strong></span> each field (except a
+<strong><em>box:    1</em></strong>,</strong></span> each field (except a
 null <strong>Text</strong> field) is boxed separately.<br><span
-class="red"><strong>If <strong><em>box: 0</em></strong>
+class="red"><strong>If <strong><em>box:    0</em></strong>
 (default),</strong></span> nothing is boxed automatically. Any
 <strong>Code</strong> field expression may be explicitly boxed using the
 <strong>Box</strong> shortcut,
@@ -2223,12 +2223,12 @@ be used with settings <strong><code>dfn: 1</code></strong> <em>and</em>
 <tr>
 <td style="text-align: center;"><strong>auto</strong></td>
 <td style="text-align: center;"><strong><em>[3]</em></strong></td>
-<td style="text-align: center;"><strong><em>auto: 1</em></strong></td>
+<td style="text-align: center;"><strong><em>auto:    1</em></strong></td>
 <td style="text-align: justify;"><span class="red"><strong>If
-<strong><em>auto: 0</em></strong>,</strong></span> user must manually
+<strong><em>auto:    0</em></strong>,</strong></span> user must manually
 load/create any Session Library objects for use with the £ or
 <code>`L</code> shortcuts.<br><span class="red"><strong>If
-<strong><em>auto: 1</em></strong> (default),</strong></span> honors the
+<strong><em>auto:    1</em></strong> (default),</strong></span> honors the
 default and user-defined settings for
 <code>auto</code>.<br><big>👉</big> Depends on (1) the system parameter
 file <strong><em>∆F/ParmDefs.apla</em></strong> and (ii) the user
@@ -2237,16 +2237,16 @@ parameter file <strong><em>./.∆F</em></strong>.</td>
 <tr>
 <td style="text-align: center;"><strong>inline</strong></td>
 <td style="text-align: center;"><strong><em>[4]</em></strong></td>
-<td style="text-align: center;"><strong><em>inline: 0</em></strong></td>
+<td style="text-align: center;"><strong><em>inline:    0</em></strong></td>
 <td style="text-align: justify;"><span class="red"><strong>If
-<strong><em>inline: 1</em></strong>,</strong></span> the code for each
+<strong><em>inline:    1</em></strong>,</strong></span> the code for each
 internal support function used is included in the result. <span
 class="red"><strong>If <strong><em>dfn</em></strong> is also
 1,</strong></span> <strong><em>no</em></strong> reference to namespace
 <strong>FString</strong> will be made during the execution of the
-generated <em>dfn</em>. (<strong><em>Exception:</em></strong> see
+generated <em>dfn</em>. (<strong><em>Exception: </em></strong> see
 <em>Session Library Shortcuts</em> below.)<br><span
-class="red"><strong>If <strong><em>inline: 0</em></strong>
+class="red"><strong>If <strong><em>inline:    0</em></strong>
 (default),</strong></span> whenever <strong>∆F</strong> or a
 <em>dfn</em> generated by it is executed, it makes calls to library
 routines in the namespace <strong>FString</strong>, created during the
@@ -2257,9 +2257,9 @@ may simply disappear one day.</td>
 <tr>
 <td style="text-align: center;"><strong>cache</strong></td>
 <td style="text-align: center;"><strong><em>[5]</em></strong></td>
-<td style="text-align: center;"><strong><em>cache: 1</em></strong></td>
+<td style="text-align: center;"><strong><em>cache:    1</em></strong></td>
 <td style="text-align: justify;"><span class="red"><strong>If
-<strong><em>cache: 1</em></strong>, </strong>(the default)</span> will
+<strong><em>cache:    1</em></strong>, </strong>(the default)</span> will
 look for a prior call to <strong>∆F</strong> with this
 <strong><em>fstring</em></strong> and these
 <strong><em>options</em></strong> and use the
@@ -2288,11 +2288,11 @@ pa­ram­eters.</td>
 </tbody>
 </table>
 <ul>
-<li><strong>Default options:</strong> If the left argument
+<li><strong>Default options: </strong> If the left argument
 <code>⍺</code> is omitted, the options default as shown here.</li>
 </ul>
 <p><a id="table-default-options" class="scroll-target"></a></p>
-<table style="width:98%;">
+<table style="width: 98%;">
 <caption>5c. <strong>∆F Default Options</strong></caption>
 <colgroup>
 <col style="width: 20%" />
@@ -2318,23 +2318,23 @@ style="text-align: center;"><code>(dfn: 0 ◇ verbose: 0 ◇ box: 0 ◇ auto: 1 
 </tbody>
 </table>
 <ul>
-<li><strong>Positional-style options:</strong> If <strong>∆F</strong>’s
+<li><strong>Positional-style options: </strong> If <strong>∆F</strong>’s
 left argument <code>⍺</code> is a simple integer vector (or a scalar),
 omitted (trailing) elements are replaced by the corresponding elements
 of the default, <code>0 0 0 1 0 1</code>.<br><big>👉</big> Extra
 elements will trigger a <strong><em>DOMAIN ERROR.</em></strong></li>
-<li><strong>Keyword-style options:</strong> If the left argument is a
+<li><strong>Keyword-style options: </strong> If the left argument is a
 <span class="margin-note">Dyalog 20 and later. See docu­ment­ation on
 <em>APL</em> Ar­ray Not­ation.</span>namespace, it is assumed to contain
 option names (in any order) with their desired
 values,<br>  e.g. <code>(verbose: 1 ◇ auto: 0)</code>;<br />
 Keyword options are new for Dyalog 20. They are sometimes clearer and
 more convenient than positional keywords.</li>
-<li><strong>Help option:</strong> If the left argument <code>⍺</code>
+<li><strong>Help option: </strong> If the left argument <code>⍺</code>
 starts with <code>'help'</code> (case ignored), this help information is
 displayed. In this case, the right argument to <strong>∆F</strong> is
 ignored.</li>
-<li><strong>Parms option:</strong> If the left argument <code>⍺</code>
+<li><strong>Parms option: </strong> If the left argument <code>⍺</code>
 matches <code>'parms'</code> (case ignored), the Session Library
 parameters are (re-)loaded and displayed. In this case, the right
 argument to <strong>∆F</strong> is ignored.</li>
@@ -2412,7 +2412,7 @@ class="header-section-number">5.5</span> Code Field Shortcuts</h2>
 shortcuts, intended to be concise and expressive tools for common tasks.
 <strong>Shortcuts</strong> are valid in <strong>Code</strong> fields
 only <em>outside</em> <strong>Quoted strings</strong>.</p>
-<p><strong>Shortcuts</strong> include:</p>
+<p><strong>Shortcuts</strong> include: </p>
 <p><a id="table-shortcuts" class="scroll-target"></a></p>
 <table>
 <caption>5d. <strong>Code Field Shortcuts</strong></caption>
@@ -2437,7 +2437,7 @@ only <em>outside</em> <strong>Quoted strings</strong>.</p>
 <td style="text-align: center;">Above</td>
 <td style="text-align: center;"><code>[⍺] % ⍵</code></td>
 <td style="text-align: justify;">Centers array <code>⍺</code> above array
-<code>⍵</code>.<br>If omitted, <code>⍺←''</code>, <em>i.e.</em> a blank
+<code>⍵</code>.<br>If omitted, <code>⍺← ''</code>, <em>i.e.</em> a blank
 line.</td>
 </tr>
 <tr>
@@ -2486,18 +2486,18 @@ formats numbers to the left of an optional decimal point.</small></td>
 <td style="text-align: justify;">Return text at url <code>⍵</code> as a
 vector of character vectors.<br> (⍺=1) Return <em>user</em> text only
 (default).<br> (⍺=0) Return <em>raw</em> text. <br><code>⍵</code> by
-default has prefix <code>htpps://</code>.</td>
+default has prefix <code>htpps: //</code>.</td>
 </tr>
 <tr>
 <td style="text-align: justify;"><strong>`J</strong></td>
 <td style="text-align: center;">Justify</td>
 <td style="text-align: center;"><code>[⍺]`J ⍵</code></td>
 <td style="text-align: justify;">Justify each row of object <code>⍵</code>
-as text:<br>  <em>left</em>: ⍺=“L”; <em>center</em>: ⍺=“C”;
+as text: <br>  <em>left</em>: ⍺=“L”; <em>center</em>: ⍺=“C”;
 <em>right</em> ⍺=“R”.<br>You may use
 <code>¯1</code>|<code>0</code>|<code>1</code> in place of
 <code>"L"</code>|<code>"C"</code>|<code>"R"</code>. If omitted,
-<code>⍺←'L'</code>. <small><em>Displays numbers with the maximum
+<code>⍺← 'L'</code>. <small><em>Displays numbers with the maximum
 precision available.</em></small></td>
 </tr>
 <tr>
@@ -2510,19 +2510,19 @@ class="grey"><strong>.nm2</strong></span></code></td>
 (namespace) local to the <strong>∆F</strong> runtime environ­ment into
 which functions or objects (including name­spaces) may be placed
 (e.g. via <code>⎕CY</code>) for the duration of the <em>APL</em>
-session.<br><strong>Autoload:</strong> Outside of simple assignments,
+session.<br><strong>Autoload: </strong> Outside of simple assignments,
 <strong>∆F</strong> will attempt to copy an undefined object named
 <code>nm</code> in the expression <code>£.nm</code>, <code>£.nm<span
 class="grey"><strong>.nm2</strong></span></code>, <em>etc.</em>, from,
-<em>in order:</em><br> <small><small><span
-class="blue"><strong>DIRECTORY:</strong></span></small></small> <strong>./MyDyalogLib/</strong>
- &gt;  <small><small><span class="blue"><strong><em>APL</em>
-WS:</strong></span></small></small> <strong>dfns</strong>
- &gt; <small><small><span
-class="blue"><strong>DIRECTORY:</strong></span></small></small> <strong>./</strong><br><small>Other
+<em>in order: </em><br> <small><small><span
+class="blue"><strong>DIRECTORY: </strong></span></small></small> <strong>./MyDyalogLib/</strong>
+&gt;  <small><small><span class="blue"><strong><em>APL</em>
+WS: </strong></span></small></small> <strong>dfns</strong>
+&gt; <small><small><span
+class="blue"><strong>DIRECTORY: </strong></span></small></small> <strong>./</strong><br><small>Other
 <code>£</code> expressions like <code>£.(hex dec)</code> are valid, but
 no autoload takes place.<br><em>For filetypes and customisation, see <a
-href="#session-library-shortcut-details">Session Library Shortcut:
+href="#session-library-shortcut-details">Session Library Shortcut: 
 Details</a> below.</em></small></td>
 </tr>
 <tr>
@@ -2532,7 +2532,7 @@ Details</a> below.</em></small></td>
 <td style="text-align: justify;">Recursively scans <code>⍵</code>, putting
 char. vectors, scalars, and rows of higher-dimensional strings in APL
 quotes, leaving other elements as is. If omitted,
-<code>⍺←''''</code>.</td>
+<code>⍺← ''''</code>.</td>
 </tr>
 <tr>
 <td style="text-align: justify;"><strong>`S</strong></td>
@@ -2543,7 +2543,7 @@ quotes, leaving other elements as is. If omitted,
 (APLAN), either (<code>⍺=0</code>, the default) in <em>tabular</em>
 (multiline) form or (<code>⍺=1</code>) compactly with statement
 separators <code>◇</code> in place of newlines. If omitted,
-<code>⍺←0</code>. <small><em>See details below.</em></small></td>
+<code>⍺← 0</code>. <small><em>See details below.</em></small></td>
 </tr>
 <tr>
 <td style="text-align: justify;"><strong>`T</strong></td>
@@ -2561,7 +2561,7 @@ template in <code>1200⌶</code> format. If omitted,
 <td style="text-align: center;"><code>[⍺]`W ⍵</code></td>
 <td style="text-align: justify;">Wraps the rows of simple arrays in ⍵ in
 decorators <code>0⊃2⍴⍺</code> (on the left) and <code>1⊃2⍴⍺</code> (on
-the right). If omitted, <code>⍺←''''</code>. <small><em>See details
+the right). If omitted, <code>⍺← ''''</code>. <small><em>See details
 below.</em></small></td>
 </tr>
 <tr>
@@ -2615,12 +2615,12 @@ below on displaying quote characters like <code>"</code> in a string.
 <strong>Quoted strings</strong> in <strong>Code</strong> fields may
 include a small number of escape sequences, beginning with the backtick
 <code>`</code>. Some sequences are valid in <strong>Text</strong> fields
-<em>only</em>, but not in Quoted strings:</p>
+<em>only</em>, but not in Quoted strings: </p>
 <p><span class="margin-note"><br><br><br><br><br><strong>Quoted
 Strings</strong> appear <strong><em>only</em></strong> in
 <strong>Code</strong> fields. </span></p>
 <p><a id="table-escapes" class="scroll-target"></a></p>
-<table style="width:100%;">
+<table style="width: 100%;">
 <caption>5e. <strong>Escape Sequences</strong></caption>
 <colgroup>
 <col style="width: 15%" />
@@ -2651,13 +2651,13 @@ Strings</strong> appear <strong><em>only</em></strong> in
 </tr>
 <tr>
 <td style="text-align: center;"><strong>`{</strong></td>
-<td style="text-align: center;">{</td>
-<td style="text-align: center;">left brace</td>
-<td style="text-align: center;">Text fields only</td>
-</tr>
-<tr>
-<td style="text-align: center;"><strong>`}</strong></td>
-<td style="text-align: center;">}</td>
+  <td style="text-align: center;">{</td>
+     <td style="text-align: center;">left brace</td>
+     <td style="text-align: center;">Text fields only</td>
+      </tr>
+      <tr>
+     <td style="text-align: center;"><strong>`}</strong></td>
+  <td style="text-align: center;">}</td>
 <td style="text-align: center;">right brace</td>
 <td style="text-align: center;">Text fields only</td>
 </tr>
@@ -2671,7 +2671,7 @@ back­tick.</span> treated literally.</p>
 class="header-section-number">5.7</span> Quoted Strings in Code
 Fields</h2>
 <p>As mentioned in the introduction, <strong>Quoted strings</strong> in
-<strong>Code</strong> fields allow several delimiting quote styles:</p>
+<strong>Code</strong> fields allow several delimiting quote styles: </p>
 <ul>
 <li><strong>double-quotes</strong><br>
 <code>∆F '{"like «this» one"}'</code> or
@@ -2684,8 +2684,8 @@ as well as</li>
 <code>∆F '{''shown like ''''this'''', "this" or «this».''}'</code>.</li>
 </ul>
 <p><span class="margin-note">Compare these
-examples:<br> <strong>Invalid:</strong> <span
-class="red"><strong>∆F ‘{“abc`”def”}’</strong></span><br> <strong>Valid:</strong> <code>∆F '{"abc""def"}'</code>
+examples: <br> <strong>Invalid: </strong> <span
+class="red"><strong>∆F ‘{“abc`”def”}’</strong></span><br> <strong>Valid: </strong> <code>∆F '{"abc""def"}'</code>
 </span> If you wish to include a traditional delimiting quote
 (<code>'</code> or <code>"</code>) or the closing quote of a quote pair
 (<code>«</code> <code>»</code>) within the <strong>Quoted
@@ -2733,7 +2733,7 @@ character within the string. The clumsiness of the standard single quote
 <code>'</code> examples is due to the fact that the single quote is the
 required delimiter for the outermost (<em>APL</em>-level) string.</p>
 <h2 data-number="5.8" id="omega-shortcut-expressions-details"><span
-class="header-section-number">5.8</span> Omega Shortcut Expressions:
+class="header-section-number">5.8</span> Omega Shortcut Expressions: 
 Details</h2>
 <ol start="3" type="1">
 <li>All <strong>Omega</strong> shortcut expressions in the
@@ -2763,7 +2763,7 @@ accessed at runtime via any means, shortcut or traditional, that element
 class="header-section-number">5.9</span> <strong>Serialise</strong>
 Shortcut Expressions: Details</h2>
 <p>Serialise ( <code>`S</code>) uses Dyalog <em>APL</em>’s Array
-Notation (APLAN)<span class="margin-note"><strong>APLAN</strong>:
+Notation (APLAN)<span class="margin-note"><strong>APLAN</strong>: 
 <em>⎕SE.Dyalog.Array.Serialise</em>.</span> to display the object to its
 right. It is intended to have roughly the same behaviour as displaying
 an object with <code>]APLAN.output on</code>. (See Dyalog documentation
@@ -2780,11 +2780,11 @@ operator,<code>`S</code> will display <code>⍵</code>
 <h2 data-number="5.10" id="wrap-shortcut-details"><span
 class="header-section-number">5.10</span> Wrap Shortcut: Details</h2>
 <ol type="1">
-<li>Syntax: <code>[⍺←''''] `W ⍵</code>.</li>
-<li>Let <code>L←0⊃2⍴⍺</code> and <code>R←1⊃2⍴⍺</code>.</li>
+<li>Syntax: <code>[⍺← ''''] `W ⍵</code>.</li>
+<li>Let <code>L← 0⊃2⍴⍺</code> and <code>R← 1⊃2⍴⍺</code>.</li>
 <li>Wrap each row <code>X′</code> of the simple arrays <code>X</code> in
 <code>⍵</code> (or the entire array <code>X</code> if a simple vector or
-scalar) in decorators <code>L</code> and <code>R</code>:
+scalar) in decorators <code>L</code> and <code>R</code>: 
 <code>L,(⍕X′),R</code>.</li>
 <li><code>⍵</code> is an array of any shape and depth.<code>L</code>and
 <code>R</code>are char. vectors or scalars or <code>⍬</code> (treated as
@@ -2796,7 +2796,7 @@ will wrap the array ⍵, row by row, whether character, numeric or
 otherwise.</li>
 </ol>
 <h2 data-number="5.11" id="session-library-shortcut-details"><span
-class="header-section-number">5.11</span> Session Library Shortcut:
+class="header-section-number">5.11</span> Session Library Shortcut: 
 Details</h2>
 <ol type="1">
 <li><p>If <span class="margin-note">The search <strong>path</strong>
@@ -2810,7 +2810,7 @@ made— during <strong>∆F</strong>’s left-to-right <em>scanning</em>
 phase— to copy it to <code>£</code> from (in order) directory
 <strong>./MyDyalogLib</strong>, workspace <strong>dfns</strong>, and the
 current directory <strong>./</strong>, <em>unless</em> it is being
-assigned (via a simple <code>←</code>) or has <span
+assigned (via a simple <code>← </code>) or has <span
 class="margin-note">Once a name is seen, no attempt will be made to load
 it.</span>already been seen in this <strong>∆F</strong> call. It will be
 available for the duration of the <em>APL</em> session.</p></li>
@@ -2825,23 +2825,23 @@ automatically retrieved (if not defined), names in other <code>£</code>
 expressions, like <code>£.(name1 name2)</code> or
 <code>£.⎕NC "name3"</code>, will be ignored during the scanning
 phase;</p></li>
-<li><p>In the case of a simple assignment (<code>£.name←val</code>), the
+<li><p>In the case of a simple assignment (<code>£.name← val</code>), the
 object assigned must be new or of an <em>APL</em> class compatible with
 its existing value, else a domain error will be signaled. Even if seen
 later in the scan, the object will be assumed to have been set by the
 user.</p></li>
-<li><p>Simple modified assignments of the form <code>£.name+←val</code>
+<li><p>Simple modified assignments of the form <code>£.name+← val</code>
 are allowed: the object <code>name</code> will be retrieved (if not
 present) before modification.</p></li>
 </ol>
 <h3 data-number="5.11.1"
 id="session-library-shortcut-filetypes-of-source-files"><span
-class="header-section-number">5.11.1</span> Session Library Shortcut:
+class="header-section-number">5.11.1</span> Session Library Shortcut: 
 Filetypes of Source Files</h3>
 <p><span
-class="margin-note"><br><br><br><br><br><br><br><br><br><br><br><strong>apla:</strong>
+class="margin-note"><br><br><br><br><br><br><br><br><br><br><br><strong>apla: </strong>
 Encoded using <em>APL</em> Array Notation (Dyalog
-20).<br><br><br><strong>txt:</strong> Each line of file is converted to
+20).<br><br><br><strong>txt: </strong> Each line of file is converted to
 a Unicode char. vector.</span></p>
 <p><a id="table-library-filetypes" class="scroll-target"></a></p>
 <table>
@@ -2960,7 +2960,7 @@ NEVER</small></strong></span></td>
 </tbody>
 </table>
 <h3 data-number="5.11.2" id="session-library-shortcut-parameters"><span
-class="header-section-number">5.11.2</span> Session Library Shortcut:
+class="header-section-number">5.11.2</span> Session Library Shortcut: 
 Parameters</h3>
 <p>The <span class="margin-note">If the automatic search feature is
 enabled— the default—, the <em>first</em> time each name is used there
@@ -2973,7 +2973,7 @@ to support it is a tad complex. The complex components run only when
 <code>0</code>, the runtime impact of the feature is more modest
 still.</p>
 <p>To support the Session Library auto-load process, there are
-parameters that may <em>optionally</em> be tailored:</p>
+parameters that may <em>optionally</em> be tailored: </p>
 <ul>
 <li><strong>LIB_ACTIVE</strong>: A global variable set in
 FString.dyalog.
@@ -2984,19 +2984,19 @@ FString.dyalog.
 </ul></li>
 </ul>
 <p>In addition, there are user parameters settable in the file
-<strong>.∆F</strong> in the user’s home directory:</p>
+<strong>.∆F</strong> in the user’s home directory: </p>
 <ul>
-<li><strong>auto:</strong> allowing <strong>∆F</strong> to automatically
+<li><strong>auto: </strong> allowing <strong>∆F</strong> to automatically
 load undefined objects of the form <code>£.obj</code> or
 <code>`L.obj</code> into the Session Library from workspaces or files on
 the search path;</li>
-<li><strong>verbose:</strong> providing limited information on
+<li><strong>verbose: </strong> providing limited information on
 parameters, object loading, <em>etc.</em>;</li>
-<li><strong>path:</strong> listing what directories to search for the
+<li><strong>path: </strong> listing what directories to search for the
 object definitions;</li>
-<li><strong>prefix:</strong> literal character vectors to prefix to each
+<li><strong>prefix: </strong> literal character vectors to prefix to each
 file name during the object search;</li>
-<li><strong>suffix:</strong> <span class="margin-note">More details
+<li><strong>suffix: </strong> <span class="margin-note">More details
 appear below.<br>Don’t forget the ‘.’ prefix!</span>filetypes that
 indicate the types of objects in our “library,” along with any expected
 conversions.</li>
@@ -3006,74 +3006,74 @@ class="margin-note">Additional doc­ument­ation is need­ed, should this go
 forward.</span> is documented <em>below</em>.</p>
 <details>
 <summary class="summary">
- <em><span style="opacity:0.6;">Show/Hide</span> Default £ibrary
+<em><span style="opacity: 0.6;">Show/Hide</span> Default £ibrary
 Parameter File</em> <big><strong>. ∆F</strong></big>
 </summary>
 <p><a id="table-library-parameters" class="scroll-target"></a></p>
 <pre class="skip"><code>(
-  ⍝ Default (Internal) Library Parameter File  (in APL Array Notation) 
-  ⍝ Default file:           ∆F/∆FParmDefs.apla
-  ⍝ User parameter file:   ./.∆F (no filetype)  
-  ⍝ Global settings that impact the two parameter files:
-  ⍝    LIB_ACTIVE, VERBOSE 
-  ⍝ LIB_ACTIVE: 
-  ⍝           Setting  Do we want to use the SESSION LIBRARY autoload feature?
-  ⍝ LIB_ACTIVE:  2     Yes. Load default and user parameters
-  ⍝              1     Yes. Load default parameters ONLY.
-  ⍝              0     No.  No autoload features should be available.
-  ⍝ VERBOSE: Compile-time and run-time verbosity flag
-  ⍝                
-  ⍝ Items not to be (re)set by user may be omitted in user .∆F file.           
-  ⍝ If (verbose: ⎕NULL), then VERBOSE [note 1] is used for verbose.
-  ⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: &#39;&#39; ◇)     
-  ⍝ [note 1] 
+⍝ Default (Internal) Library Parameter File  (in APL Array Notation)
+⍝ Default file:           ∆F/∆FParmDefs.apla
+⍝ User parameter file:   ./.∆F (no filetype)
+⍝ Global settings that impact the two parameter files:
+⍝    LIB_ACTIVE, VERBOSE
+⍝ LIB_ACTIVE:
+⍝           Setting  Do we want to use the SESSION LIBRARY autoload feature?
+⍝ LIB_ACTIVE:  2     Yes. Load default and user parameters
+⍝              1     Yes. Load default parameters ONLY.
+⍝              0     No.  No autoload features should be available.
+⍝ VERBOSE: Compile-time and run-time verbosity flag
+⍝
+⍝ Items not to be (re)set by user may be omitted in user .∆F file.
+⍝ If (verbose: ⎕NULL), then VERBOSE [note 1] is used for verbose.
+⍝ If (prefix: ⎕NULL) or (prefix: ⍬), then (prefix: &#39;&#39; ◇)
+⍝ [note 1]
    
-  ⍝ Parameter auto:
-  ⍝   0: user must load own objects; nothing is automatic.                
-  ⍝   1: dfns and files (if any) searched in sequence set by dfnsOrder.
-  ⍝      See path for directory search sequence. 
-  ⍝ If the user sets (auto: 0) as a ∆F option, then objects already loaded will
-  ⍝ be found and used normally, but no new objects will be autoloaded. New objects
-  ⍝ may be created explicitly (e.g. via &#39;obj&#39; ⎕CY &#39;ws&#39; or £.obj←val), as expected.
-  ⍝ Note: If (load: 0) or if there are no files or workspaces in the search path,
-  ⍝       auto is set to 0, since no objects will ever be found.                    
-    auto: 1
-      
-  ⍝ verbose: 
-  ⍝    If 0 (quiet), 
-  ⍝    If 1 (verbose).  
-  ⍝    If ⎕NULL, value is set from VERBOSE (see above).
-    verbose: ⎕NULL  
-                                                          
-  ⍝ path: The file dirs and/or workspaces to search IN ORDER left to right:
-  ⍝    e.g. path: [ &#39;fd1&#39;, &#39;fd2&#39;, [&#39;ws1&#39;, &#39;wsdir/ws2&#39;], &#39;fd3&#39;, [&#39;ws3&#39;]]
-  ⍝    For a file directory, the item must be a simple char vector
-  ⍝        &#39;MyDyalogLib&#39;
-  ⍝    For workspaces, the item must be a vector of one or more char vectors
-  ⍝        (⊂&#39;dfns&#39;) or (⊂&#39;MyDyalogLib/mathfns&#39;) or (&#39;dfns&#39;, &#39;myDfns&#39;)
-  ⍝  To indicate we don&#39;t want to search ANY files, 
-  ⍝     best: (load: 0)
-  ⍝     ok:   (path: ⎕NULL)
-  ⍝           directory      workspace    directory
-    path:  ( &#39;MyDyalogLib&#39; ◇ (&#39;dfns&#39;◇)  ◇  &#39;.&#39;     ◇ )  
-                  
-  ⍝ prefix: literal string to prefix to each name, when searching directories.
-  ⍝     Ignored for workspaces.
-  ⍝     Default is ⍬ or (equivalently) &#39;&#39;
-  ⍝     Example given name &#39;mydfn&#39; and (prefix: &#39;∆F_&#39; &#39;MyLib/&#39; ◇ suffix: ⊂&#39;.aplf&#39;)  
-  ⍝     ==&gt; (&#39;∆F_mydfn.aplf&#39;  &#39;MyLib/mydfn.aplf&#39;)   
-    prefix: ⍬ 
-                              
-  ⍝ suffix: at least one suffix is required for files to be checked.
-  ⍝ ∘  Note: Don&#39;t forget the &#39;.&#39;.
-  ⍝ ∘  Suffixes don&#39;t apply to workspaces. See documentation for definitions.
-  ⍝ ∘  By default, unknown filetypes are not enabled. 
-  ⍝    If they are enabled, they work the same as &#39;dyalog&#39;.
-  ⍝ ∘  If possible, place most used suffixes first.
-    suffix: (&#39;.aplf&#39; ◇ &#39;.apla&#39; ◇ &#39;.aplo&#39; ◇ &#39;.apln&#39; ◇ &#39;.json&#39;◇ &#39;.txt&#39; ◇&#39;.dyalog&#39;)    
-                  
-  ⍝  Internal Runtime (hidden) Parameters (not shown). Do not modify or delete. 
-  ⍝     ⍙readParms,⍙fullPath                                          
+⍝ Parameter auto:
+⍝   0: user must load own objects; nothing is automatic.
+⍝   1: dfns and files (if any) searched in sequence set by dfnsOrder.
+⍝      See path for directory search sequence.
+⍝ If the user sets (auto: 0) as a ∆F option, then objects already loaded will
+⍝ be found and used normally, but no new objects will be autoloaded. New objects
+⍝ may be created explicitly (e.g. via &#39;obj&#39; ⎕CY &#39;ws&#39; or £.obj←val), as expected.
+⍝ Note: If (load: 0) or if there are no files or workspaces in the search path,
+⍝       auto is set to 0, since no objects will ever be found.
+   auto: 1
+   
+⍝ verbose:
+⍝    If 0 (quiet),
+⍝    If 1 (verbose).
+⍝    If ⎕NULL, value is set from VERBOSE (see above).
+   verbose: ⎕NULL  
+   
+⍝ path: The file dirs and/or workspaces to search IN ORDER left to right:
+⍝    e.g. path: [ &#39;fd1&#39;, &#39;fd2&#39;, [&#39;ws1&#39;, &#39;wsdir/ws2&#39;], &#39;fd3&#39;, [&#39;ws3&#39;]]
+⍝    For a file directory, the item must be a simple char vector
+⍝        &#39;MyDyalogLib&#39;
+⍝    For workspaces, the item must be a vector of one or more char vectors
+⍝        (⊂&#39;dfns&#39;) or (⊂&#39;MyDyalogLib/mathfns&#39;) or (&#39;dfns&#39;, &#39;myDfns&#39;)
+⍝  To indicate we don&#39;t want to search ANY files,
+⍝     best: (load: 0)
+⍝     ok:   (path: ⎕NULL)
+⍝           directory      workspace    directory
+   path:  ( &#39;MyDyalogLib&#39; ◇ (&#39;dfns&#39;◇)  ◇  &#39;.&#39;     ◇ )  
+   
+⍝ prefix: literal string to prefix to each name, when searching directories.
+⍝     Ignored for workspaces.
+⍝     Default is ⍬ or (equivalently) &#39;&#39;
+⍝     Example given name &#39;mydfn&#39; and (prefix: &#39;∆F_&#39; &#39;MyLib/&#39; ◇ suffix: ⊂&#39;.aplf&#39;)
+⍝     ==&gt; (&#39;∆F_mydfn.aplf&#39;  &#39;MyLib/mydfn.aplf&#39;)
+   prefix: ⍬ 
+   
+⍝ suffix: at least one suffix is required for files to be checked.
+⍝ ∘  Note: Don&#39;t forget the &#39;.&#39;.
+⍝ ∘  Suffixes don&#39;t apply to workspaces. See documentation for definitions.
+⍝ ∘  By default, unknown filetypes are not enabled.
+⍝    If they are enabled, they work the same as &#39;dyalog&#39;.
+⍝ ∘  If possible, place most used suffixes first.
+   suffix: (&#39;.aplf&#39; ◇ &#39;.apla&#39; ◇ &#39;.aplo&#39; ◇ &#39;.apln&#39; ◇ &#39;.json&#39;◇ &#39;.txt&#39; ◇&#39;.dyalog&#39;)    
+   
+⍝  Internal Runtime (hidden) Parameters (not shown). Do not modify or delete.
+⍝     ⍙readParms,⍙fullPath
 )    </code></pre>
 </details>
 <hr />
@@ -3086,7 +3086,7 @@ Parameter File</em> <big><strong>. ∆F</strong></big>
 class="header-section-number">6</span> Appendices</h1>
 <details>
 <summary class="summary">
- <span style="opacity:0.6;">Show/Hide</span> <em>Appendices</em>
+<span style="opacity: 0.6;">Show/Hide</span> <em>Appendices</em>
 </summary>
 <p><a id="inside-appendices" class="scroll-target"></a></p>
 <h2 data-number="6.1" id="appendix-i-underdocumented-features"><span
@@ -3130,8 +3130,8 @@ value of the load-time parameter <span class="margin-note">See
 <code>FUTURES</code> includes <code>'⍥'</code>, then this fun
 <em>future</em> feature will be recognized within code fields, without
 impacting other capabilities of <code>⍥</code>. For more information,
-see <a id="displayText" href="javascript:linkAlert();"><span
-class="linkNote">https://aplwiki.com/wiki/Depth_(operator)</span></a>.</p>
+see <a id="displayText" href="javascript: linkAlert();"><span
+class="linkNote">https: //aplwiki.com/wiki/Depth_(operator)</span></a>.</p>
 <h4 data-number="6.1.2.2"
 id="future-behaviour-of-select-sane-indexing-here-today"><span
 class="header-section-number">6.1.2.2</span> Future Behaviour of ⊇
@@ -3142,8 +3142,8 @@ indexing</strong>) if the value of the load-time parameter <span
 class="margin-note">See <code>FUTURES</code> global variable in
 ∆F/FString.dyalog.</span> <code>FUTURES</code> includes
 <code>'⍥'</code>. For more information, see
-<a id="displayText" href="javascript:linkAlert();"><span
-class="linkNote">https://aplwiki.com/wiki/From</span></a>.</p>
+<a id="displayText" href="javascript: linkAlert();"><span
+class="linkNote">https: //aplwiki.com/wiki/From</span></a>.</p>
 <h4 data-number="6.1.2.3"
 id="future-behaviour-of-ellipsis-range-function-here-today"><span
 class="header-section-number">6.1.2.3</span> Future Behaviour of …
@@ -3154,18 +3154,18 @@ class="header-section-number">6.1.2.3</span> Future Behaviour of …
 dyalog-apl-extended on Github [retrieved 2026-02-13].</span> to function
 <strong>to</strong> in the <em>dfns</em> workspace, extended to handle
 characters as well as integers (see discussion at
-https://dfns.dyalog.com/n_to.htm). E.g. <code>'a' … 'j'</code> is the
+   https: //dfns.dyalog.com/n_to.htm). E.g. <code>'a' … 'j'</code> is the
 same as ‘abcdefghij’, just as <code>1 … 10</code> is the same as `1 2 3
 4 5 6 7 8 9 10’. This is similar to Python’s range() function.</p>
 <h3 data-number="6.1.3" id="f-helps-secret-variant"><span
 class="header-section-number">6.1.3</span> ∆F Help’s Secret Variant</h3>
 <p><code>∆F⍨'help'</code> has a secret variant: <span
-class="margin-note"><em>synonym:</em>
+class="margin-note"><em>synonym: </em>
 <code>∆F⍨'help-n'</code>.</span><code>∆F⍨'help-narrow'</code>. With this
 variant, the help session will start up in a narrower window
 <em>without</em> side notes. If the user widens the window, the side
 notes will appear, as in the default case: <span
-class="margin-note"><em>synonym:</em>
+class="margin-note"><em>synonym: </em>
 <code>∆F⍨'help-wide'</code>.</span><code>∆F⍨'help'</code>.</p>
 <h3 data-number="6.1.4" id="fs-library-parameter-option-parms"><span
 class="header-section-number">6.1.4</span> ∆F’s Library Parameter
@@ -3187,28 +3187,28 @@ Option: ‘globals’</h3>
 <p><strong>∆F</strong> has a number of load-time parameters (global
 variables) that set its runtime behaviour for all users. You can view
 these parameters using the call: <code>∆F⍨ 'globals'</code>. The
-parameters include:</p>
+parameters include: </p>
 <pre class="skip"><code>
-  TRAP_ERRORS      VERBOSE_RUNTIME      VERBOSE_LOADTIME  SIGNAL_LIB_ERRS
-  ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_DEF        HELP_HTML_FI   
-  LIB_ACTIVE       LIB_PARM_FI          LIB_USER_FI       LIB_SRC_FI
-  OPTS_KW          OPTS_DEFval          OPTS_N
-  VERBOSE_RUNTIME  VERSION              FUTURES</code></pre>
+TRAP_ERRORS      VERBOSE_RUNTIME      VERBOSE_LOADTIME  SIGNAL_LIB_ERRS
+ESCAPE_CHAR      QUOTES_SUPPLEMENTAL  INLINE_DEF        HELP_HTML_FI   
+LIB_ACTIVE       LIB_PARM_FI          LIB_USER_FI       LIB_SRC_FI
+OPTS_KW          OPTS_DEFval          OPTS_N
+VERBOSE_RUNTIME  VERSION              FUTURES</code></pre>
 <p>The meaning of each parameter and appropriate values are currently
 documented solely within the <strong>∆F</strong> code itself.</p>
 <h2 data-number="6.2" id="appendix-ii-python-fstrings"><span
 class="header-section-number">6.2</span> Appendix II: Python
 f‑strings</h2>
-<p>For more information on Python f-strings, <em>see</em>:</p>
-<p> <a id="displayText" href="javascript:linkAlert();"><span
-class="linkNote">https://docs.python.org/3/tutorial/inputoutput.html#formatted-string-literals</span></a>.</p>
+<p>For more information on Python f-strings, <em>see</em>: </p>
+<p> <a id="displayText" href="javascript: linkAlert();"><span
+class="linkNote">https: //docs.python.org/3/tutorial/inputoutput.html#formatted-string-literals</span></a>.</p>
 </details>
 <h1 data-number="7" id="index-of-topics"><span
 class="header-section-number">7</span> Index of Topics</h1>
 <details id="TOC">
 <!-- option: open  Set id="TOC" here only. -->
 <summary class="summary">
- <span style="opacity:0.6;">Show/Hide</span> <em>Index</em>
+<span style="opacity: 0.6;">Show/Hide</span> <em>Index</em>
 </summary>
 <p><a id="inside-index" class="scroll-target"></a></p>
 <p><span
@@ -3217,9 +3217,9 @@ class="red"><strong><big>■</big> Major
 topic</strong></span></big><br><span class="green"><strong><big>■</big>
 Topic in table or figure</strong></span><br><big>■</big> Regular
 entry</strong></big></span></p>
-<div class="multi-column-text" style="font-size:85%;">
+<div class="multi-column-text" style="font-size: 85%;">
 <!-- INDEX_BEGIN -->
-<!-- Generated by ∆F_toc: 2026-07-30T21:07:11 -->
+<!-- Generated by ∆F_toc: 2026-07-30T21: 07: 11 -->
 <p><a href="#the-above-shortcut"                            > <strong>`A
 (above)</strong> <big><span class="blue">4.12</span></big></a><br>
 <a href="#the-above-shortcut"                            > <strong>Above
@@ -3569,7 +3569,7 @@ class="blue">4.7</span></big></a><br> <!-- INDEX_END --></p>
 </details>
 <!-- Put a set of navigation tools at a fixed position at the bottom of the Help screen
 -->
-<div class="doc-footer" style="text-align: left;padding-left:60px;">
+<div class="doc-footer" style="text-align: left;padding-left: 60px;">
 <div class="button-container">
 <p><input type="button" value="Back" class="button happy-button" onclick="history.back()"/>
 <button id="toggleDetails" class="button happy-button" style="width: 130px;">Expand
@@ -3579,7 +3579,7 @@ All</button>    
 <input type="button" class="button normal-button" value="Examples" onclick="window.location='#inside-examples'"/>
 <input type="button" class="button normal-button" value="Reference" onclick="window.location='#inside-reference'"/>
 <!-- 
- <input type="button" class="button normal-button" value="Appendices" onclick="window.location='#appendices'"/> 
+<input type="button" class="button normal-button" value="Appendices" onclick="window.location='#appendices'"/> 
 -->
 <input type="button" class="button normal-button" value="Index" onclick="window.location='#inside-index'"/>
 <input type="button" class="button normal-button" value="Bottom" onclick="window.location='#index-of-topics'"/>    
@@ -3589,7 +3589,7 @@ Window</button></p>
 </div>
 </div>
 <hr />
-<p><br> <span id="copyright" style="font-family:cursive;"> Copyright
+<p><br> <span id="copyright" style="font-family: cursive;"> Copyright
 <big>©</big> 2026 Sam the Cat Foundation. [Version 0.1.3: 2026-01-20]
 </span> <br></p>
 </div>
