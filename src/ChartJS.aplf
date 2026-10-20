@@ -1,5 +1,5 @@
 ∇ {hr}← {opts}ChartJS values
-      ; anim; chartParms; chartSrcNm; chartType; hr; html; labels; len; opts
+      ; anim; chartParms; chartSrcNm; chartType; hr; html; labels; ∆; opts
       ; posn; print; rc; size; title; type; wait; xl; yl; yz                
       ; HBuild; NumObj; PrintToPDF; TexMix; WaitForLoad 
       ; ⎕IO; ⎕ML 
@@ -50,7 +50,9 @@
       1=rc: ⎕← 'Printed ',fi
       1: ⎕← 'Unable to print ',fi
     }
-    TexMix← { 0= ⊃0⍴ ⍵: ⍵ ⋄ '-'@ ('¯'∘=) ,⍕⍵ }¨,∘⊆  ⍝ Mixed CV and NS
+   ⍝ TexMix ⍵@[CV|NS]+ 
+   ⍝     Useful for labels with simple vector of numbers mixed with char vectors.
+    TexMix← { 0= ⊃0⍴ ⍵: ⍵ ⋄ '-'@ ('¯'∘=) ,⍕⍵ }¨,∘⊆   
 ⍝ End Support Functions
     
 ⍝ Load defaults => modify by opts => import these variables into this fn's namespace
@@ -88,8 +90,8 @@
             labels← TexMix labels
         :EndIf
     ⍝  labels← (≢values)↑ labels, (0⌈ values-⍥≢ labels)⍴ ⊂''
-        :Select ×len← values-⍥≢labels
-          :Case 1 ⋄ labels,← len⍴⊂''       ⍝  Missing? Pad with empty string
+        :Select ×∆← values-⍥≢labels
+          :Case  1 ⋄ labels,← ∆⍴⊂''        ⍝  Missing? Pad with empty string
           :Case ¯1 ⋄ labels↑⍨← ≢values     ⍝  Extras? Truncate quietly
         :EndSelect
     :EndIf
@@ -99,12 +101,13 @@
     ⍝    Hdr: Define Header, Def: Define Chart Fn, Exec: Insert Parms & Execute
         Case← ⍺∘≡ ⋄ snk← ⍵  
         _Rx← ⍠'Regex'(1 0)
-        code← { ('^\h*⍝', ⍵, ' (.*)') ⎕S '\1' ⎕NR 1⊃ ⎕XSI } ⊃⍺ 
+        code← { ('^\h*⍝', ⍵, '\h(.*)') ⎕S '\1' ⎕NR 1⊃ ⎕XSI } ⊃⍺ 
         NLn← (⎕UCS 10)∘,¨
       Case'Hdr':  NLn '_SRC_NM_' ⎕R snk _Rx code 
       Case'Def':  NLn          code 
       Case'Exec': NLn '_PARMS_' ⎕R snk _Rx code
         'ChartJS Logic Error'⎕SIGNAL 911
+      ⍝⍝⍝ HTML/JS Code Segments:  matching /⍝[HDE]\h/ only.
         ⍝ :Section Html/JavaScript Code
         ⍝H <!DOCTYPE html>
         ⍝H  <html>
@@ -116,7 +119,7 @@
         ⍝H     </style>
         ⍝H   </head>
         ⍝H   <body><div id="chart"></div>
-            
+        ⍝    
         ⍝D   <script>
         ⍝D   /**
         ⍝D    * DrawChart(spec, containerId)
@@ -205,7 +208,7 @@
         ⍝D     }
         ⍝D   }
         ⍝D   </script>
-            
+        ⍝    
         ⍝E    <script>
         ⍝E      var spec = _PARMS_;
         ⍝E      if (spec.startDelay) {
