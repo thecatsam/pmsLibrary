@@ -14,50 +14,50 @@
 ⍝   OPTS_KW          QUOTES_SUPPLEMENTAL  QUOTE_STYLES      SIGNAL_LIB_ERRS
 ⍝   SRC_FI           TRAP_ERRORS          VERBOSE_LOADTIME  VERBOSE_RUNTIME
 ⍝   VERSION
-   
-   SRC_FI← '∆F/FString.aplns'                     ⍝  Typically, rendered as namespace FString as well
-   ADD_∆F_TO_PATH←  1                             ⍝  If 1, adds FString to Dyalog ⎕PATH.
-   VERSION← 'v.0.4.5'                             ⍝  Version of ∆F package. Updated by ∆F_Publish.dyalog...
+    
+    SRC_FI← '∆F/FString.aplns'                       ⍝  Typically, rendered as namespace FString as well
+    ADD_∆F_TO_PATH←  1                               ⍝  If 1, adds FString to Dyalog ⎕PATH.
+    VERSION← 'v.0.4.5'                               ⍝  Version of ∆F package. Updated by ∆F_Publish.dyalog...
 ⍝  Returns 20 if Dyalog 20, 19 if 19. (∆F package [now] requires Dyalog 20 or later)
-   APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion' 
-   
+    APL_VERSION← ⊃⊃⌽'.'⎕VFI 1⊃'.' ⎕WG 'APLVersion' 
+    
 ⍝  TRAP_ERRORS: If 0, turns off error trapping in ∆F utility.
-   TRAP_ERRORS← 1          
+    TRAP_ERRORS← 1          
 ⍝
 ⍝  VERBOSE_RUNTIME: Run-time verbosity flag
 ⍝  (verbose: 1) is ∆F-settable (user) run-time verbosity flag-- which
 ⍝  also changes `⋄ to ␤ instead of an actual "new line" (⎕UCS 13, for us).
 ⍝  Determines the "default" for user parm ¨verbose¨.
-   VERBOSE_RUNTIME← 0
-   
+    VERBOSE_RUNTIME← 0
+    
 ⍝  VERBOSE_LOADTIME: Load (Fix)-Time verbosity flag.
 ⍝  If 1, be informative during ]load FString -t=⎕SE  (etc.)
-   VERBOSE_LOADTIME← 0
-   
+    VERBOSE_LOADTIME← 0
+    
 ⍝  ESCAPE_CHAR: Allows an installation to use a non-standard "escape" char.
 ⍝  ESCAPE_CHAR must be a scalar.
 ⍝  If ESCAPE_CHAR is omitted or null, the default will be '`'.
 ⍝  Note ESCAPE_CHAR is a load-time variable, to take advantage of minor optimizations.
-   ESCAPE_CHAR← '`'
+    ESCAPE_CHAR← '`'
 ⍝
 ⍝  Quote pairs, i.e. beyond double quotes and single quotes.
 ⍝  QUOTES_SUPPLEMENTAL must consist of 0 or more PAIRS of left AND right quotes.
 ⍝  You might consider any of these additions among others:
-   QUOTE_STYLES← (
-      FR1: '«»'                         ⍝  French     ⍝  Help doc shows only these.
-      FR2: '“”'  
-      FR3: '‘’'           
-      JP1: '「」'                        ⍝  Japanese     ⍝  "Double-wide" characters, best to use with Japanese
-      JP2: '『』' 
-      DE1: '»«'                         ⍝  German     ⍝  Reverse of French FR1 
-      DE2: '„“'
-      DE3: '‚‘'
-      CH1: '《》'                                   ⍝  Chinese
-      CH2: '「」'
-   ) 
+    QUOTE_STYLES← (
+        FR1: '«»'                         ⍝  French     ⍝  Help doc shows only these.
+        FR2: '“”'  
+        FR3: '‘’'           
+        JP1: '「」'                        ⍝  Japanese   ⍝  "Double-wide" characters, best to use with Japanese
+        JP2: '『』' 
+        DE1: '»«'                         ⍝  German     ⍝  Reverse of French FR1 
+        DE2: '„“'
+        DE3: '‚‘'
+        CH1: '《》'                        ⍝  Chinese
+        CH2: '「」'
+    ) 
 ⍝  Note: The code can support all of these (and more) at the same time.
-   QUOTES_SUPPLEMENTAL← QUOTE_STYLES.(FR1)        ⍝  May be null '' or ⍬.
-   
+    QUOTES_SUPPLEMENTAL← QUOTE_STYLES.(FR1)          ⍝  May be null '' or ⍬.
+    
 ⍝  INLINE_DEF.
 ⍝  If 1 by default,
 ⍝      puts full definitions of internal utilities (shortcuts etc.) into the result.
@@ -66,8 +66,8 @@
 ⍝  May be overridden in ∆F via (inline: ⍵), where ⍵ is either 1 or 0.
 ⍝  There are occasions where INLINE_DEF mode results in marginally faster code, but
 ⍝  in general with (verbose: 1), the code is very long and rather unreadable.
-   INLINE_DEF← 0 
-   
+    INLINE_DEF← 0 
+    
 ⍝  FUTURES
 ⍝  '⍥' ∊ FUTURES
 ⍝     Potential "future" implementation of circle diaeresis (⍥) to include the Depth operation,
@@ -78,8 +78,8 @@
 ⍝     Potential future implementation of Ellipsis, Adam B's extensions to dfns:to.
 ⍝  '⊇' ∊ FUTURES
 ⍝     Potential future implementation of right shoe underbar (⊇) as Select (aka "sane indexing").
-   FUTURES← '⍥⊇…' 
-   
+    FUTURES← '⍥⊇…' 
+    
 ⍝  =======================================================================
 ⍝  SESSION LIBRARY (£ or `L) VARIABLES
 ⍝  =======================================================================
@@ -91,33 +91,33 @@
 ⍝                   Load default parameters ONLY, never user's. Good for a demo environment!
 ⍝               0   No.    No.
 ⍝                   No autoload features should be available.
-   LIB_AUTO←  2                                   ⍝  2= Full functionality
-   LIB_PARM_FI← '∆F/ParmDefs.apla' 
-   LIB_USER_FI← '.∆F'                             ⍝  User parameters, rel. to Apl ]CD
-   LIB_SRC_FI←  '∆F/LibUtils.aplns'               ⍝  Library shortcuts (£,  `L) utilities.
+    LIB_AUTO←  2                                     ⍝  2= Full functionality
+    LIB_PARM_FI← '∆F/ParmDefs.apla' 
+    LIB_USER_FI← '.∆F'                               ⍝  User parameters, rel. to Apl ]CD
+    LIB_SRC_FI←  '∆F/LibUtils.aplns'                 ⍝  Library shortcuts (£,  `L) utilities.
 ⍝  HELP FILE
 ⍝  File is loaded into FString at load-time for use by ∆F⍨'help'.
-   HELP_HTML_FI← '∆F/Help.html'                       
-   
+    HELP_HTML_FI← '∆F/Help.html'                       
+    
 ⍝  ==================================================================================
 ⍝  VARIABLES FOR ∆F OPTIONS: Positional and keyword
 ⍝  See also globals: VERBOSE_RUNTIME, INLINE_DEF
 ⍝  =======================================================================
-   OPTS_KW←      ↑'dfn' 'verbose'        'box' 'auto' 'inline'      'cache'   ⍝  In order 
-   OPTS_DEFval←    0    VERBOSE_RUNTIME   0     1      INLINE_DEF    1   ⍝  In order
-   
+    OPTS_KW←      ↑'dfn' 'verbose'        'box' 'auto' 'inline'      'cache' ⍝  In order 
+    OPTS_DEFval←    0    VERBOSE_RUNTIME   0     1      INLINE_DEF    1 ⍝  In order
+    
 ⍝  OPTS_DEFns: The defaults in namespace form. Treat as a read-only object.
-   OPTS_DEFns← ()⎕VSET OPTS_KW OPTS_DEFval
-   
+    OPTS_DEFns← ()⎕VSET OPTS_KW OPTS_DEFval
+    
 ⍝  KEEP_SRC_CM: Are source comments maintained in runtime ns's FString and FString.libUtils?
-   KEEP_SRC_CM← 0 
-   
-   FS_CACHE_ENABLED← 1                            ⍝  Can also be turned off for a particular ∆F call: (cache: 0)
+    KEEP_SRC_CM← 0 
+    
+    FS_CACHE_ENABLED← 1                              ⍝  Can also be turned off for a particular ∆F call: (cache: 0)
 ⍝  Fstring argument cache MAX and KEEP. KEEP is how many to keep when max number of elements
 ⍝  in the f-string cache is exceeded.  Be sure FSTR_CACHE_KEEP << FSTR_CACHE_MAX.
-   FS_CACHE_MAX←   100
-   FS_CACHE_KEEP←   50
-   
+    FS_CACHE_MAX←   100
+    FS_CACHE_KEEP←   50
+    
 ⍝  SIGNAL_LIB_ERRS: Affects £.nm and `L.nm constructions. See LibUtils.aplns.
 ⍝  - If SIGNAL_LIB_ERRS← 1
 ⍝    always ⎕SIGNAL any actual internal library search error (e.g. OBJECT NOT FOUND ON SEARCH PATH),
@@ -130,12 +130,12 @@
 ⍝         |     (verbose:1)∆F'{0: £.pcox 12 ⋄ 3}'
 ⍝         |  ∆F DOMAIN ERROR: Object "pcox" not found on search path
 ⍝         | { ⎕SE.FString.M ⌽⍬({0: (⎕SE.FString.userLibrary).pcox 12 ⋄ 3}⍵)}⍵
-⍝         |  3                                    ⍝  <== function string executed normally!
+⍝         |  3                                       ⍝  <== function string executed normally!
 ⍝    1b.  If (verbose: 0) and (VERBOSE_RUNTIME=0)
 ⍝         no informational messages are generated.
 ⍝    2.   If the ∆F code containing any missing object is executed,
 ⍝         APL will signal the expected APL error (typically as a VALUE ERROR)
 ⍝         |      (verbose:0)∆F'{0:: £.pcox 12 ⋄ 3}'
 ⍝         |  3
-   SIGNAL_LIB_ERRS← 0 
-:EndNamespace                                     ⍝  ⍙FGlobals
+    SIGNAL_LIB_ERRS← 0 
+:EndNamespace                                        ⍝  ⍙FGlobals
