@@ -1,222 +1,226 @@
-∇ SCImport 
-   ⍝ :Section Shortcut Definitions
-   ⍝ Enter shortcut definitions
-   ⍝ Here, for X, the letter (or letters) of the shortcut,
-   ⍝ we store the function (in namespace ⎕SE.FString) as ⎕SE.FString.X.
-   ⍝
-   ⍝ If X_src does NOT exist, a code string is generated from the function
-   ⍝   to be used when (inline: 1) is set or when a string is needed for internal functions.
-   ⍝ If a variable X_src exists, it is expected to be a character vector
-   ⍝   with the desired code, it will ber used in place of the string form of the function.
-   ⍝ This X_src should be identical in operation to the function X, but may be far more
-   ⍝ concise than a naive rendering.
-   ⍝ See internal function Ð/Ð_src below for an example.
-      
-   ⍝ A: Above
-   ⍝        a ∇ b: "obj a above obj b"
-   ⍝          ∇ b: "blank line above obj b"
-      A← {
-         ⎕ML← 1 ⋄ ⍺← ⍬
-         ⊃⍪/(⌈2÷⍨w-m)⌽¨f↑⍤1⍨¨m← ⌈/w← ⊃∘⌽⍤⍴¨f← ⎕FMT¨⍺⍵
-      } 
-   ⍝ B: Box
-   ⍝     ∇ b: "box obj b"
-   ⍝   a ∇ b: "a box b, where a are the options to APL ¨disp¨."
-      B← {
-         ⎕ML← 1 ⋄ d← |≡⍵ ⋄ ⍺← 0
-         ⍺ ⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵
-      }  
-      
-   ⍝ C: Commas
-   ⍝ Commas - Inserts a separator s (default ",") every n (default 5) digits in
-   ⍝          the integer part of each right argument string.
-   ⍝          You may enter no left arg or a left arg of: n, s, n s, or s n, with
-   ⍝          omitted elements (n or s) replaced by the defaults.
-   ⍝          Note: n is either an integer or a (character) digit.
-   ⍝          These are the same:  "5_" and (5 "_").
-   ⍝      Examples:
-   ⍝          E.g.  { `C "123324"}     { 4 `C "123324"}     { 4 "_" `C "123324"}
-   ⍝                { "_" `C "123324"} { "_" 4 `C "123324"}
-   ⍝          Items omitted in the left arg will have their defaults: 3 ","
-      C← { 
-         ⎕IO ⎕ML← 0 1 ⋄ nd← ≢def← 3 ',' ⋄ ⍺← def 
-         Opt← ⍕¨{                                 ⍝ Get options; def=defaults, o=options (⍺) 
-            o← ⍵ ⋄ isN← (⎕D∊⍨ ⊃o)∨ 0=⊃0⍴o         ⍝ isN=1 if first option is <a number or digit>
-           isN: o,(def↑⍨-0⌈nd-≢o) ⋄ (def↑⍨0⌈nd-≢o),⌽o    
-         }  
-         Esc← { ⍵≡⍥, '&': '\&' ⋄ ⍵/⍨1+ '\'= ⍵}    ⍝ Escapes. In case & or \ is the char separator
-         n s← Opt ⍺
-         src← '[.Ee]\d+',⍥⊂ '(?<=\d)(?=(\d{', n, '})+([-¯.Ee]|(?=\s|$)))'
-         snk← '&',⍥⊂ '&',⍨ Esc s 
-         w← src ⎕R snk⍤1 ⍕⍵
-         ⊃⍣(1=≢⍵)⊢ w  
-      } 
-      
-   ⍝ Ð: Internal box display (internal only)
-      Ð← ⍎Ð_src← '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' 
-      
-   ⍝ D: Date (or Time).
-      D← {
-         ⎕ML← 1 ⋄  ⍺← '%ISO%'
-         ∊⍣(1=≡⍵)⊢⍺(1200⌶)⊢1⎕DT⊆⍵
-      }
-      
-   ⍝ F: Format
-      F← ⍎F_src← '⎕FMT' 
-      
-   ⍝ G: GetUrlText
-   ⍝   lines@CVV ← [⍺←1] ∇ url
-   ⍝   Retrieve URL ⍵ (assumes default 'https://' prefix, if prefix is omitted)
-   ⍝   If ⍺=1, remove all html and scripts and return lines as a vector of CVs.
-   ⍝   Otherwise return lines raw.
-      G← {  
-         ⍺← 1 
-      ⍝  Loads HttpCommand (creates namespace) when first used...
-         LoadHttp← {  
-           0:: ⎕SIGNAL ⊂('EN' 11 ⋄ 'Message' 'Http Commands are unavailable')      
-            HttpCommand⊢← ()                      ⍝ Make empty ns in case Load fails.
-            ⎕SE.SALT.Load 'HttpCommand'           ⍝ Try load.
-         } 
-         pats repl← ↓⍉↑(
-            '<script[^>]*>.*?</script[^>]*>' ''
-            '<style[^>]*>.*?</style[^>]*>'   ''
-            '<!-{0,2}.*?-->'                 ''
-            '<[^>]+>'   ''
-            '&amp;'     '&'
-            '&lt;'      '<'
-            '&gt;'      '>'
-            '&quot;'    '"'
-            '&nbsp;'    ' '
-         )
-         _Opts← ⍠('Mode' 'M')('DotAll' 1)
-         GetRaw← {  
-            FullUrl← { ⍵,⍨ 'https://'/⍨~1∊'://'⍷⍵ } 
-           9≠ ⎕NC 'HttpCommand': ∇ ⍵ ⊣ LoadHttp⍬
-            rec← HttpCommand.Get FullUrl ⍵
-           rec.rc=  0: rec.Data 
-           rec.rc= ¯1: ⎕SIGNAL ⊂('EN' 11)('Message' 'Invalid URL')
-            ⎕SIGNAL ⊂('EN' 11)('Message' 'Unable to find URL')
-         }
-         Repl← pats ⎕R repl _Opts
-         Split← (⎕UCS 10 13)∘((~∊⍨)⊆⊢)
-         NoDup← '(\R\h*$)+'⎕R'\n'_Opts
-         raw← GetRaw ⍵ 
-        ⍺=0: raw ⋄ NoDup Split Repl raw 
-      }           
-      
-   ⍝ J: Justify
-      J← {
-         ⎕PP← 34 
-         ⍺← 'L' ⋄ B← {+/∧\' '=⍵}
-         w⌽⍨(1⎕C⍺) { o← ⊂⍺                        ⍝ Treat ⍺ as a scalar.
-           o∊'L'¯1: B ⍵
-           o∊'R' 1: -B⌽⍵ 
-           o∊'C' 0: ⌈0.5×⍵-⍥B⌽⍵                   ⍝ If o is invalid, drop off ends of earth.
-            ⎕SIGNAL ⊂ ('EN' 11) ('Message' 'Shortcut option (⍺) was invalid')
-         } w← ⎕FMT⍵
-      }
-      
-   ⍝ £, `L: Library
-   ⍝ Handled ad hoc as a niladic function
-      
-   ⍝ M: Merge
-      M← {
-         ⎕ML← 1
-         ⍺← ⊢ ⋄ ⊃,/((⌈/≢¨)↑¨⊢)⎕FMT¨⍺⍵
-      } 
-      
-   ⍝ Q: Quote
-   ⍝      ∇ b: "Put single quotes around char. vectors/scalars in b"
-   ⍝    a ∇ b: "Put our quotes around b as above,
-   ⍝            with (⊃a) as the left quote char and (⊃⌽a) as the right."
-      Q←  {
-         ⍺← ''''               
-        1<|≡⍵: ⍺∘∇¨⍵                              
-        (0=⍴⍴⍵)∧1=≡⍵: ⍵                           
-        (0≠≡⍵)∧326=⎕DR⍵: ⍺∘∇¨⍵                 
-         ⎕ML← 1                                                                   
-         ⍺{l r← ⍺ ⋄ 0=80|⎕DR⍵: l, r,⍨ ⍵/⍨ 1+r= ⍵ ⋄ ⍵}⍤1⊢⍵        
-      }
-      
-   ⍝ S: Serialise (display in APLAN)
-      S← { 
-         ⎕ML← 1 ⋄ 11 16 6:: ⍵ ⋄ ⍺← 0     
-        1=≢s← ⍺⎕SE.Dyalog.Array.Serialise⍵: ⊃s
-         ⍪s
-      }
-   ⍝ T: Time or Date (aliases)
-      T← D 
-      
-   ⍝ W: Wrap
-      W← {
-         ⎕ML← 1 ⋄ ⍺← ⎕UCS 39
-        1<|≡⍵: ⍺∘∇¨⍵
-         L R← 2⍴⍺ ⋄ {L,R,⍨⍕⍵}⍤1⊢⍵
-      }
-      
-   ⍝ :EndSection Shortcut Definitions
-   
-   ⍝ :Section Futures Definitions
-   ⍝ The required functions are shown below.
-   ⍝ If not used, you must have at least a dummy function
-   ⍝ e.g.     Ö← { 'Function not defined' ⎕SIGNAL 11 }
-   ⍝   or     Ö← ⍎ Ö_src← '⊢'                     ⍝ A nop
-   ⍝ Is the function is NOT in FUTURES, it won't be called no matter what the value.
-      
-   ⍝ Ö: Depth from Dyalog's dfns workspace
-   ⍝ Recast as Ö.
-   ⍝ Faster AFAIK than CircleDiaeresis below and not quite compatible.
-   ⍝ See Also
-   ⍝    CircleDiaeresis from Adam B's https://github.com/abrudz/dyalog_vision github.
-   ⍝       MIT License
-   ⍝    Copyright (c) 2018 Adám Brudzewsky
-      Ö← {                                        ⍝ Apply fn ⍺⍺ at depths ⍵⍵.
-         ⍺← ⊣
-         depths← ⌽3⍴⌽⍵⍵                           ⍝ expand right operand
-         m l r← depths-⍨(|≡¨⍵ ⍺ ⍵)×depths≥0       ⍝ ¨ digs top-down
-         max encl← '¨⊂'⍴¨⍨l(⌈,∘|-)r               ⍝ find number of ¨s and ⊂s
-         el er← (1 0=l≤r)/¨⊂encl                  ⍝ where do the ⊂s go?
-        0:: ⎕SIGNAL ⎕EN                           ⍝ bubble errors up
-         ⍎'(',el,'⍺)⍺⍺',max,er,'⍵'                ⍝ do it!
-      }
-      
-   ⍝ ==================================================================================
-      
-   ⍝ Ë: By Adam B. under name Ellipsis.
-   ⍝ See: https://github.com/abrudz/dyalog-apl-extended/blob/master/Ellipsis.dyalog
-   ⍝ …  (⎕UCS 8230) Fill sequence gap (http://dfns.dyalog.com/n_to.htm)
-      Ë← { 
-         ⍺← ⊢
-         ⍺{⎕IO← 0
-            Char← 0 2∊⍨10|⎕DR                     ⍝ character?
-            end← ⊃⍵                               ⍝ of sub-sequence
-            tl← 1↓⍵                               ⍝ to be appended
-            ce← Char end                          ⍝ character ⍵?
-            deflt← ⎕UCS⍣ce⊢0                      ⍝ default beg from 0
-            ⍺← deflt                              ⍝ deflt if monadic
-            cb← Char¨¯2↑⍺                         ⍝ character ⍺?
-            ld← -(2-ce)⌊(≢⍺)⌊+/ce=cb              ⍝ to be considered
-            hd← ld↓⍺                              ⍝ to be prepended
-            beg← (¯1⌊ld)↑¯2↑deflt,ld↑⍺            ⍝ first one/two items
-           ce: hd,tl,⍨⎕UCS(⎕UCS beg)∇ ⎕UCS end    ⍝ char sequences
-            from step← -⍨\2↑beg,beg+×end-beg      ⍝ step deflt is +/- 1
-            hd,tl,⍨from+step×⍳0⌈1+⌊(end-from)÷step+step=0 ⍝ ⍺ thru ⍵ inclusive
-         }⍤1⊢⍵ 
-      }                                   
-      
-      
-   ⍝ ==================================================================================
-      
-      
-   ⍝ Î:  RtShoeUnder   (Indexing and Last)  (Def. by PMS)
-   ⍝     [⍺] ⊇ ⍵
-      Î← { 
-         ⍺← ⊢ 
-        0≢ ⍺ 0: ⍺⊂⍛⌷⍤0 99⊢ ⍵                      ⍝ Sane Indexing  ⌷⍨∘⊃⍨⍤0 99
-         ⎕IO← 1                                   ⍝ Last...
-        0= ≢⍴⍵: ⍵                                 ⍝ If scalar, return itself
-        0= ≢⍵:  ⍵                                 ⍝ If empty array, return itself (or an empty prototype)
-         ≢⍛⌷⍨ ⍵                                   ⍝ Otherwise, safely grab the last cell  
-      }   
-   ⍝ :EndSection Futures Definitions
-∇
+    :Namespace     ⍝ Anonymous
+    ⍝ :Section Shortcut Definitions
+    ⍝ Enter shortcut definitions
+    ⍝ Here, for X, the letter (or letters) of the shortcut,
+    ⍝ we store the function (in namespace ⎕SE.FString) as ⎕SE.FString.X.
+    ⍝
+    ⍝ If X_src does NOT exist, a code string is generated from the function
+    ⍝   to be used when (inline: 1) is set or when a string is needed for internal functions.
+    ⍝ If a variable X_src exists, it is expected to be a character vector
+    ⍝   with the desired code, it will ber used in place of the string form of the function.
+    ⍝ This X_src should be identical in operation to the function X, but may be far more
+    ⍝ concise than a naive rendering.
+    ⍝ See internal function Ð/Ð_src below for an example.
+        
+    ⍝ A: Above
+    ⍝        a ∇ b: "obj a above obj b"
+    ⍝          ∇ b: "blank line above obj b"
+        A← {
+            ⎕ML← 1 ⋄ ⍺← ⍬
+            ⊃⍪/(⌈2÷⍨w-m)⌽¨f↑⍤1⍨¨m← ⌈/w← ⊃∘⌽⍤⍴¨f← ⎕FMT¨⍺⍵
+        } 
+    ⍝ B: Box
+    ⍝     ∇ b: "box obj b"
+    ⍝   a ∇ b: "a box b, where a are the options to APL ¨disp¨."
+        B← {
+            ⎕ML← 1 ⋄ d← |≡⍵ ⋄ ⍺← 0
+            ⍺ ⎕SE.Dyalog.Utils.disp⊂⍣(1≥d),⍣(0=d)⊢⍵
+        }  
+        
+    ⍝ C: Commas
+    ⍝ Commas - Inserts a separator s (default ",") every n (default 5) digits in
+    ⍝          the integer part of each right argument string.
+    ⍝          You may enter no left arg or a left arg of: n, s, n s, or s n, with
+    ⍝          omitted elements (n or s) replaced by the defaults.
+    ⍝          Note: n is either an integer or a (character) digit.
+    ⍝          These are the same:  "5_" and (5 "_").
+    ⍝      Examples:
+    ⍝          E.g.  { `C "123324"}     { 4 `C "123324"}     { 4 "_" `C "123324"}
+    ⍝                { "_" `C "123324"} { "_" 4 `C "123324"}
+    ⍝          Items omitted in the left arg will have their defaults: 3 ","
+        C← { 
+            ⎕IO ⎕ML← 0 1 ⋄ nd← ≢def← 3 ',' ⋄ ⍺← def 
+            Opt← ⍕¨{                                 ⍝ Get options; def=defaults, o=options (⍺) 
+                o← ⍵ ⋄ isN← (⎕D∊⍨ ⊃o)∨ 0=⊃0⍴o        ⍝ isN=1 if first option is <a number or digit>
+              isN: o,(def↑⍨-0⌈nd-≢o) ⋄ (def↑⍨0⌈nd-≢o),⌽o    
+            }  
+            Esc← { ⍵≡⍥, '&': '\&' ⋄ ⍵/⍨1+ '\'= ⍵}    ⍝ Escapes. In case & or \ is the char separator
+            n s← Opt ⍺
+            src← '[.Ee]\d+',⍥⊂ '(?<=\d)(?=(\d{', n, '})+([-¯.Ee]|(?=\s|$)))'
+            snk← '&',⍥⊂ '&',⍨ Esc s 
+            w← src ⎕R snk⍤1 ⍕⍵
+            ⊃⍣(1=≢⍵)⊢ w  
+        } 
+        
+    ⍝ Ð: Internal box display (internal only)
+        Ð← ⍎Ð_src← '0∘⎕SE.Dyalog.Utils.disp¯1∘↓' 
+        
+    ⍝ D: Date (or Time).
+        D← {
+            ⎕ML← 1 ⋄  ⍺← '%ISO%'
+            ∊⍣(1=≡⍵)⊢⍺(1200⌶)⊢1⎕DT⊆⍵
+        }
+        
+    ⍝ F: Format
+        F← ⍎F_src← '⎕FMT' 
+        
+    ⍝ G: GetUrlText
+    ⍝   lines@CVV ← [⍺←1] ∇ url
+    ⍝   Retrieve URL ⍵ (assumes default 'https://' prefix, if prefix is omitted)
+    ⍝   If ⍺=1, remove all html and scripts and return lines as a vector of CVs.
+    ⍝   Otherwise return lines raw.
+        G← {  
+            ⍺← 1 
+        ⍝  Loads HttpCommand (creates namespace) when first used...
+            LoadHttp← { 
+              0:: ⎕SIGNAL noCÊ   
+                HttpCommand⊢← ()                     ⍝ Make empty ns in case Load fails.
+                ⎕SE.SALT.Load 'HttpCommand'          ⍝ Try load.
+            } 
+            GetRaw← { ⍺← 1 
+              0≥ ⍺: ⎕SIGNAL noCÊ                     ⍝ Only one try to load HttpCommand
+                FullUrl← { ⍵,⍨ 'https://'/⍨~1∊'://'⍷⍵ } 
+              9≠ ⎕NC 'HttpCommand':  0 ∇ ⍵ ⊣ LoadHttp⍬
+                rec← HttpCommand.Get FullUrl ⍵
+              rec.rc=  0: rec.Data 
+              rec.rc= ¯1: ⎕SIGNAL badÊ
+                ⎕SIGNAL nFÊ
+            }
+            noCÊ← ⊂('EN' 11 ⋄ 'Message' 'Http Commands are unavailable')   
+            badÊ← ⊂('EN' 11)('Message' 'Invalid URL')
+            nFÊ← ⊂('EN' 11)('Message' 'Unable to find URL') 
+            pats repl← ↓⍉↑(
+                '<script[^>]*>.*?</script[^>]*>' ''
+                '<style[^>]*>.*?</style[^>]*>'   ''
+                '<!-{0,2}.*?-->'                 ''
+                '<[^>]+>'   ''
+                '&amp;'     '&'
+                '&lt;'      '<'
+                '&gt;'      '>'
+                '&quot;'    '"'
+                '&nbsp;'    ' '
+            )
+            _Opts← ⍠('Mode' 'M')('DotAll' 1)
+            Repl← pats ⎕R repl _Opts
+            Split← (⎕UCS 10 13)∘((~∊⍨)⊆⊢)
+            NoDup← '(\R\h*$)+'⎕R'\n'_Opts
+            raw← GetRaw ⍵ 
+          ⍺=0: raw ⋄ NoDup Split Repl raw 
+        }           
+        
+    ⍝ J: Justify
+        J← {
+            ⎕PP← 34 
+            ⍺← 'L' ⋄ B← {+/∧\' '=⍵}
+            w⌽⍨(1⎕C⍺) { o← ⊂⍺                        ⍝ Treat ⍺ as a scalar.
+              o∊'L'¯1: B ⍵
+              o∊'R' 1: -B⌽⍵ 
+              o∊'C' 0: ⌈0.5×⍵-⍥B⌽⍵                   ⍝ If o is invalid, drop off ends of earth.
+                ⎕SIGNAL ⊂ ('EN' 11) ('Message' 'Shortcut option (⍺) was invalid')
+            } w← ⎕FMT⍵
+        }
+        
+    ⍝ £, `L: Library
+    ⍝ Handled ad hoc as a niladic function
+        
+    ⍝ M: Merge
+        M← {
+            ⎕ML← 1
+            ⍺← ⊢ ⋄ ⊃,/((⌈/≢¨)↑¨⊢)⎕FMT¨⍺⍵
+        } 
+        
+    ⍝ Q: Quote
+    ⍝      ∇ b: "Put single quotes around char. vectors/scalars in b"
+    ⍝    a ∇ b: "Put our quotes around b as above,
+    ⍝            with (⊃a) as the left quote char and (⊃⌽a) as the right."
+        Q←  {
+            ⍺← ''''               
+          1<|≡⍵: ⍺∘∇¨⍵                              
+          (0=⍴⍴⍵)∧1=≡⍵: ⍵                           
+          (0≠≡⍵)∧326=⎕DR⍵: ⍺∘∇¨⍵                 
+            ⎕ML← 1                                                                   
+            ⍺{l r← ⍺ ⋄ 0=80|⎕DR⍵: l, r,⍨ ⍵/⍨ 1+r= ⍵ ⋄ ⍵}⍤1⊢⍵        
+        }
+        
+    ⍝ S: Serialise (display in APLAN)
+        S← { 
+            ⎕ML← 1 ⋄ 11 16 6:: ⍵ ⋄ ⍺← 0     
+          1=≢s← ⍺⎕SE.Dyalog.Array.Serialise⍵: ⊃s
+            ⍪s
+        }
+    ⍝ T: Time or Date (aliases)
+        T← D 
+        
+    ⍝ W: Wrap
+        W← {
+            ⎕ML← 1 ⋄ ⍺← ⎕UCS 39
+          1<|≡⍵: ⍺∘∇¨⍵
+            L R← 2⍴⍺ ⋄ {L,R,⍨⍕⍵}⍤1⊢⍵
+        }
+        
+    ⍝ :EndSection Shortcut Definitions
+    
+    ⍝ :Section Futures Definitions
+    ⍝ The required functions are shown below.
+    ⍝ If not used, you must have at least a dummy function
+    ⍝ e.g.     Ö← { 'Function not defined' ⎕SIGNAL 11 }
+    ⍝   or     Ö← ⍎ Ö_src← '⊢'                       ⍝ A nop
+    ⍝ Is the function is NOT in FUTURES, it won't be called no matter what the value.
+        
+    ⍝ Ö: Depth from Dyalog's dfns workspace
+    ⍝ Recast as Ö.
+    ⍝ Faster AFAIK than CircleDiaeresis below and not quite compatible.
+    ⍝ See Also
+    ⍝    CircleDiaeresis from Adam B's https://github.com/abrudz/dyalog_vision github.
+    ⍝       MIT License
+    ⍝    Copyright (c) 2018 Adám Brudzewsky
+        Ö← {                                         ⍝ Apply fn ⍺⍺ at depths ⍵⍵.
+            ⍺← ⊣
+            depths← ⌽3⍴⌽⍵⍵                           ⍝ expand right operand
+            m l r← depths-⍨(|≡¨⍵ ⍺ ⍵)×depths≥0       ⍝ ¨ digs top-down
+            max encl← '¨⊂'⍴¨⍨l(⌈,∘|-)r               ⍝ find number of ¨s and ⊂s
+            el er← (1 0=l≤r)/¨⊂encl                  ⍝ where do the ⊂s go?
+          0:: ⎕SIGNAL ⎕EN                            ⍝ bubble errors up
+            ⍎'(',el,'⍺)⍺⍺',max,er,'⍵'                ⍝ do it!
+        }
+        
+    ⍝ ==================================================================================
+        
+    ⍝ Ë: By Adam B. under name Ellipsis.
+    ⍝ See: https://github.com/abrudz/dyalog-apl-extended/blob/master/Ellipsis.dyalog
+    ⍝ …  (⎕UCS 8230) Fill sequence gap (http://dfns.dyalog.com/n_to.htm)
+        Ë← { 
+            ⍺← ⊢
+            ⍺{⎕IO← 0
+                Char← 0 2∊⍨10|⎕DR                    ⍝ character?
+                end← ⊃⍵                              ⍝ of sub-sequence
+                tl← 1↓⍵                              ⍝ to be appended
+                ce← Char end                         ⍝ character ⍵?
+                deflt← ⎕UCS⍣ce⊢0                     ⍝ default beg from 0
+                ⍺← deflt                             ⍝ deflt if monadic
+                cb← Char¨¯2↑⍺                        ⍝ character ⍺?
+                ld← -(2-ce)⌊(≢⍺)⌊+/ce=cb             ⍝ to be considered
+                hd← ld↓⍺                             ⍝ to be prepended
+                beg← (¯1⌊ld)↑¯2↑deflt,ld↑⍺           ⍝ first one/two items
+              ce: hd,tl,⍨⎕UCS(⎕UCS beg)∇ ⎕UCS end    ⍝ char sequences
+                from step← -⍨\2↑beg,beg+×end-beg     ⍝ step deflt is +/- 1
+                hd,tl,⍨from+step×⍳0⌈1+⌊(end-from)÷step+step=0 ⍝ ⍺ thru ⍵ inclusive
+            }⍤1⊢⍵ 
+        }                                   
+        
+        
+    ⍝ ==================================================================================
+        
+        
+    ⍝ Î:  RtShoeUnder   (Indexing and Last)  (Def. by PMS)
+    ⍝     [⍺] ⊇ ⍵
+        Î← { 
+            ⍺← ⊢ 
+          0≢ ⍺ 0: ⍺⊂⍛⌷⍤0 99⊢ ⍵                       ⍝ Sane Indexing  ⌷⍨∘⊃⍨⍤0 99
+            ⎕IO← 1                                   ⍝ Last...
+          0= ≢⍴⍵: ⍵                                  ⍝ If scalar, return itself
+          0= ≢⍵:  ⍵                                  ⍝ If empty array, return itself (or an empty prototype)
+            ≢⍛⌷⍨ ⍵                                   ⍝ Otherwise, safely grab the last cell  
+        }   
+    ⍝ :EndSection Futures Definitions
+ :EndNamespace 
