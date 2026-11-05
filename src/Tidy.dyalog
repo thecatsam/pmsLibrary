@@ -1,0 +1,508 @@
+Tidy← {
+   ⍝H
+   ⍝H Tidy (fn)
+   ⍝H ∘  Aligns comments nicely in dfn or tradfn source (and code generally),
+   ⍝H    distinguishing between left-hand side (LHS) and right-hand side (RHS)
+   ⍝H    comments, with the latter aligned tidily. LHS comments by default are
+   ⍝H    those placed before column 40 (See min).
+   ⍝H ∘  Unlike other similar software, it can locate the RHS comments in any
+   ⍝H    desired column and by default calculates a "best" position, handling
+   ⍝H    cases where a few code lines are longer than most others.
+   ⍝H ∘  Handles arbitrary char. vectors of vectors and files, as well as in-workspace
+   ⍝H    fns and ops.
+   ⍝H ∘  To format code itself, it has two options (neither by default):
+   ⍝H    - refmt: uses dfns ¨refmt¨ (which it copies in), or
+   ⍝H    - pms: uses an internal fn ¨pms¨ which exdents guards and comments in two styles,
+   ⍝H      either a narrower style with minimal spaces per tab or a wide style.
+   ⍝H ----------------------
+   ⍝H {res}← [opts] ∇ [source | sourceFi [0|1|2] ]
+   ⍝H   source: [sourceDoc≡2 | sourceFnOp≡1 | sourceFi≡1]
+   ⍝H      [sourceFi 0]:  Same as ∇ sourceFi
+   ⍝H      [sourceFi 1]:  Equivalent to: (fi: 1) ∇ sourceFi
+   ⍝H      [sourceFi 2]:  Equivalent to: (fi: 1 ⋄ updt: 1) ∇ sourceFi
+   ⍝H  opts:              Where dd∊ integers >0, nn∊ reals or integers.
+   ⍝H   ∘  col: ...       Place RHS comments in a user-specified or a calculated column.
+   ⍝H          '95%'      DEFAULT (see below).
+   ⍝H                     If the col is a char vector and the last char is %,
+   ⍝H                     place RHS comments at the specified percentile of lengths.
+   ⍝H          '%'        ∘ Place RHS comments at the 95% pctile of lengths.
+   ⍝H          'nn%'      ∘ If nn≤100, place RHS comments at nnth pctile of line lengths.
+   ⍝H                       If nn>100, place nn% (not pctile) beyond max. Same as '×1.1'.
+   ⍝H           dd        ∘ Place at ABSOLUTE column dd, dd a non-negative number.
+   ⍝H      '-dd'|'+dd'    ∘ Place RHS column RELATIVE to longest line.
+   ⍝H         '×nn'       ∘ Place RHS column RELATIVE to longest line. (col: '×1.1') means "1.1 times longest line".
+   ⍝H                     Note: Non-integer col numbers will be rounded down!
+   ⍝H   ∘  min: 40        Comments starting at column < min are treated as LHS comments
+   ⍝H           dd        and never moved. Those at min or greater are RHS comments.
+   ⍝H                     Using (min:40) will treat all comments as RHS comments
+   ⍝H                     except those matching pattern '⍝[^\s]'.
+   ⍝H   ∘  fi: [0|1]      If 1, a depth 1 or 0 right arg (⍵) refers to a file, not a fn or op.
+   ⍝H   ∘  updt: [0|1]    If 1, updates the file, fn, or op IN PLACE as side effect.
+   ⍝H                     The update will always be returned as a char vec of vectors.
+   ⍝H   ∘  double: [1|0]  If 1, we support "double" comments on a single line.
+   ⍝H   ∘  inc: 5         If a comment can't fit where desired, place <inc> chars to right, etc.
+   ⍝H   ∘  compact: 50    If (col: '[dd]%'), the default, and a object fits in a width of 50 chars,
+   ⍝H               dd    place RHS comments to the right of all lines, ignoring pctile. (Prettier).
+   ⍝H                     With (col: '[dd]%' ⋄ min: 0), a large value for compact will force
+   ⍝H                     ALL comments to the right (see (min: 0) above).
+   ⍝H                     Note: If you do this using (updt: 1), the distinction between LHS and RHS
+   ⍝H                           comments will be lost.
+   ⍝H   ∘  marg:  3  5    What margin (spaces) must there be between code and comments?
+   ⍝H            dd dd    [0] For non-compact objects; [1] for compact objs.
+   ⍝H                     Specifying a single number will address BOTH cases.
+   ⍝H   ∘  refmt: 0       If >0, calls refmt from the dfns library to format
+   ⍝H          0|dd       the code ONLY; comments are handled by Tidy proper.
+   ⍝H                     To match the dfns refmt, specify:
+   ⍝H                        refmt: 4
+   ⍝H                     The value is passed to refmt as its first option,
+   ⍝H                     its tab setting (see dfns notes.refmt).
+   ⍝H   ∘  pms: 0         If 0, does nothing (std default). If 1 through 4, calls PmsFmtC with
+   ⍝H        0..4         that value, which formats code just as PMS wants it.
+   ⍝H                     Pms format exdents comments and guards (to make them easier
+   ⍝H                     to see in a dfn, among other things).
+   ⍝H                     1 is the narrowest indent mode; 4 is the widest.
+   ⍝H       Alternate PMS Default:
+   ⍝H                     If ⎕AN≡'petermsiegel', the default is 2.
+   ⍝H   ∘  list:    *     List the files via (⎕←) as they are processed?
+   ⍝H             0|1     0: Don't list the file(s). The default if the fileid has  no wildcards, [*?].
+   ⍝H                     1: List the files processed. The default if the fileid contains wildcards.
+   ⍝H   ∘  recurse: 0     When searching for files with wildcards, don't search below the first level.
+   ⍝H             0|1     When searching for files with wildcards, recurse as needed, skipping inaccessible subdirs.
+   ⍝H   ∘  verbose: 0     If verbose is 1, will report on various things.
+   ⍝H           0|1|2     If 2, will report on each pms mode match.
+   ⍝H
+   ⍝H   Return Value:
+   ⍝H   res: returns the modified source document as a shy char vector of vectors.
+   ⍝H        See (updt: 1) for side effect.
+   ⍝⍝ For the rest of this HELP info, see bottom of this function or do Tidy⍨'help'
+      
+      DEBUG← 0 ⋄ ⎕IO ⎕ML← 0 1 ⋄ ⍺← ()          
+    'help'≡ ⎕C⍺: ⎕ED 'h'⊣ h← '^\s*⍝H(?|\s(.*)|()$)' ⎕S ' \1'⊢ ⎕NR ⊃⎕XSI 
+      
+    11 22 92 911/⍨ 0=DEBUG:: ⎕SIGNAL⊂⎕DMX.( 'EN' EN ⋄ 'Message' Message ⋄  ('EM'  ⋄ 'Tidy ',EM) )
+      
+   ⍝--------------⍝
+   ⍝   Phase I    ⍝
+   ⍝--------------⍝
+      wild← ∨/'?*'∊ ⊃⊆⍵                                                 ⍝ Wildcards. Determines default for list.
+   ⍝  Default Options (Merged with User Options below)
+      o← (                                          
+            col: '95%' ⋄ min: 40 ⋄ fi:       0 ⋄ updt:    0   
+            double:  1 ⋄ inc:  5 ⋄ compact: 50 ⋄ marg:  3 5    
+            refmt:   0 ⋄ verbose:  0           ⋄ list: wild 
+            recurse: 0 ⋄ pms:  ⎕AN≡ 'petermsiegel' 
+      ) 
+   ⍝  Ê: Error Msgs
+      ⋄ Ê← { ⊂⍵, ⊂'EM' ('Tidy ',⎕EM 0 1⊃⍵) }
+      optUnknÊ← Ê( 'EN'  11 ⋄ 'Message' 'Unknown option(s) in left argument' )
+      optTabÊ←  Ê( 'EN'  11 ⋄ 'Message' 'Invalid value for option pms' )
+      rhsOptÊ←  Ê( 'EN'  11 ⋄ 'Message' 'Invalid file (numeric) option in right argument' )
+      fiNFÊ←    Ê( 'EN'  11 ⋄ 'Message' 'File not found')
+      fisNFÊ←   Ê( 'EN'  11 ⋄ 'Message' 'No files found')
+      fnOpÊ←    Ê( 'EN'  11 ⋄ 'Message' 'Unknown function or operator. Did you intend to Tidy a file?' )
+      fixÊ←     Ê( 'EN'  11 ⋄ 'Message' 'Can''t fix object' )     
+      colÊ←     Ê( 'EN'  11 ⋄ 'Message' 'Invalid column value (col)' )
+      logicÊ←   Ê( 'EN' 911 ⋄ 'Message' 'Logic error' ) 
+      
+   ⍝  Fn/Op/File Management Fns
+      GetByNm← {                                                        ⍝ GetByNm: in-ws Fn/Op or File?
+            fiNm alt← 2↑(⊆⍵), 0                                         ⍝ File with code of any type
+          (¯2= ≡⍵)∧ ~alt∊ 0 1 2: ⎕SIGNAL rhsOptÊ
+            o.fi∨← alt∊ 1 2                                             ⍝ Alt way to set o.fi via ⍵
+            o.updt∨← alt= 2                                             ⍝ Alt way to set o.updt via ⍵
+            
+            GetFis← {
+                  GetFi← {  fiNm← ⍵                                               
+                        _← (⎕∘← )⍣ o.list⊢ fiNm                         ⍝ List file for user?
+                        outLns← o Main⊢ inLns← ⊃⎕NGET fiNm 1            ⍝ Get file lines & then tidy
+                      outLns≡inLns: outLns⊣ ⎕← 'Nothing changed in ',fiNm 
+                        _← outLns⊂⍛⎕NPUT⍣o.updt⊢ fiNm 1                 ⍝ Update the file. (if o.updt=1) 
+                        outLns                                          ⍝ Return shyly.
+                  }
+                22:: ⎕SIGNAL fiNFÊ
+                4::  'File format is invalid' ⎕SIGNAL 4 
+                ~wild: GetFi ⍵ 
+                  opts← ('Wildcard' 1 ⋄ 'Recurse' (o.recurse×2))        ⍝ 'Recurse' 2: Ignore inaccessible dirs
+                  nms← ⊃⎕NINFO⍠opts⊢ ⍵                                  ⍝ Get names of files to Tidy
+                0= ≢nms: ⎕SIGNAL fisNFÊ 
+                  GetFi¨ nms                                            ⍝ Run Getfi on each
+            }
+            GetFnOp← {                                                  ⍝ In-ws fn or op
+                ~⍵ ⎕NC⍛∊ 3 4:  ⎕SIGNAL fnOpÊ
+                  outLns← o Main⊢ 62 ⎕ATX ⍵                             ⍝ Get fn/op lines & then tidy. 
+                ~o.updt: outLns                                         ⍝ No update here. Return the lines.
+                0≠ ⊃0⍴⎕FX outLns: outLns                                ⍝ Update the fn/op. Return the lines..
+                  ⎕SIGNAL fixÊ 
+            }
+          o.fi: GetFis fiNm ⋄  GetFnOp fiNm  
+      }
+      
+      
+      ⍝ :Section Code Formatting Utilities
+         ⍝  RefmtC:  See option (refmt: opts)
+         ⍝  Conditionally call dfns ¨refmt¨ to reformat code,
+         ⍝  without impacting comments (handled here by Tidy itself).
+         ⍝  Only useful for dfns, not tradfns or namespaces.
+         ⍝  This "hides" comments so that Tidy handles ALL comments.
+         ⍝  Self-contained...
+            RefmtC← { 
+                  ⍺← 0 ⋄ refmtOpts← ⍺ 
+                0= refmtOpts:  ⍵                                        ⍝ Nop if 0= refmtOpts (default).                                    
+                  refmt← ⊢  ⋄  _← 'refmt' ⎕CY 'dfns'                    ⍝ Localise refmt from dfns ws.
+                  qL qR← '''[^'']*''' '&'                               ⍝ Skip quotes
+                  H← qL '\h*⍝.*' ⎕R qR '\x{00}⍝&'                       ⍝ "Hide" comments/leading spaces behind NUL
+                  UnH← qL '\x{00}\h*⍝(.*)$' ⎕R qR '\1'                  ⍝ "Unhide" comments            
+                  UnH refmtOpts refmt H  ⍵                              ⍝ Unhide after refmt after hide cm/sp
+            }
+            
+         ⍝  PmsFmtC. See option (pms: 0|1|2)
+         ⍝  Conditionally provides special PMS-specific formatting (if ⍺=1).
+         ⍝  str@CVV← opts@Ns ∇ ⍵@CVV
+         ⍝      opts:    (pms: 0 ⋄ min: 40 ⋄ verbose: 0)
+         ⍝               pms ∊ 0 1 2 3 4;  min∊ Int>0; verbose∊ 0 1 2
+         ⍝               Ignores any other opts (i.e. accepts all Tidy opts).
+         ⍝      pms:     indicates the indentation levels for various types of statements.
+         ⍝               Typically passed from Tidy without change into local var tabIx.
+         ⍝               (pms: 0) is a nop, i.e. does nothing. 1 is the narrowest.
+         ⍝      min:     same value as in Tidy.
+         ⍝      verbose: same value as in Tidy.
+         ⍝  Self-contained.
+         ⍝
+            PmsFmtC← {                                                              
+                  ⎕IO ⎕ML← 0 1 ⋄ od← 0 40 0 ⋄ ⍺← od                     ⍝ Option defaults        
+                  tabIx min verbose← ⍺ ⎕VGET [                          ⍝ Get ⍺ options...
+                        'pms' ⋄ 'min'  ⋄ 'verbose'
+                  ] od                          
+                0= ⊃tabIx: ⍵      
+                  
+               ⍝  Tab position for different match types (in two variants-- choose one below)
+                  tabTbl← ↓⍉[  
+                     ⍝            |←    multiplier     →|
+                     ⍝   name     narrow med-nar med wide               ⍝ How much to in/exdent constructs..
+                        'group'      3     4      6   9                 ⍝ (indent) inside a {([])} group    
+                        'guard'     ¯1    ¯2     ¯2  ¯3                 ⍝ (exdent) group with guard 
+                        'cmLine'    ¯3    ¯4     ¯3  ¯3                 ⍝ (exdent) LHS comments  
+                        'tradFn'     3     4      6   9                 ⍝ (indent) trad functions
+                        'ctrlIf'     3     4      6   9                 ⍝ (indent) :IF, :WHILE, :SELECT 
+                        'ctrlElse'  ¯3    ¯4     ¯6  ¯9                 ⍝ (exdent) elseif, else
+                        'ctrlCase'  ¯1    ¯2     ¯2  ¯3                 ⍝ (exdent) Case stmts 
+                  ]
+                ~tabIx∊ 1↓⍳≢tabTbl: ⎕SIGNAL optTabÊ
+                  tabNmV← ⊃tabTbl 
+               ⍝   ⍝ # of spaces for each type of tab (group, guard, etc.). An IV.
+                  tabSet← tabTbl⊃⍨ tabIx                                ⍝ By def, tabIx≥1  
+                  
+               ⍝  Indices into tab.
+                  î← () ⎕VSET ( ↑tabNmV ) ( ⍳≢tabNmV ) 
+               ⍝  indices of tab values that are reset after each line.
+                  î.( resetV← guard cmLine ctrlElse ctrlCase ) 
+               ⍝  vector of # tabs for each type in tabNmV
+                  tabs← 0⍨¨tabNmV
+               ⍝  The currently active group token. Always a CV, elements in '([{'
+                  grpStk← ⍬
+               ⍝  Our main result-- how many blanks to prefix to each line? An IV.
+                  pfxStk← ⍬                                                    
+                  
+                  skip← ( 
+                        other:   0                                      ⍝ skip: current line skip options
+                        groupCt: 0                                      ⍝ The # of grouping elements {([])} seen on THIS line
+                  )
+                  
+                  ⍝:S Key Patterns
+                     ⍝  Generate key patterns and their names (pattern #s)
+                        ⋄ m2← ⍕0⌈ min-2
+                        cmLftP←   '^(?:\h{0,', m2, '}⍝|\h*⍝⍝).*'
+                        cmSectBP← '(?i)^\h*⍝(?|\h*:Section|:S).*$'      ⍝ ⍝ :S or :Section
+                        localLP← '^\h*;\h*([\w_∆⍙⎕]+)\h*'
+                        localP←  '((;\h*([\w_∆⍙⎕]+)\h*)+)(⍝|$)'  
+                        ⋄ ifMatches← 'Name|Sect|If|Rep|For|Sel|Whil|Trap|With|Hold|Disp|Class|Property'
+                        ctrlIfP←   '(?i):(', ifMatches, ')\w*'
+                        ctrlElseP← '(?i):(?|Else|And|Or)\w*'            ⍝ Else, ElseIf, And, AndIf, Or, OrIf
+                        ctrlCaseP← '(?i):(?|Case|Access)\w*'
+                        ctrlEndP←  '(?i):(?:End\w*|Until)'
+                        ⋄ ignMatches← 'Ret|Goto|Leav|Cont|In|Acc|Implem|Field'
+                        ctrlIgnoreP← '(?i):(?|', ignMatches, ')\w*'     ⍝ :Hold and :Disposable
+                        cmSectEP←  '(?i)^\h*⍝\h*:E(nd)?\w*.*$'          ⍝  ⍝ :E or :End or :EndSection
+                  ⍝:E Key Patterns 
+                  
+                  pats pNames← ↓⍉↑(            
+                     ⍝  Ordered patterns. Some like ctrlIfP matches anything not in prior ctrl Pats
+                     ⍝  Pattern            PatName    ⋄   Pattern           PatName
+                        '^'               'newline'   ⋄   '^\h*∇\h*(⍝.*)?$' 'tradEQ'    
+                     ⍝  tradBQ: ∇ will be treated as ∇ function, if inside a dfn.
+                        '^\h*∇(?!∇)'      'tradBQ'    ⋄   cmSectBP          'cmSectB'   
+                        cmSectEP          'cmSectE'   ⋄   cmLftP            'cmL'    
+                        localLP           'localL'    ⋄   localP            'local'  
+                        '\h?⋄\h?'         'dmd'       ⋄   '^\h*(⋄\h?)'      'dmdL'   
+                        '^\h*'            'spL' 
+                        
+                        ctrlIfP           'ctrlIf'    ⋄   ctrlElseP         'ctrlElse'     
+                        ctrlCaseP         'ctrlCase'  ⋄   ctrlEndP          'ctrlEnd'    
+                        ctrlIgnoreP       'ctrlIgn'  
+                        
+                        '''[^'']*'''      'qt'        ⋄   '[[{(]+'          'grpB'      
+                        '[]})]+'          'grpE'      ⋄   '::?\h?'          'guard'     
+                        '⍝.*'             'cm'        ⋄   '←(?!\h)'         'assign' 
+                  )
+               ⍝  pn: Each pattern name refers to its ⎕R pattern number.
+               ⍝      I.e. pn.newLine← 0  ⋄  pn.assign← ¯1+≢pats
+                  pn← ().⎕VSET (↑pNames) (⍳≢pats) 
+                  
+                  ⍝  :Section Scan Actions
+                     ⍝  CanonLocal: Make local var semicolons consistent
+                     ⍝     ⍺⍺ ∇ ⍵⍵⊢ ⍵.  Operates on field ⍵ in ⎕R namespace ⍵⍵
+                     ⍝     ⍺⍺=1: matching ∇P. ⍺⍺=0: matching localP.
+                        CanonLocal← {                                   ⍝ Systematize tradfn local vars.      
+                              f← ⍵⍵ RF ⍵ ⋄ ⍺⍺: '  ; ', f                                     
+                              '\h*;\h*([\w_∆⍙⎕]+)\h*'  ⎕R '; \1'⍠ ('UCP' 1)⊣ f   
+                        }
+                     ⍝  Ensure control stmts are in canonical form
+                        Ctrl← ('(e)(nd|lse)(\w)(\w+)' '(\w)(\w+)' ⎕R '\u1\2\u3\4' '\u1\2' ) ⎕C 
+                     ⍝  If we see a diamond outside a group ([{}]), a guard won't affect the indent.
+                        Dmd← { 
+                              skip.(other∨← groupCt= 0)          
+                            ⍺:  ⍵, ' '/⍨ ' '≠⊃⌽⍵ 
+                              (p q)← ' '↑⍨¨' '≠ (⊃⍵) (⊃⌽⍵) 
+                              p, ⍵, q  
+                        } 
+                        Grp← { f0← ⍵ ⋄ ∆← ≢f0 
+                            ⍺: f0 ⊣ grpStk,← f0 ⊣ skip.groupCt+← ∆ ⊣ Tok ()
+                              f0 ⊣ Tok () ⊣ grpStk↓⍨← -≢f0 ⊣ skip.groupCt-← ∆ 
+                        }
+                        Guard← { f0← ⍵                                  ⍝ Format a guard (: or ::)  
+                              skip.other∨← 0≠ skip.groupCt∨ '('= ⊃⌽grpStk    
+                              tabs[î.guard]← ~skip.other
+                              f0,← ''↑⍨' '≠⊃⌽f0                         ⍝ Ensure at least one space after guard...
+                            skip.other: f0 ⋄ f0 ⊣ Tok (isLast: 1 ⋄ force: 1)  ⍝ Guard inside one-line dfn def is ignored.
+                        } 
+                        Newline← {                                      ⍝ Handle the start of each line.
+                              tabs[î.resetV]← skip.(other⊢← groupCt⊢← 0) ⍝ Turned off before each line   
+                              ⊢ pfxStk,← CalcTab⍬ 
+                        } 
+                        Tok← {  
+                              updt← (force: 0 ⋄ isLast: 0) ⎕NS ⍵        ⍝ Handle various tokens (objects)
+                            skip.other∧ ~updt.force: 0                  ⍝ skip.other: Line already fully updated.
+                              (⊃⌽pfxStk)⊢← CalcTab⍬  
+                              ⊢ skip.other∨← updt.isLast
+                        }
+                     ⍝                                                  ⍝  Updt line padding for this line and...
+                        TradBQ← { inDfn← ⍵                              ⍝ Is it the start of a  tradfn (∇)?
+                            inDfn: ⍺ 
+                              ⍺⊣ tabs[î.tradFn]+← 1 ⊣ Tok (isLast: 1)  
+                        }   
+                        TradEQ← { inDfn← ⍵                              ⍝ Is it the end of a tradfn (∇)?
+                            inDfn: ⍺  
+                              ⍺⊣ Tok (isLast: 1) ⊣ tabs[î.tradFn]-← 1  
+                        }
+                  ⍝  :EndSection Scan Actions
+                  
+                  ⍝  :Section Support Functions 
+                        CalcTab← {                                      ⍝ Calculate current tabs in spaces
+                              tabs[î.group]← ≢grpStk
+                            ∧/ 0= tabs: 0 ⋄ 0⌈ +/tabs× tabSet 
+                        }             
+                     ⍝  1 Debug: Debug at start of line. Increments line count. Prints current state.
+                     ⍝  0 Debug: Debug within a line (at a token). Just prints current state.
+                        Debug← verbose {                                ⍝ Debugging/verbose info at start of each line
+                            2≠⍺⍺: ⍬  
+                              Details←  {                               ⍝ Debugging/Verbose info for each match
+                                    ⎕← ∊(
+                                          10↑ ⍵.PatternNum⊃pNames 
+                                          33↑'"', '" ',⍨ 30∘{ ⍺≥≢⍵: ⍵ ⋄ '...',⍨ ⍵↑⍨ ⍺-3 } ⍵.Match    
+                                          12∘↑¨ tabNmV,¨ ':',¨ ⍕¨tabs 
+                                          15∘↑¨ ( 'skip.groupCt:', ⍕skip.groupCt ⋄ 'skip.other:', ⍕skip.other )
+                                    )
+                                    ⍬
+                              }
+                            ⍺=0: Details ⍵ 
+                              ⎕← (⌊0.80×⎕PW)⍴'¯' 
+                              ⎕← '[',(⍕dbg_lno),'] Blk: "','"',⍨⍵.Block 
+                              _← Details ⍵ 
+                            1: dbg_lno+← 1 
+                        } 
+                        ⋄ dbg_lno← 1   
+                  ⍝  :EndSection Support Functions 
+                  
+               ⍝  PmsFmtC Main Routine
+                  Scan← pats ⎕R {
+                        Case← ⍵.PatternNum∘∊
+                        f0← ⍵.Match
+                        
+                      Case pn.newline:   '' ⊣ Newline ⍵⊣ 1 Debug ⍵  
+                        
+                        _←  0 Debug ⍵                                   ⍝ For all other Cases 
+                        
+                      Case pn.spL:       ''                             ⍝ Spaces anchored to left 
+                      Case pn.cmL:       DLB DTB f0  ⊣ Tok()⊣ tabs[î.cmLine]⊢← 1 ⍝ Space+Comments anchored to left
+                        
+                      Case pn.(qt cm):   f0                             ⍝ 'abc'    ⍝ after code
+                      Case pn.assign:    f0, ' '                        ⍝ Any ← 
+                      Case pn.dmdL:      1 Dmd ⍵ RF 1                   ⍝ diamonds inside and outside () and []
+                      Case pn.dmd:       0 Dmd f0                       ⍝ -do-
+                      Case pn.localL:    1 CanonLocal ⍵ ⊢ 1             ⍝ local vars in Tradfn
+                      Case pn.local:     0 CanonLocal ⍵ ⊢ 1             ⍝ -do-
+                        
+                      Case pn.grpB:      1 Grp f0                       ⍝ ([{       
+                      Case pn.grpE:      0 Grp f0                       ⍝ }])  
+                        
+                      Case pn.guard:     Guard f0                       ⍝ : and :: (wherever they appear)
+                        
+                      Case pn.tradBQ:    f0 DLB⍛TradBQ ×≢grpStk         ⍝ ∇ at beg of Tradfn
+                      Case pn.tradEQ:    f0 DLB⍛TradEQ ×≢grpStk         ⍝ ∇ at end of Tradfn
+                        
+                      Case pn.cmSectB:   DLB f0 ⊣ tabs[î.ctrlIf]+← 1  ⊣ Tok (isLast: 1)   ⍝ :Section
+                      Case pn.cmSectE:   DLB f0 ⊣ Tok (isLast: 1)     ⊣ tabs[î.ctrlIf]-←  1  ⍝ :EndSection  
+                      Case pn.ctrlIf:    Ctrl f0 ⊣ tabs[î.ctrlIf]+← 1 ⊣ Tok (isLast: 1)   ⍝ :If etc
+                      Case pn.ctrlElse:  Ctrl f0 ⊣ Tok(isLast: 1)     ⊣ tabs[î.ctrlElse]⊢←  1 ⍝ :Else etc  
+                      Case pn.ctrlCase:  Ctrl f0 ⊣ Tok(isLast: 1)     ⊣ tabs[î.ctrlCase]⊢←  1 ⍝ :Case etc
+                      Case pn.ctrlEnd:   Ctrl f0 ⊣ Tok(isLast: 1)     ⊣ tabs[î.ctrlIf]-←  1  ⍝ :End...
+                      Case pn.ctrlIgn:   Ctrl f0     
+                        
+                        'Logic Error (PmsFmtC)' ⎕SIGNAL 911
+                        
+                  } ⍠ ('UCP' 1) 
+                  (pfxStk⍴¨' '),¨ Scan ⍵  
+            }
+      ⍝  :EndSection Code Formatting Utilities
+      ⍝  :Section Miscellaneous Utilities
+            LB←  { +/∧\' '=  ⍵ }                                        ⍝ LB: Leading blanks 
+            TB←  { +/∧\' '= ⌽⍵ }                                        ⍝ TB: Trailing blanks
+            DLB← { ⍵↓⍨  LB ⍵ }
+            DTB← { ⍵↓⍨ -TB ⍵ }
+            RF←  { ⍵≥ ≢l← ⍺.Lengths: '' ⋄ l[⍵]↑ ⍺.Offsets[⍵]↓ ⍺.Block ⋄ } ⍝ RF: Regex Field value
+      ⍝  :EndSection Miscellaneous Utilities
+      
+   ⍝--------------⍝
+   ⍝-  Main      -⍝
+   ⍝--------------⍝
+      Main← { 
+            o← ⍺ 
+         ⍝  Main Functions
+            AL← {                                                       ⍝ AL: Align line
+                5/⍨ 0=o.verbose:: ⎕SIGNAL colÊ 
+                  ∆ p← ⍺ ⍵                                              ⍝ ∆: Pad by at least ∆ spaces. 
+                p≤o.col: ''⍴⍨ ∆⌈ ¯1+ o.col- p        
+                  ''⍴⍨ ∆⌈ ¯1+ o.inc| p- o.col       
+            }
+            AC← {                                                       ⍝ AC: Generate Absolute col  
+                  ac← ⌊0.5+ o.min⌈ ⍺ AC_main ⍵  
+                ×o.verbose: ac⊣ ⎕← 'Absol. col=',ac  ⋄ ac 
+            }       
+            AC_main← {                                                  ⍝ AC Main Routine
+                  col← ⍺ 
+                0=⊃0⍴col: col                                           ⍝ Fast-- col is a number 
+                  MaxL← {                                               ⍝ MaxL: adjusted line length for RHS comments
+                        R← ⌊0.5∘+                                       ⍝ Round                       
+                        P← R { 0.5× ⍵[⌊i]+ ⍵[⌈i← 100÷⍨p×¯1+≢⍵ ] }       ⍝ Pctile (rounded)
+                        S← ⊂∘⍋⍛⌷                                        ⍝ Sort 
+                        ⍺← 100                                          ⍝ ⍺/p: What %age of max ll. 
+                        pic← 0                                          ⍝ pic: pctile including comment widths
+                        isP p← ⍺⍺ ⍺                                     ⍝ p: position. isP: percent/ile format.
+                        cMinP←  '^\s{0,', (⍕0⌈ o.min- 2 ), '}⍝.*$'          
+                        trimI trimO← ↓⍉↑1 pic 1 1/(       
+                              '''[^'']*''' '&'
+                              cMinP        '&'                          ⍝ pic=1: include LHS comments in pctile calc
+                              '\s*⍝.*$'    ''
+                              '\s*$'       ''
+                        )                      
+                        max← ⌈/ll← ≢¨trimI ⎕R trimO⊢ ⍵                  ⍝ trimmed line lengths 
+                        _← (⎕∘← )⍣(×o.verbose)⊢ 'Max Line=  ',max 
+                      ~isP:  max                                        ⍝ Abs. position needed.  
+                     ⍝  Percent/ile
+                        isC← max≤ o.compact                             ⍝ Is the object compact?
+                        marg← isC⊃ 2⍴o.marg 
+                      isC:     marg+ max                                ⍝ Obj is compact, best posn is on the right.
+                      p≥ 100:  marg+ R 0.01× p× max                     ⍝ If greater than line length, use percent
+                        marg+ pl← P S ll                                ⍝ Actual interpolated percentile + margin
+                  } 
+               ⍝  Look for ['nn%'] OR '[+nn' | '-nn' | '-dd']
+                  VFIê← { 1=⊃⊃sn← ⎕VFI ⍵: ⊃⌽sn ⋄ ⎕SIGNAL colÊ   }       ⍝ Numeric value or error
+                '%'≡⍥, col:    95 (1 MaxL) ⍵                            ⍝ (col: '%')
+                '%'= ⊃⌽col:    (VFIê ¯1↓col) (1 MaxL) ⍵                 ⍝ col is pct/ile of max line len
+                col⊃⍛∊ '+-×':  ((0 MaxL) ⍵) (⍎⊃col) VFIê 1↓col          ⍝ col is relative to exact max line length.
+                  VFIê col                                              ⍝ Absolute positioning
+            }             
+         ⍝  Helper Functions for fn FmtComments
+            CmRProc← { m← ⍵                                             ⍝ RHS comments
+                  nsp← LB m                                             ⍝ cmI:  Std comments 
+                  (1 AL cur), nsp↓ m                                    ⍝ align and pad
+            }
+            Cm2Proc← { ns← ⍵                                            ⍝ "Double" comments (see doc)
+                  cm1 cm2← ns RF¨ 1 2                                   ⍝ ... Get LHS or RHS comments
+                  cm1↓⍨← -TB cm1                                        ⍝ ... Remove trail. blanks from LHS...
+                  padL← 5 AL cur+ ≢cm1                                  ⍝ ... Align "2nd" comment on RHS
+                  cm1, padL, cm2                                        ⍝ ... and pad 
+            }
+            
+         ⍝  Variable/Constant Declarations
+            cur← 0                                                      ⍝ c: Our cur pos'n on this line.    
+            o.col← o.col AC ⍵                                           ⍝ Calculate the absolute col pos'n.
+            cmDSp← 5                                                    ⍝ Required spacing between double comments 
+            cm2P← o.double⊃ (                                           ⍝ cm2I: double comments
+                  '(*F)'                                                ⍝ ← Ignore dbl comments                                      
+                  '(\s*⍝.+?\s{', cmDSp⍕⍛, ',})((?<!⍝)⍝(?!\S).*)$'       ⍝ ← Respect dbl comments
+            )
+            cmLP← '^\s{0,', om2⍕⍛, '}⍝.*$' ⊣ om2← 0⌈o.min-2
+            pats pNames← ↓⍉↑( 
+               ⍝  pattern                 pattern name
+                  '^'                        'nl'                       ⍝ start    (of line)
+                  '''[^'']*''|[^⍝''\s]+'     'cod'                      ⍝ code     (fragments)
+                  '\s*⍝\S.*$'                'cmF'                      ⍝ fixed pos comment (don't format)
+                  cm2P                       'cm2'                      ⍝ double comments
+                  cmLP                       'cmL'                      ⍝ LHS comment.
+                  '\s*⍝.*$'                  'cmR'                      ⍝ comment  (incl. preceding spaces)
+                  '\s+(?!⍝)'                 'sp'                       ⍝ spaces (not before comments)
+            )
+            pn← ().⎕VSET (↑pNames) (⍳≢pats) 
+         ⍝  Pattern Matching Scan
+            FmtComments← pats ⎕R {  
+                  m← ⍵.Match 
+                  Case← ⍵.PatternNum∘=
+                Case pn.nl:    m ⊣ cur⊢← 0                              ⍝ Start of new line
+                Case pn.cod:   m ⊣ cur+← ≢m                             ⍝ Code found
+                Case pn.cmF:   m ⊣ cur+← ≢m                             ⍝ fixed pos  comment '⍝⍝' '⍝H' etc.
+                Case pn.sp:    m ⊣ cur+← ≢m                             ⍝ Spaces (not foll by comment)
+                Case pn.cm2:   Cm2Proc ⍵                                ⍝ (LHS/RHS) double comment.  
+                Case pn.cmL:   m                                        ⍝ LHS simple omment 
+                Case pn.cmR:   CmRProc m                                ⍝ RHS comment.  
+                  
+                  ⎕SIGNAL logicÊ                                        ⍝  →→  Error!
+            } 
+            FmtComments o∘PmsFmtC o.refmt∘RefmtC ⍵
+      }
+      FirstIsNm← {                                                      ⍝ Is ⍺ of this form: CV [[0|1]] 
+          ∧/ 0 1∊⍨ (≡,⍴∘⍴) ⍵: 1                                         ⍝ Return 1 if depth and rank either 0 or 1.
+            0=1↑0⍴ ⊃⌽⍵                                                  ⍝ Or if tthe last (2nd) elem is a number.
+      }
+      
+   ⍝-------------------⍝
+   ⍝  Tidy  Executive  ⍝
+   ⍝-------------------⍝
+    ×≢⊃~/(⍺ o).⎕NL ¯2: ⎕SIGNAL optUnknÊ                                 ⍝ Are user-specified options valid? 
+      _← o ⎕NS ⍺                                                        ⍝ Merge user options ⍺ into o.
+      o.verbose⌈← DEBUG 
+    FirstIsNm ⍵: _← GetByNm ⍵                                           ⍝ File or fn/op name
+      cvv← ↓⍣(mxIn← ⊃2=⍴⍴⍵)⊢ ⍵                                          ⍝ Matrix in => Vector of char vectors
+    1: _← ↑⍣mxIn⊢ o Main cvv                                            ⍝ Matrix in => Matrix out . Shy return 
+      
+   ⍝   Rest of "help" information
+   ⍝H ---------------------------------
+   ⍝H Other features:
+   ⍝H ¯¯¯¯¯ ¯¯¯¯¯¯¯¯¯
+   ⍝H ∘ Allows "double" comments, i.e. those with both a LHS comment and a RHS comment,
+   ⍝H     each starting with a ⍝ symbol (See double: 1).
+   ⍝H ∘ Can place comments in the "best" position, where some code lines
+   ⍝H   are far longer than the average. (See col: 'best')
+   ⍝H ∘ LHS comments are never moved.
+   ⍝H ∘ RHS comments that start with ⍝⍝ or ⍝X, where X is any non-space, are never moved,
+   ⍝H   even within "double" comments.
+   ⍝H ∘ If the longest lines are shorter than ¨compact¨ number of bytes,
+   ⍝H   (compact: 50) by default, the "best" position will be just to the
+   ⍝H   right of ALL lines, as for ¨refmt¨ in the dfns library.
+   ⍝H   (See compact and marg options).
+   ⍝H ---------------------------------
+   ⍝H Documentation:
+   ⍝H ¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+   ⍝H   To see this information, call: Tidy⍨'help'
+   ⍝H
+}
