@@ -1,0 +1,234 @@
+:Namespace Gmp
+    ⎕IO ⎕ML← 0 1
+    
+⍝ TO implement
+⍝ Shift left:  void mpz_mul_2exp (mpz_t rop, const mpz_t op1, mp_bitcnt_t op2)
+⍝ Shift right: void mpz_tdiv_q_2exp (mpz_t rop, const mpz_t op, mp_bitcnt_t cnt);
+⍝ 'ShiftL'  libG.⎕NA sysLib,'|__gmpz_mul_2exp     =I8[2] U8'
+⍝ 'ShiftR'  libG.⎕NA sysLib,'|__gmpz_tdiv_q_2exp  =I8[2] U8'
+    
+    :Namespace libG 
+    ⍝   Will hold APL names of GMP functions
+    :EndNamespace 
+    
+    ∇ {ok}← LoadGmp; nfÊ; sysLib
+        :If 3=libG. ⎕NC'Clear' ⋄ :Return ⋄ :EndIf                         ⍝ clear is bound last
+        ok← 0 
+        :For sysLib :In (
+                '/opt/homebrew/opt/gmp/lib/libgmp.dylib' 
+                '/usr/local/opt/gmp/lib/libgmp.dylib' 
+                'libgmp.dylib'
+            )
+            :Trap 0
+                'InitSetStr' libG.⎕NA 'I4 ',sysLib,'|__gmpz_init_set_str =I8[2] <C1[] I4'
+                ok← 1 ⋄ :Leave  
+            :EndTrap
+        :EndFor
+        nfÊ← ⊂('EN' 22)('Message' 'libgmp not found') 
+        ⎕SIGNAL (~ok)/ nfÊ 
+        
+        'Add'  libG.⎕NA sysLib,'|__gmpz_add    =I8[2] <I8[2] <I8[2]'
+        'AddU' libG.⎕NA sysLib,'|__gmpz_add_ui =I8[2] <I8[2] U8'
+        'Sub'  libG.⎕NA sysLib,'|__gmpz_sub    =I8[2] <I8[2] <I8[2]'
+        'SubU' libG.⎕NA sysLib,'|__gmpz_sub_ui =I8[2] <I8[2] U8'
+        'Mul'  libG.⎕NA sysLib,'|__gmpz_mul    =I8[2] <I8[2] <I8[2]'
+        'Div'  libG.⎕NA sysLib,'|__gmpz_tdiv_q =I8[2] <I8[2] <I8[2]'       ⍝ Truncated division
+        'Rem'  libG.⎕NA sysLib,'|__gmpz_tdiv_r =I8[2] <I8[2] <I8[2]'       ⍝ Truncated division
+        'Gcd'  libG.⎕NA sysLib,'|__gmpz_gcd    =I8[2] <I8[2] <I8[2]'
+        'Lcm'  libG.⎕NA sysLib,'|__gmpz_lcm    =I8[2] <I8[2] <I8[2]'
+        
+        'Root' libG.⎕NA'I4 ',sysLib,'|__gmpz_root =I8[2] <I8[2] U8'       ⍝ If returned non-zero, is exact 
+        'Pow'  libG.⎕NA sysLib,'|__gmpz_pow_ui    =I8[2] <I8[2] U8'
+        'Cmp'  libG.⎕NA'I4 ',sysLib,'|__gmpz_cmp  <I8[2] <I8[2]'
+        
+        'ShiftL'  libG.⎕NA sysLib,'|__gmpz_mul_2exp    =I8[2] <I8[2] U8'  ⍝ Shift left by n bits 
+        'ShiftR'  libG.⎕NA sysLib,'|__gmpz_tdiv_q_2exp =I8[2] <I8[2] U8'  ⍝ Shift right by n bits 
+        
+        'Fact' libG.⎕NA sysLib,'|__gmpz_fac_ui    =I8[2] U8' 
+        'Sqrt' libG.⎕NA'I4 ',sysLib,'|__gmpz_sqrt =I8[2] <I8[2]'          ⍝ If returned non-zero, is exact 
+        
+        'SizeInBase' libG.⎕NA'U8 ',sysLib,'|__gmpz_sizeinbase <I8[2] I4'
+        'GetStr' libG.⎕NA'P ',sysLib,'|__gmpz_get_str =C1[] I4 <I8[2]'
+        'Clear' libG.⎕NA sysLib,'|__gmpz_clear <I8[2]'
+    ∇
+    LoadGmp 
+    
+    ∇ ok← LoadFns
+        ⍝:Section Global Helper Fns 
+            SigÊ← ⎕SIGNAL { ⊂ ⎕DMX.('EN' EN ⋄ 'EM' EM ⋄ 'Message' Message )} 
+            NoLB← { ⍵↓⍨ +/∧\ ⍵= ' '}                                      ⍝ Remove leading blanks 
+            IsZ←  ∧/ ∊∘'0 -¯'                                             ⍝ A Gmp Zero
+            IsInt←  0=(⊃0⍴⊢)                                              ⍝ An APL Num? 
+            _SimpleDyad← { 0:: SigÊ 0 ⋄ ⍺ ⍺⍺{ zC← ⍺⍺ ⍵  ⋄ (Fmt zC)zC}  _ICM⍥⍕ ⍵}
+            _DyadU_← { 
+               0:: SigÊ 0 
+               isU← { ~IsInt ⍵: 0 ⋄ ⍵≥0 } ⍵ 
+               isU: ⍺ ⍕⍛( ⍵⍵{ zC← ⍺⍺ ⍵  ⋄ (Fmt zC)zC }  _ICM ) ⍵
+                    ⍺ ⍺⍺{ zC← ⍺⍺ ⍵  ⋄ (Fmt zC)zC }  _ICM⍥⍕ ⍵
+            }
+            _DivRem← {0:: SigÊ 0 
+              IsZ ⍵: ⎕SIGNAL divÊ 
+                ⍺ ⍺⍺ { zC← ⍺⍺ ⍵  ⋄ (Fmt zC)zC } _ICM⍥⍕ ⍵
+            }
+        ⍝:EndSection Global Helper Fn s
+        ⍝:Section Global Errors
+            badStrÊ← ⊂('EN' 11)('Message' 'Invalid numeric string')
+            intÊ← ⊂('EN' 11)('Message' 'Only integers are allowed') 
+            divÊ←  ⊂( 'EN' 11 ⋄ 'Message' 'Divide by 0')
+            powÊ←  ⊂( 'EN' 11 ⋄ 'Message' 'Pow requires that ⍵ or ÷⍵ be a non-negative integer')
+            IntÊ← ⊂{ ('EN' 11 ⋄ 'Message' (⍵, ' requires that ⍵ be a non-negative integer'))}
+            FnNotImplÊ← { 
+                typ← 'Dy' 'Mon'⊃⍨ ⍺
+                ⊂(
+                    'EN' 11 
+                    ('Message' ⋄ 'Not implemented: ', typ, 'adic "', ⍵, '"')
+                )
+            }
+        ⍝:EndSection Global Errors
+        ⍝:Section Dyadic Functions 
+            Add← libG.Add  _DyadU_ libG.AddU
+            Sub← libG.Sub  _DyadU_ libG.SubU
+            Mul← libG.Mul  _SimpleDyad
+            Gcd← libG.Gcd  _SimpleDyad 
+            Lcm← libG.Lcm  _SimpleDyad 
+            Div← libG.Div  _DivRem 
+            Rem← libG.Rem  _DivRem              
+            Mod← Rem⍨                                                     ⍝ Reverses args w.r.t. Gmp's Rem.
+        ⍝  Pow:  Either  10*3 (power) or 10*÷3 (root)
+            Pow← {     
+              0:: SigÊ 0 
+              ~IsInt ⍵: ⎕SIGNAL powÊ ⋄ ⍵< 0:  ⎕SIGNAL powÊ
+              ⍵=⌊⍵:   ⍺ ⍕⍛({ zC← libG.Pow ⍵ ⋄ (Fmt zC)zC }  _ICM) ⍵
+            ⍝ Integral Inverse: Do root
+              (inv≤ 1)∨inv≠ ⌊inv← ÷⍵: ⎕SIGNAL powÊ
+                ⍺ ⍕⍛({ rc zC← libG.Root ⍵ ⋄ (Fmt zC)zC }  _ICM) inv 
+            }
+            Shift← {     
+              0:: SigÊ 0 
+              ~IsInt ⍵: ⎕SIGNAL IntÊ 'Shift' ⋄ ⍵≠⌊⍵: ⎕SIGNAL IntÊ 'Shift'
+              ⍵>0: ⍺ ⍕⍛( { zC← libG.ShiftL ⍵ ⋄ (Fmt zC)zC }  _ICM) ⍵
+              ⍵<0: ⍺ ⍕⍛( { zC← libG.ShiftR ⍵ ⋄ (Fmt zC)zC }  _ICM) -⍵
+                ⍺ 
+            }
+            Rotate← Shift⍨
+            Root← {                                                       ⍝ Root(10 N) => 10*÷N 
+              0:: SigÊ 0 
+              ~IsInt ⍵: ⎕SIGNAL IntÊ 'Root' ⋄ (0> ⍵)∨ ⍵≠ ⌊⍵:  ⎕SIGNAL IntÊ 'Root'
+                ⍺ ⍕⍛({ rc zC← libG.Root ⍵ ⋄ (Fmt zC)zC }  _ICM) ⍵
+            }
+            Cmp← { 
+              0:: SigÊ 0 
+                ⍺ { zC← ×libG.Cmp 1↓ ⍵  ⋄ zC (0⊃⍵)   }  _ICM⍥⍕ ⍵
+            }
+            _Cmp← {  (⍺ Cmp ⍵)⍺⍺ 0 }                                      ⍝  ⍺ =_Cmp ⍵, etc.
+            Eq← =_Cmp 
+            Lt← <_Cmp
+            Le← ≤_Cmp 
+            Gt← >_Cmp
+            Ge← ≥_Cmp 
+            
+        ⍝:EndSection Dyadic Functions     
+        
+        ⍝:Section Monadic Functions 
+            NegA← { IsInt ⍵: ⍕-⍵ ⋄ s← NoLB ⍵ ⋄ '-¯'∊⍨ ⊃s: 1↓s ⋄ '-', s }  ⍝ -⍵: Apl only 
+        ⍝  SigCmp: Much slower than SigApl! Sig← { 0:: SigÊ 0 ⋄ ⍵ Cmp '0'}
+            SigA← { IsInt ⍵: ×⍵  ⋄ s← NoLB ⍵ ⋄ '-¯'∊⍨ ⊃s: ¯1  ⋄ IsZ ⍵ }   ⍝  Signum ×⍵ : Apl only 
+            Sqrt← { 
+              0:: SigÊ 0 
+                ({ rc zC← libG.Sqrt ⍵ ⋄ (Fmt zC)zC } _ICM) ⍕⍵ 
+            }
+            Fact← { 
+              0:: SigÊ 0 
+              ~IsInt ⍵: ⎕SIGNAL factÊ
+                ({ zC← libG.Fact ⍵ ⋄ (Fmt zC)zC } _ICM) ⍵ 
+            }
+            Inc← { 0:: SigÊ 0 ⋄ ⍵ Add 1 }
+            Dec← { 0:: SigÊ 0 ⋄ ⍵ Sub 1 }
+        ⍝:EndSection Monadic Functions 
+        
+        ok← 1 
+    ∇ 
+    LoadFns
+    
+    ∇ t2← LoadOpTables 
+        dyadTbl← ⍉↑(
+            '+' (⎕OR 'Add') 
+            '-' (⎕OR 'Sub') 
+            '×' (⎕OR 'Mul')
+            '÷' (⎕OR 'Div')
+            '*' (⎕OR 'Pow')
+            '|' (⎕OR 'Mod')
+            '⌽' (⎕OR 'Rotate')
+            
+            '=' (⎕OR 'Eq')
+            '<' (⎕OR 'Lt')
+            '≤' (⎕OR 'Le')
+            '>' (⎕OR 'Gt')
+            '≥' (⎕OR 'Ge')
+        )  
+        monadTbl← ⍉↑(
+            '-' (⎕OR 'NegA') 
+            '×' (⎕OR 'SigA')
+            '!' (⎕OR 'Fact')
+        )  
+        t2← dyadTbl monadTbl
+    ∇ 
+    opTables← LoadOpTables 
+    
+    Parse← { 
+        s← '-'@('¯'∘=)⊢ ,⍵                                                ⍝ APL high minus → ASCII
+        libG.InitSetStr(2⍴0) s 10                                         ⍝ NUL-terminated
+    }
+    
+    Fmt← {
+        n← 2+ libG.SizeInBase ⍵ 10                                        ⍝ digits + sign + NUL
+        buf← n⍴' '
+        (ptr buf)← libG.GetStr buf 10 ⍵
+        buf↑⍨ buf⍳⎕UCS 0                                                  ⍝ keep text before the first NUL
+    } 
+    
+    _FnNm← { 
+        f← ⍺⍺ ⋄ 3= ⎕NC 'f': ⍬⍴⎕NR 'f' ⋄ ⊂⎕C f 
+    }  
+    
+    _Call← { 
+        monad← 0= ⎕NC '⍺' ⋄ ⍺← ⊢ 
+      0:: SigÊ 0 
+        tbl← monad⊃ opTables 
+        src← tbl[0;]⍳ nm← ⍺⍺ _FnNm ⍬  
+      src= ≢tbl[0;]:  ⎕SIGNAL/ monad FnNotImplÊ nm 
+        Fn← src⊃ tbl[1;] 
+        ⍺ (Fn{⍺← ⊢ ⋄ ⍺ ⍺⍺ ⍵}) ⍵ 
+    }
+    
+⍝  Internal call mechanism
+    ∇ c← {a} (Op _ICM) b
+          ; êmsg; ên; q; rcA; rcB; zA; zB; zC; _
+        :Trap 0
+            q← ⍬ 
+            :If ~900⌶⍬                                                    ⍝ Dyadic Call
+                (rcA zA)← Parse a ⋄ q,← (0=rcA)/ ⊂zA 
+            :Else                                                         ⍝ Monadic Call 
+                rcA← 0 ⋄ zA← ,⍥⊂                                          ⍝ Ignore zA
+            :EndIf 
+            :If 0≠ ⊃0⍴ b                                                  ⍝ Is b a string?
+                (rcB zB)← Parse b ⋄ q,← (0=rcB)/ ⊂zB                      ⍝ b must be a big int 
+            :Else 
+                zB← ⍬⍴ b ⋄ rcB← 0                                         ⍝ b is a long int 
+                :If zB≠⌊zB ⋄ ⎕SIGNAL intÊ ⋄ :EndIf
+            :EndIf
+            :If ∨/rcA rcB≠ 0 
+                ⎕SIGNAL badStrÊ
+            :EndIf
+            (_ zC)← Parse'0'                                              ⍝ Initialise zC 
+            (c zC)← Op zC zA zB                                           ⍝ Now set (c zC) per Op.
+            q,← (0≠ ≢c)/ ⊂zC        
+            ên← 0                    
+        :Else 
+            ên êmsg← ⎕DMX.( EN Message )
+        :EndTrap
+        {}libG.Clear∘⊂¨ q                                                 ⍝ Release any Gmp objects 
+        :If ên≠0 ⋄ ⎕SIGNAL⊂('EN' ên)('Message' êmsg) ⋄ :EndIf
+    ∇
+    
+:EndNamespace
