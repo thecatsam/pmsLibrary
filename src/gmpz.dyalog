@@ -80,14 +80,16 @@
    ⎕IO ⎕ML ⎕PP ⎕FR← 0 1 34 1287                               ⍝ Class-wide settings (see header)
    DEBUG← 1                                                   ⍝ 1: print Alloc/Free messages and set display forms
 
+⍝ ═══════════════════════════════════════════════════════════════════════════════
+⍝ Class randState - for handling Random Numbers. See also Rand and RandSeed
+⍝ ═══════════════════════════════════════════════════════════════════════════════
 :Class randState
    ⍝ Call:    rs← ⎕NEW randState 
    ⍝ WHen rs goes out of scope, the storage is released
      :Field Public Instance  r⍙ptr← 0 
-     :Field Shared           DEBUG← 1 
+     :Field Shared           DEBUG← 0 
      :Field Public Shared    active←0
-     :Field Public Shared    oldSeed← 0
-     :Field Public Shared    curSeed← ?1E18 
+     :Field Public Shared    seeds← (?1E18) 0
      ∇ Init0
         :Access Public
          :Implements Constructor
@@ -97,21 +99,21 @@
                 ⎕SIGNAL randStateÊ 
              :EndIf 
                {}gNs.RandInitDef r⍙ptr  
-               {}gNs.RandSeedU   r⍙ptr curSeed         ⍝ Seed from APL random # 
+               {}gNs.RandSeedU   r⍙ptr (⊃seeds)          ⍝ Seed from APL random # 
               :If DEBUG ⋄ ⎕← 'Alloc randState [',(⍕r⍙ptr),']'  ⋄ :EndIf
           :Else
             :IF 0≠ r⍙ptr 
                {}gNs.RandClear r⍙ptr 
                {}gNs.Free r⍙ptr 
-               :If DEBUG ⋄ ⎕← 'Free  randState  [',(⍕r⍙ptr),']'  ⋄ :EndIf
-               DmxSig
+               :If DEBUG ⋄ ⎕← 'Free   randState [',(⍕r⍙ptr),']'  ⋄ :EndIf
             :EndIf 
+            ##.DmxSig
           :EndTrap  
           active← 1 
       ∇
       ∇ Free
          :Implements Destructor
-         :If DEBUG ⋄ ⎕← 'Free  randState  [',(⍕r⍙ptr),']'  ⋄ :EndIf
+         :If DEBUG ⋄ ⎕← 'Free   randState [',(⍕r⍙ptr),']'  ⋄ :EndIf
          :IF 0≠ r⍙ptr 
             {}gNs.RandClear r⍙ptr 
             {}gNs.Free r⍙ptr                   ⍝ {}gNs.Free ⍙ptr
@@ -119,11 +121,10 @@
          :EndIf 
       ∇
       :Property Simple Default Component
-      ⍝  Retrieve the gmpz integer as a string of any length!
+      ⍝  ⌷rs:  Retrieve the randstate variable rs's pointer!
          ∇ ptr← get ; badObjÊ
             badObjÊ← ⊂('EM' 11 ⋄ 'Message' 'Invalid random state variable')
             ⎕SIGNAL badObjÊ/⍨ r⍙ptr=0                         ⍝ Whoops! Nothing there.
-            ⎕←'Getting randState r⍙ptr'
             ptr← r⍙ptr 
          ∇
       :EndProperty
@@ -293,7 +294,7 @@
    ∆THIS← ⎕THIS                                               ⍝ The class "name" (used for ⎕NEW and class tests)
    ∆TRAP← 0 'E' 'DmxSig⍬'                                     ⍝ Standard ⎕TRAP for public methods: re-signal at caller
    :Field Shared   gNs←   LoadLib ()                          ⍝ Namespace holding all bound GMP and libc routines
-   :Field Shared   ⍙rs←  ⎕NULL 
+   :Field Shared   rsInstance←  ⎕NULL 
    :Field Instance ⍙ptr← 0                                    ⍝ address of the gmpz_t; 0 = nothing live
    
 ⍝ ───────────────────────────────────────────────────────────────────────────────
@@ -436,7 +437,6 @@
       }
    ⍝  Type codes:  mpz_T=3 (gmpz object)      ui_T=2.5 (APL integer ≥ 0)
    ⍝                si_T=2 (APL integer < 0)  str_t=0 (string)
-   ⍝  (Rand uses ⌊Case_T so ui_T and si_T both land on the "APL integer" case, 2.)
       mpz_T ui_T si_T str_t← 3 2.5 2 0                        ⍝ si_T - a signed int that is <0
    ⍝:EndSection Types
    
@@ -785,9 +785,11 @@ rc← (a Cmp b) > 0
 ∇ {mpz}← Rand b   ; str; ⎕TRAP
    :Access Public
     ⎕TRAP← ∆TRAP 
-  :IF ~randState.active ⋄ ⍙rs← ⎕NEW randState ⋄ :EndIf 
+  :IF ~randState.active ⋄ rsInstance← ⎕NEW randState ⋄ :EndIf 
  
-   {}gNs.URandomM ⍙ptr (⍙rs.r⍙ptr) (Ptr0 b)
+   {}gNs.URandomM ⍙ptr (⌷rsInstance) (Ptr0 b)
+  ⍝  {}gNs.URandomM ⍙ptr (⌷rsInstance) (Ptr0 b)
+
 
    mpz← ⎕THIS 
 ∇
@@ -798,14 +800,14 @@ rc← (a Cmp b) > 0
 ∇ {old}← RandSeed u8  ; ok; ⎕TRAP
   :Access Public
   ⎕TRAP← ∆TRAP 
-  :IF ~randState.active ⋄ ⍙rs← ⎕NEW randState ⋄ :EndIf 
+  :IF ~randState.active ⋄ rsInstance← ⎕NEW randState ⋄ :EndIf 
   u8← gNs.Int∘Ptr1⍣ (~IsUI u8)⊢ u8 
   ⎕SIGNAL randSeedÊ/⍨ ~IsUI u8 
   
-   {}gNs.RandSeedU (⍙rs.r⍙ptr) u8 
+   {}gNs.RandSeedU (⌷rsInstance) u8 
 
-   old← randState.(oldSeed← curSeed)
-   randState.curSeed← u8 
+   old← ⊃randState.seeds
+   randState.seeds← 2↑ u8, randState.seeds
   ∇
 ⍝:EndSection Monadic - Rand
   
