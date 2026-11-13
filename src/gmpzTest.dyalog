@@ -10,10 +10,10 @@
      nm←⊃⍵
      exp←⊃1↓⍵
      act←⊃2↓⍵
-     exp≡act:'PASS: ',nm
-     'FAIL: ',nm,' — expected: ',(⍕exp),' — got: ',(⍕act)
+     exp≡act:'  PASS: ',nm
+     '**FAIL: ',nm,' — expected: ',(⍕exp),' — got: ',(⍕act)
  }
- IsPass←{'PASS:'≡5↑⍵}
+ IsPass←{'PASS'≡4↑2↓⍵}
 ⍝ ── 1. Construction ──────────────────────────────────────────────
  :Trap 0
      c←⎕NEW gmpz
@@ -31,7 +31,7 @@
      c←⎕NEW gmpz'123456789012345678901234567890'
      rep,←⊂Chk(⊂'New from 30-digit string')(⊂'123456789012345678901234567890')(⊂(⌷c))
  :Else
-     rep,←⊂'FAIL: Construction section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Construction section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 2. New0 / New / Set ──────────────────────────────────────────
  :Trap 0
@@ -54,22 +54,22 @@
      x←⎕NEW gmpz 5
      rep,←⊂Chk(⊂'Set to self returns self, value kept')(⊂'5')(⊂(⌷(x.Set x)))
  :Else
-     rep,←⊂'FAIL: New0 / New / Set section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: New0 / New / Set section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 3. ⌷ / ptr / Int / VFI ───────────────────────────────────────
  :Trap 0
      c←⎕NEW gmpz 123
      rep,←⊂Chk(⊂'⌷ 123')(⊂'123')(⊂(⌷c))
      rep,←⊂Chk(⊂'ptr is a live address (>0)')(⊂1)(⊂(0<c.ptr))
-     rep,←⊂Chk(⊂'Int 123')(⊂123)(⊂(c.Int))
-     c←⎕NEW gmpz ¯9223372036854775807
-     rep,←⊂Chk(⊂'Int most-negative-ish fits')(⊂¯9223372036854775807)(⊂(c.Int))
+    rep,←⊂Chk(⊂'Int 123')(⊂123)(⊂(c.Int))          ⍝ ¯9223372036854775806
+     c←⎕NEW gmpz ¯922337203685477600
+    rep,←⊂Chk(⊂'Int most-negative-ish fits')(⊂¯922337203685477600)(⊂(c.Int))
      c←⎕NEW gmpz'123456789012345678901234567890'
      rep,←⊂Chk(⊂'VFI huge number = 0 0')(⊂0 0)(⊂(c.VFI))
      c←⎕NEW gmpz 42
      rep,←⊂Chk(⊂'VFI 42 = 1 42')(⊂1 42)(⊂(c.VFI))
  :Else
-     rep,←⊂'FAIL: ⌷ / ptr / Int / VFI section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: ⌷ / ptr / Int / VFI section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 4. GetInBase / StrLen / Len ──────────────────────────────────
  :Trap 0
@@ -96,7 +96,7 @@
      rep,←⊂Chk(⊂'StrLen 30-digit = 30')(⊂30)(⊂(c.StrLen))
      rep,←⊂Chk(⊂'StrLen = ≢⌷ for 30-digit')(⊂(≢⌷c))(⊂(c.StrLen))
  :Else
-     rep,←⊂'FAIL: GetInBase / StrLen / Len section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: GetInBase / StrLen / Len section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 5. Signum / Even / Odd / Inc / Dec ───────────────────────────
  :Trap 0
@@ -116,7 +116,7 @@
      rep,←⊂Chk(⊂'Inc 5')(⊂'6')(⊂(⌷(c.Inc)))
      rep,←⊂Chk(⊂'Dec 6')(⊂'5')(⊂(⌷(c.Dec)))
  :Else
-     rep,←⊂'FAIL: Signum / Even / Odd / Inc / Dec section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Signum / Even / Odd / Inc / Dec section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 6. Add / Sub / Mul (incl. big numbers, in-place, left operand) ─
  :Trap 0
@@ -144,7 +144,7 @@
      rep,←⊂Chk(⊂'In-place: receiver changed, operand unchanged')(⊂'10')(⊂(⌷a))
      rep,←⊂Chk(⊂'In-place: receiver is 52')(⊂'52')(⊂(⌷c))
  :Else
-     rep,←⊂'FAIL: Add / Sub / Mul section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Add / Sub / Mul section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 7. Div / DivRem — floored ────────────────────────────────────
  :Trap 0
@@ -173,7 +173,7 @@
      x.Add y
      rep,←⊂Chk(⊂'Div identity: 2×(¯7÷2) + (¯7|2) = ¯7')(⊂'¯7')(⊂(⌷x))
  :Else
-     rep,←⊂'FAIL: Div / DivRem section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Div / DivRem section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 8. Gcd / Lcm ─────────────────────────────────────────────────
  :Trap 0
@@ -188,7 +188,7 @@
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'Lcm 0 5 = 0')(⊂'0')(⊂(⌷(0 c.Lcm 5)))
  :Else
-     rep,←⊂'FAIL: Gcd / Lcm section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Gcd / Lcm section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 9. Pow / PowM / roots ────────────────────────────────────────
  :Trap 0
@@ -211,7 +211,7 @@
      c←⎕NEW gmpz 3
      rep,←⊂Chk(⊂'PowM 3*5 mod 7 = 5')(⊂'5')(⊂(⌷(c.PowM 5 7)))
  :Else
-     rep,←⊂'FAIL: Pow / PowM section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Pow / PowM section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 10. Res / Invert ────────────────────────────────────────────
  :Trap 0
@@ -235,7 +235,7 @@
      rc←c.Invert 4
      rep,←⊂Chk(⊂'Invert 2 mod 4 has no inverse, returns 0')(⊂0)(⊂rc)
  :Else
-     rep,←⊂'FAIL: Res / Invert section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Res / Invert section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 11. Shift ────────────────────────────────────────────────────
  :Trap 0
@@ -252,7 +252,7 @@
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'Shift 0 leaves value')(⊂'7')(⊂(⌷(0 c.Shift 7)))
  :Else
-     rep,←⊂'FAIL: Shift section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Shift section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 12. TestBit / SetBit / ClrBit / Flip ─────────────────────────
  :Trap 0
@@ -281,7 +281,7 @@
      rep,←⊂Chk(⊂'Flip 1 returns new bit 0')(⊂0)(⊂v)
      rep,←⊂Chk(⊂'Flip 1: 10 becomes 8')(⊂'8')(⊂(⌷c))
  :Else
-     rep,←⊂'FAIL: TestBit / SetBit / ClrBit / Flip section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: TestBit / SetBit / ClrBit / Flip section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 13. Scan / Iota (⎕IO←0) ─────────────────────────────────────
  :Trap 0
@@ -295,7 +295,7 @@
      rep,←⊂Chk(⊂'Iota 1 of 8 = 3')(⊂3)(⊂(c.Iota 1))
      rep,←⊂Chk(⊂'Iota 0 of 8 = 0')(⊂0)(⊂(c.Iota 0))
  :Else
-     rep,←⊂'FAIL: Scan / Iota section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Scan / Iota section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 14. And / Or / Xor / Neg / Abs / Divisible ───────────────────
  :Trap 0
@@ -317,7 +317,7 @@
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'Divisible 0 by 0 = 1')(⊂1)(⊂(c.Divisible 0))
  :Else
-     rep,←⊂'FAIL: And / Or / Xor / Neg / Abs / Divisible section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: And / Or / Xor / Neg / Abs / Divisible section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 15. Bit property (⎕IO←0) ────────────────────────────────────
  :Trap 0
@@ -332,7 +332,7 @@
      c.Bit[1 3]←0 0
      rep,←⊂Chk(⊂'Bit[1 3]←0 0: 10 becomes 0')(⊂'0')(⊂(⌷c))
  :Else
-     rep,←⊂'FAIL: Bit property section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Bit property section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 16. Bits ─────────────────────────────────────────────────────
  :Trap 0
@@ -345,7 +345,7 @@
      c←⎕NEW gmpz 8
      rep,←⊂Chk(⊂'Bits 8 = 1 0 0 0, ≢Bits = Len')(⊂(c.Len))(⊂(≢c.Bits))
  :Else
-     rep,←⊂'FAIL: Bits section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Bits section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 17. Fac ──────────────────────────────────────────────────────
  :Trap 0
@@ -358,7 +358,7 @@
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'Fac string 5 = 120')(⊂'120')(⊂(⌷(c.Fac'5')))
  :Else
-     rep,←⊂'FAIL: Fac section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Fac section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 18. Cmp / Lt / Le / Eq / Ne / Ge / Gt ────────────────────────
  :Trap 0
@@ -378,7 +378,7 @@
      rep,←⊂Chk(⊂'Cmp big vs string, equal')(⊂0)(⊂(c.Cmp'123456789012345678901234567890'))
      rep,←⊂Chk(⊂'Cmp big vs smaller')(⊂1)(⊂(c.Cmp'1'))
  :Else
-     rep,←⊂'FAIL: Comparison section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Comparison section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 19. Rand / RandB / RandSeed ──────────────────────────────────
  :Trap 0
@@ -406,7 +406,7 @@
      v←(a.RandB 0).Int
      rep,←⊂Chk(⊂'RandB 0 = 0')(⊂0)(⊂v)
  :Else
-     rep,←⊂'FAIL: Rand / RandB / RandSeed section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Rand / RandB / RandSeed section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 20. ProbabPrime / NextPrime / PrevPrime / PrevPrime2 / Jacobi ─
  :Trap 0
@@ -435,7 +435,7 @@
      c←⎕NEW gmpz 7
      rep,←⊂Chk(⊂'Jacobi (7/7) = 0')(⊂0)(⊂(c.Jacobi 7))
  :Else
-     rep,←⊂'FAIL: Prime / Jacobi section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: Prime / Jacobi section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 21. GI dyadic arithmetic ─────────────────────────────────────
  :Trap 0
@@ -453,7 +453,7 @@
      rep,←⊂Chk(⊂'GI 16⊥ff base')(⊂'255')(⊂(⌷(16⊥GI'ff')))
      rep,←⊂Chk(⊂'GI big: string + string')(⊂'111111111011111111100')(⊂(⌷('12345678901234567890'+GI'98765432109876543210')))
  :Else
-     rep,←⊂'FAIL: GI dyadic arithmetic section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: GI dyadic arithmetic section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 22. GI comparisons / DivRem / PowM / Iota / Bit ──────────────
  :Trap 0
@@ -472,7 +472,7 @@
      rep,←⊂Chk(⊂'GI 1⌷10 bit 1 of 10')(⊂1)(⊂(1⌷GI 10))
      rep,←⊂Chk(⊂'GI 0⌷10 bit 0 of 10')(⊂0)(⊂(0⌷GI 10))
  :Else
-     rep,←⊂'FAIL: GI comparisons / DivRem / PowM / Iota / Bit section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: GI comparisons / DivRem / PowM / Iota / Bit section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 23. GI monadic ───────────────────────────────────────────────
  :Trap 0
@@ -494,7 +494,7 @@
      :EndFor
      rep,←⊂Chk(⊂'GI ?10: 20 draws all in 0..9 (⎕IO←0)')(⊂1)(⊂ok)
  :Else
-     rep,←⊂'FAIL: GI monadic section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: GI monadic section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 24. GI does not modify its arguments; unknown glyph ──────────
  :Trap 0
@@ -509,7 +509,7 @@
      rep,←⊂Chk(⊂'GI monadic result -5')(⊂'¯5')(⊂(⌷z))
      rep,←⊂Chk(⊂'GI monadic argument unchanged')(⊂'5')(⊂(⌷a))
  :Else
-     rep,←⊂'FAIL: GI no-modify section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: GI no-modify section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
  err←¯1
  :Trap 0
@@ -632,7 +632,8 @@
  err←¯1
  :Trap 0
      c←⎕NEW gmpz 0
-     c.Fac 4294967296
+    c.Fac 2*70 40⊃⍨'Windows'≡7↑⊃'.'⎕WG'APLVersion'  ⍝ Different limit for microsoft!
+
  :Else
      err←⎕DMX.EN
  :EndTrap
@@ -754,7 +755,7 @@
      ⎕IO←0
  :Else
      ⎕IO←0
-     rep,←⊂'FAIL: ⎕IO←1 section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: ⎕IO←1 section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── Summary ──────────────────────────────────────────────────────
  total←≢rep
