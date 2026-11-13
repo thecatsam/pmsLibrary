@@ -101,7 +101,7 @@
    :Field Public Shared ReadOnly DEBUG← 0                      ⍝ 1: print Alloc/Free messages and set display forms
    :Field Shared ReadOnly ∆THIS   ← ⎕THIS                      ⍝ The class "name" (used for ⎕NEW and class tests)
    :Field Shared ReadOnly ∆TRAP   ← 0 'E' 'DmxSig⍬'            ⍝ Standard ⎕TRAP for public methods: re-signal at caller
-   :Field Shared ReadOnly WINDOWS ← 'Windows'≡7↑⊃'.'⎕WG'APLVersion' 
+   :Field Public Shared ReadOnly WINDOWS ← 'Windows'≡7↑⊃'.'⎕WG'APLVersion' 
    :Field Shared ReadOnly UL_MAX  ← ¯1+2* WINDOWS⊃64 32        ⍝ Max C unsigned long: 2*64-1 Unix, 2*32-1 Windows
    :Field Shared ReadOnly IL_MAX  ← ¯1+2* WINDOWS⊃63 31        ⍝ Max C signed long: 2*63-1 Unix, 2*31-1 Windows
    
@@ -115,9 +115,8 @@
       :Field Public Shared ReadOnly DEBUG← ##.DEBUG            ⍝ NOTE: randState is a nested class and does not
    ⍝ inherit the outer gmpz DEBUG field, so it keeps
    ⍝ its own flag. Set gmpz.randState.DEBUG←1 to trace it.
-      :Field Public Shared           active← 0                 ⍝ Only 1 instance is allowed!
-      :Field Public Shared ReadOnly  WINDOWS← 'Windows'≡7↑⊃'.'⎕WG'APLVersion'                  
-      :Field Public Shared           seeds← (?¯1+ 2* WINDOWS⊃63 32) 0 ⍝ Order: newseed oldseed. A seed fits in a UL.
+      :Field Public Shared          active← 0                  ⍝ Only 1 instance is allowed!
+      :Field Public Shared          seeds← (?¯1+ 2* ##.WINDOWS⊃63 32) 0 ⍝ Order: newseed oldseed. A seed fits in a UL.
       ∇ Init0
         :Access Public
          :Implements Constructor
@@ -177,7 +176,7 @@
       'badBitValÊ'   11  'Invalid bit value (must be 0 or 1)'
       'badBitIxÊ'     3  'Invalid bit index (must be >= 0)'
       'badAplÊ'      11  'Invalid APL Integer'
-      'baseXtraÊ'    11 'Bases are valid only with string arguments'
+      'baseXtraÊ'    11  'Bases are valid only with string arguments'
       'badObjÊ'      11  'Can''t convert object to a Gmp integer'
       'badBitsÊ'     11  'Bits accessible only for unsigned objects'
       'badUIntÊ'     11  'Value not an APL non-negative integer'
@@ -216,9 +215,9 @@
 ⍝    Errors: Signals noGmpÊ if no library (or libc) is found; gmpLoadÊ if a routine
 ⍝            cannot be bound (the offending entry is echoed to the session).
 ⍝ ───────────────────────────────────────────────────────────────────────────────
-   ∇ where← LoadLib where; sysLib; clib; field; info; errs; nm; ok; pfx; gm; ret; sig; trueLongs 
+   ∇ where← LoadLib where; sysLib; clib; field; info; errs; nm; ok; pfx; gm; ret; sig; trueLongs
       :If 0=≢where ⋄ where← ⎕NS '' ⋄ :EndIf                    ⍝ ⍬ (or an empty value) → fresh namespace
-      :If 0≠  where.⎕NC 'loadComplete' ⋄ :Return ⋄ :EndIf      ⍝ already bound
+      → 0/⍨ where.⎕VGET ⊂'loadComplete' 0                      ⍝ Already exists and 1? Return!
       where.⎕DF 'gmpInt [gmp library]'
       ok← 0                                                    ⍝ MUST initialise: ~ok is tested after the loop
       :For sysLib :In (
@@ -242,20 +241,20 @@
       :For clib :In ('/usr/lib/libc.dylib' 'libc.so.6' 'msvcrt.dll')
          where.⎕EX 'Malloc' 'Free' 'MemCpyI'                   ⍝ Expunge any partial bindings from a failed candidate
          :Trap 0
-            'Malloc'   where.⎕NA 'P ',clib,'|malloc U8'        ⍝ malloc(count) → pointer
-            'Free'     where.⎕NA clib,'|free P'
-            'MemCpyI'  where.⎕NA clib,'|memcpy >I4[2] P U8'    ⍝ copy N bytes out as 2 ints (used for the sign)
-            :If (3=where.⎕NC 'Malloc') ∧ (3=where.⎕NC 'Free') ∧ (3=where.⎕NC 'MemCpyI')
-               :Leave                                          ⍝ All three bound, all from this clib
+            'Malloc'  where.⎕NA 'P ',clib,'|malloc U8'         ⍝ malloc(count) → pointer
+            'Free'    where.⎕NA clib,'|free P'
+            'MemCpyI' where.⎕NA clib,'|memcpy >I4[2] P U8'     ⍝ copy N bytes out as 2 ints (used for the sign)
+            :If ∧/3= ⌊where.⎕NC 'Malloc' 'Free' 'MemCpyI'      ⍝ All three bound, all from this clib
+               :Leave                                         
             :EndIf
          :EndTrap
       :EndFor
-      :If ~(3=where.⎕NC 'Malloc') ∨ ~(3=where.⎕NC 'Free') ∨ ~(3=where.⎕NC 'MemCpyI')
+      :If ∨/3≠ ⌊where.⎕NC 'Malloc' 'Free' 'MemCpyI'
          ⎕SIGNAL noGmpÊ
       :EndIf
       
-   ⍝ C long is 64-bit on Unix/macOS/Linux (LP64) but 32-bit on Windows
-   ⍝ (LLP64), so a C long must not be bound as a fixed I8/U8. The table
+   ⍝ C long is 64-bits on Unix/macOS/Linux but 32-bits on Windows
+   ⍝ so a C long must not be bound as a fixed I8/U8. The table
    ⍝ uses two placeholders for C longs, expanded at ]LOAD / ⎕FIX time by
    ⍝ LoadLib (see below) to the right ⎕NA type for the platform:
    ⍝   UL = unsigned long int / mp_bitcnt_t : U8 on Unix, U4 on Windows
@@ -338,7 +337,7 @@
          'URandomM'    'urandomm'       ''            'P P P'  ⍝ mpz: random # < the ceiling
          'URandomB'    'urandomb'       ''            'P P UL' ⍝ Random # based on bits
       )
-   ⍝ These traps are ignored in a ⎕FIX or ]Load, but not when LoadLib called directly
+      
       errs← 0
       trueLongs← ('U8' 'I8')  ('U4' 'I4') ⊃⍨ WINDOWS 
       :For field :In (2 3)  
@@ -349,7 +348,7 @@
             pfx← 'gmpz_'/⍨ 'gmp_'≢4↑gm
             info← '|__', pfx, gm, ' ', sig
             nm where.⎕NA ret,' ',sysLib, info
-            :If 0                                              ⍝ DEBUG
+            :If DEBUG                                          ⍝ DEBUG
                ⎕← ' ',(18↑'''',nm,''''),' ⎕NA ''',(4↑ret),' [LIB]',info,''''
             :EndIf
          :EndFor
@@ -387,12 +386,9 @@
          ⍙InitObj
       ⍝  Int 'ca' => (Int 'ca' 10).                            ⍝ We let ⎕THIS.Set handle invalid bases
          :If IsStr ⊃args                                       ⍝ (init base): a 2-element vector, second element a number
-            :If IsNum ⊃⌽args 
-               obj base← args 
-               base Set obj  
-            :Else 
-               Set args 
-            :EndIf                                
+         :Andif IsNum ⊃⌽args 
+            obj base← args 
+            base Set obj                               
          :Else 
             Set args 
          :EndIf
@@ -419,19 +415,19 @@
          :If DEBUG ⋄ ⎕← 'Alloc gmpz [',⍕⍙ptr,']' ⋄ :EndIf
       ∇
       
-   ⍝  New0:  gi← gmpz.New0           — new object with value 0   (shared method)
-      ∇ gi← New0 ; ⎕TRAP
+   ⍝  New0:  mpz← gmpz.New0           — new object with value 0   (shared method)
+      ∇ mpz← New0 ; ⎕TRAP
         :Access Public Shared
          ⎕TRAP← ∆TRAP
-         gi← ⎕NEW ⎕THIS
+         mpz← ⎕NEW ⎕THIS
       ∇
-   ⍝  New:   gi← [base] gmpz.New init   — new object from init (shared method)
+   ⍝  New:   mpz [base] gmpz.New init   — new object from init (shared method)
    ⍝         base defaults to 10 and only matters when init is a string.
-      ∇ gi← {base} New init ; ⎕TRAP
+      ∇ mpz← {base} New init ; ⎕TRAP
         :Access Public Shared
          ⎕TRAP← ∆TRAP
-         :If 900⌶⍬ ⋄ gi← ⎕NEW ∆THIS init  
-         :Else ⋄ gi← ⎕NEW ∆THIS (init base)
+         :If 900⌶⍬ ⋄ mpz← ⎕NEW ∆THIS init  
+         :Else ⋄ mpz← ⎕NEW ∆THIS (init base)
          :EndIf 
       ∇
       
@@ -1500,8 +1496,8 @@
               :Case '≢' ⋄ res← (c.Set b).StrLen                ⍝ int← ≢⌷b
               :Case '⍎' ⋄ res← (c.Set b).IntApl                ⍝ int← b.IntApl
               :Case '⌷' ⋄ res← ⌷(c.Set b)                      ⍝ str← ⌷b, for a gmpz, string, or APL integer b
-              :Case '⊤' ⋄ res← gmpz.Get b                      ⍝ retrieve value of b as a string
-              :Case '⊥' ⋄ c.Set b                              ⍝ return a copy of b  
+              :Case '⍕' ⋄ res← gmpz.Get b                      ⍝ retrieve value of b as a STRING
+              :Case '⊥' ⋄ c.Set b                              ⍝ return a copy of b. b any int/ mpz type. 
             :Else ⋄ ⎕SIGNAL unknownÊ
             :EndSelect
          :Else
@@ -1515,8 +1511,8 @@
               :Case '∨'   ⋄ a c.Gcd b                          ⍝ mpz← a∨b
               :Case '∧'   ⋄ a c.Lcm b                          ⍝ mpz← a∧b
               :Case '|'   ⋄ a c.Res b                          ⍝ a is the modulus (APL int), b the value
-              :Case '⌽'   ⋄ a c.Shift b                        ⍝ a is the shift (APL int), b the value
-              :Case '⍳'   ⋄ res← a c.Iota b                    ⍝ a⍳i, where i∊ 0 1
+              :Case '⌽'   ⋄ a c.Shift b                        ⍝ binary shift: a is the shift amount (APL int) L or R
+              :Case '⍳'   ⋄ res← a c.Iota b                    ⍝ a⍳b, where b∊ 0 1
               :Case '<'   ⋄ res← a c.Lt b                      ⍝ c← a< b. comparisons return boolean 0/1 directly
               :Case '≤'   ⋄ res← a c.Le b
               :Case '='   ⋄ res← a c.Eq b
@@ -1524,8 +1520,8 @@
               :Case '≥'   ⋄ res← a c.Ge b
               :Case '>'   ⋄ res← a c.Gt b
               :Case '⌷'   ⋄ res← (c.Set b).Bit[a]              ⍝ bool← b.Bit [a]
-              :Case '⊤'   ⋄ res← a gmpz.Get b                  ⍝ retrieve value of b as a string in base a.
-              :Case '⊥'   ⋄ a c.Set b                          ⍝ return copy of b in base a
+              :Case '⍕'   ⋄ res← a gmpz.Get b                  ⍝ retrieve value of b as a STRING in base a.
+              :Case '⊥'   ⋄ a c.Set b                          ⍝ return copy of INT STRING b in base a.  
               :Case '*∘|' ⋄ a c.PowM b                         ⍝ mpz← mod| a*exp where (exp mod)←b .
               :Case '÷∘|' ⋄ res← c, a c.DivRem b               ⍝ mpz1 mpz2← (a÷b) (b|a).
             :Else ⋄ ⎕SIGNAL unknownÊ
