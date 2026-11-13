@@ -185,7 +185,7 @@ Tidy← {
                         'tradFn'     3     4      6   9                 ⍝ (indent) trad functions
                         'ctrlIf'     3     4      6   9                 ⍝ (indent) :IF, :WHILE, :SELECT 
                         'ctrlElse'  ¯3    ¯4     ¯6  ¯9                 ⍝ (exdent) elseif, else
-                        'ctrlCase'  ¯1    ¯2     ¯2  ¯3                 ⍝ (exdent) Case stmts 
+                        'ctrlCase'  ¯1    ¯4     ¯2  ¯3                 ⍝ (exdent) Case stmts 
                   ]
                 ~tabIx∊ 1↓⍳≢tabTbl: ⎕SIGNAL optTabÊ
                   tabNmV← ⊃tabTbl 
