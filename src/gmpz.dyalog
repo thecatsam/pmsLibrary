@@ -1,5 +1,6 @@
 ⍝ ═══════════════════════════════════════════════════════════════════════════════
 ⍝  gmpz — Arbitrary-precision integers for Dyalog APL, backed by GMP (libgmp)
+⍝  Version 2026-11-12
 ⍝ ═══════════════════════════════════════════════════════════════════════════════
 ⍝
 ⍝  OVERVIEW
@@ -14,14 +15,14 @@
 ⍝    integers up to 2*63 are exact; here 2*63 means 2 to the power 63).
 ⍝
 ⍝  QUICK START
-⍝      a← ⎕NEW gmpz '12345678901234567890'                           ⍝ from a string
-⍝      b← ⎕NEW gmpz 2                                                ⍝ from an APL integer
-⍝      c← ⎕NEW gmpz                                                  ⍝ defaults to 0
-⍝      d← gmpz.New '99999999999999999999'                            ⍝ shared factory (optional base on left)
-⍝      16 gmpz.New 'ff'                                              ⍝ → 255
+⍝      a← ⎕NEW gmpz '12345678901234567890'                     ⍝ from a string
+⍝      b← ⎕NEW gmpz 2                                          ⍝ from an APL integer
+⍝      c← ⎕NEW gmpz                                            ⍝ defaults to 0
+⍝      d← gmpz.New '99999999999999999999'                      ⍝ shared factory (optional base on left)
+⍝      16 gmpz.New 'ff'                                        ⍝ → 255
 ⍝
-⍝      ⌷a                                                            ⍝ string form (default property)
-⍝      c.Set 5                                                       ⍝ overwrite c with 5 (c now holds 5)
+⍝      ⌷a                                                      ⍝ string form (default property)
+⍝      c.Set 5                                                 ⍝ overwrite c with 5 (c now holds 5)
 ⍝
 ⍝  OPERATING MODEL (read this first)
 ⍝    Methods such as Add, Sub, Mul, … are IN-PLACE: the object receiving the
@@ -81,22 +82,28 @@
 ⍝    16. Niladic export (Int, VFI, GetInBase, Bits)
 ⍝    17. Prime numbers
 ⍝    18. Miscellany (StrLen, Len)
-⍝    19. GI operator (primitive-style wrapper)
+⍝    19. GI operator (APL primitive-style wrapper)
 ⍝
 ⍝  NOTES FOR MAINTAINERS
-⍝    Names ending in Ê are error-signal tables loaded by LoadErrs.
-⍝    Names starting with ⍙ are private helpers.
-⍝    Library entries in gNs (Add, AddU, …) are raw GMP calls; the "U" variants
-⍝    take an unsigned 64-bit APL integer instead of an mpz.
-⍝    ⎕FR←1287 is used, since it allows handling of (64-bit) pointers and
-⍝    U8 and I8 (64-bit unsigned and signed integers).
+⍝  - Names ending in Ê are variables generated from a table in LoadErrs.
+⍝  - Names starting with ⍙ are private helpers.
+⍝  - Library entries in namespace gNs (Add, AddU, …) are raw GMP calls;
+⍝    the "U" variants take an unsigned C long instead of an mpz — 64-bit
+⍝    on Unix, 32-bit on Windows (see the UL/IL note above mpzTable in LoadLib).
+⍝  - ⎕FR←1287 is used, since it allows handling of (64-bit) pointers and
+⍝    U8 and I8 (64-bit unsigned and signed integers). We occasionally take
+⍝    advantage of decimal floats to work with integers larger than 64-bits.
 ⍝
 ⍝ ═══════════════════════════════════════════════════════════════════════════════
-:Class gmpz                                                          ⍝ MPZ: GMP's multiple precision integer
-   
-   ⎕IO ⎕ML ⎕PP ⎕FR← 0 1 34 1287                                      ⍝ Class-wide settings (see header)
-   ⎕RL← ⍬ 2                                                          ⍝ Use the system entropy by default for "seeds"
-   DEBUG← 0                                                          ⍝ 1: print Alloc/Free messages and set display forms
+:Class gmpz                                                    ⍝ MPZ: GMP's multiple precision integer
+   ⎕IO ⎕ML ⎕PP ⎕FR← 0 1 34 1287                                ⍝ Class-wide settings (see header)
+   ⎕RL← ⍬ 2                                                    ⍝ Use the system entropy by default for "seeds"
+   :Field Public Shared ReadOnly DEBUG← 0                      ⍝ 1: print Alloc/Free messages and set display forms
+   :Field Shared ReadOnly ∆THIS   ← ⎕THIS                      ⍝ The class "name" (used for ⎕NEW and class tests)
+   :Field Shared ReadOnly ∆TRAP   ← 0 'E' 'DmxSig⍬'            ⍝ Standard ⎕TRAP for public methods: re-signal at caller
+   :Field Shared ReadOnly WINDOWS ← 'Windows'≡7↑⊃'.'⎕WG'APLVersion' 
+   :Field Shared ReadOnly UL_MAX  ← ¯1+2* WINDOWS⊃64 32        ⍝ Max C unsigned long: 2*64-1 Unix, 2*32-1 Windows
+   :Field Shared ReadOnly IL_MAX  ← ¯1+2* WINDOWS⊃63 31        ⍝ Max C signed long: 2*63-1 Unix, 2*31-1 Windows
    
 ⍝ ═══════════════════════════════════════════════════════════════════════════════
 ⍝ Class randState - for handling Random Numbers. See also Rand and RandSeed
@@ -104,13 +111,13 @@
    :Class randState
    ⍝ Call:    rs← ⎕NEW randState
    ⍝ When rs goes out of scope, the storage is released
-      :Field Private Instance  r⍙ptr← 0
-      :Field Shared            DEBUG← 0                              ⍝ NOTE: randState is a nested class and does not
+      :Field Private Instance       r⍙ptr← 0
+      :Field Public Shared ReadOnly DEBUG← ##.DEBUG            ⍝ NOTE: randState is a nested class and does not
    ⍝ inherit the outer gmpz DEBUG field, so it keeps
    ⍝ its own flag. Set gmpz.randState.DEBUG←1 to trace it.
-      :Field Public Shared     active← 0                             ⍝ Only 1 instance is allowed!
-      :Field Public Shared     seeds← (?¯1+2*63) 0                   ⍝ Order: newseed oldseed. A seed is a 64-bit APL integer.
-   ⍝ 2*63 means 2 to the power 63.
+      :Field Public Shared           active← 0                 ⍝ Only 1 instance is allowed!
+      :Field Public Shared ReadOnly  WINDOWS← 'Windows'≡7↑⊃'.'⎕WG'APLVersion'                  
+      :Field Public Shared           seeds← (?¯1+ 2* WINDOWS⊃63 32) 0 ⍝ Order: newseed oldseed. A seed fits in a UL.
       ∇ Init0
         :Access Public
          :Implements Constructor
@@ -121,28 +128,28 @@
                ⎕SIGNAL randStateÊ
             :EndIf
             {}gNs.RandInitDef r⍙ptr
-            {}gNs.RandSeedU   r⍙ptr (⊃seeds)                         ⍝ Seed from APL random #
-            :If DEBUG ⋄ ⎕← 'Alloc randState [',r⍙ptr⍕⍛,']'  ⋄ :EndIf
+            {}gNs.RandSeedU   r⍙ptr (⊃seeds)                   ⍝ Seed from APL random #
+            :If DEBUG ⋄ ⎕← 'rand: Alloc state var [',r⍙ptr⍕⍛,']'  ⋄ :EndIf
          :Else
             :If 0≠ r⍙ptr
                {}gNs.RandClear r⍙ptr
                {}gNs.Free r⍙ptr
                r⍙ptr← 0
-               :If DEBUG ⋄ ⎕← 'Free   randState [', r⍙ptr⍕⍛, ']'  ⋄ :EndIf
+               :If DEBUG ⋄ ⎕← 'rand:  Free state var [', r⍙ptr⍕⍛, ']'  ⋄ :EndIf
             :EndIf
-            ##.DmxSig⍬                                               ⍝ Re-signal at the caller; do NOT set active←1
+            ##.DmxSig⍬                                         ⍝ Re-signal at the caller; do NOT set active←1
          :EndTrap
          active← 1
       ∇
       ∇ Free
          :Implements Destructor
-         :If DEBUG ⋄ ⎕← 'Free   randState [', r⍙ptr⍕⍛, ']'  ⋄ :EndIf
+         :If DEBUG ⋄ ⎕← 'rand:  Free state var [', r⍙ptr⍕⍛, ']'  ⋄ :EndIf
          :If 0≠ r⍙ptr
             {}gNs.RandClear r⍙ptr
             {}gNs.Free r⍙ptr
             r⍙ptr← 0
          :EndIf
-         active← 0                                                   ⍝ Allow a second instance after the first is freed
+         active← 0                                             ⍝ Allow a second instance after the first is freed
       ∇
       ∇ p← ptr
         :Access Public
@@ -170,6 +177,7 @@
       'badBitValÊ'   11  'Invalid bit value (must be 0 or 1)'
       'badBitIxÊ'     3  'Invalid bit index (must be >= 0)'
       'badAplÊ'      11  'Invalid APL Integer'
+      'baseXtraÊ'    11 'Bases are valid only with string arguments'
       'badObjÊ'      11  'Can''t convert object to a Gmp integer'
       'badBitsÊ'     11  'Bits accessible only for unsigned objects'
       'badUIntÊ'     11  'Value not an APL non-negative integer'
@@ -180,7 +188,7 @@
       'powÊ'         11  'Invalid power: neither an integer nor the inverse of one'
       'shiftÊ'       11  'Shift value must be an integer'
       'badIntÊ'      11  'Number too large to fit into a 64-bit integer (decimal float)'
-      'facBadÊ'      11  'Factorial of a negative integer or non-integer'
+      'facBadÊ'      11  'Arg must be non-neg integer (Windows: 32-bit, Other: 64-bit)'
       'primeÊ'       11  'ProbabPrime requires a number of test repetitions in the optional left argument, usually 15-50'
       'unknownÊ'     11  'Unknown error'
    )
@@ -208,37 +216,37 @@
 ⍝    Errors: Signals noGmpÊ if no library (or libc) is found; gmpLoadÊ if a routine
 ⍝            cannot be bound (the offending entry is echoed to the session).
 ⍝ ───────────────────────────────────────────────────────────────────────────────
-   ∇ where← LoadLib where; sysLib; clib; info; errs; nm; ok; pfx; gm; ret; sig
-      :If 0=≢where ⋄ where← ⎕NS '' ⋄ :EndIf                          ⍝ ⍬ (or an empty value) → fresh namespace
-      :If 0≠  where.⎕NC 'loadComplete' ⋄ :Return ⋄ :EndIf            ⍝ already bound
+   ∇ where← LoadLib where; sysLib; clib; field; info; errs; nm; ok; pfx; gm; ret; sig; trueLongs 
+      :If 0=≢where ⋄ where← ⎕NS '' ⋄ :EndIf                    ⍝ ⍬ (or an empty value) → fresh namespace
+      :If 0≠  where.⎕NC 'loadComplete' ⋄ :Return ⋄ :EndIf      ⍝ already bound
       where.⎕DF 'gmpInt [gmp library]'
-      ok← 0                                                          ⍝ MUST initialise: ~ok is tested after the loop
+      ok← 0                                                    ⍝ MUST initialise: ~ok is tested after the loop
       :For sysLib :In (
-            '/opt/homebrew/opt/gmp/lib/libgmp.dylib'                 ⍝ macOS, Apple silicon (Homebrew)
-            '/usr/local/opt/gmp/lib/libgmp.dylib'                    ⍝ macOS, Intel (Homebrew)
+            '/opt/homebrew/opt/gmp/lib/libgmp.dylib'           ⍝ macOS, Apple silicon (Homebrew)
+            '/usr/local/opt/gmp/lib/libgmp.dylib'              ⍝ macOS, Intel (Homebrew)
             'libgmp.dylib'
             'libgmp.10.dylib'
-            'libgmp.so.10'                                           ⍝ Linux, via the loader path
+            'libgmp.so.10'                                     ⍝ Linux, via the loader path
             '/usr/lib/x86_64-linux-gnu/libgmp.so.10'
             '/usr/lib/aarch64-linux-gnu/libgmp.so.10'
             '/usr/lib64/libgmp.so.10'
-            'libgmp-10.dll'                                          ⍝ Windows
+            'libgmp-10.dll'                                    ⍝ Windows
          )
          :Trap 0
-            'Init' where.⎕NA sysLib,'|__gmpz_init P'                 ⍝ Probe: does this path load?
+            'Init' where.⎕NA sysLib,'|__gmpz_init P'           ⍝ Probe: does this path load?
             ok← 1 ⋄ :Leave
          :EndTrap
       :EndFor
       ⎕SIGNAL noGmpÊ/⍨ ~ok
       
       :For clib :In ('/usr/lib/libc.dylib' 'libc.so.6' 'msvcrt.dll')
-         where.⎕EX 'Malloc' 'Free' 'MemCpyI'                         ⍝ Expunge any partial bindings from a failed candidate
+         where.⎕EX 'Malloc' 'Free' 'MemCpyI'                   ⍝ Expunge any partial bindings from a failed candidate
          :Trap 0
-            'Malloc'   where.⎕NA 'P ',clib,'|malloc U8'              ⍝ malloc(count) → pointer
+            'Malloc'   where.⎕NA 'P ',clib,'|malloc U8'        ⍝ malloc(count) → pointer
             'Free'     where.⎕NA clib,'|free P'
-            'MemCpyI'  where.⎕NA clib,'|memcpy >I4[2] P U8'          ⍝ copy N bytes out as 2 ints (used for the sign)
+            'MemCpyI'  where.⎕NA clib,'|memcpy >I4[2] P U8'    ⍝ copy N bytes out as 2 ints (used for the sign)
             :If (3=where.⎕NC 'Malloc') ∧ (3=where.⎕NC 'Free') ∧ (3=where.⎕NC 'MemCpyI')
-               :Leave                                                ⍝ All three bound, all from this clib
+               :Leave                                          ⍝ All three bound, all from this clib
             :EndIf
          :EndTrap
       :EndFor
@@ -246,89 +254,102 @@
          ⎕SIGNAL noGmpÊ
       :EndIf
       
-   ⍝ Note that long ints and unsigns are I8 and U8 on Unix and Linux.
-   ⍝ These are in general forced to be I8 and U8 on Microsoft as well,
-   ⍝ but weird things are known to happen.
+   ⍝ C long is 64-bit on Unix/macOS/Linux (LP64) but 32-bit on Windows
+   ⍝ (LLP64), so a C long must not be bound as a fixed I8/U8. The table
+   ⍝ uses two placeholders for C longs, expanded at ]LOAD / ⎕FIX time by
+   ⍝ LoadLib (see below) to the right ⎕NA type for the platform:
+   ⍝   UL = unsigned long int / mp_bitcnt_t : U8 on Unix, U4 on Windows
+   ⍝   IL = signed long int                 : I8 on Unix, I4 on Windows
+   ⍝ Not every U8/I8 is a C long. size_t (SizeInBase's return, and the
+   ⍝ malloc/memcpy counts above) is 64-bit on Win64 as well as on Unix64,
+   ⍝ so it stays U8. C int stays I4 on both platforms. The bit-index
+   ⍝ functions (TstBit/SetBit/ClrBit/ComBit) take mp_bitcnt_t, an
+   ⍝ *unsigned* long, so they are UL, not IL.
    ⍝
    ⍝ Binding table. Each row: APL name, GMP name (after __gmpz_), return type, arg types.
    ⍝   P = pointer (to an mpz_t)     U8 / I8 = 64-bit unsigned / signed int
+   ⍝   UL / IL = C unsigned / signed long (expanded at load time, see above)
    ⍝   I4 = 32-bit int               '' return = void (result left in the first mpz arg)
    ⍝ A trailing "U" in an APL name means the last operand is an unsigned machine int.
    ⍝ 'Rem' is deliberately NOT bound: it would duplicate 'FRem' (both fdiv_r).
    ⍝ There is no tdiv_r binding; use FRem for the floored remainder everywhere.
-      mpzTable← (
+      mpzTable← (   
       ⍝ APL synonym    gmpz name     return type       args
          'Abs'         'abs'            ''            'P P'
          'Add'         'add'            ''            'P P P'
-         'AddU'        'add_ui'         ''            'P P U8'
+         'AddU'        'add_ui'         ''            'P P UL'
          'Clear'       'clear'          ''            'P'
-         'Cmp'         'cmp'            'I4'          'P P'          ⍝ <0, 0, >0
-         'CmpI'        'cmp_si'         'I4'          'P I8'         ⍝ compare to a signed machine int
-         'CmpAbs'      'cmpabs'         'I4'          'P P'          ⍝ compare absolute values
-         'UiPow'       'ui_pow_ui'      ''            'P U8 U8'      ⍝ rop ← base*exp (both unsigned ints)
-         'Div'         'fdiv_q'         ''            'P P P'        ⍝ Floored division
-         'DivRemU'     'fdiv_qr_ui'     'U8'          'P P P U8'
+         'Cmp'         'cmp'            'I4'          'P P'    ⍝ <0, 0, >0
+         'CmpI'        'cmp_si'         'I4'          'P IL'   ⍝ compare to a signed machine int
+         'CmpAbs'      'cmpabs'         'I4'          'P P'    ⍝ compare absolute values
+         'UiPow'       'ui_pow_ui'      ''            'P UL UL' ⍝ rop ← base*exp (both unsigned ints)
+         'Div'         'fdiv_q'         ''            'P P P'  ⍝ Floored division
+         'DivRemU'     'fdiv_qr_ui'     'UL'          'P P P UL'
          'DivRem'      'fdiv_qr'        ''            'P P P P'
          'Divisible'   'divisible_p'    'I4'          'P P'
-         'DivU'        'fdiv_q_ui'      ''            'P P U8'
-         'Fac'         'fac_ui'         ''            'P U8'
-         'FRem'        'fdiv_r'         ''            'P P P'        ⍝ Floored remainder
-         'FRemU'       'fdiv_r_ui'      ''            'P P U8'       ⍝ ditto
+         'DivU'        'fdiv_q_ui'      ''            'P P UL'
+         'Fac'         'fac_ui'         ''            'P UL'
+         'FRem'        'fdiv_r'         ''            'P P P'  ⍝ Floored remainder
+         'FRemU'       'fdiv_r_ui'      ''            'P P UL' ⍝ ditto
          'Gcd'         'gcd'            ''            'P P P'
-         'GcdU'        'gcd_ui'         ''            'P P U8'
-         'GetStr'      'get_str'        ''            '=0C[] I4 P'   ⍝ Handle null termination automatically
-         'Init'        'init'           ''            'P'            ⍝ To zero (void)
-         'InitSet'     'init_set'       ''            'P P'          ⍝ From mpz (void)
-         'InitSetI'    'init_set_si'    ''            'P I8'         ⍝ From signed int (void)
-         'Int'         'get_si'         'I8'          'P'
-         'Invert'      'invert'         'I4'          'P P P'        ⍝ Modular inverse: rop = a^-1 mod m (returns non-zero if exists)
-         'IntFits'     'fits_slong_p'   'I4'          'P'            ⍝ mpz_fits_slong_p returns int, not I8
-         'Jacobi'      'jacobi'         'I4'          'P P'          ⍝ Jacobi symbol (a/b) -> returns -1, 0, 1
+         'GcdU'        'gcd_ui'         ''            'P P UL'
+         'GetStr'      'get_str'        ''            '=0C[] I4 P' ⍝ Handle null termination automatically
+         'Init'        'init'           ''            'P'      ⍝ To zero (void)
+         'InitSet'     'init_set'       ''            'P P'    ⍝ From mpz (void)
+         'InitSetI'    'init_set_si'    ''            'P IL'   ⍝ From signed int (void)
+         'Int'         'get_si'         'IL'          'P'
+         'Invert'      'invert'         'I4'          'P P P'  ⍝ Modular inverse: rop = a^-1 mod m (returns non-zero if exists)
+         'IntFits'     'fits_slong_p'   'I4'          'P'      ⍝ mpz_fits_slong_p returns int, not I8
+         'Jacobi'      'jacobi'         'I4'          'P P'    ⍝ Jacobi symbol (a/b) -> returns -1, 0, 1
          'Lcm'         'lcm'            ''            'P P P'
-         'LcmU'        'lcm_ui'         ''            'P P U8'
+         'LcmU'        'lcm_ui'         ''            'P P UL'
          'Mul'         'mul'            ''            'P P P'
-         'MulU'        'mul_ui'         ''            'P P U8'
+         'MulU'        'mul_ui'         ''            'P P UL'
          'Neg'         'neg'            ''            'P P'
          'NextPrime'   'nextprime'      ''            'P P'
-         'Pow'         'pow_ui'         ''            'P P U8'
-         'PowM'        'powm'           ''            'P P P P'      ⍝ Modular exponentiation: rop ← base^exp mod mod
-         'PrevPrime'   'prevprime'      'I4'          'P P'          ⍝ Returns the likelihood of primality: 2, 1, 0
-         'ProbabPrime' 'probab_prime_p' 'I4'          'P I4'         ⍝ 2 definitely, 1 probably, 0 not
-         'Root'        'root'           'I4'          'P P U8'       ⍝ nonzero return ⇒ exact
+         'Pow'         'pow_ui'         ''            'P P UL'
+         'PowM'        'powm'           ''            'P P P P' ⍝ Modular exponentiation: rop ← base^exp mod mod
+         'PrevPrime'   'prevprime'      'I4'          'P P'    ⍝ Returns the likelihood of primality: 2, 1, 0
+         'ProbabPrime' 'probab_prime_p' 'I4'          'P I4'   ⍝ 2 definitely, 1 probably, 0 not
+         'Root'        'root'           'I4'          'P P UL' ⍝ nonzero return ⇒ exact
          'Set'         'set'            ''            'P P'
-         'SetI'        'set_si'         ''            'P I8'
+         'SetI'        'set_si'         ''            'P IL'
          'SetStr'      'set_str'        'I4'          'P <0C1[] I4'  ⍝ Handle null termination automatically
-         'ShiftL'      'mul_2exp'       ''            'P P U8'       ⍝ Shift left by n bits
-         'ShiftR'      'tdiv_q_2exp'    ''            'P P U8'       ⍝ Shift right by n bits, truncating toward zero
-         'SizeInBase'  'sizeinbase'     'U8'          'P I4'
-         'Sqrt'        'sqrt'           ''            'P P'          ⍝ Truncated root
+         'ShiftL'      'mul_2exp'       ''            'P P UL' ⍝ Shift left by n bits
+         'ShiftR'      'tdiv_q_2exp'    ''            'P P UL' ⍝ Shift right by n bits, truncating toward zero
+         'SizeInBase'  'sizeinbase'     'U8'          'P I4'   ⍝ size_t: 64-bit on Win64 and Unix64 alike, so stays U8
+         'Sqrt'        'sqrt'           ''            'P P'    ⍝ Truncated root
          'Sub'         'sub'            ''            'P P P'
-         'SubU'        'sub_ui'         ''            'P P U8'
+         'SubU'        'sub_ui'         ''            'P P UL'
       ⍝   Logical functions
-         'TstBit'      'tstbit'         'I4'          'P I8'         ⍝ Look at the actual bits of an mpz (big integer)
-         'SetBit'      'setbit'         ''            'P I8'
-         'ClrBit'      'clrbit'         ''            'P I8'
-         'Scan1'       'scan1'          'U8'          'P U8'
-         'Scan0'       'scan0'          'U8'          'P U8'
-         'ComBit'      'combit'         ''            'P I8'         ⍝ one's complement-- flip every bit.
+         'TstBit'      'tstbit'         'I4'          'P UL'   ⍝ Look at the actual bits of an mpz (big integer)
+         'SetBit'      'setbit'         ''            'P UL'
+         'ClrBit'      'clrbit'         ''            'P UL'
+         'Scan1'       'scan1'          'UL'          'P UL'
+         'Scan0'       'scan0'          'UL'          'P UL'
+         'ComBit'      'combit'         ''            'P UL'   ⍝ one's complement-- flip every bit.
          'And'         'and'            ''            'P P P'
-         'Or'          'ior'            ''            'P P P'        ⍝ inclusive or
+         'Or'          'ior'            ''            'P P P'  ⍝ inclusive or
          'Xor'         'xor'            ''            'P P P'
       ⍝   gmp calls-- handled specially
-         'RandInitDef' 'gmp_randinit_default' ''      'P'            ⍝ gmp: the default— Mersenne
-         'RandSeedU'   'gmp_randseed_ui' ''           'P U8'         ⍝ gmp: seed state with unsigned int
-         'RandClear'   'gmp_randclear'  ''            'P'            ⍝ gmp:
-         'URandomM'    'urandomm'       ''            'P P P'        ⍝ mpz: random # < the ceiling
-         'URandomB'    'urandomb'       ''            'P P U8'       ⍝ Random # based on bits
+         'RandInitDef' 'gmp_randinit_default' ''      'P'      ⍝ gmp: the default— Mersenne
+         'RandSeedU'   'gmp_randseed_ui' ''           'P UL'   ⍝ gmp: seed state with unsigned int
+         'RandClear'   'gmp_randclear'  ''            'P'      ⍝ gmp:
+         'URandomM'    'urandomm'       ''            'P P P'  ⍝ mpz: random # < the ceiling
+         'URandomB'    'urandomb'       ''            'P P UL' ⍝ Random # based on bits
       )
    ⍝ These traps are ignored in a ⎕FIX or ]Load, but not when LoadLib called directly
       errs← 0
+      trueLongs← ('U8' 'I8')  ('U4' 'I4') ⊃⍨ WINDOWS 
+      :For field :In (2 3)  
+         (field⊃¨mpzTable)← 'UL' 'IL' ⎕R trueLongs⊣ field⊃¨mpzTable
+      :EndFor  
       :Trap 6 11 102
          :For (nm gm ret sig) :In mpzTable
             pfx← 'gmpz_'/⍨ 'gmp_'≢4↑gm
             info← '|__', pfx, gm, ' ', sig
             nm where.⎕NA ret,' ',sysLib, info
-            :If 0                                                    ⍝ DEBUG
+            :If 0                                              ⍝ DEBUG
                ⎕← ' ',(18↑'''',nm,''''),' ⎕NA ''',(4↑ret),' [LIB]',info,''''
             :EndIf
          :EndFor
@@ -341,11 +362,9 @@
       where.loadComplete← 1
    ∇
    
-   :Field Shared   ∆THIS← ⎕THIS                                      ⍝ The class "name" (used for ⎕NEW and class tests)
-   :Field Shared   ∆TRAP← 0 'E' 'DmxSig⍬'                            ⍝ Standard ⎕TRAP for public methods: re-signal at caller
-   :Field Shared   gNs←   LoadLib ()                                 ⍝ Namespace holding all bound GMP and libc routines
-   :Field Shared   rsInstance←  ⎕NULL                                ⍝ Random # state var
-   :Field Instance ⍙ptr← 0                                           ⍝ address of the gmpz_t; 0 = nothing live
+   :Field Shared   gNs←   LoadLib ()                           ⍝ Namespace holding all bound GMP and libc routines
+   :Field Shared   rsInstance←  ⎕NULL                          ⍝ Random # state var
+   :Field Instance ⍙ptr← 0                                     ⍝ address of the gmpz_t; 0 = nothing live
    
 ⍝ ───────────────────────────────────────────────────────────────────────────────
    ⍝:Section Object Initialization and Value Setting
@@ -353,25 +372,30 @@
    ⍝  Constructors:
    ⍝     ⎕NEW gmpz                 → value 0
    ⍝     ⎕NEW gmpz  obj            → value of obj (gmpz, string, or APL integer), base 10
-   ⍝     ⎕NEW gmpz (obj base)      → value of obj (as above, except string obj parsed in base 2…62)
+   ⍝     ⎕NEW gmpz (obj base)      → value of obj (as above, except string obj parsed in base 2…62).
+   ⍝     ⎕NEW gmpz,⊂obj base       → Same as ⎕NEW gmpz (obj base)
       ∇ Init0; ⎕TRAP
         :Access Public
          :Implements Constructor
          ⎕TRAP← ∆TRAP
-         ⍙InitObj                                                    ⍝ Set to 0
+         ⍙InitObj                                              ⍝ Set to 0
       ∇
-   ⍝  ⎕NEW gmpz string
       ∇ Init args; obj; base; ⎕TRAP
         :Access Public
          :Implements Constructor
          ⎕TRAP← ∆TRAP
-         :If (2=≢,args) ∧ IsInt ⊃⌽args                               ⍝ (init base): a 2-element vector, second element an integer scalar
-            obj base← args
-         :Else                                                       ⍝ A single init; base defaults to 10
-            obj← args ⋄ base← 10
-         :EndIf
          ⍙InitObj
-         base ⎕THIS.Set obj                                          ⍝ string int or APL int or mpz int, base 10
+      ⍝  Int 'ca' => (Int 'ca' 10).                            ⍝ We let ⎕THIS.Set handle invalid bases
+         :If IsStr ⊃args                                       ⍝ (init base): a 2-element vector, second element a number
+            :If IsNum ⊃⌽args 
+               obj base← args 
+               base Set obj  
+            :Else 
+               Set args 
+            :EndIf                                
+         :Else 
+            Set args 
+         :EndIf
       ∇
    ⍝  ⍙InitObj (private): allocate 16 zeroed bytes for the mpz_t and mpz_init it.
    ⍝  If anything fails after malloc, the memory is released before badInitÊ is signalled.
@@ -379,12 +403,10 @@
    ⍝  is freed, no matter what error occurs.
       ∇  ⍙InitObj; err
          err← 0
-         :Trap 0                                                     ⍝ Capture problems so we can free storage!
-            ⍙ptr← gNs.Malloc 16                                      ⍝ mpz_t is 16 bytes on 64-bit
-            :If ⍙ptr=0                                               ⍝ Allocation failed
-               ⎕SIGNAL badInitÊ
-            :Else
-               {}gNs.Init ⍙ptr
+         :Trap 0                                               ⍝ Capture problems so we can free storage!
+            ⍙ptr← gNs.Malloc 16                                ⍝ mpz_t is 16 bytes on 64-bit
+            :If ⍙ptr=0 ⋄ ⎕SIGNAL badInitÊ                      ⍝ Allocation failed
+            :Else      ⋄ {}gNs.Init ⍙ptr
             :EndIf
          :Else
             err← 1
@@ -394,9 +416,7 @@
             {}gNs.Free ⍙ptr ⋄ ⍙ptr← 0
             ⎕SIGNAL badInitÊ
          :EndIf
-         :If DEBUG
-            ⎕← 'Alloc gmpz [',⍕⍙ptr,']'
-         :EndIf
+         :If DEBUG ⋄ ⎕← 'Alloc gmpz [',⍕⍙ptr,']' ⋄ :EndIf
       ∇
       
    ⍝  New0:  gi← gmpz.New0           — new object with value 0   (shared method)
@@ -410,8 +430,9 @@
       ∇ gi← {base} New init ; ⎕TRAP
         :Access Public Shared
          ⎕TRAP← ∆TRAP
-         :If 900⌶⍬ ⋄ base← 10 ⋄ :EndIf
-         gi← ⎕NEW ∆THIS (init base)
+         :If 900⌶⍬ ⋄ gi← ⎕NEW ∆THIS init  
+         :Else ⋄ gi← ⎕NEW ∆THIS (init base)
+         :EndIf 
       ∇
       
    ⍝ Set: overwrite ⎕THIS with a new value.    [base] obj.Set b
@@ -423,21 +444,30 @@
       ∇ {mpz}← {base} Set b   ; bP; rc; ⎕TRAP
         :Access Public Instance
          ⎕TRAP← ∆TRAP
-         :If 900⌶⍬ ⋄ base← 10 ⋄ :EndIf
          mpz← ⎕THIS
-      ⍝ obj: Can be set from gmpz obj, string, or number
-         :If b≡ ⎕THIS
-            :Return                                                  ⍝  Setting self to self. Just return!
-         :ElseIf IsMpz b                                             ⍝ mpz
-            :If ⍙ptr≠ bP← b.ptr ⋄ {}gNs.Set ⍙ptr bP ⋄ :EndIf
-         :ElseIf 0=1↑0⍴ b                                            ⍝ signed int
-            ⎕SIGNAL badAplÊ/⍨ ~IsInt b
-            {}gNs.SetI ⍙ptr b
-         :Else
+      ⍝ obj: Can be set from  num str, gmpz obj, or integer.
+         :Select Case_T b  
+           :Case str_T   
+           string: 
+            :If 900⌶⍬ ⋄ base← 10 ⋄ :EndIf
             b← '-'@('¯'∘=),b
-            rc← gNs.SetStr ⍙ptr b base                               ⍝ SetStr will handle invalid numeric strings.
-            ⎕SIGNAL (rc≠0)/ badObjÊ
-         :EndIf
+            rc← gNs.SetStr ⍙ptr b base                         ⍝ SetStr will handle invalid numeric strings.
+            ⎕SIGNAL badObjÊ/⍨ rc≠0
+           :Case mpz_T 
+            ⎕SIGNAL baseXtraÊ/⍨ ~900⌶⍬  
+            :If ⍙ptr≠ bP← b.ptr 
+               {}gNs.Set ⍙ptr bP 
+            :EndIf
+           :Caselist si_T ui_T                                 ⍝ any integer 
+            ⎕SIGNAL baseXtraÊ/⍨ ~900⌶⍬  
+            {}gNs.SetI ⍙ptr b    
+           :Case i128_T                                        ⍝ Number is bigger than uint64, so convert to string int.
+            ⎕SIGNAL baseXtraÊ/⍨ ~900⌶⍬  
+            b← ⍕b 
+            :Goto string                    
+         :Else                                               
+            ⎕SIGNAL badAplÊ 
+         :EndSelect 
       ∇
    ⍝ Destructor: runs automatically when the object is expunged or goes out of scope.
       ∇ Free
@@ -463,10 +493,10 @@
       ⍝  Retrieve the gmpz integer as a string of any length!
          ∇ buf← get ; n; ⎕TRAP
             ⎕TRAP← ∆TRAP
-            ⎕SIGNAL (⍙ptr=0)/ badObjÊ                                ⍝ Whoops! Nothing there.
-            n← 2+ gNs.SizeInBase ⍙ptr 10                             ⍝ digits + possible sign + NUL
+            ⎕SIGNAL (⍙ptr=0)/ badObjÊ                          ⍝ Whoops! Nothing there.
+            n← 2+ gNs.SizeInBase ⍙ptr 10                       ⍝ digits + possible sign + NUL
          ⍝ Create a place in APL for the null-terminated string. from GetStr
-            buf← '¯'@('-'∘=)⊢ gNs.GetStr (n⍴⎕UCS 0) 10 ⍙ptr          ⍝ Import that result
+            buf← '¯'@('-'∘=)⊢ gNs.GetStr (n⍴⎕UCS 0) 10 ⍙ptr    ⍝ Import that result
          ∇
       :EndProperty
       
@@ -483,29 +513,40 @@
    ⍝:Section Types
    ⍝ ───────────────────────────────────────────────────────────────────────────────
    ⍝  IsMpz ⍵   1 if ⍵ is an instance of this class (gmpz), else 0
-   ⍝  IsUI  ⍵   1 if ⍵ is an APL non-negative integer (numeric), else 0. Doesn't rule out ALL floats that are near to ⌊⍵.
+   ⍝  IsUI  ⍵   1 if ⍵ is an APL non-negative integer ≤ UL_MAX (numeric), else 0. Doesn't rule out ALL floats that are near to ⌊⍵.
    ⍝  IsInt ⍵   1 if ⍵ is an APL integer of any sign (numeric), else 0
    ⍝  Case_T ⍵  classify an operand, returning one of the codes below.
    ⍝            Signals badAplÊ for a non-integer number.
    ⍝  IsUI and IsInt are scalar-safe: a vector argument returns 0.
-      UI32_MAX← ¯1+2*32
-      UI64_MAX← ¯1+2*64
-      IsMpz←  { 9.2≠ ⎕NC ⊂,'⍵': 0 ⋄ ∆THIS⊂∘,⍛∊  ⎕CLASS ⍵ }
-      IsUI←   { 2≠ ⎕NC '⍵': 0 ⋄ 1≠ ≢,⍵: 0 ⋄ 0≠ ⊃0⍴⍵: 0 ⋄ (⍵=⌊⍵) ∧ (⍵≥ 0)∧ ⍵≤UI64_MAX } ⍝ Explicitly reject gmpz's by rejecting non-variables
-      IsInt←  { 2≠ ⎕NC '⍵': 0 ⋄ 1≠ ≢,⍵: 0 ⋄ 0≠ ⊃0⍴⍵: 0 ⋄ ⍵=⌊⍵ }      ⍝ Uses ⊃0⍴⍵ (the prototype) to reject non-numerics
-      IsStr←  { ' '=⊃0⍴⍵ }
-         Str2I←  { ok i← ⎕VFI '¯'@(=∘'-')⊢ ⍵ ⋄ ok: i ⋄ ⎕SIGNAL badAplÊ }
-      Case_T← {
-        IsMpz ⍵: mpz_T ⋄ 0≠ ⊃0⍴⍵: str_t ⋄ ⍵≠ ⌊⍵: ⎕SIGNAL badAplÊ ⋄ (⍵≥ 0)∧ ⍵≤UI64_MAX: ui_T ⋄ si_T
-      }
-      ToInt← {
-        IsInt ⍵: ⍵ ⋄ IsMpz ⍵: ⍵.Int ⋄ IsStr ⍵: Str2I ⍵ ⋄ ⎕SIGNAL badAplÊ
-      }
-   ⍝  Type codes (all integers):  mpz_T=3 (gmpz object)      ui_T=2 (APL integer ≥ 0)
-   ⍝                              si_T=1 (APL integer < 0)   str_t=0 (string)
-   ⍝  The old code used ui_T=2.5; there was no reason for a fractional code,
-   ⍝  so the codes are now plain integers 3 2 1 0.
-      mpz_T ui_T si_T str_t← 3 2 1 0
+      UI32_MAX← ¯1+2*32   ⋄   UI64_MAX← ¯1+2*64
+      I64_MAX←  ¯1+2*63   ⋄   I128_Max← ¯1+10*34               ⍝ A Dyalog supports bigger nteges than GMP can handle!
+      
+      
+   ⍝  Here, we use a "minimal" approach to determining the kind of object. We will trap the rest.
+   ⍝  Use Case_T below if you are going to accept mpz's, strings, unsigneds, signed, and APL integers in Dec Floats;
+   ⍝  the individual tests assume ANY type might be presented.
+      IsMpz←  326= ⎕DR                                         ⍝ If you present an invalid obj, it will still be trapped.
+      IsNum←  0=(⊃0⍴⊢) 
+      IsInt←  { IsMpz ⍵: 0 ⋄ IsNum ⍵: (⍵=⌊⍵)∧ ⍵≤ UI64_MAX ⋄ 0  } ⍝ 64-bit                       
+      IsUI←   { IsInt ⍵: (⍵≥0)∧(⍵≤UL_MAX) ⋄ 0 }                ⍝ fits a C unsigned long
+      IsStr←  ' '∘=(⊃0⍴⊢)
+      Str2I←  { 
+         ok i← ⎕VFI '¯'@(=∘'-')⊢ ⍵ ⋄  ok∧ ~'E'∊ ⍕i: ⍬⍴i ⋄ ⎕SIGNAL badAplÊ 
+      }  
+      ToInt←  { IsInt ⍵: ⍵ ⋄ IsMpz ⍵: ⍵.IntApl ⋄ IsStr ⍵: Str2I ⍵ ⋄ ⎕SIGNAL badAplÊ }      
+      mpz_T ui_T si_T str_T i128_T← ⍳5                         ⍝  Type codes 
+      IU_T← ⊃∘si_T ui_T 
+      Case_T← { 
+         Case← 80|⎕DR ⍵
+        Case=6: mpz_T                                          ⍝ mpz or error
+        Case=0: str_T                                          ⍝ str
+        Case=5: IU_T ⍵≥ 0⊣ ⎕SIGNAL badAplÊ/⍨ ⍵≠⌊⍵              ⍝ I1, I2, I4 
+        Case=3: IU_T ⍵≥ 0                                      ⍝ U8, I8 
+        (Case≠7)∨ ⍵≠ ⌊⍵: ⎕SIGNAL badAplÊ
+      ⍝ Case=7 ↓↓↓                                             ⍝ 64 to 128 bit (Decimal Floats)
+        IL_MAX≥ |⍵:   IU_T ⍵≥ 0  
+         i128_T 
+      }     
    ⍝:EndSection Types
    
 ⍝ ───────────────────────────────────────────────────────────────────────────────
@@ -517,14 +558,13 @@
    ⍝  meaningless between calls.
    ⍝  Note: To make the class thread-safe,
    ⍝        remove the comment symbol preceding :HOLD and :ENDHOLD below.
-      ∇ ok← InitStatics
-         statics← ⎕NEW¨ 3⍴⊂⎕THIS 
-         statics.⎕DF ⊂'STATIC MPZ OBJ'
-         ∆STATICS← 'statics'
-         
+      ∇ {ok}← InitStatics
+         statics← gmpz.New¨ 3⍴0                                ⍝ Declare 3 statics (or as needed)
+         statics.⎕DF ⊂'Static mpz object'
+         ∆STATICS← 'statics'                                   ⍝ Used for :HOLDing
       ⍝  Ptr0, etc: these typically take fn arguments (usually a and b) and copy any
       ⍝  non-mpz objects (integers, strings) into statics[0] and return statics[0].ptr
-      ⍝  Actual mpz objects ¨a¨ are kept as is (aliased, not copied); instead, a.ptr is returned.
+      ⍝  Actual mpz objects ¨a¨ are USED AS IS (aliased, not copied), i.e. a.ptr is returned, NOT statics[…].
          StatPtr← { IsMpz ⍵: ⍵.ptr ⋄ ((⍺⊃statics).Set ⍵).ptr }
          MpzTemp← { IsMpz ⍵: ⍵ ⋄ ⍺ (⍺⍺⊃statics).Set ⍵}
          Mpz1← 0 MpzTemp 
@@ -542,15 +582,15 @@
    ⍝
    ⍝    [nzFlag] (fn1 _Dyad_ fn2) (a b)
    ⍝
-   ⍝      fn1     GMP routine taking (dest src1 src2) as mpz pointers, eg gNs.Add
-   ⍝      fn2     the matching "unsigned int" routine,                 eg gNs.AddU
+   ⍝      fn1     GMP routine taking (dest src1 src2) as mpz pointers, e.g. gNs.Add
+   ⍝      fn2     the matching "unsigned int" routine,                 e.g. gNs.AddU
    ⍝      a, b    operands (any supported type); the destination is always ⎕THIS
    ⍝      nzFlag  1 → signal divZÊ if b is zero (division); default 0
    ⍝
    ⍝    Dispatch on the type of b (via Case_T):
    ⍝      gmpz object        → fn1 with b's pointer
-   ⍝      APL integer ≥ 0 and ≤ UI64_MAX → fn2 with b passed directly (fast path)
-   ⍝      string / APL < 0 / APL integer > UI64_MAX → b is copied into statics[1], then fn1
+   ⍝      APL integer ≥ 0 and ≤ UL_MAX → fn2 with b passed directly (fast path)
+   ⍝      string / APL < 0 / APL integer > UL_MAX → b is copied into statics[1], then fn1
    ⍝    `a` is always passed through (Ptr0 a) (converted to an mpz when necessary).
    ⍝    Returns ⎕THIS.
    ⍝
@@ -561,18 +601,17 @@
    ⍝  The object a or b may be this →→ Gmp handles.
    ⍝ While Gmp allows for uints on the left (a) in some cases, we just convert (a) to a gmpz obj
    ⍝ no matter what (this can be changed with additional coding).
-      ∇ mpz← {nzFlag} (fn1 _Dyad_ fn2) (a b) ; aP; bP; type
-         :If 900⌶⍬ ⋄ nzFlag← 0 ⋄ :EndIf                              ⍝ Must b be non-zero, no matter the type?
+      ∇ mpz← {nzFlag} (fn1 _Dyad_ fn2) (a b) ; aP; bP
+         :If 900⌶⍬ ⋄ nzFlag← 0 ⋄ :EndIf                        ⍝ Must b be non-zero, no matter the type?
          :Hold ∆STATICS
             aP← Ptr0 a
-            type← Case_T b
-            :If (type=ui_T)                            ⍝ APL unsigned integer in U8 range, use fast path
+            :If IsUI b                                         ⍝ APL unsigned integer in UL range, use fast path
                :If nzFlag ⋄ :Andif 0= b ⋄ ⎕SIGNAL divZÊ ⋄ :EndIf
-               {} fn2 ⍙ptr aP b                                      ⍝ ==>  fn2  <==
-            :Else                                                    ⍝ b is an mpz, a string, a negative integer, or too large for U8.
+               {} fn2 ⍙ptr aP b                                ⍝ ==>  fn2  <==
+            :Else                                              ⍝ b is an mpz, a string, a negative integer, or too large for UL.
                bP← Ptr1 b
                :If nzFlag ⋄ :Andif 0= PSignum bP ⋄ ⎕SIGNAL divZÊ ⋄ :EndIf
-               {} fn1 ⍙ptr aP bP                                     ⍝ ==>  fn1  <==
+               {} fn1 ⍙ptr aP bP                               ⍝ ==>  fn1  <==
             :EndIf    
          :EndHold
          mpz← ⎕THIS
@@ -598,7 +637,7 @@
       ∇ si← PSignum ptr  ; CopyIVec
       ⍝  [Alt]  si← gNs.CmpI ptr 0   ⍝ Replaces two lines here.
          ⎕SIGNAL (ptr=0)/ badObjÊ
-         CopyIVec← { gNs.MemCpyI (⍵⍴ 0) ⍺ (4× ⍵) }                   ⍝ Get the sign of the variable at offset 0 (two 4-byte integers)
+         CopyIVec← { gNs.MemCpyI (⍵⍴ 0) ⍺ (4× ⍵) }             ⍝ Get the sign of the variable at offset 0 (two 4-byte integers)
          si← ×1⌷ ptr CopyIVec 2
       ∇
    ⍝:EndSection Methods - Signum
@@ -640,27 +679,27 @@
         :Access Public
          ⎕TRAP← ∆TRAP
          :If 900⌶⍬ ⋄ a← ⎕THIS ⋄  :EndIf
-         mpz← 1 gNs.Div _Dyad_ gNs.DivU a b                          ⍝ ⍺ of 1: Ensure b≠0
+         mpz← 1 gNs.Div _Dyad_ gNs.DivU a b                    ⍝ ⍺ of 1: Ensure b≠0
       ∇
    ⍝   rem← a c.DivRem b.
    ⍝      Sets rem (the remainder) and c (a÷b, floored).
    ⍝   a defaults to c.
-   ⍝   DivRemU returns the remainder as a U8 as well; that return value is
+   ⍝   DivRemU returns the remainder as a UL as well; that return value is
    ⍝   ignored — the remainder is in rem, not in statics[2].
       ∇ {rem}← {a} DivRem b; aP; bP; ⎕TRAP
         :Access Public
          ⎕TRAP← ∆TRAP
          :If 900⌶⍬ ⋄ a← ⎕THIS ⋄ :EndIf
-         rem← ⎕NEW ∆THIS                                             ⍝ remainder returned as a new gmpz
+         rem← ⎕NEW ∆THIS                                       ⍝ remainder returned as a new gmpz
          :Hold ∆STATICS
             aP← Ptr0 a
             :If IsUI b 
                ⎕SIGNAL divZÊ/⍨ 0= b
-               {}gNs.DivRemU ⍙ptr rem.ptr aP b                       ⍝ fdiv_qr_ui: remainder also returned as U8, ignored
+               {}gNs.DivRemU ⍙ptr rem.ptr aP b                 ⍝ fdiv_qr_ui: remainder also returned as UL, ignored
             :Else
                bP← Ptr1 b
                ⎕SIGNAL divZÊ/⍨ 0= PSignum bP
-               {}gNs.DivRem ⍙ptr rem.ptr aP bP                       ⍝ fdiv_qr: q=⍙ptr, r=remP
+               {}gNs.DivRem ⍙ptr rem.ptr aP bP                 ⍝ fdiv_qr: q=⍙ptr, r=remP
             :EndIf
          :EndHold
       ∇
@@ -690,14 +729,14 @@
             :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
             :If IsInt exp
                :If exp<0 ⋄ ⎕SIGNAL powÊ ⋄ :EndIf
-               :If exp>UI64_MAX ⋄ ⎕SIGNAL powÊ ⋄ :EndIf              ⍝ Pow (pow_ui) takes a U8 exponent
-               {}gNs.Pow ⍙ptr aP exp                                 ⍝ exp is a non-negative integer.
+               :If exp>UL_MAX ⋄ ⎕SIGNAL powÊ ⋄ :EndIf          ⍝ Pow (pow_ui) takes a UL exponent
+               {}gNs.Pow ⍙ptr aP exp                           ⍝ exp is a non-negative integer.
             ⍝ Integral Inverse: Do root.  ⍵ must be (nearly) ÷ an integer, e.g. ÷3,
             ⍝ and if the left operand is negative, ⍵ must be an odd number.
             ⍝ inv is assigned BEFORE it is used in the tolerance test below.
             :ElseIf (0=⊃0⍴exp) ∧ (1=≢,exp) ∧ (exp>0) ∧ (exp<1)
                inv← ⌊0.5+ ÷exp
-               :If (inv≥1) ∧ (1E¯9≥ |1- exp× inv) ∧ ((¯1≠ PSignum aP) ∨ 0≠2| inv)
+               :If (inv≥1) ∧ (inv≤UL_MAX) ∧ (1E¯9≥ |1- exp× inv) ∧ ((¯1≠ PSignum aP) ∨ 0≠2| inv)
                   {}gNs.Root ⍙ptr aP inv
                :Else
                   ⎕SIGNAL powÊ
@@ -717,15 +756,15 @@
         :Access Public
          ⎕TRAP← ∆TRAP
          :If 900⌶⍬ ⋄ a← ⎕THIS ⋄ :EndIf
-         exp mod← exp_mod                                            ⍝ Unpack exponent and modulus
+         exp mod← exp_mod                                      ⍝ Unpack exponent and modulus
          :Hold ∆STATICS
-            aP← Ptr0 a                                               ⍝ Base -> statics[0] if not a gmpz
-            expP← Ptr1 exp                                           ⍝ Exponent -> statics[1]
-            modP← Ptr2 mod                                           ⍝ Modulus -> statics[2]
-            ⎕SIGNAL powÊ/⍨ 0> PSignum expP                           ⍝ Exponent cannot be negative
-            ⎕SIGNAL divZÊ/⍨ 0= PSignum modP                          ⍝ Modulus cannot be zero
-            ⎕SIGNAL powÊ/⍨ 0> PSignum modP                           ⍝ Modulus cannot be negative
-            {}gNs.PowM ⍙ptr aP expP modP                             ⍝ Call GMP: ⍙ptr ← (aP ^ expP) % modP
+            aP← Ptr0 a                                         ⍝ Base -> statics[0] if not a gmpz
+            expP← Ptr1 exp                                     ⍝ Exponent -> statics[1]
+            modP← Ptr2 mod                                     ⍝ Modulus -> statics[2]
+            ⎕SIGNAL powÊ/⍨ 0> PSignum expP                     ⍝ Exponent cannot be negative
+            ⎕SIGNAL divZÊ/⍨ 0= PSignum modP                    ⍝ Modulus cannot be zero
+            ⎕SIGNAL powÊ/⍨ 0> PSignum modP                     ⍝ Modulus cannot be negative
+            {}gNs.PowM ⍙ptr aP expP modP                       ⍝ Call GMP: ⍙ptr ← (aP ^ expP) % modP
          :EndHold
          mpz← ⎕THIS
       ∇
@@ -744,10 +783,10 @@
             bP← Ptr1 b
             :If IsUI mod
                :Select mod
-                 :Case 0 ⋄ :If ⍙ptr≠ bP ⋄ {}gNs.Set ⍙ptr bP ⋄ :EndIf ⍝ b← 0|b
-                 :Case 2 ⋄ {}⎕THIS.Set gNs.TstBit bP 0               ⍝ ⎕THIS ← bit 0 of b
+                 :Case 0 ⋄ :If ⍙ptr≠ bP ⋄ {}gNs.Set ⍙ptr bP ⋄ :EndIf   ⍝ b← 0|b
+                 :Case 2 ⋄ {}⎕THIS.Set gNs.TstBit bP 0         ⍝ ⎕THIS ← bit 0 of b
                :Else
-                  :If mod≤UI64_MAX
+                  :If mod≤UL_MAX
                      {}gNs.FRemU ⍙ptr bP mod
                   :Else
                      modP← Ptr0 mod
@@ -756,8 +795,8 @@
                :EndSelect
             :Else
                modP← Ptr0 mod
-               :If 0= PSignum modP                                   ⍝ zero gmpz or string modulus
-                  :If ⍙ptr≠ bP ⋄ {}gNs.Set ⍙ptr bP ⋄ :EndIf          ⍝ b← 0| b
+               :If 0= PSignum modP                             ⍝ zero gmpz or string modulus
+                  :If ⍙ptr≠ bP ⋄ {}gNs.Set ⍙ptr bP ⋄ :EndIf    ⍝ b← 0| b
                :Else
                   {}gNs.FRem ⍙ptr bP modP
                :EndIf
@@ -775,9 +814,9 @@
          :If 900⌶⍬ ⋄ a← ⎕THIS ⋄ :EndIf
          :Hold ∆STATICS
             aP← Ptr0 a ⋄ modP← Ptr1 mod
-            ⎕SIGNAL divZÊ/⍨ 0= PSignum modP                          ⍝ Modulus cannot be zero
-            ⎕SIGNAL powÊ/⍨ 0> PSignum modP                           ⍝ Modulus cannot be negative
-            rc← gNs.Invert ⍙ptr aP modP                              ⍝ Returns non-zero on success, 0 if none
+            ⎕SIGNAL divZÊ/⍨ 0= PSignum modP                    ⍝ Modulus cannot be zero
+            ⎕SIGNAL powÊ/⍨ 0> PSignum modP                     ⍝ Modulus cannot be negative
+            rc← gNs.Invert ⍙ptr aP modP                        ⍝ Returns non-zero on success, 0 if none
          :EndHold
       ∇
       
@@ -790,21 +829,21 @@
       ⍝    h > 0  shift left  (multiply by 2*h, where * is power)
       ⍝    h < 0  shift right (divide by 2*|h|, truncating toward zero)
       ⍝    h = 0  copy b unchanged
-      ⍝    h must be an integer (else shiftÊ) and fit in a U8.
+      ⍝    h must be an integer (else shiftÊ) and fit in a UL.
          
          ∇ {mpz}← h Shift b; bP; ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
-            :If (0=⊃0⍴h) ∧ (h≠⌊h) ⋄ ⎕SIGNAL shiftÊ ⋄ :EndIf          ⍝ Non-integer numeric shift
-            h← ToInt h                                               ⍝ h: how much to shift (gmpz / string / APL int)
-            ⎕SIGNAL shiftÊ/⍨ |h>UI64_MAX                             ⍝ Shift amount must fit in a U8
+            :If (0=⊃0⍴h) ∧ (h≠⌊h) ⋄ ⎕SIGNAL shiftÊ ⋄ :EndIf    ⍝ Non-integer numeric shift
+            h← ToInt h                                         ⍝ h: how much to shift (gmpz / string / APL int)
+            ⎕SIGNAL shiftÊ/⍨ |h>UL_MAX                         ⍝ Shift amount must fit in a UL
             :Hold ∆STATICS
                bP← Ptr1 b
                :Select ×h
-                 :Case  1 ⋄ {}gNs.ShiftL ⍙ptr bP h                   ⍝ left shift: a multiplication by 2*h
-                 :Case ¯1 ⋄ {}gNs.ShiftR ⍙ptr bP (-h)                ⍝ right shift: a division by 2*|h|, truncating toward zero
+                 :Case  1 ⋄ {}gNs.ShiftL ⍙ptr bP h             ⍝ left shift: a multiplication by 2*h
+                 :Case ¯1 ⋄ {}gNs.ShiftR ⍙ptr bP (-h)          ⍝ right shift: a division by 2*|h|, truncating toward zero
                :Else
-                  :If ⍙ptr≠ bP ⋄ {}gNs.Set ⍙ptr bP ⋄ :EndIf          ⍝ Return mpz← b
+                  :If ⍙ptr≠ bP ⋄ {}gNs.Set ⍙ptr bP ⋄ :EndIf    ⍝ Return mpz← b
                :EndSelect
             :EndHold
             mpz← ⎕THIS
@@ -817,7 +856,7 @@
             :Hold ∆STATICS
                :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
                ix← ToInt ix
-               ⎕SIGNAL badBitIxÊ/⍨ ix<0
+               ⎕SIGNAL badBitIxÊ/⍨ (ix<0)∨(ix>UL_MAX)
                bit← gNs.TstBit aP ix
             :EndHold
          ∇
@@ -833,7 +872,7 @@
                ix val← 2↑ix_val, 1
                ix← ToInt ix
                val← ToInt val
-               ⎕SIGNAL badBitIxÊ/⍨ ix<0
+               ⎕SIGNAL badBitIxÊ/⍨ (ix<0)∨(ix>UL_MAX)
                ⎕SIGNAL badBitValÊ/⍨ ~val∊0 1
                :If val
                   {}gNs.SetBit aP ix
@@ -852,7 +891,7 @@
             :Hold ∆STATICS
                :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
                ix← ToInt ix
-               ⎕SIGNAL badBitIxÊ/⍨ ix<0
+               ⎕SIGNAL badBitIxÊ/⍨ (ix<0)∨(ix>UL_MAX)
                {}gNs.ClrBit aP ix
             :EndHold
             bit← 0
@@ -866,7 +905,7 @@
             :Hold ∆STATICS
                :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
                ix← ToInt ix
-               ⎕SIGNAL badBitIxÊ/⍨ ix<0
+               ⎕SIGNAL badBitIxÊ/⍨ (ix<0)∨(ix>UL_MAX)
                {}gNs.ComBit aP ix
                bit← gNs.TstBit aP ix
             :EndHold
@@ -877,7 +916,7 @@
             ⎕TRAP← ∆TRAP
             ∆io← ⍙CallerIO ⊃⎕RSI
             p0← ∆io-⍨ ToInt p0
-            ⎕SIGNAL badBitIxÊ/⍨ p0< 0
+            ⎕SIGNAL badBitIxÊ/⍨ (p0<0)∨(p0>UL_MAX)
             :Hold ∆STATICS
                :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
                p← ⍙Scan aP p0 bit
@@ -988,21 +1027,21 @@
            :Access Public Instance
             ∇ vals← get arg; ixs; ∆io; ⎕TRAP
                ⎕TRAP← ∆TRAP
-               ∆io← -⍙CallerIO ⊃⎕RSI                                 ⍝ See ⍙CallerIO: verify ⊃⎕RSI in Dyalog
+               ∆io← -⍙CallerIO ⊃⎕RSI                           ⍝ See ⍙CallerIO: verify ⊃⎕RSI in Dyalog
                ixs← ∆io+ ⊃arg.Indexers
-               ⎕SIGNAL badBitIxÊ/⍨ 0=≢,ixs                           ⍝ Empty indexer list is an error
-               ⎕SIGNAL  badBitIxÊ/⍨ ∨/ ixs<0
+               ⎕SIGNAL badBitIxÊ/⍨ 0=≢,ixs                     ⍝ Empty indexer list is an error
+               ⎕SIGNAL  badBitIxÊ/⍨ ∨/ (ixs<0)∨(ixs>UL_MAX)
                vals← (⍴ixs)⍴ {gNs.TstBit ⍙ptr ⍵}¨ixs
             ∇
             
             ∇ set arg; vals; ixs; ∆io; i; ⎕TRAP
                ⎕TRAP← ∆TRAP
-               ∆io← -⍙CallerIO ⊃⎕RSI                                 ⍝ See ⍙CallerIO: verify ⊃⎕RSI in Dyalog
+               ∆io← -⍙CallerIO ⊃⎕RSI                           ⍝ See ⍙CallerIO: verify ⊃⎕RSI in Dyalog
                ixs←  ,∆io+ ⊃arg.Indexers
-               ⎕SIGNAL badBitIxÊ/⍨ 0=≢,ixs                           ⍝ Empty indexer list is an error
-               ⎕SIGNAL badBitIxÊ/⍨ ∨/ ixs<0                          ⍝ Negative indices are an error (get checks too)
-               vals← ,(⍴ixs)⍴ arg.NewValue                            ⍝ Expand single bit => bit vector
-               :For i :In ⍳≢ixs                                      ⍝ ⎕IO←0 here, so ⍳ gives 0-origin indices
+               ⎕SIGNAL badBitIxÊ/⍨ 0=≢,ixs                     ⍝ Empty indexer list is an error
+               ⎕SIGNAL badBitIxÊ/⍨ ∨/ (ixs<0)∨(ixs>UL_MAX)     ⍝ Negative indices are an error (get checks too)
+               vals← ,(⍴ixs)⍴ arg.NewValue                     ⍝ Expand single bit => bit vector
+               :For i :In ⍳≢ixs                                ⍝ ⎕IO←0 here, so ⍳ gives 0-origin indices
                   :If (i⊃vals)=1
                      {}gNs.SetBit ⍙ptr (i⊃ixs)
                   :ElseIf (i⊃vals)=0
@@ -1019,25 +1058,23 @@
    ⍝ ───────────────────────────────────────────────────────────────────────────────
       ⍝:Section (Pseudo-)Monadic - Factorial
       ⍝ ───────────────────────────────────────────────────────────────────────────────
-      ⍝  mpz.Fac n   →→   mpz← !n.    n must be a 32-bit unsigned integer:  0 ≤ num ≤¯1+2*32.
-      ⍝    n may be an APL integer, an integer string, or a gmpz that fits in a
-      ⍝    32-bit (not 64-bit) unsigned integer.
+      ⍝  mpz.Fac n   →→   mpz← !n.    n must be a non-negative integer fitting in a
+      ⍝    C unsigned long: 0 ≤ num ≤ UL_MAX (32-bit on Windows, 64-bit elsewhere).
+      ⍝    n may be an APL integer, an integer string, or a gmpz.
       ⍝  Large factorials are limited only by memory and time.
-      ⍝  The 32-bit limit (not 64-bit) is for Windows portability: mpz_fac_ui
-      ⍝  takes an unsigned long, which is 32-bit on Windows.
          ∇ {mpz}← Fac num; ok; ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
             :If IsMpz num
-               num← num.Int                                          ⍝ Issues its own error, if needed!
-            :ElseIf ' '=⊃0⍴num
+               num← num.Int                                    ⍝ Issues its own error, if needed!
+            :ElseIf IsStr num 
                ok num← ⎕VFI num
                ⎕SIGNAL facBadÊ/⍨ ~ok
-            :EndIf
-            :If (num> UI32_MAX) ∨ (num < 0) ∨ num≠ ⌊num              ⍝  Valid: 0 ≤ num ≤¯1+2*32
+               ⎕SIGNAL facBadÊ/⍨ ~IsUI num
+            :ElseIf ~IsUI num                                      
                ⎕SIGNAL facBadÊ
             :EndIf
-            {} gNs.Fac ⍙ptr num
+            {} gNs.Fac ⍙ptr num                  
             mpz← ⎕THIS
          ∇
       ⍝:EndSection (Pseudo-)Monadic - Factorial
@@ -1063,8 +1100,8 @@
                :Else     ⋄ aP← Ptr0 a
                :EndIf
                :If (IsInt b) 
-               :AndIf (b≥¯2*63) 
-               :AndIf (b<2*63)
+               :Andif (b≥-IL_MAX-1)  
+               :Andif (b≤IL_MAX)    
                   rc← ×gNs.CmpI aP b
                :Else
                   rc← ×gNs.Cmp aP (Ptr1 b)
@@ -1124,7 +1161,7 @@
       ⍝ Each function passes a GMP randstate state variable, which is allocated on first use of Rand or RandSeed.
       ⍝ See also RandSeed below.
          
-      ⍝ {c}← c.Rand b                                                ⍝  c← a random # r in range: (⎕IO) ≤ r < (b+1+⎕IO).    Sensitive to ⎕IO.
+      ⍝ {c}← c.Rand b                                          ⍝  c← a random # r in range: (⎕IO) ≤ r < (b+1+⎕IO).    Sensitive to ⎕IO.
       ⍝   b: a valid mpz, integer, or integer string.
       ⍝ An alias to c is returned.
       ⍝
@@ -1150,7 +1187,7 @@
             ⎕TRAP← ∆TRAP
             :If ⎕NULL≡rsInstance ⋄ rsInstance← ⎕NEW randState ⋄ :EndIf
             nbits← ToInt nbits
-            ⎕SIGNAL randÊ/⍨ (nbits<0) ∨ (nbits>UI64_MAX)
+            ⎕SIGNAL randÊ/⍨ (nbits<0) ∨ (nbits>UL_MAX)
             {}gNs.URandomB ⍙ptr rsInstance.ptr nbits
             :If (⊃⎕RSI).⎕IO
                {}gNs.AddU ⍙ptr ⍙ptr 1
@@ -1159,12 +1196,12 @@
          ∇
          
          
-      ⍝ gmpz.RandSeed ui, where u8 is a U8 integer.
-      ⍝ To seed with a random APL 64-bit integer (using system entropy), use RandSeed 0.
+      ⍝ gmpz.RandSeed ui, where u8 is a UL integer.
+      ⍝ To seed with a random APL integer (using system entropy), use RandSeed 0.
       ⍝ Returns the old seed in string form.
       ⍝
-      ⍝ At initialisation, the random seed is ?1E18 (with ⎕FR=1287), i.e. is seeded from a random APL 64-bit integer,
-      ⍝ based on system entropy (⎕RL using RNG2).
+      ⍝ At initialisation, the random seed is ?UL_MAX (with ⎕FR=1287), i.e. seeded from
+      ⍝ a random APL integer, based on system entropy (⎕RL using RNG2).
       ⍝ If you want predictable sequences (out of a larger range), reset it using RandSeed.
          ∇ {old}← RandSeed u8  ; ⎕TRAP
            :Access Public Shared
@@ -1173,8 +1210,8 @@
             u8← ToInt u8
             ⎕SIGNAL randSeedÊ/⍨ ~IsUI u8
             
-            :If u8= 0 ⋄ u8← 1+ ?¯2+2*63 ⋄ :EndIf                     ⍝ 1 to ¯1+2*63.
-            {}gNs.RandSeedU rsInstance.ptr u8                        ⍝ rsInstance.ptr is its C-language pointer
+            :If u8= 0 ⋄ u8← 1+ ?WINDOWS⊃¯2+2*63 ¯1+2*32 ⋄ :EndIf ⍝ 1 to UL_MAX.
+            {}gNs.RandSeedU rsInstance.ptr u8                  ⍝ rsInstance.ptr is its C-language pointer
             
             old← ⍕⊃randState.seeds
             randState.seeds← 2↑ u8, randState.seeds
@@ -1214,13 +1251,23 @@
    ⍝ ───────────────────────────────────────────────────────────────────────────────
       ⍝:Section Niladic - Export
       ⍝ ───────────────────────────────────────────────────────────────────────────────
-      ⍝  int← ⍵.Int   - Returns ⍵ in APL 64-bit integer (i.e. decimal float) form, if it fits!
+      ⍝  int← ⍵.IntMpz   - Returns ⍵ in APL 64-bit integer (i.e. decimal float) form, if it fits!
       ⍝                 Errors: badIntÊ if the value does not fit in a signed 64-bit integer.
-         ∇ int← Int   ; ⎕TRAP
+         ∇ i64← Int    ; ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
             ⎕SIGNAL badIntÊ/⍨ ~gNs.IntFits ⍙ptr
-            int← gNs.Int ⍙ptr
+         ⍝ ⎕← ⌷⎕THIS
+            i64← gNs.Int ⍙ptr
+         ∇
+      ⍝ Int← ⍵.Int  This uses APL's ⎕VFI, which-- under ⎕FR=1287-- allows larger integers up to:
+      ⍝   999999999999999999999999999999999, i.e. ¯1+10*34
+         ∇ i64← IntApl   ; ⎕TRAP
+           :Access Public
+            ⎕TRAP← ∆TRAP
+            ok i64← ⎕VFI ⌷⎕THIS 
+            ⎕SIGNAL badIntÊ/⍨ (i64> I128_Max) ~ok 
+            i64← ⍬⍴i64 
          ∇
       ⍝ rc int← ⍵.VFI;  If ⍵ fits into an APL decimal float format, returns (1 int), int as above,
       ⍝                 else returns (0 0).
@@ -1242,11 +1289,11 @@
             ⎕TRAP← ∆TRAP
             base← ToInt base
             ⎕SIGNAL badAplÊ/⍨ (base<2) ∨ (base>62)
-            n← 2+ gNs.SizeInBase ⍙ptr base                           ⍝ digits + possible sign + NUL
+            n← 2+ gNs.SizeInBase ⍙ptr base                     ⍝ digits + possible sign + NUL
          ⍝ Create a place in APL for the null-terminated string. from GetStr
-            str← '¯'@('-'∘=)⊢ gNs.GetStr (n⍴⎕UCS 0) base ⍙ptr        ⍝ Import that result
+            str← '¯'@('-'∘=)⊢ gNs.GetStr (n⍴⎕UCS 0) base ⍙ptr  ⍝ Import that result
          ∇
-
+         
       ⍝  str← {base←10} gmpz.Get b, where b is gmpz, string, or integer.
       ⍝  Value is in the specified base.
          ∇ str←  {base} Get b  ; ⎕TRAP
@@ -1345,19 +1392,19 @@
       ⍝ ───────────────────────────────────────────────────────────────────────────────
       ⍝  len← obj.StrLen : Returns the number of characters required by the object in APL,
       ⍝                   including the sign, if any.  Equivalent to ≢⌷x.
-      ⍝  Example:   (bigNum.StrLen ≡ ≢⌷bigNum)                       ⍝ Returns 1 for gmpz objects.
+      ⍝  Example:   (bigNum.StrLen ≡ ≢⌷bigNum)                 ⍝ Returns 1 for gmpz objects.
       ⍝     len← x.StrLen : number of characters ⌷x would have, including a leading '¯'.
       ⍝  Exact, without generating the string.
          ∇ len← StrLen ; n; v; t; ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
-            n← gNs.SizeInBase ⍙ptr 10                                ⍝ true digit count, or 1 too many
-            :If n≤ 18                                                ⍝ always fits an I8: stay in APL
+            n← gNs.SizeInBase ⍙ptr 10                          ⍝ true digit count, or 1 too many
+            :If n≤ (⍴⍕IL_MAX)-1                                ⍝ always fits an IL: stay in APL
                v← gNs.Int ⍙ptr
-               len← (n- (n>1)∧ (|v)< 10*n-1) + v<0                   ⍝ n=1 is exact (guards 0)
+               len← (n- (n>1)∧ (|v)< 10*n-1) + v<0             ⍝ n=1 is exact (guards 0)
             :Else
-               t← ⎕NEW ∆THIS                                         ⍝ scratch; freed on exit
-               {}gNs.UiPow t.ptr 10 (n-1)                            ⍝ t ← 10*n-1
+               t← ⎕NEW ∆THIS                                   ⍝ scratch; freed on exit
+               {}gNs.UiPow t.ptr 10 (n-1)                      ⍝ t ← 10*n-1
                len← (n- 0> gNs.CmpAbs ⍙ptr t.ptr) + ¯1= PSignum ⍙ptr
             :EndIf
          ∇
@@ -1429,7 +1476,7 @@
    ⍝ ───────────────────────────────────────────────────────────────────────────────
       ∇ res← {a}(fn GI)b
            ; c; nm
-           ; ⎕TRAP                                                   ⍝ ⎕ML ⎕IO from caller
+           ; ⎕TRAP                                             ⍝ ⎕ML ⎕IO from caller
            ; Atom; DmxSig; unknownÊ
          
          ⎕ML← 1
@@ -1437,57 +1484,57 @@
          unknownÊ← ⊂('EN' 11 ⋄ 'Message' 'Unknown operand')
          ⎕TRAP← 0 'E' 'DmxSig⍬'
          Atom← { 1= ≢f← ∊⎕NR ⍵: ⍬⍴f ⋄ f}
-         nm← Atom 'fn'                                               ⍝ the primitive glyph of the operand
-         res← c← ⎕NEW gmpz                                           ⍝ new result obj, freed per gmpz class
+         nm← Atom 'fn'                                         ⍝ the primitive glyph of the operand
+         res← c← ⎕NEW gmpz                                     ⍝ new result obj, freed per gmpz class
          
          :If 900⌶⍬
          ⍝  MONADIC
             :Select nm
-              :Case '-' ⋄ c.Neg b                                    ⍝ c← -b
-              :Case '|' ⋄ c.Abs b                                    ⍝ c← |b
-              :Case '?' ⋄ c.Rand b                                   ⍝ c← ?b
-              :Case '×' ⋄ res← (c.Set b).Signum                      ⍝ c← ×b
-              :Case '!' ⋄ c.Fac b                                    ⍝ c← !b
-              :Case '<' ⋄ (c.Set b).Dec                              ⍝ c← b-1
-              :Case '>' ⋄ (c.Set b).Inc                              ⍝ c← b+1
-              :Case '≢' ⋄ res← (c.Set b).StrLen                      ⍝ int← ≢⌷b
-              :Case '⍎' ⋄ res← (c.Set b).Int                         ⍝ int← b.Int
-              :Case '⌷' ⋄ res← ⌷(c.Set b)                            ⍝ str← ⌷b, for a gmpz, string, or APL integer b
-              :Case '⊥' ⋄ c.Set b 
-              :Case '⊂' ⋄ c.Set b ⊣ ⎕← '⊂GI is obsolete'                                   ⍝ mpz← ⎕NEW mpz b
+              :Case '-' ⋄ c.Neg b                              ⍝ c← -b
+              :Case '|' ⋄ c.Abs b                              ⍝ c← |b
+              :Case '?' ⋄ c.Rand b                             ⍝ c← ?b
+              :Case '×' ⋄ res← (c.Set b).Signum                ⍝ c← ×b
+              :Case '!' ⋄ c.Fac b                              ⍝ c← !b
+              :Case '<' ⋄ (c.Set b).Dec                        ⍝ c← b-1
+              :Case '>' ⋄ (c.Set b).Inc                        ⍝ c← b+1
+              :Case '≢' ⋄ res← (c.Set b).StrLen                ⍝ int← ≢⌷b
+              :Case '⍎' ⋄ res← (c.Set b).IntApl                ⍝ int← b.IntApl
+              :Case '⌷' ⋄ res← ⌷(c.Set b)                      ⍝ str← ⌷b, for a gmpz, string, or APL integer b
+              :Case '⊤' ⋄ res← gmpz.Get b                      ⍝ retrieve value of b as a string
+              :Case '⊥' ⋄ c.Set b                              ⍝ return a copy of b  
             :Else ⋄ ⎕SIGNAL unknownÊ
             :EndSelect
          :Else
          ⍝   DYADIC
             :Select nm
-              :Case '+'   ⋄ a c.Add b                                ⍝ c← a + b
+              :Case '+'   ⋄ a c.Add b                          ⍝ c← a + b
               :Case '-'   ⋄ a c.Sub b
               :Case '×'   ⋄ a c.Mul b
-              :Case '÷'   ⋄ a c.Div b                                ⍝ c← a÷b.  floored; 0 divisor → divZÊ
-              :Case '*'   ⋄ a c.Pow b                                ⍝ a^n.  n may be ÷m, where m is an integer, like ⍺*0.5 in std Apl.
-              :Case '∨'   ⋄ a c.Gcd b                                ⍝ mpz← a∨b
-              :Case '∧'   ⋄ a c.Lcm b                                ⍝ mpz← a∧b
-              :Case '|'   ⋄ a c.Res b                                ⍝ a is the modulus (APL int), b the value
-              :Case '⌽'   ⋄ a c.Shift b                              ⍝ a is the shift (APL int), b the value
-              :Case '⍳'   ⋄ res← a c.Iota b                          ⍝ a⍳i, where i∊ 0 1
-              :Case '<'   ⋄ res← a c.Lt b                            ⍝ c← a< b. comparisons return boolean 0/1 directly
+              :Case '÷'   ⋄ a c.Div b                          ⍝ c← a÷b.  floored; 0 divisor → divZÊ
+              :Case '*'   ⋄ a c.Pow b                          ⍝ a^n.  n may be ÷m, where m is an integer, like ⍺*0.5 in std Apl.
+              :Case '∨'   ⋄ a c.Gcd b                          ⍝ mpz← a∨b
+              :Case '∧'   ⋄ a c.Lcm b                          ⍝ mpz← a∧b
+              :Case '|'   ⋄ a c.Res b                          ⍝ a is the modulus (APL int), b the value
+              :Case '⌽'   ⋄ a c.Shift b                        ⍝ a is the shift (APL int), b the value
+              :Case '⍳'   ⋄ res← a c.Iota b                    ⍝ a⍳i, where i∊ 0 1
+              :Case '<'   ⋄ res← a c.Lt b                      ⍝ c← a< b. comparisons return boolean 0/1 directly
               :Case '≤'   ⋄ res← a c.Le b
               :Case '='   ⋄ res← a c.Eq b
               :Case '≠'   ⋄ res← a c.Ne b
               :Case '≥'   ⋄ res← a c.Ge b
               :Case '>'   ⋄ res← a c.Gt b
-              :Case '⌷'   ⋄ res← (c.Set b).Bit[a]                            ⍝ bool← b.Bit [a]
-              :Case '⊤'   ⋄ res←a gmpz.Get b 
-              :Case '⊥'   ⋄ a c.Set b                                  ⍝ mpz← a c.Set b: b in base a.
-              :Case '*∘|' ⋄ a c.PowM b                               ⍝ mpz← mod| a*exp where (exp mod)←b .
-              :Case '÷∘|' ⋄ res← c, a c.DivRem b                     ⍝ mpz1 mpz2← (a÷b) (b|a).
+              :Case '⌷'   ⋄ res← (c.Set b).Bit[a]              ⍝ bool← b.Bit [a]
+              :Case '⊤'   ⋄ res← a gmpz.Get b                  ⍝ retrieve value of b as a string in base a.
+              :Case '⊥'   ⋄ a c.Set b                          ⍝ return copy of b in base a
+              :Case '*∘|' ⋄ a c.PowM b                         ⍝ mpz← mod| a*exp where (exp mod)←b .
+              :Case '÷∘|' ⋄ res← c, a c.DivRem b               ⍝ mpz1 mpz2← (a÷b) (b|a).
             :Else ⋄ ⎕SIGNAL unknownÊ
             :EndSelect
          :EndIf
       ∇
-
+      
       InitStatics
-      ##.⎕FX '\bgmpz\b' ⎕R (⍕⎕THIS)⊢⎕NR 'GI'                         ⍝ Be sure GI refers to this gmpz
+      ##.⎕FX '\bgmpz\b' ⎕R (⍕⎕THIS)⊢⎕NR 'GI'                   ⍝ Be sure GI refers to this gmpz
       ⎕← 'Created class ',(⍕⎕THIS),', operator ',(⍕⎕THIS),'.GI'
       
    :EndClass
