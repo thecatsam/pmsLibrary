@@ -486,7 +486,7 @@
      rep,←⊂Chk(⊂'GI ≢12345 StrLen')(⊂5)(⊂(≢GI'12345'))
      rep,←⊂Chk(⊂'GI ⍎123 Int')(⊂123)(⊂(⍎GI'123'))
      rep,←⊂Chk(⊂'GI ⌷123 string')(⊂'123')(⊂(⌷GI 123))
-     rep,←⊂Chk(⊂'GI ⊂123 fresh gmpz')(⊂'123')(⊂(⌷(⊂GI'123')))
+    rep,←⊂Chk(⊂'GI ⊥123 fresh gmpz')(⊂'123')((⊂⌷(⊥GI'123')))
      ok←1
      :For i :In ⍳20
          v←((?GI 10).Int)
