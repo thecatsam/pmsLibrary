@@ -3,7 +3,7 @@ cd /Users/petermsiegel/MyDyalogLibrary/pmsLibrary/src
 
 echo Running from `pwd`
 # $duck: The <ps> pattern we'll look for...
-duck="/Dyalog-20"
+duck="/Dyalog-2\d"
 
 # Include:
 #    a) anyone's procs b) keep those w/ $duck c) discard those w/ grep d) return only the pid
