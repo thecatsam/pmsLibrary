@@ -30,7 +30,7 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 
 | Call | Result |
 | :------------------------------------------------------------------------- | :---- |
-| `str← ⌷a` | a in base 10 as a string (any length). |
+| `str← ⌷a` | *a* in base 10 as a string (any length). |
 | `a.Set value / base a.Set value` | Overwrite **a** with value (base applies to strings only, default 10). Returns **a** itself (shy), so calls can be chained. |
 | `int← a.Int` | a as an APL integer (signed 64-bit). Error (badIntÊ) if it doesn't fit. |
 | `ok int← a.VFI` | 1 n if it fits in 64 bits, else 0 0\. Never errors. |
@@ -78,7 +78,7 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 \[a\]: if a is omitted, it defaults to the receiver c.
 
 | Method | Meaning | Notes |
-| :------------------------------------------- | :----------- | :---------- |
+| :------------------------------------------------------------------------------------------ | :----------- | :---------- |
 | `[a] c.Add b` | `c ← a + b` |  |
 | `[a] c.Sub b` | `c ← a − b` |  |
 | `[a] c.Mul b` | `c ← a × b` |  |
