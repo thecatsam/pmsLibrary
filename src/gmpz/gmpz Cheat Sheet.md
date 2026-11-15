@@ -78,12 +78,12 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 \[a\]: if a is omitted, it defaults to the receiver c.
 
 | Method | Meaning | Notes |
-| :------------------------------------------------------------------------------------------ | :----------- | :---------- |
+| :----------------------------------------------------------------------------------------------- | :----------- | :---------- |
 | `[a] c.Add b` | `c ← a + b` |  |
 | `[a] c.Sub b` | `c ← a − b` |  |
 | `[a] c.Mul b` | `c ← a × b` |  |
 | `[a] c.Div b` | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b.` Signals divZÊ if b is 0\. |
-| `rem←&nbsp;[a]&nbsp;c.DivRem&nbsp;m` | `c ← ⌊a÷m, returns rem← m\|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ 2\*64-1). |
+| `rem← [a] c.DivRem m` | `c ← ⌊a÷m, returns rem← m\|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ 2\*64-1). |
 | `m c.Res b` | `c ← m\|b` | APL residue, floored (sign follows m). 0\|b is b. Dyadic only. |
 | `[a] c.Gcd b` | `c ← a∨b` | ≥ 0\. Greatest common divisor. |
 | `[a] c.Lcm b` | `c ← a∧b` | ≥ 0\. Least common multiple. |
@@ -97,7 +97,7 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 | `c.Fac n` | `c ← !n` | n ≥ 0; n may be an integer, string or mpz. n must be ≤ 2\*32-1 (facBadÊ otherwise). Large results are limited only by memory. |
 | `c.Inc` | `c ← c+1` | Niladic. |
 | `c.Dec` | `c ← c−1` | Niladic. |
-| `bool←\ c.Divisible\ b` | `1 if b divides c` | b=0: true only if c is 0\. |
+| `bool← c.Divisible b` | `1 if b divides c` | b=0: true only if c is 0\. |
 
 ```
     c← ⎕NEW gmpz 
@@ -195,7 +195,7 @@ Uses GMP's Mersenne Twister in a single shared random state, created on first us
    c← ⎕NEW gmpz '123456789012345678901234567890' 
    r← ⎕NEW gmpz r.RandSeed 42                  ⍝ seed (like gmp_randseed_ui) 
    r.Rand c                                    ⍝ r ← uniform in 0 ≤ r < c 
-   ⌷r r.RandB 256                              ⍝ r ← uniform in 0 … 2*256−1
+   ⌷r r.RandB 256                              ⍝ r ← uniform in 0 ≤ r ≤ 2*256−1
 ```
 
 | Method | Meaning |
