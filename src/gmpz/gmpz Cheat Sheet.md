@@ -44,7 +44,7 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 | `int← a.ptr` | Address of the underlying GMP object. Be careful\! |
 
 **Memory:** A gmpz object and its GMP storage are allocated for you. They are freed automatically, when the object goes out of scope; when ⎕EX is executed on the object, when the workspace is cleared, or when the session ends. The random-number state is created the first time you call Rand, RandB or RandSeed. 
-***Set DEBUG←1 in the class to trace allocations and frees.***
+Set **DEBUG←1** in the class source to trace allocations and frees.***
 
 # **2\.  The operating model**
 
@@ -146,7 +146,7 @@ a.Bit[3]                    ⍝ → 1
 a.Bit[0 1 2]← 1 0 1         ⍝ set several bits at once → a is 13 (1101₂) 
 a.Bit[0 2 3]                ⍝ read several bits → 1 1 1 
 a.Bit[2]← 0                 ⍝ clear bit 2 → a is 9 (1001₂) 
-a.Len                       ⍝ bit length of a (4) 
+a.Len                       ⍝ bit length of **a** (4) 
 a.Bits                      ⍝ 1 0 0 1   (most-significant bit first)
 ```
 
@@ -297,7 +297,6 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 7. Strings may use the high minus (¯) on input; it is converted to −.  
 8. The base (2 through 62\) only matters when importing numeric strings; it is ignored for other operand types.  
 9. a.Int only succeeds when the value fits a signed 64-bit integer; use VFI to test safely. Set ⎕FR←1287 in your session if you manipulate 64-bit integers.  
-10. **Len** is the exact bit length of \|a\| — do not apply StrLen's base-10 correction, and do not add anything for a negative.
 
 # 
 
