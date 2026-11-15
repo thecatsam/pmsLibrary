@@ -80,7 +80,7 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 | `[a] c.Sub b` | `c ← a − b` |  |
 | `[a] c.Mul b` | `c ← a × b` |  |
 | `[a] c.Div b` | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b.` Signals divZÊ if b is 0\. |
-| `rem← [a] c.DivRem m` | `c ← ⌊a \÷ m, returns rem← m|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ 2\*64-1). |
+| `rem← [a] c.DivRem m` | `c ← ⌊a ÷ m, returns rem← m|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ 2\*64-1). |
 | `m c.Res b` | `c ← m|b` | APL residue, floored (sign follows m). 0\|b is b. Dyadic only. |
 | `[a] c.Gcd b` | `c ← a∨b` | ≥ 0\. Greatest common divisor. |
 | `[a] c.Lcm b` | `c ← a∧b` | ≥ 0\. Least common multiple. |
