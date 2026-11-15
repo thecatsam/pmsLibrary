@@ -5,7 +5,7 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 # **Setup**
 
 ```
-\]load gmpz 
+]load gmpz 
 ⎕FR← 1287        ⍝ in YOUR session: makes APL integers up to 2*63 exact` |
 ``` 
 
@@ -29,7 +29,7 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 ```
 
 | Call | Result |
-| :---- | :---- |
+| :--------------------------------------------- | :---- |
 | `str← ⌷a` | a in base 10 as a string (any length). |
 | `a.Set value / base a.Set value` | Overwrite a with value (base applies to strings only, default 10). Returns a itself (shy), so calls can be chained. |
 | `int← a.Int` | a as an APL integer (signed 64-bit). Error (badIntÊ) if it doesn't fit. |
