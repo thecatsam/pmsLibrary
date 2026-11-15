@@ -31,16 +31,16 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 | Call | Result |
 | :------------------------------------------------------------------------- | :---- |
 | `str← ⌷a` | a in base 10 as a string (any length). |
-| `a.Set value / base a.Set value` | Overwrite a with value (base applies to strings only, default 10). Returns a itself (shy), so calls can be chained. |
+| `a.Set value / base a.Set value` | Overwrite **a** with value (base applies to strings only, default 10). Returns **a** itself (shy), so calls can be chained. |
 | `int← a.Int` | a as an APL integer (signed 64-bit). Error (badIntÊ) if it doesn't fit. |
 | `ok int← a.VFI` | 1 n if it fits in 64 bits, else 0 0\. Never errors. |
 | `int← a.StrLen` | Number of characters in ⌷a, including the leading ¯. Same as ≢⌷a, without building the string. |
 | `int← a.Len` | Exact number of bits in (\|a) — e.g. 8 and ¯8 are both Len 4, and 0 is Len 1\. Signs do not affect it. |
-| `str← a.GetInBase n` | a as a string in base n (2 ≤ n ≤ 62). |
+| `str← a.GetInBase n` | **a** as a string in base n (2 ≤ n ≤ 62). |
 | `int← a.Signum` | ¯1, 0 or 1\. |
 | `bool← a.Even / a.Odd` | 1 or 0 (result is shy — see §10 Gotchas). |
 | `bool← a.Bit[i1 i2 …]` | Read bits. Honours ⎕IO. See §5. |
-| `bits← a.Bits` | a as a boolean vector, most-significant bit first. Read-only. Non-negative values only — signals badObjÊ for a negative. |
+| `bits← a.Bits` | **a** as a boolean vector, most-significant bit first. Read-only. Non-negative values only — signals badObjÊ for a negative. |
 | `int← a.ptr` | Address of the underlying GMP object. Be careful\! |
 
 **Memory:** A gmpz object and its GMP storage are allocated for you. They are freed automatically, when the object goes out of scope; when ⎕EX is executed on the object, when the workspace is cleared, or when the session ends. The random-number state is created the first time you call Rand, RandB or RandSeed. 
