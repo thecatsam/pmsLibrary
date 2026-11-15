@@ -33,7 +33,7 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 | `int← a.Int` | a as an APL integer (signed 64-bit). Error (badIntÊ) if it doesn't fit. |
 | `ok int← a.VFI` | 1 n if it fits in 64 bits, else 0 0\. Never errors. |
 | `int← a.StrLen` | Number of characters in ⌷a, including the leading ¯. Same as ≢⌷a, without building the string. |
-| `int← a.Len` | Exact number of bits in \|a\| — e.g. 8 and ¯8 are both Len 4, and 0 is Len 1\. Signs do not affect it. |
+| `int← a.Len` | Exact number of bits in (\|a) — e.g. 8 and ¯8 are both Len 4, and 0 is Len 1\. Signs do not affect it. |
 | `str← a.GetInBase n` | a as a string in base n (2 ≤ n ≤ 62). |
 | `int← a.Signum` | ¯1, 0 or 1\. |
 | `bool← a.Even / a.Odd` | 1 or 0 (result is shy — see §10 Gotchas). |
@@ -302,7 +302,7 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 
 Implement a simplified[^1] **RSA key generation, encryption, and decryption** workflow. This demonstrates the core lifecycle of GMP integers: initialization, random prime generation, modular arithmetic, modular inverse, and memory cleanup.
 
-## EXAMPLE 
+## **Example**
 ```
 ∇ ret←  GmpzExample msgIn 
 ⍝ Descr: Simplified 1024-bit RSA public-key encryption and decryption of Unicode string 
