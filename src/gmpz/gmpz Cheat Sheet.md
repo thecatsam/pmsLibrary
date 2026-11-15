@@ -115,8 +115,12 @@ There are no .\< or .\> methods — use the named forms below. If a is omitted, 
 | `[a] c.Ge b` | `a ≥ b` | `0 or 1` |
 | `[a] c.Gt b` | `a > b` | `0 or 1` |
 
-| `c.Gt 100                       ⍝ is c > 100 ? '1234567890123456' c.Eq y      ⍝ string vs gmpz` |
-| :---- |
+``` 
+    c.Gt 100                       ⍝ is c > 100 ?  
+1                                  ⍝ Output is simple integer ¯1 0 or 1 
+   '1234567890123456' c.Eq y       ⍝ string vs gmpz 
+0                                  ⍝ Output is simple boolean 0 or 1 
+```  
 
 # **5\.  Retrieving and manipulating bits**
 
@@ -124,8 +128,16 @@ a.Bit\[ix\] reads or writes individual bits in place. The least significant bit 
 
 *Known issue: Bit and Bits have a known problem, left as-is for now. Treat the examples below as the intended behaviour, and verify against your build if a result looks off.*
 
-| `a← ⎕NEW gmpz 15             ⍝ 1111₂ a.Bit[0 1 2]← 0             ⍝ a is now 8 (1000₂) a.Bit[3]                    ⍝ → 1 a.Bit[0 1 2]← 1 0 1         ⍝ set several bits at once → a is 13 (1101₂) a.Bit[0 2 3]                ⍝ read several bits → 1 1 1 a.Bit[2]← 0                 ⍝ clear bit 2 → a is 9 (1001₂) a.Len                       ⍝ bit length of a (4) a.Bits                      ⍝ 1 0 0 1   (most-significant bit first)` |
-| :---- |
+```
+a← ⎕NEW gmpz 15             ⍝ 1111₂ 
+a.Bit[0 1 2]← 0             ⍝ a is now 8 (1000₂) 
+a.Bit[3]                    ⍝ → 1 
+a.Bit[0 1 2]← 1 0 1         ⍝ set several bits at once → a is 13 (1101₂) 
+a.Bit[0 2 3]                ⍝ read several bits → 1 1 1 
+a.Bit[2]← 0                 ⍝ clear bit 2 → a is 9 (1001₂) 
+a.Len                       ⍝ bit length of a (4) 
+a.Bits                      ⍝ 1 0 0 1   (most-significant bit first)
+```
 
 | Form | Meaning |
 | :---- | :---- |
@@ -168,8 +180,12 @@ Iota and Scan are ⎕IO-sensitive, returning the largest possible U8 value when 
 
 Uses GMP's Mersenne Twister in a single shared random state, created on first use and seeded from system entropy until you call RandSeed. Rand and RandB are ⎕IO-sensitive — in ⎕IO←1 Rand returns 1…b and RandB returns 1…2\*n (in ⎕IO←0, 0…b-1 and 0…2\*n-1).
 
-| `c← ⎕NEW gmpz '123456789012345678901234567890' r← ⎕NEW gmpz r.RandSeed 42                  ⍝ seed (like gmp_randseed_ui) r.Rand c                       ⍝ r ← uniform in 0 ≤ r < c ⌷r r.RandB 256                    ⍝ r ← uniform in 0 … 2*256−1` |
-| :---- |
+```
+   c← ⎕NEW gmpz '123456789012345678901234567890' 
+   r← ⎕NEW gmpz r.RandSeed 42                  ⍝ seed (like gmp_randseed_ui) 
+   r.Rand c                                    ⍝ r ← uniform in 0 ≤ r < c 
+   ⌷r r.RandB 256                              ⍝ r ← uniform in 0 … 2*256−1
+```
 
 | Method | Meaning |
 | :---- | :---- |
@@ -183,8 +199,16 @@ Only one random state exists for all objects; reseeding anywhere affects every l
 
 # **7\.  Primes and number theory**
 
-| `rc← c.ProbabPrime ⍬        ⍝ ⍬ or 0: default of 24 Miller-Rabin reps rc← c.ProbabPrime 15       ⍝ 15 reps (15–50 is reasonable)                            ⍝ rc: 2 definitely prime, 1 probably prime, 0 not prime   c.NextPrime n              ⍝ c ← next prime > n c.PrevPrime n              ⍝ c ← greatest prime < n (c rc)← c.PrevPrime2 n     ⍝ Like PrevPrime, but also returns rc: 2 yes, 1 likely, 0 none   rc← [a] c.Jacobi b         ⍝ Jacobi symbol (a/b): ¯1, 0 or 1. b must be odd (badAplÊ if even). rc← [a] c.Invert m         ⍝ modular inverse (see §3)` |
-| :---- |
+```
+⍝  rc: 2 definitely prime, 1 probably prime, 0 not prime   
+   rc← c.ProbabPrime ⍬        ⍝ ⍬ or 0: default of 24 Miller-Rabin reps 
+   rc← c.ProbabPrime 15       ⍝ 15 reps (15–50 is reasonable)                            
+   c.NextPrime n              ⍝ c ← next prime > n 
+   c.PrevPrime n              ⍝ c ← greatest prime < n 
+   (c rc)← c.PrevPrime2 n     ⍝ Like PrevPrime, but also returns rc: 2 yes, 1 likely, 0 none   
+   rc← [a] c.Jacobi b         ⍝ Jacobi symbol (a/b): ¯1, 0 or 1. b must be odd (badAplÊ if even). 
+   rc← [a] c.Invert m         ⍝ modular inverse (see §3)
+```
 
 PrevPrime relies on GMP's mpz\_prevprime (GMP 6.3+), which sets c to the greatest prime strictly less than n and itself returns 2, 1 or 0\. PrevPrime2 returns (mpz rc) where rc is ProbabPrime 24 applied to the previous prime just found; plain PrevPrime discards the GMP return code.
 
@@ -194,8 +218,13 @@ c is the number being tested for ProbabPrime, Jacobi (when a is omitted) and Div
 
 GI wraps the methods so they read like APL primitives. Arguments are never modified; a new gmpz is returned (comparisons, monadic × and ≢ return plain integers). GI is also defined in the namespace that holds gmpz, so it can be used from anywhere.
 
-| `x← 2 *GI 100                   ⍝ 2*100 y← x +GI 1                     ⍝ x + 1 z← 10 |GI y                    ⍝ 10|y   (left is the modulus) ⌷ !GI 30                       ⍝ factorial, shown as a string 7 <GI x                        ⍝ comparison → 0/1` |
-| :---- |
+```
+    x← 2 *GI 100                   ⍝ 2*100 
+    y← x +GI 1                     ⍝ x + 1 
+    z← 10 |GI y                    ⍝ 10|y   (left is the modulus) 
+    ⌷ !GI 30                       ⍝ factorial, shown as a string 
+    7 <GI x                        ⍝ comparison → 0/1
+```
 
 | Dyadic | Meaning | Monadic | Meaning |
 | :---- | :---- | :---- | :---- |
@@ -331,9 +360,9 @@ Implement a simplified[^1] **RSA key generation, encryption, and decryption** wo
 ∇
 ``` 
 
-### OUTPUT 
+### OUTPUT [^2] 
 ```
-     GmpzExample  '🙂 This is a cat 🙂 '                  
+      GmpzExample  '🙂 This is a cat 🙂'                  
 Input message:      🙂 This is a cat 🙂    
 Public Modulus (n): 17423688898927617259201626411325686…   
 Encrypted Cipher:   88307460760761788632490902262327645…   
@@ -341,6 +370,5 @@ Decrypted Message:  🙂 This is a cat 🙂
 Unicode out! Success: Decrypted message matches original
 ``` 
 
-#### Abridged on right (`…).` 
-
 [^1]:  RSA encryption is still useful today, provided you use 2048- or, preferably, 4096-bit encryption. 
+[^2]:  The output is abridged on right (`…)` for pedagogical purposes.
