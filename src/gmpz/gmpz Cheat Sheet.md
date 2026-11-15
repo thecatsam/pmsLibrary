@@ -13,8 +13,18 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 
 # **1\.  Creating and reading values**
 
-| `a← ⎕NEW gmpz                         ⍝ 0 a← ⎕NEW gmpz ¯2                      ⍝ from an APL integer a← ⎕NEW gmpz '1234567 89012345678'   ⍝ from a string ('¯' => '-'). Blanks ok! a← ⎕NEW gmpz ('bee cafe' 16)         ⍝ from a string in base 16 (base ∊ 2…62) a← gmpz.New0                         ⍝ Alternative: new object, value 0 a← gmpz.New '999999999'              ⍝ Alternative: new object from a value b← 16 gmpz.New 'ff'                  ⍝ ... works with a base on the left 16 b.Set 'bee cafe'                  ⍝ Set b to a new string value (in base 16) b.Set a                              ⍝ copy another gmpz ⌷b                                   ⍝ value of b in string form` |
-| :---- |
+```
+   a← ⎕NEW gmpz                         ⍝ 0 
+   a← ⎕NEW gmpz ¯2                      ⍝ from an APL integer 
+   a← ⎕NEW gmpz '1234567 89012345678'   ⍝ from a string ('¯' => '-'). Blanks ok! 
+   a← ⎕NEW gmpz ('bee cafe' 16)         ⍝ from a string in base 16 (base ∊ 2…62) 
+   a← gmpz.New0                         ⍝ Alternative: new object, value 0 
+   a← gmpz.New '999999999'              ⍝ Alternative: new object from a value 
+   b← 16 gmpz.New 'ff'                  ⍝ ... works with a base on the left 
+   16 b.Set 'bee cafe'                  ⍝ Set b to a new string value (in base 16) 
+   b.Set a                              ⍝ copy another gmpz 
+   ⌷b                                   ⍝ value of b in string form`
+```
 
 | Call | Result |
 | :---- | :---- |
@@ -37,8 +47,12 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 
 Most methods are in place. The receiver is overwritten and returned (shy).
 
-| `c.Add b             ⍝ c ← c + b a c.Add b           ⍝ c ← a + b   (c is only the destination) ⌷(c.Set 5).Inc      ⍝ results are shy and return the receiver, so calls chain: c is now 6` |
-| :---- |
+```
+   c.Add b             ⍝ c ← c + b 
+   a c.Add b           
+   ⍝ c ← a + b   (c is only the destination) 
+   ⌷(c.Set 5).Inc      ⍝ results are shy and return the receiver, so calls chain: c is now 6
+```
 
 Operands (a, b) may each be:
 
