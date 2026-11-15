@@ -3,10 +3,12 @@
 ⍝    GmpzExample msg
 ⍝  msg: An APL string
 ⍝  Success if it returns a happy message
-⍝  0. Declare input message and helper
- ;hexMsg;HS
+⍝  0. Declare input message, key constant, and helper
+ ;hexMsg;pqSize;HS
 ⍝  1. Declare all mpz_t variables
  ;p;q;n;phi;e;d;msg;cipher;decrypted
+
+ pqSize←1024×2          ⍝ Power of two
 ⍝  1a. Helper (HS: Hexadecimal string)
  HS←{⎕IO←0 ⋄ ⍺←1 ⋄ hd←⎕D,'abcdef' ⋄ U←'UTF-8'∘⎕UCS
      ⍺=1:,hd[⍉16 16⊤U ⍵] ⋄ U 16⊥hd⍳⍉t⍴⍨2,⍨2÷⍨≢t←⎕C ⍵~' '
@@ -20,10 +22,10 @@
 ⍝  (automatic when RandB is first called)
 ⍝  3. Generate two distinct 512-bit probable primes (p and q)
 ⍝  p...
- p.(NextPrime RandB)512
+ p.(NextPrime RandB)pqSize
 ⍝  q...
  :Repeat        ⍝ Ensure p ≠ q
-     q.(NextPrime RandB)512
+     q.(NextPrime RandB)pqSize
  :Until q.Ne p
 ⍝  4. Compute the  modulus n: n ← p × q (1024-bit)
  p n.Mul q
