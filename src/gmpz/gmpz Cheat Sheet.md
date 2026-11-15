@@ -4,8 +4,10 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 
 # **Setup**
 
-| `]load gmpz ⎕FR← 1287        ⍝ in YOUR session: makes APL integers up to 2*63 exact` |
-| :---- |
+```
+\]load gmpz 
+⎕FR← 1287        ⍝ in YOUR session: makes APL integers up to 2*63 exact` |
+``` 
 
 * Dyalog APL v20 (64-bit) and the GMP shared library (libgmp).  
 * GMP 6.3 or later is required — PrevPrime uses mpz\_prevprime, which does not exist in earlier GMP versions, and the class binds its routines on load.  
