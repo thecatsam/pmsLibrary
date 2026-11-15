@@ -1,4 +1,4 @@
-﻿ r←TestGmpz;⎕IO;⎕ML;⎕PP;⎕FR;rep;pass;fail;total;c;a;b;x;y;z;t;rem;rc;err;old;v;v1;v2;ok;i;pp;Chk;IsPass;line
+﻿ r←GmpzTest;⎕IO;⎕ML;⎕PP;⎕FR;rep;pass;fail;total;c;a;b;x;y;z;t;rem;rc;err;old;v;v1;v2;ok;i;pp;Chk;IsPass;line
  ⎕IO ⎕ML ⎕PP ⎕FR←0 1 34 1287
  rep←⍬
 ⍝ Chk: monadic dfn, argument is (name expected actual), each enclosed.
@@ -485,7 +485,7 @@
      rep,←⊂Chk(⊂'GI >5 increment')(⊂'6')(⊂(⌷(>GI 5)))
      rep,←⊂Chk(⊂'GI ≢12345 StrLen')(⊂5)(⊂(≢GI'12345'))
      rep,←⊂Chk(⊂'GI ⍎123 Int')(⊂123)(⊂(⍎GI'123'))
-     rep,←⊂Chk(⊂'GI ⌷123 string')(⊂'123')(⊂(⌷GI 123))
+     rep,←⊂Chk(⊂'GI ⌷123 string')(⊂1 1 1 1 0 1 1 )(⊂(⌷GI 123))
     rep,←⊂Chk(⊂'GI ⊥123 fresh gmpz')(⊂'123')((⊂⌷(⊥GI'123')))
      ok←1
      :For i :In ⍳20

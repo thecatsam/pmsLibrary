@@ -1,6 +1,6 @@
 :Class gmpz                                                    ⍝ MPZ: GMP's multiple precision integer
 ⍝ Created by PMS 20261114
-⍝   ∘ Wrote original design, prototype code, code comments and primer
+⍝   ∘ Original design, prototype code, code comments and primer
 ⍝   ∘ All class code, including system (malloc/free) memory management
 ⍝   ∘ Random state code
 ⍝   ∘ Method for adding Microsoft declarations (untested), where different from Unix
