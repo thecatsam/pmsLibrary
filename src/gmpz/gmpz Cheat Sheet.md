@@ -80,7 +80,7 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 | `[a] c.Sub b` | `c ← a − b` |  |
 | `[a] c.Mul b` | `c ← a × b` |  |
 | `[a] c.Div b` | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b.` Signals divZÊ if b is 0\. |
-| `rem← [a] c.DivRem m` | `c ← ⌊a ÷ m, returns rem← m|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ 2\*64-1). |
+| `rem← [a] c.DivRem m` | `c ← ⌊a \÷ m, returns rem← m|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ 2\*64-1). |
 | `m c.Res b` | `c ← m|b` | APL residue, floored (sign follows m). 0\|b is b. Dyadic only. |
 | `[a] c.Gcd b` | `c ← a∨b` | ≥ 0\. Greatest common divisor. |
 | `[a] c.Lcm b` | `c ← a∧b` | ≥ 0\. Least common multiple. |
@@ -96,8 +96,16 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 | `c.Dec` | `c ← c−1` | Niladic. |
 | `bool← c.Divisible b` | `1 if b divides c` | b=0: true only if c is 0\. |
 
-| `c← ⎕NEW gmpz 2 c.Pow 200                    ⍝ c ← 2*200 c.Mul 3                        ⍝ c ← c × 3 1000 c.Res c                   ⍝ c ← 1000|c ¯7 c.Shift c                   ⍝ c ← c ÷ 2*7, truncated toward 0. (Shift bits right) c.Pow ÷2                       ⍝ c ← √c (truncated toward 0) c.Fac 100                      ⍝ c ← !100 r← ⎕NEW gmpz 7 r.PowM 128 13                ⍝ r ← 13|7*128` |
-| :---- |
+```
+    c← ⎕NEW gmpz 
+    2 c.Pow 200                    ⍝ c ← 2*200 
+    c.Mul 3                        ⍝ c ← c × 3 
+    1000 c.Res c                   ⍝ c ← 1000|c 
+    ¯7 c.Shift c                   ⍝ c ← c ÷ 2*7, truncated toward 0. (Shift bits right) 
+    c.Pow ÷2                       ⍝ c ← √c (truncated toward 0) 
+    c.Fac 100                      ⍝ c ← !100 r← ⎕NEW gmpz 
+    7 r.PowM 128 13                ⍝ r ← 13|7*128
+```
 
 **Floored division:** Div, DivRem and Res are floored (round toward ¯∞), matching APL's ⌊ and ⍺\|⍵, so a \= (m×⌊a÷m) \+ m\|a for any signs. This differs from C, where integer division (/) truncates toward zero. Right Shift truncates toward zero, so that identity holds for Div/Res but not for right Shift. The n-th root, Pow ÷n, also truncates toward zero, which only matters for negative a with odd n.
 
