@@ -75,22 +75,22 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 \[a\]: if a is omitted, it defaults to the receiver c.
 
 | Method | Meaning | Notes |
-| :--------------------------------- | :----------- | :-------------------------- |
+| :------------------------------------------- | :----------- | :---------- |
 | `[a] c.Add b` | `c ← a + b` |  |
 | `[a] c.Sub b` | `c ← a − b` |  |
 | `[a] c.Mul b` | `c ← a × b` |  |
 | `[a] c.Div b` | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b.` Signals divZÊ if b is 0\. |
 | `rem← [a] c.DivRem m` | `c ← ⌊a÷m, returns rem← m\|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ 2\*64-1). |
-| `m c.Res b` | `c ← m|b` | APL residue, floored (sign follows m). 0\|b is b. Dyadic only. |
+| `m c.Res b` | `c ← m\|b` | APL residue, floored (sign follows m). 0\|b is b. Dyadic only. |
 | `[a] c.Gcd b` | `c ← a∨b` | ≥ 0\. Greatest common divisor. |
 | `[a] c.Lcm b` | `c ← a∧b` | ≥ 0\. Least common multiple. |
-| `[a] c.Pow n` | `c ← a*n` | n must be a non-negative APL integer, and the exponent must fit in a 64-bit unsigned integer (powÊ otherwise). |
+| `[a] c.Pow n` | `c ← a\*n` | n must be a non-negative APL integer, and the exponent must fit in a 64-bit unsigned integer (powÊ otherwise). |
 | `[a] c.Pow ÷n` | `n-th root of a, truncated toward 0` | Same as ⌊a\*÷n for a≥0\. n a positive integer. If a\<0, n must be odd. |
 | `[a] c.PowM (e m)` | `c ← m|a*e` | Modular exponentiation. `m=0` → divZÊ. e and m may be gmpz, integer or string. A negative exponent or a negative modulus signals powÊ (modulus 0 signals divZÊ). |
 | `rc← [a] c.Invert m` | `c ← a⁻¹ mod m` | Returns 1 if the inverse exists, 0 if not (then c is meaningless). |
 | `i c.Shift b` | `c ← b × 2*i` | Binary shift. i\>0 left, i\<0 right (truncating toward zero, like b÷2\*\|i rounded toward 0). Dyadic only. |
 | `c.Neg b` | `c ← −b` | Right argument required. |
-| `c.Abs b` | `c ← |b` | Right argument required. |
+| `c.Abs b` | `c ← \|b` | Right argument required. |
 | `c.Fac n` | `c ← !n` | n ≥ 0; n may be an integer, string or mpz. n must be ≤ 2\*32-1 (facBadÊ otherwise). Large results are limited only by memory. |
 | `c.Inc` | `c ← c+1` | Niladic. |
 | `c.Dec` | `c ← c−1` | Niladic. |
