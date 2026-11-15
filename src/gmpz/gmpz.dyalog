@@ -573,8 +573,8 @@
       ⍝  Ptr0, etc: these typically take fn arguments (usually a and b) and copy any
       ⍝  values into statics[0] and return statics[0].ptr.
       ⍝ If ⍵ is an mpz, it is returned as is.
-         StatPtr← { IsMpz ⍵: ⍵.ptr ⋄ ((⍺⊃statics).Set ⍵).ptr }
-         MpzTemp← { IsMpz ⍵: ⍵     ⋄ (⍺⍺⊃statics).Set ⍵}
+         StatPtr← {      IsMpz ⍵: ⍵.ptr ⋄ ((⍺⊃statics).Set ⍵).ptr }
+         MpzTemp← { ⍺←⊢ ⋄IsMpz ⍵: ⍵     ⋄ ⍺ (⍺⍺⊃statics).Set ⍵ }
          Mpz0← 0 MpzTemp 
          _← { (⍵⊃statics).⎕DF 'Static mpz #',⍕⍵ }¨0 1 2
          Ptr0← 0∘StatPtr
@@ -582,8 +582,7 @@
          Ptr2← 2∘StatPtr  
          ok← 1
       ∇
-      InitStatics
-   ⍝  Call to InitStatics is at end of this class.
+      ⍝ InitStatics
    ⍝:EndSection  statics[0..2]: Global mpz's used in _Dyad_  and elsewhere
 ⍝ ───────────────────────────────────────────────────────────────────────────────
    ⍝:Section Support Operators
@@ -860,29 +859,31 @@
          ∇
          
       ⍝ TestBit:  Retrieve a bit of an mpz at index <ix>
-         ∇ {bit}← {a} TestBit ix   ; aP; ⎕TRAP
+         ∇ {bit}← {a} TestBit ix   ; aP; ∆io; ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
+            ∆io← (⊃⎕RSI).⎕IO 
             :Hold ∆STATICS
                :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
-               ix← ToInt ix
-               ⎕SIGNAL badBitIxÊ/⍨ (ix<0)∨(ix>UL_MAX)
+               ix← ∆io-⍨ ToInt ix
+               ⎕SIGNAL badBitIxÊ/⍨ (ix<∆io)∨(ix>UL_MAX)
                bit← gNs.TstBit aP ix
             :EndHold
          ∇
          
       ⍝ SetBit:  val← {a} SetBit ix [val←1]
       ⍝ Sets a bit of an mpz at index <ix> to  val (default is 1).
-      ⍝ Returns the value set to.
-         ∇ {val}← {a} SetBit ix_val   ; aP; ix; ⎕TRAP
+      ⍝ Returns the value set to.  Honours ⎕IO. 
+         ∇ {val}← {a} SetBit ix_val   ; aP; ix; ∆io;  ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
+            ∆io← (⊃⎕RSI).⎕IO
             :Hold ∆STATICS
                :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
                ix val← 2↑ix_val, 1
-               ix← ToInt ix
+               ix← ∆io-⍨ ToInt ix
                val← ToInt val
-               ⎕SIGNAL badBitIxÊ/⍨ (ix<0)∨(ix>UL_MAX)
+               ⎕SIGNAL badBitIxÊ/⍨ (ix<∆io)∨(ix>UL_MAX)
                ⎕SIGNAL badBitValÊ/⍨ ~val∊0 1
                :If val
                   {}gNs.SetBit aP ix
@@ -894,13 +895,14 @@
          
       ⍝ ClrBit: val← {a} ClrBit ix
       ⍝   Clears a bit of an mpz at index <ix>
-      ⍝ Same as {a} SetBit ix 0
-         ∇ {bit}← {a} ClrBit ix    ; aP; ⎕TRAP
+      ⍝ Same as {a} SetBit ix 0. Honours ⎕IO. 
+         ∇ {bit}← {a} ClrBit ix    ; aP; ∆io; ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
+            ∆io← (⊃⎕RSI).⎕IO
             :Hold ∆STATICS
                :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
-               ix← ToInt ix
+               ix← ∆io-⍨ ToInt ix
                ⎕SIGNAL badBitIxÊ/⍨ (ix<0)∨(ix>UL_MAX)
                {}gNs.ClrBit aP ix
             :EndHold
@@ -908,13 +910,14 @@
          ∇
          
       ⍝ Flip: bit← {a} Flip ix   - Flip index ix in a (using gNs.ComBit -- Complement the bit)
-      ⍝ Here, we ALSO return the new bit value.
-         ∇ {bit}← {a} Flip ix  ; aP; ⎕TRAP
+      ⍝ Here, we ALSO return the new bit value. Honours ⎕IO. 
+         ∇ {bit}← {a} Flip ix  ; aP; ∆io; ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
+            ∆io← (⊃⎕RSI).⎕IO
             :Hold ∆STATICS
                :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
-               ix← ToInt ix
+               ix← ∆io-⍨ ToInt ix
                ⎕SIGNAL badBitIxÊ/⍨ (ix<0)∨(ix>UL_MAX)
                {}gNs.ComBit aP ix
                bit← gNs.TstBit aP ix
@@ -924,7 +927,7 @@
          ∇ p← {a} Scan (p0 bit); aP; ∆io; ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
-            ∆io← ⍙CallerIO ⊃⎕RSI
+            ∆io← (⊃⎕RSI).⎕IO
             p0← ∆io-⍨ ToInt p0
             ⎕SIGNAL badBitIxÊ/⍨ (p0<0)∨(p0>UL_MAX)
             :Hold ∆STATICS
@@ -937,7 +940,7 @@
          ∇ p← {a} Iota bit; aP; ∆io; ⎕TRAP
            :Access Public
             ⎕TRAP← ∆TRAP
-            ∆io← ⍙CallerIO ⊃⎕RSI
+            ∆io← (⊃⎕RSI).⎕IO
             :Hold ∆STATICS
                :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
                p← ⍙Scan aP 0 bit
@@ -955,13 +958,6 @@
                :EndSelect
             ∇
          ⍝:EndSection Helper for Scan and Iota
-         
-      ⍝ ⍙CallerIO: the caller's ⎕IO, for converting between the caller's
-      ⍝ ⎕IO-origin indices and this class's 0-origin indices.
-      ⍝ Call it as ⍙CallerIO ⊃⎕RSI from a public method. VERIFY IN DYALOG:
-      ⍝ it assumes ⊃⎕RSI, as seen by that method, is the caller's frame.
-      ⍝ If that assumption is wrong, Bit/Scan/Iota index conversion is wrong.
-         ⍙CallerIO← { ⍵.⎕IO }
          
       ⍝ And: {a} And b
          ∇ {mpz}← {a} And b   ; aP; ⎕TRAP
@@ -1037,8 +1033,8 @@
            :Access Public Instance
             ∇ vals← get arg; ixs; ∆io; ⎕TRAP
                ⎕TRAP← ∆TRAP
-               ∆io← -⍙CallerIO ⊃⎕RSI                           ⍝ See ⍙CallerIO: verify ⊃⎕RSI in Dyalog
-               ixs← ∆io+ ⊃arg.Indexers
+               ∆io← (⊃⎕RSI).⎕IO                           ⍝ See ⍙CallerIO: verify ⊃⎕RSI in Dyalog
+               ixs← ∆io-⍨ ⊃arg.Indexers
                ⎕SIGNAL badBitIxÊ/⍨ 0=≢,ixs                     ⍝ Empty indexer list is an error
                ⎕SIGNAL  badBitIxÊ/⍨ ∨/ (ixs<0)∨(ixs>UL_MAX)
                vals← (⍴ixs)⍴ {gNs.TstBit ⍙ptr ⍵}¨ixs
@@ -1046,8 +1042,8 @@
             
             ∇ set arg; vals; ixs; ∆io; i; ⎕TRAP
                ⎕TRAP← ∆TRAP
-               ∆io← -⍙CallerIO ⊃⎕RSI                           ⍝ See ⍙CallerIO: verify ⊃⎕RSI in Dyalog
-               ixs←  ,∆io+ ⊃arg.Indexers
+               ∆io← (⊃⎕RSI).⎕IO                           ⍝ See ⍙CallerIO: verify ⊃⎕RSI in Dyalog
+               ixs←  ,∆io-⍨ ⊃arg.Indexers
                ⎕SIGNAL badBitIxÊ/⍨ 0=≢,ixs                     ⍝ Empty indexer list is an error
                ⎕SIGNAL badBitIxÊ/⍨ ∨/ (ixs<0)∨(ixs>UL_MAX)     ⍝ Negative indices are an error (get checks too)
                vals← ,(⍴ixs)⍴ arg.NewValue                     ⍝ Expand single bit => bit vector
@@ -1206,8 +1202,8 @@
          ∇
          
          
-      ⍝ gmpz.RandSeed ui, where u8 is a UL integer.
-      ⍝ To seed with a random APL integer (using system entropy), use RandSeed 0.
+      ⍝ gmpz.RandSeed ui, where u8 is a UL integer greater than 0.
+      ⍝ To seed with a random APL integer (using system entropy), use RandSeed 0 (zero).
       ⍝ Returns the old seed in string form.
       ⍝
       ⍝ At initialisation, the random seed is ?UL_MAX (with ⎕FR=1287), i.e. seeded from
@@ -1452,6 +1448,8 @@
       ⍝:EndSection  Miscellany
    ⍝ ───────────────────────────────────────────────────────────────────────────────
       
+      InitStatics
+      
    ⍝ ───────────────────────────────────────────────────────────────────────────────
    ⍝  GI — a primitive-style wrapper (operator) around the gmpz methods
    ⍝
@@ -1516,7 +1514,8 @@
             :Select nm
               :Case '-' ⋄ c.Neg b                              ⍝ c← -b
               :Case '|' ⋄ c.Abs b                              ⍝ c← |b
-              :Case '?' ⋄ c.Rand b                             ⍝ c← ?b
+              ⍝ ?ddd is like APL ?ddd. ?-ddd is like ?2*ddd. ddd is any integer.
+              :Case '?' ⋄ { ⍵ c.Gt 0: c.Rand ⍵ ⋄ c.RandB c.Neg ⍵ } b                          ⍝ c← ?b
               :Case '×' ⋄ res← (c.Set b).Signum                ⍝ c← ×b
               :Case '!' ⋄ c.Fac b                              ⍝ c← !b
               :Case '<' ⋄ (c.Set b).Dec                        ⍝ c← b-1
