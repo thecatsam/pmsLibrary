@@ -7,12 +7,12 @@ For Dyalog APL v20 or later and GMP 6.3 or later. [Tested on Mac/OS, but designe
 
 ```
 ]load gmpz/gmpz 
-⎕FR← 1287        ⍝ in YOUR session: makes APL integers up to 2*63 exact.
+⎕FR ⎕PP← 1287 34        ⍝  Optional. Convenient for entering large (64-bit) integer constants.
 ``` 
 
 * Dyalog APL v20 (64-bit) and the GMP shared library (libgmp).  
 * GMP 6.3 or later is required — PrevPrime uses mpz\_prevprime, which does not exist in earlier GMP versions, and the class binds its routines on load.  
-* Inside the class, ⎕IO ⎕ML ⎕PP ⎕FR are 0 1 34 1287\. Those settings do not leak into your session, except that you should set ⎕FR←1287 yourself as above if you handle 64-bit integers.
+* Inside the class, ⎕IO ⎕ML ⎕PP ⎕FR are 0 1 34 1287\. You may wish to set ⎕FR←1287 when using **gmpz** if you wish to enter 64-bit integers directly.
 
 # **1\.  Creating and reading values**
 
