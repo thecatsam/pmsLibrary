@@ -315,7 +315,7 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
 ⍝    ret@CV← GmpzExample msgIn@CV
 ⍝  msgIn: An APL string that can be encoded in fewer than modBits (1024) bits (UTF-8)
 ⍝  Success if it returns a happy message
-
+   
 ⍝--1 DECLARATIONS AND INITIALIZATION ------------------------------------------------------------------
 ⍝  Declarations, definitions, etc.
 ⍝  Declare helper functions
@@ -326,26 +326,26 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
      ; modBits
    
 ⍝  Define helper fn HS (Hexadecimal String)
-⍝    str@CV← [[1: encrypt | 0: decrypt]] ∇ str@CV
+⍝  HS:    str@CV← [[1: encrypt | 0: decrypt]] ∇ str@CV
    HS← {⎕IO← 0 ⋄ ⍺← 1 ⋄ hd← ⎕D,'abcdef' ⋄ U← 'UTF-8'∘⎕UCS
      ⍺=1: ,hd[⍉16 16⊤U ⍵] ⋄ U 16⊥hd⍳⍉t⍴⍨2,⍨2÷⍨≢t← ⎕C ⍵~' '
    }
 ⍝  Define helper fn Tidy: Print long results in nice rows of 64 bytes, with left margin of  4 spaces
-⍝      ∇ str@CV
+⍝  Tidy:    ∇ str@CV
    Tidy← 64 { ⍺← ⍬ ⋄ p← ⍵⍵⍴'' ⋄ ⍺⍺≥ ≢⍵: ↑⍺,⊂p, ⍵ ⋄ (⍺, ⊂p, ⍺⍺↑⍵) ∇ ⍺⍺↓⍵ } 4
    
 ⍝  Initialize all mpz variables
    p q n phi e d msg cipher decrypted← gmpz.New¨9⍴0
-
- ⍝  Initialise modBits: max # of bits in the modulus.  Must be even.
-   modBits← 1024                         ⍝ Best practices: modBits∊ 2048 4096                               
+   
+⍝  Initialise modBits: max # of bits in the modulus.  Must be even.
+   modBits← 1024                                             ⍝ Best practices: modBits∊ 2048 4096                               
    'Modulus must be even number of bits' ⎕SIGNAL 11/⍨ 0≠ 2|modBits 
-     
+   
 ⍝--2 GENERATE PUBLIC ANd PRIVATE KEYS -----------------------------------------------------------------
 ⍝  Initialize random number generator with entropy
 ⍝     (automatic/default when RandB is first called)
 ⍝   Generate two distinct 512-bit probable primes (p and q)
-
+   
 ⍝  p...
    p.(NextPrime RandB) modBits÷2
    
@@ -353,7 +353,7 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
    :Repeat  ⍝⍝ Ensure p ≠ q
       q.(NextPrime RandB) modBits÷2
    :Until q.Ne p
-
+   
 ⍝  Compute the  modulus n: n ← p × q, where n.Len is approx modBits (may be a bit smaller)
    p n.Mul q
    
@@ -366,7 +366,7 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
       ret← 'Error: e and phi are not coprime.'  ⋄ :Return
    :EndIf
    
-⍝- 3 IMPORT MESSAGE -----------------------------------------------------------------------------
+⍝- 3 IMPORT MSG -----------------------------------------------------------------------------------
 ⍝  Import the plaintext msgIn ==> msg, where msgIn will be encoded via UTF-8 for simplicity.
    16 msg.Set HS msgIn
    
@@ -387,14 +387,14 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
    ⎕← 'Public Modulus (n): '  ⋄ ⎕← Tidy n.GetInBase 16
    ⎕← 'Encrypted Cipher:   '  ⋄ ⎕← Tidy cipher.GetInBase 16
    ⎕← 'Decrypted Message:  '  ⋄ ⎕← Tidy 0 HS decrypted.GetInBase 16
-
+   
 ⍝  Verify correctness
    :If 0=msg.Cmp decrypted
       ret← 'Success: Decrypted message matches original'
    :Else
       ret← 'Failure: Decrypted message does not match original'
    :EndIf
-
+   
 ⍝--6 FREE STUFF ----------------------------------------------------------------------------------
 ⍝  Free all allocated memory
 ⍝  gmpz does it all for you!

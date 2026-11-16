@@ -14,12 +14,12 @@
      ; modBits
    
 ⍝  Define helper fn HS (Hexadecimal String)
-⍝    str@CV← [[1: encrypt | 0: decrypt]] ∇ str@CV
+⍝  HS:    str@CV← [[1: encrypt | 0: decrypt]] ∇ str@CV
    HS← {⎕IO← 0 ⋄ ⍺← 1 ⋄ hd← ⎕D,'abcdef' ⋄ U← 'UTF-8'∘⎕UCS
      ⍺=1: ,hd[⍉16 16⊤U ⍵] ⋄ U 16⊥hd⍳⍉t⍴⍨2,⍨2÷⍨≢t← ⎕C ⍵~' '
    }
 ⍝  Define helper fn Tidy: Print long results in nice rows of 64 bytes, with left margin of  4 spaces
-⍝      ∇ str@CV
+⍝  Tidy:    ∇ str@CV
    Tidy← 64 { ⍺← ⍬ ⋄ p← ⍵⍵⍴'' ⋄ ⍺⍺≥ ≢⍵: ↑⍺,⊂p, ⍵ ⋄ (⍺, ⊂p, ⍺⍺↑⍵) ∇ ⍺⍺↓⍵ } 4
    
 ⍝  Initialize all mpz variables
