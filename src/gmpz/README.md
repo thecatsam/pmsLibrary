@@ -317,19 +317,13 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
 ⍝  Success if it returns a happy message
 
 ⍝--1 DECLARATIONS AND INITIALIZATION ------------------------------------------------------------------
-⍝    Declarations, definitions, etc.
-
+⍝  Declarations, definitions, etc.
 ⍝  Declare helper functions
      ; HS; Tidy
-   
 ⍝  Declare all mpz_t variables
-⍝  Declare # of bits in the modulus
      ; p; q; n; phi; e; d; msg; cipher; decrypted
+⍝  Declare # of bits in the modulus
      ; modBits
-   
-⍝  Initialise modBits: max # of bits in the modulus.  Must be even.
-   modBits← 1024                                             ⍝ Fast, even if 4096            
-   'Modulus must be even number of bits' ⎕SIGNAL 11/⍨ 0≠ 2|modBits 
    
 ⍝  Define helper fn HS (Hexadecimal String)
 ⍝    str@CV← [[1: encrypt | 0: decrypt]] ∇ str@CV
@@ -342,9 +336,12 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
    
 ⍝  Initialize all mpz variables
    p q n phi e d msg cipher decrypted← gmpz.New¨9⍴0
-   
-⍝--2 GENERATE PUBLIC ANd PRIVATE KEYS -----------------------------------------------------------------
 
+ ⍝  Initialise modBits: max # of bits in the modulus.  Must be even.
+   modBits← 1024                         ⍝ Best practices: modBits∊ 2048 4096                               
+   'Modulus must be even number of bits' ⎕SIGNAL 11/⍨ 0≠ 2|modBits 
+     
+⍝--2 GENERATE PUBLIC ANd PRIVATE KEYS -----------------------------------------------------------------
 ⍝  Initialize random number generator with entropy
 ⍝     (automatic/default when RandB is first called)
 ⍝   Generate two distinct 512-bit probable primes (p and q)
@@ -357,7 +354,7 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
       q.(NextPrime RandB) modBits÷2
    :Until q.Ne p
 
-⍝  Compute the  modulus n: n ← p × q  (n is modBits bits) in length)
+⍝  Compute the  modulus n: n ← p × q, where n.Len is approx modBits (may be a bit smaller)
    p n.Mul q
    
 ⍝  Compute Euler's totient: phi← (p - 1) × (q - 1)
@@ -369,21 +366,20 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
       ret← 'Error: e and phi are not coprime.'  ⋄ :Return
    :EndIf
    
-⍝- 3 IMPORT MSG -----------------------------------------------------------------------------------
-⍝    Import the plaintext msgIn ==> msg
-⍝    Using base-10 string initialization for an arbitrarily large integer
+⍝- 3 IMPORT MESSAGE -----------------------------------------------------------------------------
+⍝  Import the plaintext msgIn ==> msg, where msgIn will be encoded via UTF-8 for simplicity.
    16 msg.Set HS msgIn
    
-   :If msg.Len≥ n.Len                                        ⍝ Be sure not too big (keep it simple for the demo)
+   :If msg.Len≥ n.Len                                        ⍝ length limited for demo...
       ret← 'Your message is too big' ⋄  :Return 
    :EndIf
    
 ⍝--4 ENCRYPT --------------------------------------------------------------------------------------
-⍝    Encrypt: cipher ← (msg × e) mod n
-     msg cipher.PowM e n
+⍝  Encrypt: cipher ← (msg × e) mod n                         ⍝ That's all there is too it.
+   msg cipher.PowM e n
    
 ⍝--5 DECRYPT -------------------------------------------------------------------------------------
-⍝    Decrypt: decrypted ← (cipher × d) mod n
+⍝  Decrypt: decrypted ← (cipher × d) mod n
    cipher decrypted.PowM d n
    
 ⍝--6 PRINT AND VERIFY-----------------------------------------------------------------------------
@@ -400,19 +396,24 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
    :EndIf
 
 ⍝--6 FREE STUFF ----------------------------------------------------------------------------------
-⍝    Free all allocated memory
-⍝    gmpz does it all for you!
+⍝  Free all allocated memory
+⍝  gmpz does it all for you!
 ``` 
 
 ### OUTPUT [^2] 
 ```
-      GmpzExample  '🙂 This is a cat 🙂'                  
-Input message:      🙂 This is a cat 🙂    
-Public Modulus (n): 17423688898927617259201626411325686…   
-Encrypted Cipher:   88307460760761788632490902262327645…   
-Decrypted Message:  🙂 This is a cat 🙂                    
-Unicode out! Success: Decrypted message matches original
+      GmpzExample  '🙂 This is a cat 🙂'                   
+Public Modulus (n): 
+    7c09b76d3dabfc23419a94a9db4452e891747b45e86a0ef162c3712ce1a53c31
+    ... 
+Encrypted Cipher:   
+    646d47879ff5b113e3ec0172062eaeaec75ac21d5630fa815c6f8e91b49569f1
+    ...
+Decrypted Message:  
+    🙂 This is a cat 🙂
+Success: Decrypted message matches original
+      
 ``` 
 
 [^1]:  RSA encryption is still useful today, provided you use 2048- or, preferably, 4096-bit encryption. 
-[^2]:  The output is abridged on right (`…)` for pedagogical purposes.
+[^2]:  The output is abridged (...) for pedagogical purposes.
