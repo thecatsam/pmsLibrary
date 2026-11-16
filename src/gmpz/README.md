@@ -313,7 +313,7 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
 ⍝ Descr: Simplified 1024-bit RSA public-key encryption and decryption of Unicode string 
 ⍝        using the GNU Multiple Precision Arithmetic Library (GMP) via a wrapper (gmpz). 
 ⍝  To run: 
-⍝    GmpzExample msg 
+⍝    GmpzExample msgIn 
 ⍝  msgIn: An APL string 
 ⍝  Success if it returns (ret@CV) a happy message 
 ⍝  Note:  CV means character vector, mpz means GMP multiple precision integer  
