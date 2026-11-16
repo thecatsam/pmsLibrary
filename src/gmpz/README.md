@@ -250,7 +250,7 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | `a \*GI b` | a\*b (b may be ÷n) | `<GI b` | b−1 |
 | `a ∨GI b` | gcd | `>GI b` | b+1 |
 | `a ∧GI b` | lcm | `≢GI b` | string length (b.StrLen, plain integer) |
-| `a |GI b` | a\|b (a is the modulus) |   |   |
+| `a \|GI b` | a\|b (a is the modulus) |   |   |
 | `a ⌽GI b` | shift b by a bits |  |  |
 | <code>a&nbsp;\*∘\|GI&nbsp;(e&nbsp;m)</code> | m\|a\*e (PowM) |  |  |
 | `a ⍳GI i` | position of the lowest bit of a equal to i (0 or 1); largest U8 value if none (plain integer) |  |  |
