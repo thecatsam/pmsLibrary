@@ -1,4 +1,6 @@
-# **gmpz** &emdash; Dyalog Apl class and helper function **GI**
+# **gmpz** 
+
+## Dyalog Apl class and helper function **GI**
 *Backed by GMP mpz calls (libgmp)  •  Nov 2026 Edition*
 
 For Dyalog APL v20 or later and GMP 6.3 or later. [Tested on Mac/OS, but designed for Mac/OS and Windows]
@@ -6,7 +8,7 @@ For Dyalog APL v20 or later and GMP 6.3 or later. [Tested on Mac/OS, but designe
 # **Setup**
 
 ```
-]load gmpz 
+]load gmpz/gmpz 
 ⎕FR← 1287        ⍝ in YOUR session: makes APL integers up to 2*63 exact.
 ``` 
 
