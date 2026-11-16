@@ -28,7 +28,7 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
    ⌷b                                   ⍝ value of b in string form`
 ```
 
-| Call | Result |
+| Call⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ | Result |
 | :----------------------------------------- | :---- |
 | `str← ⌷a` | *a* in base 10 as a string (any length). |
 | `a.Set value / base a.Set value` | Overwrite **a** with value (base applies to strings only, default 10). Returns **a** itself (shy), so calls can be chained. |
@@ -43,8 +43,12 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
 | `bits← a.Bits` | **a** as a boolean vector, most-significant bit first. Read-only. Non-negative values only — signals badObjÊ for a negative. |
 | `int← a.ptr` | Address of the underlying GMP object. Be careful\! |
 
-**Memory:** A gmpz object and its GMP storage are allocated for you. They are freed automatically, when the object goes out of scope; when ⎕EX is executed on the object, when the workspace is cleared, or when the session ends. The random-number state is created the first time you call Rand, RandB or RandSeed. 
-Set **DEBUG←1** in the class source to trace allocations and frees.***
+**Memory:** A gmpz object and its GMP storage are allocated for you. 
+They are freed automatically, when the object goes out of scope; when ⎕EX is executed on the object, 
+when the workspace is cleared, or when the session ends. 
+The random-number state is created the first time you call Rand, RandB or RandSeed. 
+
+Set **DEBUG←1** in the class source to trace allocations and frees.
 
 # **2\.  The operating model**
 
