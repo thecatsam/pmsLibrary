@@ -247,7 +247,7 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | `a ×GI b` | a×b | `?GI b` | random in \[0, b) |
 | `a ÷GI b` | ⌊a÷b (floored) | `!GI b` | factorial |
 | <code>a&nbsp;÷∘\|GI&nbsp;b</code> | DivRem (see note below) | `×GI b` | signum (plain integer) |
-| `a *GI b` | a\*b (b may be ÷n) | `<GI b` | b−1 |
+| `a \*GI b` | a\*b (b may be ÷n) | `<GI b` | b−1 |
 | `a ∨GI b` | gcd | `>GI b` | b+1 |
 | `a ∧GI b` | lcm | `≢GI b` | string length (b.StrLen, plain integer) |
 | `a |GI b` | a\|b (a is the modulus) |   |   |
