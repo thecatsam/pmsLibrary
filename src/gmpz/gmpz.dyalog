@@ -1,6 +1,6 @@
 :Class gmpz                                                    ⍝ MPZ: GMP's multiple precision integer
    
-   :Field Public Shared DEBUG← 0                               ⍝ 1: print Alloc/Free messages and set display forms
+ :Field Public Shared DEBUG← 0                                 ⍝ 1: print Alloc/Free messages and set display forms
    ⎕IO ⎕ML ⎕PP ⎕FR← 0 1 34 1287                                ⍝ Class-wide settings (see header)
    ⎕RL← ⍬ 2                                                    ⍝ Use the system entropy by default for "seeds"
 ⍝ ═══════════════════════════════════════════════════════════════════════════════
@@ -112,11 +112,11 @@
 ⍝    advantage of decimal floats to work with integers larger than 64-bits.
 ⍝
 ⍝ ═══════════════════════════════════════════════════════════════════════════════
-   :Field Shared ReadOnly ∆THIS   ← ⎕THIS                      ⍝ The class reference (used for ⎕NEW and class tests)
-   :Field Shared ReadOnly ∆TRAP   ← 0 'E' 'DmxSig⍬'            ⍝ Standard ⎕TRAP for public methods: re-signal at caller
-   :Field Public Shared ReadOnly WINDOWS ← 'Windows'≡7↑⊃'.'⎕WG'APLVersion' 
-   :Field Shared ReadOnly UL_MAX  ← ¯1+2* WINDOWS⊃64 32        ⍝ Max C unsigned long: 2*64-1 Unix, 2*32-1 Windows
-   :Field Shared ReadOnly IL_MAX  ← ¯1+2* WINDOWS⊃63 31        ⍝ Max C signed long: 2*63-1 Unix, 2*31-1 Windows
+ :Field Public Shared ReadOnly WINDOWS ← 'Windows'≡7↑⊃'.'⎕WG'APLVersion' 
+ :Field Shared ReadOnly ∆THIS   ← ⎕THIS                        ⍝ The class reference (used for ⎕NEW and class tests)
+ :Field Shared ReadOnly ∆TRAP   ← 0 'E' 'DmxSig⍬'              ⍝ Standard ⎕TRAP for public methods: re-signal at caller
+ :Field Shared ReadOnly UL_MAX  ← ¯1+2* WINDOWS⊃64 32          ⍝ Max C unsigned long: 2*64-1 Unix, 2*32-1 Windows
+ :Field Shared ReadOnly IL_MAX  ← ¯1+2* WINDOWS⊃63 31          ⍝ Max C signed long: 2*63-1 Unix, 2*31-1 Windows
    
 ⍝ ═══════════════════════════════════════════════════════════════════════════════
 ⍝ Class randState - for handling Random Numbers. See also Rand and RandSeed
@@ -126,9 +126,9 @@
    ⍝       its own flag. Set gmpz.randState.DEBUG←2 to trace it.
    ⍝ Call:    rs← ⎕NEW randState                               ⍝ Not directly called by user. See fn Rand, RandB.
    ⍝ When rs goes out of scope, the storage is released
-      :Field Private Instance       r⍙ptr← 0
-      :Field Public Shared          active← 0                  ⍝ Only 1 active instance is allowed!
-      :Field Public Shared          seeds← (?¯1+ 2* ##.WINDOWS⊃63 32) 0 ⍝ Order: newseed oldseed. A seed fits in a UL.
+    :Field Private Instance       r⍙ptr← 0
+    :Field Public Shared          active← 0                    ⍝ Only 1 active instance is allowed!
+    :Field Public Shared          seeds← (?¯1+ 2* ##.WINDOWS⊃63 32) 0 ⍝ Order: newseed oldseed. A seed fits in a UL.
       ∇ Init0
        :Access Public
          :Implements Constructor
@@ -373,9 +373,9 @@
       where.loadComplete← 1
    ∇
    
-   :Field Shared   gNs←   LoadLib ()                           ⍝ Namespace holding all bound GMP and libc routines
-   :Field Shared   rsInstance←  ⎕NULL                          ⍝ Random # state var
-   :Field Instance ⍙ptr← 0                                     ⍝ address of the gmpz_t; 0 = nothing live
+ :Field Shared   gNs←   LoadLib ()                             ⍝ Namespace holding all bound GMP and libc routines
+ :Field Shared   rsInstance←  ⎕NULL                            ⍝ Random # state var
+ :Field Instance ⍙ptr← 0                                       ⍝ address of the gmpz_t; 0 = nothing live
    
 ⍝ ───────────────────────────────────────────────────────────────────────────────
    ⍝:Section Object Initialization and Value Setting
@@ -1564,7 +1564,7 @@
             res← ⎕NEW gmpz c
          :EndIf 
       ∇
-      :Field Public Shared tempGI← ⎕NEW gmpz                   ⍝ FOr use in GI only
+    :Field Public Shared tempGI← ⎕NEW gmpz                     ⍝ FOr use in GI only
       tempGI.⎕DF 'GI tmp mpz #0'
       ##.⎕FX '\bgmpz\b' ⎕R (⍕⎕THIS)⊢⎕NR 'GI'                   ⍝ Be sure GI refers to this gmpz
       ⎕← 'Created class ',(⍕⎕THIS),', operator ',(⍕⎕THIS),'.GI'

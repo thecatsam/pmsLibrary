@@ -307,70 +307,101 @@ Implement a simplified[^1] **RSA key generation, encryption, and decryption** wo
 This demonstrates the core lifecycle of GMP integers: 
 initialization, random prime generation, modular arithmetic, modular inverse, and memory cleanup.
 
-## **Example**
+## **Example Code: ___GmpzExample___**
+
 ```
-∇ ret←  GmpzExample msgIn 
-⍝ Descr: Simplified 1024-bit RSA public-key encryption and decryption of Unicode string 
-⍝        using the GNU Multiple Precision Arithmetic Library (GMP) via a wrapper (gmpz). 
-⍝  To run: 
-⍝    GmpzExample msgIn 
-⍝  msgIn: An APL string 
-⍝  Success if it returns (ret@CV) a happy message 
-⍝  Note:  CV means character vector, mpz means GMP multiple precision integer  
-⍝  0. Declare helper fn    ; HS   ⍝  1. Declare all mpz variables    
-   ; p; q; n; phi; e; d; msg; cipher; decrypted 
-⍝  1a. Helper fn ⍝  [⍺←1] HS str@CV: Apl Unicode (CV) [⍺=1 =>] ⇔ [<= ⍺=0] hexadecimal CV     
-   HS←{          
-      ⎕IO←0 ⋄ ⍺←1 ⋄ hd←⎕D,'abcdef' ⋄ U8← 'UTF-8'∘⎕UCS        
-      ⍺=1:,hd[⍉16 16⊤U8 ⍵] ⋄ U8 16⊥hd⍳⍉t⍴⍨2,⍨2÷⍨≢t← ⎕C ⍵     
-   }  
-⍝  2. Initialize all variables (required before any operation)    
-   p q n phi e d msg cipher decrypted← gmpz.New¨ 9⍴0   
-⍝  Initialize random number generator with entropy ⍝  (automatically done when RandB is first called) 
-⍝  ... 
-⍝  3. Generate two distinct 512-bit probable primes (p and q)     
-⍝  p...    
-   p.(NextPrime RandB 512) 
-⍝  q...    
-   :Repeat         ⍝ Ensure p ≠ q       
-      q.(NextPrime RandB 512)    
-   :Until q.Ne p   
-⍝  4. Compute the  modulus n: n ← p × q (1024-bit)    
-   p n.Mul q  
-⍝  5. Compute Euler's totient: phi← (p - 1) × (q - 1)    
-   p.Dec phi.Mul q.Dec          ⍝ p is now p-1, q is now q-1   
-⍝  6. Set public exponent e = 65537 and compute private exponent (d← e*-1 mod phi)    
-    e.Set 65537                  ⍝ 1+2*16    
-    :IF 0= e d.Invert phi     ⍝ Are e and phi coprime?        
-       ret← 'Error: e and phi are not coprime.'       
-       :return    
-   :EndIf 
-⍝  7. Encode the input Unicode msgIn into the mpz ¨msg¨ via hex helper fn ¨HS¨    
-   16 msg.Set HS msgIn  
-⍝     Ensure message isn't too big (Len, # of bits) for the demo. 
-⍝     In real life, we'd process large messages a section at a time ;-(    
-   :IF msg.Len ≥ n.Len        
-       ⎕← 'Message is too large' ⋄ :Return     
-   :EndIf  
-⍝  8. Encrypt: cipher = (msg * e) mod n    
-   msg cipher.PowM e n 
-⍝  9. Decrypt: decrypted = (cipher * d) mod n    
-   cipher decrypted.PowM  d n 
-⍝ 10. Print results     
-   ⎕← 'Input message:      ', msg     
-   ⎕← 'Public Modulus (n): ', ⌷n    
-   ⎕← 'Encrypted Cipher:   ', ⌷cipher    
-   ⎕← 'Decrypted Message:  ', 0 HS decrypted.GetInBase 16   
-⍝ 11. Verify correctness    
-   :IF 0= msg.Cmp decrypted        
-       ret← 'Success: Decrypted message matches original'    
-   :Else        
-       ret← 'Failure: Decrypted message does not match original'    
-   :EndIf 
-⍝ 11. Free all allocated memory  
-⍝     gmpz does it all for you!  
-⍝  . . . 
-∇
+∇ ret← GmpzExample msgIn
+⍝  To run:
+⍝    ret@CV← GmpzExample msgIn@CV
+⍝  msgIn: An APL string that can be encoded in fewer than modBits (1024) bits (UTF-8)
+⍝  Success if it returns a happy message
+
+⍝--1 DECLARATIONS AND INITIALIZATION ------------------------------------------------------------------
+⍝    Declarations, definitions, etc.
+
+⍝  Declare helper functions
+     ; HS; Tidy
+   
+⍝  Declare all mpz_t variables
+⍝  Declare # of bits in the modulus
+     ; p; q; n; phi; e; d; msg; cipher; decrypted
+     ; modBits
+   
+⍝  Initialise modBits: max # of bits in the modulus.  Must be even.
+   modBits← 1024                                             ⍝ Fast, even if 4096            
+   'Modulus must be even number of bits' ⎕SIGNAL 11/⍨ 0≠ 2|modBits 
+   
+⍝  Define helper fn HS (Hexadecimal String)
+⍝    str@CV← [[1: encrypt | 0: decrypt]] ∇ str@CV
+   HS← {⎕IO← 0 ⋄ ⍺← 1 ⋄ hd← ⎕D,'abcdef' ⋄ U← 'UTF-8'∘⎕UCS
+     ⍺=1: ,hd[⍉16 16⊤U ⍵] ⋄ U 16⊥hd⍳⍉t⍴⍨2,⍨2÷⍨≢t← ⎕C ⍵~' '
+   }
+⍝  Define helper fn Tidy: Print long results in nice rows of 64 bytes, with left margin of  4 spaces
+⍝      ∇ str@CV
+   Tidy← 64 { ⍺← ⍬ ⋄ p← ⍵⍵⍴'' ⋄ ⍺⍺≥ ≢⍵: ↑⍺,⊂p, ⍵ ⋄ (⍺, ⊂p, ⍺⍺↑⍵) ∇ ⍺⍺↓⍵ } 4
+   
+⍝  Initialize all mpz variables
+   p q n phi e d msg cipher decrypted← gmpz.New¨9⍴0
+   
+⍝--2 GENERATE PUBLIC ANd PRIVATE KEYS -----------------------------------------------------------------
+
+⍝  Initialize random number generator with entropy
+⍝     (automatic/default when RandB is first called)
+⍝   Generate two distinct 512-bit probable primes (p and q)
+
+⍝  p...
+   p.(NextPrime RandB) modBits÷2
+   
+⍝  q...
+   :Repeat  ⍝⍝ Ensure p ≠ q
+      q.(NextPrime RandB) modBits÷2
+   :Until q.Ne p
+
+⍝  Compute the  modulus n: n ← p × q  (n is modBits bits) in length)
+   p n.Mul q
+   
+⍝  Compute Euler's totient: phi← (p - 1) × (q - 1)
+   p.Dec phi.Mul q.Dec                                       ⍝ p is now p-1, q is now q-1
+   
+⍝  Set public exponent e = 65537 and compute private exponent
+   e.Set 65537
+   :If 0=e d.Invert phi                                      ⍝ Invert: d← e*-1 mod phi
+      ret← 'Error: e and phi are not coprime.'  ⋄ :Return
+   :EndIf
+   
+⍝- 3 IMPORT MSG -----------------------------------------------------------------------------------
+⍝    Import the plaintext msgIn ==> msg
+⍝    Using base-10 string initialization for an arbitrarily large integer
+   16 msg.Set HS msgIn
+   
+   :If msg.Len≥ n.Len                                        ⍝ Be sure not too big (keep it simple for the demo)
+      ret← 'Your message is too big' ⋄  :Return 
+   :EndIf
+   
+⍝--4 ENCRYPT --------------------------------------------------------------------------------------
+⍝    Encrypt: cipher ← (msg × e) mod n
+     msg cipher.PowM e n
+   
+⍝--5 DECRYPT -------------------------------------------------------------------------------------
+⍝    Decrypt: decrypted ← (cipher × d) mod n
+   cipher decrypted.PowM d n
+   
+⍝--6 PRINT AND VERIFY-----------------------------------------------------------------------------
+⍝  Print results
+   ⎕← 'Public Modulus (n): '  ⋄ ⎕← Tidy n.GetInBase 16
+   ⎕← 'Encrypted Cipher:   '  ⋄ ⎕← Tidy cipher.GetInBase 16
+   ⎕← 'Decrypted Message:  '  ⋄ ⎕← Tidy 0 HS decrypted.GetInBase 16
+
+⍝  Verify correctness
+   :If 0=msg.Cmp decrypted
+      ret← 'Success: Decrypted message matches original'
+   :Else
+      ret← 'Failure: Decrypted message does not match original'
+   :EndIf
+
+⍝--6 FREE STUFF ----------------------------------------------------------------------------------
+⍝    Free all allocated memory
+⍝    gmpz does it all for you!
 ``` 
 
 ### OUTPUT [^2] 
