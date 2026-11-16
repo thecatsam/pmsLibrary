@@ -254,7 +254,7 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | `a ⌽GI b` | shift b by a bits |  |  |
 | `a *∘|GI (e m)` | m\|a\*e (PowM) |  |  |
 | `a ⍳GI i` | position of the lowest bit of a equal to i (0 or 1); largest U8 value if none (plain integer) |  |  |
-| `a <GI b …` | also ≤ \= ≥ \> ≠, returning 0 or 1 |  |  |
+| <code>a&nbsp;\<GI&nbsp;b</code> … | also ≤ \= ≥ \> ≠, returning 0 or 1 |  |  |
 | `a ⊤GI b` | retrieve b in base a | ⊤GI b | retrieve b  |
 | `a ⊥GI b`  | a copy of b in base a | ⊥GI b | a (full) copy of b  |
 
