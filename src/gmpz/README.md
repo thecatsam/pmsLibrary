@@ -28,7 +28,7 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
    ⌷b                                   ⍝ value of b in string form`
 ```
 
-| Call&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&zwj; | Result |
+| Call | Result |
 | :----------------------------------------- | :---- |
 | `str← ⌷a` | *a* in base 10 as a string (any length). |
 | <code>a.Set&nbsp;value&nbsp;/&nbsp;base&nbsp;a.Set&nbsp;value</code> | Overwrite **a** with value (base applies to strings only, default 10). Returns **a** itself (shy), so calls can be chained. |
@@ -182,7 +182,7 @@ These act on a (default: the receiver c). With a left argument that is a gmpz, a
 | Method | Meaning |
 | :---- | :---- |
 | `bool←[a] c.TestBit n` | Returns bit n. |
-| `val← [a] c.SetBit n [val]` | Sets bit n to val (default 1): c.SetBit 5 or c.SetBit 5 0\. |
+| <code>val←&nbsp;[a]&nbsp;c.SetBit&nbsp;n&nbsp;[val]</code> | Sets bit n to val (default 1): c.SetBit 5 or c.SetBit 5 0\. |
 | `bit← [a] c.ClrBit n` | Clears bit n (sets it to 0). |
 | `bit← [a] c.Flip n` | Complements bit n, and returns its new value. |
 | `pos← [a] c.Iota bit` | Index of the lowest bit equal to bit (0 or 1), counted in your ⎕IO. Result is not shy. |
