@@ -186,7 +186,7 @@ These act on a (default: the receiver c). With a left argument that is a gmpz, a
 | `bit← [a] c.ClrBit n` | Clears bit n (sets it to 0). |
 | `bit← [a] c.Flip n` | Complements bit n, and returns its new value. |
 | `pos← [a] c.Iota bit` | Index of the lowest bit equal to bit (0 or 1), counted in your ⎕IO. Result is not shy. |
-| `pos← [a] c.Scan (start bit)` | Like Iota, but begins the search at index start (in your ⎕IO). A start below ⎕IO gives badBitIxÊ. Result is not shy. |
+| <code>pos←&nbsp;[a]&nbsp;c.Scan&nbsp;(start&nbsp;bit)</code> | Like Iota, but begins the search at index start (in your ⎕IO). A start below ⎕IO gives badBitIxÊ. Result is not shy. |
 
 Iota and Scan are ⎕IO-sensitive, returning the largest possible U8 value when the specified bit (1 or 0\) is not found (GMP's mpz\_scan0/mpz\_scan1 do this). The Bit\[...\] property is usually the convenient choice, especially for several bits at once.
 
