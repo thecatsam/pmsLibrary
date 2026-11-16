@@ -141,8 +141,6 @@ There are no \< or \> methods — use the named forms below or use <code>\<GI</c
 
 a.Bit\[ix\] reads or writes individual bits in place. The least significant bit is at index 0 if ⎕IO=0, and at index 1 if ⎕IO=1.
 
-*Known issue: Bit and Bits have a known problem, left as-is for now. Treat the examples below as the intended behaviour, and verify against your build if a result looks off.*
-
 ```
 a← ⎕NEW gmpz 15             ⍝ 1111₂ 
 a.Bit[0 1 2]← 0             ⍝ a is now 8 (1000₂) 
@@ -189,11 +187,11 @@ These act on a (default: the receiver c). With a left argument that is a gmpz, a
 | `pos← [a] c.Iota bit` | Index of the lowest bit equal to bit (0 or 1), counted in your ⎕IO. Result is not shy. |
 | <code>pos←&nbsp;[a]&nbsp;c.Scan&nbsp;(start&nbsp;bit)</code> | Like Iota, but begins the search at index start (in your ⎕IO). A start below ⎕IO gives badBitIxÊ. Result is not shy. |
 
-Iota and Scan are ⎕IO-sensitive, returning the largest possible U8 value when the specified bit (1 or 0\) is not found (GMP's mpz\_scan0/mpz\_scan1 do this). The Bit\[...\] property is usually the convenient choice, especially for several bits at once.
+Iota and Scan are ⎕IO-sensitive, returning the largest possible U8 value when the specified bit (1 or 0\) is not found. 
 
 # **6\.  Random numbers**
 
-Uses GMP's Mersenne Twister in a single shared random state, created on first use and seeded from system entropy until you call RandSeed. Rand and RandB are ⎕IO-sensitive — in ⎕IO←1 Rand returns 1…b and RandB returns 1…2\*n (in ⎕IO←0, 0…b-1 and 0…2\*n-1).
+Uses GMP's Mersenne Twister; its state is created on first use of a Random number function and seeded from system entropy by default (it can be changed via RandSeed). Rand and RandB are ⎕IO-sensitive — in ⎕IO←1 Rand returns 1…b and RandB returns 1…2\*n (in ⎕IO←0, 0…b-1 and 0…2\*n-1).
 
 ```
    c← ⎕NEW gmpz '123456789012345678901234567890' 
@@ -256,11 +254,10 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | <code>a&nbsp;\*∘\|GI&nbsp;(e&nbsp;m)</code> | m\|a\*e (PowM) |  |  |
 | `a ⍳GI i` | position of the lowest bit of a equal to i (0 or 1); largest U8 value if none (plain integer) |  |  |
 | <code>a&nbsp;\<GI&nbsp;b</code> … | also ≤ \= ≥ \> ≠, returning 0 or 1 |  |  |
-| `a ⊤GI b` | retrieve b in base a | ⊤GI b | retrieve b  |
-| `a ⊥GI b`  | a copy of b in base a | ⊥GI b | a (full) copy of b  |
+| `a ⊤GI b` | retrieve a string representation of **b** in base **a** | ⊤GI b | string version of b  |
+| `a ⊥GI b`  | return a new (private) copy of *b *in base *a* | ⊥GI b | a private copy of b  |
 
-Note: <code>(mpz mpz)← a ÷∘\|GI b</code> calls DivRem returning <code>((a÷m), (m\|a))</code>, floored, both mpz's.
-
+Note: <code>(mpz mpz)← a ÷∘\|GI b</code> calls DivRem, returning <code>((a÷m), (m\|a))</code>, floored, both mpz's.
 
 Use the gmpz methods directly when you want to avoid allocating a new object per operation. An unsupported glyph gives unknownÊ.
 
