@@ -246,7 +246,7 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | `a −GI b` | a−b | `|GI b` | absolute value |
 | `a ×GI b` | a×b | `?GI b` | random in \[0, b) |
 | `a ÷GI b` | ⌊a÷b (floored) | `!GI b` | factorial |
-| `a ÷∘\|GI b` | DivRem (see note below) | `×GI b` | signum (plain integer) |
+| <code>a&nbsp;÷∘\|GI&nbsp;b</code> | DivRem (see note below) | `×GI b` | signum (plain integer) |
 | `a *GI b` | a\*b (b may be ÷n) | `<GI b` | b−1 |
 | `a ∨GI b` | gcd | `>GI b` | b+1 |
 | `a ∧GI b` | lcm | `≢GI b` | string length (b.StrLen, plain integer) |
@@ -257,7 +257,6 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | <code>a&nbsp;\<GI&nbsp;b</code> … | also ≤ \= ≥ \> ≠, returning 0 or 1 |  |  |
 | `a ⊤GI b` | retrieve b in base a | ⊤GI b | retrieve b  |
 | `a ⊥GI b`  | a copy of b in base a | ⊥GI b | a (full) copy of b  |
-| :---- |
 
 Note: <code>(mpz mpz)← a ÷∘\|GI b</code> calls DivRem returning <code>((a÷m), (m\|a))</code>, floored, both mpz's.
 
