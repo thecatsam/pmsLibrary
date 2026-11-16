@@ -32,7 +32,7 @@ For Dyalog APL v20 or later and GMP 6.3 or later. [Tested on Mac/OS, but designe
 | Call | Result |
 | :----------------------------------------- | :---- |
 | `str← ⌷a` | *a* in base 10 as a string (any length). |
-| <code>a.Set&nbsp;value&nbsp;/&nbsp;base&nbsp;a.Set&nbsp;value</code> | Overwrite **a** with value (base applies to strings only, default 10). Returns **a** itself (shy), so calls can be chained. |
+| <code>a.Set&nbsp;value&nbsp;/&nbsp; base&nbsp;a.Set&nbsp;value</code> | Overwrite **a** with value (base applies to strings only, default 10). Returns **a** itself (shy), so calls can be chained. |
 | `int← a.Int` | a as an APL integer (signed 64-bit). Error (badIntÊ) if it doesn't fit. |
 | `ok int← a.VFI` | 1 n if it fits in 64 bits, else 0 0\. Never errors. |
 | `int← a.StrLen` | Number of characters in ⌷a, including the leading ¯. Same as ≢⌷a, without building the string. |
