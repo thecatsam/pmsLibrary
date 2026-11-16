@@ -28,7 +28,7 @@ For Dyalog APL v20 (64-bit) and GMP 6.3 or later.
    ⌷b                                   ⍝ value of b in string form`
 ```
 
-| Call&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Result |
+| Call | Result |
 | :----------------------------------------- | :---- |
 | `str← ⌷a` | *a* in base 10 as a string (any length). |
 | `a.Set value / base a.Set value` | Overwrite **a** with value (base applies to strings only, default 10). Returns **a** itself (shy), so calls can be chained. |
@@ -52,8 +52,7 @@ Most methods are in place. The receiver is overwritten and returned (shy).
 
 ```
    c.Add b             ⍝ c ← c + b 
-   a c.Add b           
-   ⍝ c ← a + b   (c is only the destination) 
+   a c.Add b           ⍝ c ← a + b   (c is only the destination) 
    ⌷(c.Set 5).Inc      ⍝ results are shy and return the receiver, so calls chain: c is now 6
 ```
 
@@ -79,7 +78,7 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 
 | Method | Meaning | Notes |
 | :----------------------------------------------------------------------------------------------- | :----------- | :---------- |
-| `[a] c.Add b`<img width="600" height="1">| `c ← a + b` |  |
+| `[a] c.Add b`<img width="1000" height="1">| `c ← a + b` |  |
 | `[a] c.Sub b` | `c ← a − b` |  |
 | `[a] c.Mul b` | `c ← a × b` |  |
 | `[a] c.Div b` | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b.` Signals divZÊ if b is 0\. |
