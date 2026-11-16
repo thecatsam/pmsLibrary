@@ -77,9 +77,9 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 
 \[a\]: if a is omitted, it defaults to the receiver c.
 
-| Method <img width="300" height="1">| Meaning | Notes |
+| Method | Meaning | Notes |
 | :----------------------------------------------------------------------------------------------- | :----------- | :---------- |
-| `[a] c.Add b`<img width="300" height="1">| `c ← a + b` |  |
+| `[a] c.Add b`<img width="600" height="1">| `c ← a + b` |  |
 | `[a] c.Sub b` | `c ← a − b` |  |
 | `[a] c.Mul b` | `c ← a × b` |  |
 | `[a] c.Div b` | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b.` Signals divZÊ if b is 0\. |
