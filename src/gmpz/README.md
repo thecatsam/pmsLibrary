@@ -77,7 +77,7 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 
 \[a\]: if a is omitted, it defaults to the receiver c.
 
-| Method | Meaning | Notes |
+| Method&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Meaning | Notes |
 | :----------------------------------------------------------------------------------------------- | :----------- | :---------- |
 | `[a] c.Add b` | `c ← a + b` |  |
 | `[a] c.Sub b` | `c ← a − b` |  |
