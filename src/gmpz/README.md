@@ -255,7 +255,7 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | `a ⍳GI i` | position of the lowest bit of a equal to i (0 or 1); largest U8 value if none (plain integer) |  |  |
 | <code>a&nbsp;\<GI&nbsp;b</code> … | also ≤ \= ≥ \> ≠, returning 0 or 1 |  |  |
 | `a ⊤GI b` | retrieve a string representation of **b** in base **a** | ⊤GI b | string version of b  |
-| `a ⊥GI b`  | return a new (private) copy of *b *in base *a* | ⊥GI b | a private copy of b  |
+| `a ⊥GI b`  | return a new (private) copy of **b** in base **a** | ⊥GI b | a private copy of b  |
 
 Note: <code>(mpz mpz)← a ÷∘\|GI b</code> calls DivRem, returning <code>((a÷m), (m\|a))</code>, floored, both mpz's.
 
