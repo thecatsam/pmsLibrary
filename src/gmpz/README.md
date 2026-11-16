@@ -205,7 +205,7 @@ Uses GMP's Mersenne Twister in a single shared random state, created on first us
 | :---- | :---- |
 | `r.Rand b` | r ← uniform in \[0, b); b may be gmpz, integer or string; must be positive. |
 | `r.RandB n` | r ← uniform in \[0, 2\*n). |
-| `r.RandSeed u` | Seeds with unsigned 64-bit u; returns the old seed (shy) as a string. RandSeed 0 (null) reseeds from system entropy. |
+| <code>r.RandSeed u</code> | Seeds with unsigned 64-bit u; returns the old seed (shy) as a string. RandSeed 0 (null) reseeds from system entropy. |
 
 Only one random state exists for all objects; reseeding anywhere affects every later Rand and RandB.
 
