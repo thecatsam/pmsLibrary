@@ -118,7 +118,7 @@ Methods that take *only* a right argument — Neg, Abs, Fac, NextPrime, PrevPrim
 
 # **4\.  Comparison**
 
-There are no .\< or .\> methods — use the named forms below. If a is omitted, it defaults to the receiver x. If b is an APL integer, a faster signed-integer comparison is used.
+There are no \< or \> methods — use the named forms below or use <code>\<GI</code>, <code>\>GI</code>, etc. If a is omitted, it defaults to the receiver x. If b is an APL integer, a faster signed-integer comparison is used.
 
 | Method | APL equivalent | Returns |
 | :---- | :---- | :---- |
