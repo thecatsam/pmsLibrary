@@ -218,9 +218,9 @@ Tidy← {
                         ⋄ ifMatches← 'Name|Sect|If|Rep|For|Sel|Whil|Trap|With|Hold|Disp|Class|Property'
                         ctrlIfP←   '(?i):(', ifMatches, ')\w*'
                         ctrlElseP← '(?i):(?|Else|And|Or)\w*'            ⍝ Else, ElseIf, And, AndIf, Or, OrIf
-                        ctrlCaseP← '(?i):(?|Case|Access)\w*'
+                        ctrlCaseP← '(?i):(?|Case|Access|Field)\w*'      ⍝ :Case, :Access, :Field--- extend halfway to If position.
                         ctrlEndP←  '(?i):(?:End\w*|Until)'
-                        ⋄ ignMatches← 'Ret|Goto|Leav|Cont|In|Acc|Implem|Field'
+                        ⋄ ignMatches← 'Ret|Goto|Leav|Cont|In|Acc|Implem'
                         ctrlIgnoreP← '(?i):(?|', ignMatches, ')\w*'     ⍝ :Hold and :Disposable
                         cmSectEP←  '(?i)^\h*⍝\h*:E(nd)?\w*.*$'          ⍝  ⍝ :E or :End or :EndSection
                   ⍝:E Key Patterns 
