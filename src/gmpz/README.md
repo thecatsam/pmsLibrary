@@ -1,6 +1,7 @@
-*Backed by GMP mpz calls (libgmp)  •  Cheat sheet — updated edition*
+# **gmpz** &emdash; Dyalog Apl class and helper function **GI**
+*Backed by GMP mpz calls (libgmp)  •  Nov 2026 Edition*
 
-For Dyalog APL v20 (64-bit) and GMP 6.3 or later. 
+For Dyalog APL v20 or later and GMP 6.3 or later. [Tested on Mac/OS, but designed for Mac/OS and Windows]
 
 # **Setup**
 
