@@ -289,21 +289,23 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 
 # **10\.  Quick reference and gotchas**
 
-1. **In a c.Op b,** c is the destination and is overwritten and a is the left operand; in c.Op b the receiver is both the left operand and the destination.  
-2. Res (\|) and Shift (⌽) require a left argument; most others default it to the receiver. Neg, Abs, Fac, NextPrime, PrevPrime, Rand and RandB take only a right argument.  
+1. In <code>a c.Op b</code>, **c** is the destination and is overwritten and **a** is the left operand; in <code>c.Op b</code> the receiver is both the left operand and the destination.  
+2. Res (**\|**) and Shift (**⌽**) require a left argument; most others default it to the receiver. Neg, Abs, Fac, NextPrime, PrevPrime, Rand and RandB take only a right argument.  
 3. **Shy results:** Even, Odd, Divisible, DivRem, TestBit, SetBit, ClrBit, Flip, ProbabPrime, Rand, RandSeed and the in-place arithmetic methods print nothing in the session. Assign the result, or use ⎕←x.Even.  
-4. **Pow exponent** must be a plain APL non-negative integer or ÷n (for roots). Negative exponents are invalid.  
-5. **DivRem divisors** may be any supported operand type and must be non-zero (divZÊ if 0).  
-6. Use ⌷a to see the final (string) value. It is more efficient to keep working with gmpz objects, so that no unnecessary conversions to and from gmpz are needed.  
-7. Strings may use the high minus (¯) on input; it is converted to −.  
-8. The base (2 through 62\) only matters when importing numeric strings; it is ignored for other operand types.  
-9. a.Int only succeeds when the value fits a signed 64-bit integer; use VFI to test safely. Set ⎕FR←1287 in your session if you manipulate 64-bit integers.  
+4. **Pow exponent** must be a plain APL non-negative integer *n* or *÷n* (for roots). Negative exponents are invalid.  
+5. **DivRem divisors** may be any supported operand type and must be non-zero (divZÊ if **0**).  
+6. Use `⌷a` to see the final (string) value. It is more efficient to keep working with gmpz objects, so that no unnecessary conversions to and from gmpz are needed.  
+7. Strings may use the high minus **¯** on input; it is converted to **-** by gmpz utilities.  
+8. The base (2 through 62\) can be specified when importing numeric strings; it is invalid for other operand types.  
+9. `a.Int` only succeeds when the value fits a signed 64-bit integer; use **VFI** to test safely. Set `⎕FR←1287` in your session if you manipulate 64-bit integers.  
 
 # 
 
-# **Appendix: Encrypt a Hexadecimal Message**
+# **Appendix: Encrypt a Message Using Simplified RSA Key**
 
-Implement a simplified[^1] **RSA key generation, encryption, and decryption** workflow. This demonstrates the core lifecycle of GMP integers: initialization, random prime generation, modular arithmetic, modular inverse, and memory cleanup.
+Implement a simplified[^1] **RSA key generation, encryption, and decryption** workflow. 
+This demonstrates the core lifecycle of GMP integers: 
+initialization, random prime generation, modular arithmetic, modular inverse, and memory cleanup.
 
 ## **Example**
 ```
