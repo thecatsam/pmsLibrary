@@ -127,7 +127,6 @@
    ⍝ Call:    rs← ⎕NEW randState                               ⍝ Not directly called by user. See fn Rand, RandB.
    ⍝ When rs goes out of scope, the storage is released
       :Field Private Instance       r⍙ptr← 0
-      :Field Public Shared          DEBUG← ##.DEBUG≥2           
       :Field Public Shared          active← 0                  ⍝ Only 1 active instance is allowed!
       :Field Public Shared          seeds← (?¯1+ 2* ##.WINDOWS⊃63 32) 0 ⍝ Order: newseed oldseed. A seed fits in a UL.
       ∇ Init0
@@ -141,13 +140,13 @@
             :EndIf
             {}gNs.RandInitDef r⍙ptr
             {}gNs.RandSeedU   r⍙ptr (⊃seeds)                   ⍝ Seed from APL random #
-            :If DEBUG ⋄ ⎕← 'rand: Alloc state var [',r⍙ptr⍕⍛, ']'  ⋄ :EndIf
+            :If 2≤ ##.DEBUG ⋄ ⎕← 'rand: Alloc state var [',r⍙ptr⍕⍛, ']'  ⋄ :EndIf
          :Else
             :If 0≠ r⍙ptr
                {}gNs.RandClear r⍙ptr
                {}gNs.Free r⍙ptr
                r⍙ptr← 0
-               :If DEBUG ⋄ ⎕← 'rand:  Free state var [', r⍙ptr⍕⍛, ']'  ⋄ :EndIf
+               :If 2≤ ##.DEBUG ⋄ ⎕← 'rand:  Free state var [', r⍙ptr⍕⍛, ']'  ⋄ :EndIf
             :EndIf
             ##.DmxSig⍬                                         ⍝ Re-signal at the caller; do NOT set active←1
          :EndTrap
@@ -155,7 +154,7 @@
       ∇
       ∇ Free
          :Implements Destructor
-         :If DEBUG ⋄ ⎕← 'rand:  Free state var [', r⍙ptr⍕⍛, ']'  ⋄ :EndIf
+         :If 2≤ ##.DEBUG ⋄ ⎕← 'rand:  Free state var [', r⍙ptr⍕⍛, ']'  ⋄ :EndIf
          :If 0≠ r⍙ptr
             {}gNs.RandClear r⍙ptr
             {}gNs.Free r⍙ptr
@@ -457,29 +456,29 @@
       ⍝ obj: Can be set from  num str, gmpz obj, or integer.
          :Select Case_T b  
           :Case str_T                      
-           string:                       ⍝⍝ ←←←←←←←←←←←←←←←←←←←←←←←←←┐
-            :If 900⌶⍬ ⋄ base← 10 ⋄ :EndIf⍝⍝                          ↑
-            b← '-'@('¯'∘=),b             ⍝⍝                          ↑
-            rc← gNs.SetStr ⍙ptr b base   ⍝⍝                          ↑     ⍝ SetStr will handle invalid numeric strings.
-            ⎕SIGNAL badObjÊ/⍨ rc≠0       ⍝⍝                          ↑
-          :Case mpz_T                    ⍝⍝                          ↑
-            ⎕SIGNAL baseXtraÊ/⍨ ~900⌶⍬   ⍝⍝                          ↑
-            :If ⍙ptr≠ bP← b.ptr          ⍝⍝                          ↑
-               {}gNs.Set ⍙ptr bP         ⍝⍝                          ↑
-            :EndIf                       ⍝⍝                          ↑
-          :Caselist si_T ui_T            ⍝⍝                          ↑     ⍝ any integer 
-            ⎕SIGNAL baseXtraÊ/⍨ ~900⌶⍬   ⍝⍝                          ↑
-            {}gNs.SetI ⍙ptr b            ⍝⍝                          ↑
-          :Case i128_T                   ⍝⍝                          ↑     ⍝ Number is bigger than uint64, so convert to string int.
-            ⎕SIGNAL baseXtraÊ/⍨ ~900⌶⍬   ⍝⍝                          ↑
-            b← ⍕b                        ⍝⍝                          ↑
-            :Goto string                 ⍝⍝ →→→→→→→→→→→→→→→→→→→→→→→--┘
+           string:                        ⍝⍝ ←←←←←←←←←←←←←←←←←←←←←←←←┐
+            :If 900⌶⍬ ⋄ base← 10 ⋄ :EndIf ⍝⍝                         ↑
+            b← '-'@('¯'∘=),b              ⍝⍝                         ↑
+            rc← gNs.SetStr ⍙ptr b base    ⍝⍝                         ↑     ⍝ SetStr will handle invalid numeric strings.
+            ⎕SIGNAL badObjÊ/⍨ rc≠0        ⍝⍝                         ↑
+          :Case mpz_T                     ⍝⍝                         ↑
+            ⎕SIGNAL baseXtraÊ/⍨ ~900⌶⍬    ⍝⍝                         ↑
+            :If ⍙ptr≠ bP← b.ptr           ⍝⍝                         ↑
+               {}gNs.Set ⍙ptr bP          ⍝⍝                         ↑
+            :EndIf                        ⍝⍝                         ↑
+          :Caselist si_T ui_T             ⍝⍝                         ↑     ⍝ any integer 
+            ⎕SIGNAL baseXtraÊ/⍨ ~900⌶⍬    ⍝⍝                         ↑
+            {}gNs.SetI ⍙ptr b             ⍝⍝                         ↑
+          :Case i128_T                    ⍝⍝                         ↑     ⍝ Number is bigger than uint64, so convert to string int.
+            ⎕SIGNAL baseXtraÊ/⍨ ~900⌶⍬    ⍝⍝                         ↑
+            b← ⍕b                         ⍝⍝                         ↑
+            :Goto string                  ⍝⍝ →→→→→→→→→→→→→→→→→→→→→→--┘
          :Else                                               
             ⎕SIGNAL badAplÊ 
          :EndSelect 
       ∇
    ⍝ Destructor: runs automatically when the object is expunged or goes out of scope.
-      ∇ Free
+      ∇ Free  
          :Implements Destructor
          :If DEBUG≥1 ⋄ ⎕← 'Free [',(⍕⎕THIS),': ', ']',⍨ ⍕⍙ptr  ⋄ :EndIf
          :If ⍙ptr≠ 0
@@ -1515,19 +1514,19 @@
          :If 900⌶⍬
          ⍝  MONADIC
             :Select nm
-             :Case '-' ⋄ c.Neg b                               ⍝ c← -b
-             :Case '|' ⋄ c.Abs b                               ⍝ c← |b
-            ⍝ ?ddd is like APL ?ddd. ?-ddd is like ?2*ddd. ddd is any integer.
-             :Case '?' ⋄ { ⍵ c.Gt 0: c.Rand ⍵ ⋄ c.RandB c.Neg ⍵ } b  ⍝ c← ?b
-             :Case '×' ⋄ res← (c.Set b).Signum                 ⍝ c← ×b
-             :Case '!' ⋄ c.Fac b                               ⍝ c← !b
-             :Case '<' ⋄ (c.Set b).Dec                         ⍝ c← b-1
-             :Case '>' ⋄ (c.Set b).Inc                         ⍝ c← b+1
-             :Case '≢' ⋄ res← (c.Set b).StrLen                 ⍝ int← ≢⌷b
-             :Case '⍎' ⋄ res← (c.Set b).IntApl                 ⍝ int← b.IntApl
-             :Case '⌷' ⋄ res← (c.Set b).Bits                   ⍝ str← b.Bits, for a gmpz, string, or APL integer b
-             :Case '⊤' ⋄ res← gmpz.Get b                       ⍝ retrieve value of b as a STRING
-             :Case '⊥' ⋄ c.Set b                               ⍝ return a copy of b. b any int/ mpz type. 
+             :Case '-'    ⋄ c.Neg b                            ⍝ c← -b
+             :Case '|'    ⋄ c.Abs b                            ⍝ c← |b
+             :Case '?'    ⋄ c.{ ⍵ Ge 0: Rand ⍵ ⋄ RandB Neg ⍵ } b ⍝ If b>0, do Rand b. If b<0, do RandB -b.
+             :Case '×'    ⋄ res← (c.Set b).Signum              ⍝ c← ×b
+             :Case '!'    ⋄ c.Fac b                            ⍝ c← !b
+             :Case '<'    ⋄ (c.Set b).Dec                      ⍝ c← b-1
+             :Case '>'    ⋄ (c.Set b).Inc                      ⍝ c← b+1
+             :Case '≢'    ⋄ res← (c.Set b).StrLen              ⍝ int← ≢⌷b
+             :Case '⍎'    ⋄ res← (c.Set b).IntApl              ⍝ int← b.IntApl
+             :Case '⎕VFI' ⋄ res← c.VFI b                       ⍝ Like (bits ints)← ⎕VFI b. 
+             :Case '⌷'    ⋄ res← (c.Set b).Bits                ⍝ str← b.Bits, for a gmpz, string, or APL integer b
+             :Case '⊤'    ⋄ res← gmpz.Get b                    ⍝ retrieve value of b as a STRING
+             :Case '⊥'    ⋄ c.Set b                            ⍝ return a copy of b. b any int/ mpz type. 
             :Else ⋄ ⎕SIGNAL unknownÊ
             :EndSelect
          :Else
@@ -1541,8 +1540,6 @@
              :Case '∨'   ⋄ a c.Gcd b                           ⍝ mpz← a∨b
              :Case '∧'   ⋄ a c.Lcm b                           ⍝ mpz← a∧b
              :Case '|'   ⋄ a c.Res b                           ⍝ a is the modulus (APL int), b the value
-             :Case '⌽'   ⋄ a c.Shift b                         ⍝ binary shift: a is the shift amount (APL int) L or R
-             :Case '⍳'   ⋄ res← a c.Iota b                     ⍝ a⍳b, where b∊ 0 1
              :Case '<'   ⋄ res← a c.Lt b                       ⍝ c← a< b. comparisons return boolean 0/1 directly
              :Case '≤'   ⋄ res← a c.Le b
              :Case '='   ⋄ res← a c.Eq b
@@ -1551,9 +1548,11 @@
              :Case '>'   ⋄ res← a c.Gt b
              :Case '⌷'   ⋄ res← (c.Set b).Bit[a]               ⍝ bool← b.Bit [a]
              :Case '≢'   ⋄ res← ≢a gmpz.Get b                  ⍝ Get length of b in base a 
+             :Case '⌽'   ⋄ a c.Shift b                         ⍝ binary shift: a is the shift amount (APL int) L or R
             ⍝ ⊤GI and ⊥GI: Comparable to APL counterparts
              :Case '⊤'   ⋄ res← a gmpz.Get b                   ⍝ retrieve value of b as a STRING in base a.
              :Case '⊥'   ⋄ a c.Set b                           ⍝ return copy of INT STRING b, which is in base a.  
+             :Case '⍳'   ⋄ res← a c.Iota b                     ⍝ a⍳b, where b∊ 0 1
             ⍝ Take b[1]| a*b[0]) efficiently.
              :Case '*∘|' ⋄ a c.PowM b                          ⍝ mpz← mod| a*exp given (exp mod)←b .
             ⍝ Returns 2 args:
