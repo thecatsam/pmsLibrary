@@ -325,7 +325,7 @@ initialization, random prime generation, modular arithmetic, modular inverse, an
 ⍝  Declare # of bits in the modulus
      ; modBits
    
-⍝  Define helper fn HS (Hexadecimal String)
+⍝  Define helper fn HS (Unicode => exadecimal String)
 ⍝  HS:    str@CV← [[1: encrypt | 0: decrypt]] ∇ str@CV
    HS← {⎕IO← 0 ⋄ ⍺← 1 ⋄ hd← ⎕D,'abcdef' ⋄ U← 'UTF-8'∘⎕UCS
      ⍺=1: ,hd[⍉16 16⊤U ⍵] ⋄ U 16⊥hd⍳⍉t⍴⍨2,⍨2÷⍨≢t← ⎕C ⍵~' '
