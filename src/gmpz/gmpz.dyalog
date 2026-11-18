@@ -162,7 +162,7 @@
    :Field Public Shared ReadOnly WINDOWS← 'Windows'≡7↑⊃'.'⎕WG'APLVersion'
    :Field Shared ReadOnly ∆THIS← ⎕THIS                          ⍝ The class reference (used for ⎕NEW and class tests)
    :Field Shared ReadOnly ∆TRAP← 0 'E' 'DmxSig⍬'                ⍝ Standard ⎕TRAP for public methods: re-signal at caller
-   :Field Shared ReadOnly UL_MAX← ¯1+2* WINDOWS⊃64 32           ⍝ Max C unsigned long: 2*64-1 Unix, 2*32-1 Windows
+   :Field Public Shared ReadOnly UL_MAX← ¯1+2* WINDOWS⊃64 32     ⍝ Max C unsigned long: 2*64-1 Unix, 2*32-1 Windows
    :Field Shared ReadOnly IL_MAX← ¯1+2* WINDOWS⊃63 31           ⍝ Max C signed long: 2*63-1 Unix, 2*31-1 Windows
 
 ⍝ ───────────────────────────────────────────────────────────────────────────────

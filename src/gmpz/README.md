@@ -196,7 +196,7 @@ Note: Although GMP stores mpz_t values internally in sign-magnitude form, all bi
 | \[a\] c.Or b | c ← a ∨ b, bit by bit |
 | \[a\] c.Xor b | c ← a ≠ b, bit by bit |
 | c.Com | c ← bitwise NOT of c (that is, ¯1−c). Niladic, in place. |
-| <code>n←&nbsp;c.PopCount</code> | Number of 1 bits. A negative number has infinitely many, so the result is 2\*64−1 (Windows: 2\*32−1). |
+| <code>n←&nbsp;c.PopCount</code> | Number of 1 bits. A negative number has infinitely many, so the result is `gmpz.UL_MAX` (Unix: **¯1+2\*64**; Windows: **¯1+2\*32**). |
 | <code>n←&nbsp;[a]&nbsp;c.HamDist&nbsp;b</code> | Hamming distance: the number of bit positions where a and b differ (2\*64−1 if exactly one is negative). |
 
 ## **Bit methods (alternatives to the Bit property)**
@@ -212,7 +212,7 @@ All of these honour the caller's ⎕IO for their bit positions. A position below
 | <code>pos←&nbsp;[a]&nbsp;c.Iota&nbsp;bit</code> | Index of the lowest bit equal to bit (0 or 1), counted in your ⎕IO. Visible result. |
 | <code>pos←&nbsp;[a]&nbsp;c.Scan&nbsp;(start&nbsp;bit)</code> | Like Iota, but begins the search at index start (in your ⎕IO). Visible result. |
 
-Iota and Scan return **2\*64−1** (2\*32−1 on Windows), *not* adjusted for ⎕IO, when there is no such bit.
+Iota and Scan return `gmpz.UL_MAX` (**¯1+2\*64** on *Unix* systems, **¯1+2\*32** on *Windows*), *not* adjusted for ⎕IO, when there is no such bit.
 
 # **6\.  Random numbers**
 
