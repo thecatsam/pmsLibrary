@@ -1011,6 +1011,150 @@
      err←⎕DMX.EN
  :EndTrap
  rep,←⊂Chk(⊂'Shift 1.5 (non-integer shift) → shiftÊ EN 11')(⊂11)(⊂err)
+⍝ ── 27. Com / PopCount / HamDist / Float / ShiftFloor ───────────
+ :Trap 0
+     c←⎕NEW gmpz 5
+     rep,←⊂Chk(⊂'Com 5 = ¯6')(⊂'¯6')(⊂(⌷c.Com))
+     c←⎕NEW gmpz ¯1
+     rep,←⊂Chk(⊂'Com ¯1 = 0')(⊂'0')(⊂(⌷c.Com))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'Com 0 = ¯1')(⊂'¯1')(⊂(⌷c.Com))
+     c←⎕NEW gmpz 255
+     rep,←⊂Chk(⊂'PopCount 255 = 8')(⊂8)(⊂(c.PopCount))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'PopCount 0 = 0')(⊂0)(⊂(c.PopCount))
+     c←⎕NEW gmpz'18446744073709551615'
+     rep,←⊂Chk(⊂'PopCount 2*64-1 = 64')(⊂64)(⊂(c.PopCount))
+     c←⎕NEW gmpz ¯1
+     rep,←⊂Chk(⊂'PopCount of a negative = UL_MAX (infinitely many 1 bits)')(⊂¯1+2*gmpz.WINDOWS⊃64 32)(⊂(c.PopCount))
+     c←⎕NEW gmpz 255
+     rep,←⊂Chk(⊂'HamDist 255 15 = 4')(⊂4)(⊂(c.HamDist 15))
+     rep,←⊂Chk(⊂'HamDist with left operand: 10 vs 12 = 2')(⊂2)(⊂(10 c.HamDist 12))
+     c←⎕NEW gmpz 123
+     rep,←⊂Chk(⊂'Float 123')(⊂123)(⊂(c.Float))
+     c←⎕NEW gmpz'18446744073709551616'
+     rep,←⊂Chk(⊂'Float 2*64 (a double: compare with a tolerance, not exactly)')(⊂1)(⊂1E¯15>|1-(c.Float)÷2*64)
+     c←⎕NEW gmpz ¯5
+     rep,←⊂Chk(⊂'Float ¯5')(⊂¯5)(⊂(c.Float))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'ShiftFloor ¯1>>7 = 3')(⊂'3')(⊂(⌷(¯1 c.ShiftFloor 7)))
+     rep,←⊂Chk(⊂'ShiftFloor ¯1>>¯7 = ¯4 (floored; Shift gives ¯3)')(⊂'¯4')(⊂(⌷(¯1 c.ShiftFloor ¯7)))
+     rep,←⊂Chk(⊂'ShiftFloor ¯7>>¯3 = ¯1 (floored; Shift gives 0)')(⊂'¯1')(⊂(⌷(¯7 c.ShiftFloor ¯3)))
+     rep,←⊂Chk(⊂'ShiftFloor left 3<<1 = 8')(⊂'8')(⊂(⌷(3 c.ShiftFloor 1)))
+     rep,←⊂Chk(⊂'ShiftFloor 0 leaves value')(⊂'5')(⊂(⌷(0 c.ShiftFloor 5)))
+ :Else
+     rep,←⊂'**FAIL: Com / PopCount / HamDist / Float / ShiftFloor section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+ :EndTrap
+⍝ ── 28. Bin / Fib / Primorial / SqrtRem / IsSquare / IsPower / GcdExt / Divexact / Congruent ─
+ :Trap 0
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'Bin 10 choose 3 = 120')(⊂'120')(⊂(⌷(10 c.Bin 3)))
+     rep,←⊂Chk(⊂'Bin n choose 0 = 1')(⊂'1')(⊂(⌷(10 c.Bin 0)))
+     rep,←⊂Chk(⊂'Bin ¯3 choose 2 = 6 (generalised binomial)')(⊂'6')(⊂(⌷(¯3 c.Bin 2)))
+     rep,←⊂Chk(⊂'Bin 100 choose 50 (string n)')(⊂'100891344545564193334812497256')(⊂(⌷('100'c.Bin 50)))
+     c←⎕NEW gmpz 52
+     rep,←⊂Chk(⊂'Bin default n: 52 choose 5')(⊂'2598960')(⊂(⌷(c.Bin 5)))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'Fib 10 = 55')(⊂'55')(⊂(⌷c.Fib 10))
+     rep,←⊂Chk(⊂'Fib 0 = 0')(⊂'0')(⊂(⌷c.Fib 0))
+     rep,←⊂Chk(⊂'Fib 100')(⊂'354224848179261915075')(⊂(⌷c.Fib 100))
+     rep,←⊂Chk(⊂'Primorial 10 = 210')(⊂'210')(⊂(⌷c.Primorial 10))
+     rep,←⊂Chk(⊂'Primorial 0 = 1')(⊂'1')(⊂(⌷c.Primorial 0))
+     rep,←⊂Chk(⊂'Primorial 30 = 6469693230')(⊂'6469693230')(⊂(⌷c.Primorial 30))
+     c←⎕NEW gmpz 0
+     rem←c.SqrtRem 17
+     rep,←⊂Chk(⊂'SqrtRem 17: root = 4')(⊂'4')(⊂(⌷c))
+     rep,←⊂Chk(⊂'SqrtRem 17: remainder = 1 (a gmpz)')(⊂'1')(⊂(⌷rem))
+     rem←c.SqrtRem'1000000000000000000000000000000'
+     rep,←⊂Chk(⊂'SqrtRem 10*30: root = 10*15')(⊂'1000000000000000')(⊂(⌷c))
+     rep,←⊂Chk(⊂'SqrtRem 10*30: remainder = 0')(⊂'0')(⊂(⌷rem))
+     c←⎕NEW gmpz 16
+     rep,←⊂Chk(⊂'IsSquare 16 = 1')(⊂1)(⊂(c.IsSquare))
+     c←⎕NEW gmpz 15
+     rep,←⊂Chk(⊂'IsSquare 15 = 0')(⊂0)(⊂(c.IsSquare))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'IsSquare 0 = 1')(⊂1)(⊂(c.IsSquare))
+     c←⎕NEW gmpz ¯4
+     rep,←⊂Chk(⊂'IsSquare ¯4 = 0')(⊂0)(⊂(c.IsSquare))
+     c←⎕NEW gmpz 27
+     rep,←⊂Chk(⊂'IsPower 27 = 1')(⊂1)(⊂(c.IsPower))
+     c←⎕NEW gmpz 28
+     rep,←⊂Chk(⊂'IsPower 28 = 0')(⊂0)(⊂(c.IsPower))
+     c←⎕NEW gmpz 0
+     st←240 c.GcdExt 46
+     rep,←⊂Chk(⊂'GcdExt 240 46: gcd = 2')(⊂'2')(⊂(⌷c))
+     x←⎕NEW gmpz 240
+     x.Mul ⊃st
+     y←⎕NEW gmpz 46
+     y.Mul ⊃⌽st
+     x.Add y
+     rep,←⊂Chk(⊂'GcdExt: 240×s + 46×t = gcd')(⊂'2')(⊂(⌷x))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'Divexact 100÷4 = 25')(⊂'25')(⊂(⌷(100 c.Divexact 4)))
+     rep,←⊂Chk(⊂'Divexact big string ÷ 1000')(⊂'1000000000000000000')(⊂(⌷('1000000000000000000000'c.Divexact 1000)))
+     c←⎕NEW gmpz 17
+     rep,←⊂Chk(⊂'Congruent 17 ≡ 5 (mod 12)')(⊂1)(⊂(c.Congruent 5 12))
+     rep,←⊂Chk(⊂'Congruent 17 ≡ 6 (mod 12) = 0')(⊂0)(⊂(c.Congruent 6 12))
+     rep,←⊂Chk(⊂'Congruent mod 0: 17 ≡ 17')(⊂1)(⊂(c.Congruent 17 0))
+     rep,←⊂Chk(⊂'Congruent mod 0: 17 ≡ 18 = 0')(⊂0)(⊂(c.Congruent 18 0))
+     rep,←⊂Chk(⊂'Congruent ¯7 ≡ 5 (mod 12)')(⊂1)(⊂((⎕NEW gmpz ¯7).Congruent 5 12))
+     rep,←⊂Chk(⊂'GI 3!5 = 10 (APL order: 5 choose 3)')(⊂'10')(⊂(⌷(3!GI 5)))
+     rep,←⊂Chk(⊂'GI ~5 = ¯6')(⊂'¯6')(⊂(⌷(~GI 5)))
+     rep,←⊂Chk(⊂'GI 3⌈9 = 9')(⊂'9')(⊂(⌷(3⌈GI 9)))
+     rep,←⊂Chk(⊂'GI 3⌊9 = 3')(⊂'3')(⊂(⌷(3⌊GI 9)))
+     rep,←⊂Chk(⊂'GI big max (strings)')(⊂'100000000000000000000')(⊂(⌷('100000000000000000000'⌈GI'99999999999999999999')))
+ :Else
+     rep,←⊂'**FAIL: Bin / Fib / Primorial / … / Congruent section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+ :EndTrap
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 5
+     c.Bin ¯1
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Bin k negative → badUIntÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 5
+     c.Fib 1.5
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Fib 1.5 → badAplÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     c.Primorial ¯2
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Primorial ¯2 → badUIntÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     rem←c.SqrtRem ¯4
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'SqrtRem negative → sqrtNegÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     c.Divexact 0
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Divexact by 0 → divZÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 1
+     v←1100 c.Shift c
+     v←c.Float
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Float of a >1024-bit number → badIntÊ EN 11')(⊂11)(⊂err)
 ⍝ ── 26. ⎕IO←1 — Bit / TestBit / SetBit / ClrBit / Flip / Iota / Scan / Rand ─
 ⍝    The bit-index methods and Rand/RandB honour the caller's ⎕IO. These checks run under ⎕IO←1.
 ⍝    A FAIL here means the caller's ⎕IO is not being picked up (see the ∆io← (⊃⎕RSI).⎕IO lines
