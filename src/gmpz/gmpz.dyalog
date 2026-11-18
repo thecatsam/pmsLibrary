@@ -49,15 +49,18 @@
 ⍝
 ⍝  API SUMMARY   (c = receiver; [a] = optional left operand, default c; ⎕IO = honours the caller's ⎕IO)
 ⍝    Create / set    ⎕NEW gmpz [obj | (obj base)]    gmpz.New0    [base] gmpz.New obj    [base] c.Set b    c.Copy
-⍝    Value out       ⌷c   c.Int64   c.IntDF   c.VFI   c.GetInBase n   [base] gmpz.Get b   c.Signum   c.ptr
+⍝    Value out       ⌷c   c.Int64   c.IntDF   c.VFI   c.Float   c.GetInBase n   [base] gmpz.Get b   c.Signum   c.ptr
 ⍝    Size            c.StrLen   c.StrLenInBase n   c.BitLen
 ⍝    Arithmetic      [a] c.Add|Sub|Mul|Div|Gcd|Lcm b      rem← [a] c.DivRem b      m c.Res b
 ⍝                    c.Neg   c.Abs   c.Inc   c.Dec  (niladic, in place)      c.Fac n
 ⍝    Powers          [a] c.Pow n | ÷n      [a] c.PowM (e m)      rc← [a] c.Invert m
+⍝    Number theory   [a] c.Bin k   c.Fib n   c.Primorial n   rem← c.SqrtRem b   st← [a] c.GcdExt b   [a] c.Divexact b
+⍝                    c.IsSquare   c.IsPower   bool← [a] c.Congruent (b m)
 ⍝    Predicates      c.Even   c.Odd   c.Divisible b   c.ProbabPrime reps   [a] c.Jacobi b   (all visible 0/1/…)
 ⍝    Comparison      [a] c.Cmp|Lt|Le|Eq|Ne|Ge|Gt b
 ⍝    Primes          c.NextPrime n   c.PrevPrime n   c.PrevPrime2 n
-⍝    Bits            h c.Shift b   [a] c.And|Or|Xor b   c.Bit[i]   c.Bits   c.ExportBits w   c.ImportBits v
+⍝    Bits            h c.Shift b   h c.ShiftFloor b   [a] c.And|Or|Xor b   c.Com   c.PopCount   n← [a] c.HamDist b
+⍝                    c.Bit[i]   c.Bits   c.ExportBits w   c.ImportBits v
 ⍝                    [a] c.TestBit n   c.SetBit n [v]   c.ClrBit n   c.Flip n  (⎕IO)   [a] c.Iota bit   [a] c.Scan (start bit)  (⎕IO)
 ⍝    Random          c.Rand b   c.RandB n  (⎕IO)      gmpz.RandSeed u
 ⍝    Operator        [a] (fn GI) b   — non-destructive, primitive-style (see the GI section)
@@ -244,6 +247,8 @@
       'randÊ'        11  'Arg must be positive'
       'propSetÊ'     11  '⍵.Bits[i] is invalid. To set an individual bit, use ⍵.Bit[n]'
       'powÊ'         11  'Invalid power: neither an integer nor the inverse of one'
+      'badUIntÊ'     11  'Value must be a non-negative integer no larger than a C unsigned long'
+      'sqrtNegÊ'     11  'Square root of a negative number'
       'shiftÊ'       11  'Shift value must be an integer'
       'facBadÊ'      11  'Arg must be non-neg integer (Windows: 32-bit, Other: 64-bit)'
       'primeÊ'       11  'ProbabPrime reps must be a non-negative integer (⍬ or 0 for the default of 24; 15-50 is usual)'
@@ -390,6 +395,22 @@
          'And'         'and'            ''            'P P P'
          'Or'          'ior'            ''            'P P P'   ⍝ inclusive or
          'Xor'         'xor'            ''            'P P P'
+      ⍝   Further number theory and conversion (all exist in GMP 6.3)
+         'Com'         'com'            ''            'P P'     ⍝ bitwise NOT: -x-1
+         'PopCount'    'popcount'       'UL'          'P'       ⍝ number of 1 bits; UL_MAX if negative
+         'HamDist'     'hamdist'        'UL'          'P P'     ⍝ differing bits; UL_MAX if signs differ
+         'Bin'         'bin_ui'         ''            'P P UL'  ⍝ rop← C(n,k), n any integer, k unsigned
+         'Fib'         'fib_ui'         ''            'P UL'
+         'Primorial'   'primorial_ui'   ''            'P UL'    ⍝ product of the primes ≤ n
+         'SqrtRem'     'sqrtrem'        ''            'P P P'   ⍝ root, remainder; op must be ≥ 0
+         'PerfectSquare' 'perfect_square_p' 'I4'      'P'
+         'PerfectPower'  'perfect_power_p'  'I4'      'P'
+         'GcdExt'      'gcdext'         ''            'P P P P P' ⍝ g s t a b:  a*s + b*t = g
+         'Divexact'    'divexact'       ''            'P P P'   ⍝ only valid if the division is exact
+         'DivexactU'   'divexact_ui'    ''            'P P UL'
+         'Congruent'   'congruent_p'    'I4'          'P P P'   ⍝ a ≡ b (mod m)
+         'GetD'        'get_d'          'F8'          'P'       ⍝ truncated double
+         'ShiftRF'     'fdiv_q_2exp'    ''            'P P UL'  ⍝ shift right, FLOORED
       ⍝   gmp calls-- handled specially
          'RandInitDef' 'gmp_randinit_default' ''      'P'       ⍝ gmp: the default— Mersenne
          'RandSeedU'   'gmp_randseed_ui' ''           'P UL'    ⍝ gmp: seed state with unsigned int
@@ -744,6 +765,17 @@
          :EndIf
       ∇
 
+   ⍝  f← ⍵.Float — ⍵ as an approximate APL float (mpz_get_d: truncated toward zero, 53 bits).
+   ⍝               Errors: badIntÊ if ⍵ has more than 1024 bits (it could exceed the largest double).
+   ⍝               The C double is converted to a decimal float (⎕FR 1287) by its shortest decimal form, about 17 digits:
+   ⍝               2*64 comes back as 18446744073709552000, not 18446744073709551616. Compare results with a tolerance.
+      ∇ f← Float ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         ⎕SIGNAL badIntÊ/⍨ 1024< gNs.SizeInBase ⍙ptr 2
+         f← gNs.GetD ⍙ptr
+      ∇
+
    ⍝ str←  ⍺.GetInBase n  -- Retrieves ⍺ as a string in base n.
    ⍝ base∊ 2 … 62, and the result uses '¯' for negatives, like the ⌷ property.
       ∇ str← GetInBase base ; n; ⎕TRAP
@@ -942,6 +974,18 @@
          {}gNs.SubU ⍙ptr ⍙ptr 1
          mpz← ⎕THIS
       ∇
+   ⍝  ⍵.Even / ⍵.Odd - parity tests (via the lowest bit, which is correct for negatives too);
+   ⍝  return a visible 1 or 0.
+      ∇ bool← Even ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         bool← 0= gNs.TstBit ⍙ptr 0
+      ∇
+      ∇ bool← Odd ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         bool← 1= gNs.TstBit ⍙ptr 0
+      ∇
    ⍝  mpz.Gcd b / a mpz.Gcd b   →→   mpz← a∨b   (greatest common divisor, ≥ 0)
       ∇ {mpz}← {a} Gcd b ; ⎕TRAP
          :Access Public
@@ -955,6 +999,14 @@
          ⎕TRAP← ∆TRAP
          :If 900⌶⍬ ⋄ a← ⎕THIS ⋄ :EndIf
          mpz← gNs.Lcm _Dyad_ gNs.LcmU a b
+      ∇
+   ⍝  mpz.Divexact b / a mpz.Divexact b   →→   mpz← a ÷ b, FAST but only valid when b divides a exactly
+   ⍝  (the result is otherwise meaningless). Use Div for a general floored quotient.  divZÊ if b is 0.
+      ∇ {mpz}← {a} Divexact b ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         :If 900⌶⍬ ⋄ a← ⎕THIS ⋄ :EndIf
+         mpz← 1 gNs.Divexact _Dyad_ gNs.DivexactU a b
       ∇
    ⍝  bool← ⍵.Divisible b  -- Is ⍵ divisible by b (b: any kind of number)?   Returns 0 or 1.
    ⍝  Unlike standard division functions which throw exceptions or crash on zero,
@@ -1124,6 +1176,90 @@
          :EndHold
          mpz_rc← ⎕THIS rc
       ∇
+
+   ⍝ mpz← {n} mpz.Bin k   →→   mpz← C(n,k): n choose k.   n defaults to the receiver; it may be negative
+   ⍝   (GMP uses the generalised binomial). k must be a non-negative integer no larger than a C unsigned long
+   ⍝   (badUIntÊ otherwise). Large results are limited only by memory and time.  APL's  k!n  is  n c.Bin k.
+      ∇ {mpz}← {n} Bin k ; nP; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         k← ToInt k
+         ⎕SIGNAL badUIntÊ/⍨ ~IsUI k
+         :Hold ∆STATICS
+            :If 900⌶⍬ ⋄ nP← ⍙ptr ⋄ :Else ⋄ nP← Ptr0 n ⋄ :EndIf
+            {}gNs.Bin ⍙ptr nP k
+         :EndHold
+         mpz← ⎕THIS
+      ∇
+   ⍝ mpz.Fib n  →→  mpz← the n-th Fibonacci number (Fib 0 is 0, Fib 1 is 1).  n: non-negative integer (badUIntÊ).
+      ∇ {mpz}← Fib n ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         n← ToInt n
+         ⎕SIGNAL badUIntÊ/⍨ ~IsUI n
+         {}gNs.Fib ⍙ptr n
+         mpz← ⎕THIS
+      ∇
+   ⍝ mpz.Primorial n  →→  mpz← the product of all primes ≤ n (Primorial 0 and 1 are 1).  n: as Fib.
+      ∇ {mpz}← Primorial n ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         n← ToInt n
+         ⎕SIGNAL badUIntÊ/⍨ ~IsUI n
+         {}gNs.Primorial ⍙ptr n
+         mpz← ⎕THIS
+      ∇
+   ⍝ rem← mpz.SqrtRem b  →→  mpz← ⌊√b  and the returned (shy) NEW gmpz rem← b - mpz*2.
+   ⍝   Errors: sqrtNegÊ if b is negative.  (For the root alone, Pow÷2 does the same.)
+      ∇ {rem}← SqrtRem b ; bP; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         rem← ⎕NEW ∆THIS
+         :Hold ∆STATICS
+            bP← Ptr1 b
+            ⎕SIGNAL sqrtNegÊ/⍨ 0> PSignum bP
+            {}gNs.SqrtRem ⍙ptr rem.ptr bP
+         :EndHold
+      ∇
+   ⍝ st← {a} mpz.GcdExt b   →→   Extended GCD: mpz← a∨b (the gcd, as Gcd gives) and the returned (shy) pair
+   ⍝   st← s t of NEW gmpz's, with  (a×s)+(b×t) = mpz.   a defaults to the receiver.  (Invert is built on this.)
+      ∇ {st}← {a} GcdExt b ; aP; bP; s; t; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         :If 900⌶⍬ ⋄ a← ⎕THIS ⋄ :EndIf
+         s← ⎕NEW ∆THIS
+         t← ⎕NEW ∆THIS
+         :Hold ∆STATICS
+            aP← Ptr0 a ⋄ bP← Ptr1 b
+            {}gNs.GcdExt ⍙ptr s.ptr t.ptr aP bP
+         :EndHold
+         st← s t
+      ∇
+   ⍝ bool← mpz.IsSquare / mpz.IsPower — is the receiver a perfect square / a perfect power (a*k, k>1)?
+   ⍝   Visible 0/1.  0 and 1 are both; negatives are never squares, and are powers only if an odd power.
+      ∇ bool← IsSquare ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         bool← 0≠ gNs.PerfectSquare ⍙ptr
+      ∇
+      ∇ bool← IsPower ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         bool← 0≠ gNs.PerfectPower ⍙ptr
+      ∇
+   ⍝ bool← {a} mpz.Congruent (b m)   →→   Is a ≡ b (mod m)?   a defaults to the receiver. Visible 0/1.
+   ⍝   m = 0: true only if a = b.  b and m: gmpz, integer or string.
+      ∇ bool← {a} Congruent b_m ; aP; b; bP; m; mP; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         b m← b_m
+         :Hold ∆STATICS
+            :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
+            bP← Ptr1 b
+            mP← Ptr2 m
+            bool← 0≠ gNs.Congruent aP bP mP
+         :EndHold
+      ∇
    ⍝:EndSection Powers, Roots, Modular Arithmetic, Primes
 
 ⍝ ───────────────────────────────────────────────────────────────────────────────
@@ -1135,9 +1271,20 @@
    ⍝    h = 0  copy b unchanged
    ⍝    h may be an APL integer, integer string or gmpz; it must be a whole number (else shiftÊ)
    ⍝    with |h| ≤ UL_MAX.
-      ∇ {mpz}← h Shift b ; bP; ⎕TRAP
+   ⍝  mpz← h mpz.ShiftFloor b: the same, except that a right shift FLOORS (toward ¯∞, like APL's ⌊b÷2*|h|):
+   ⍝    ¯1 Shift ¯7 is ¯3, but ¯1 ShiftFloor ¯7 is ¯4.  They differ only for negative b.
+      ∇ {mpz}← h Shift b ; ⎕TRAP
          :Access Public
          ⎕TRAP← ∆TRAP
+         mpz← 0 ⍙Shift h b
+      ∇
+      ∇ {mpz}← h ShiftFloor b ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         mpz← 1 ⍙Shift h b
+      ∇
+   ⍝ ⍙Shift (h b): private, dyadic. fl∊ 0 1: 1 floors a right shift, 0 truncates it.
+      ∇ mpz← fl ⍙Shift (h b) ; bP
          :If ~IsMpz h                                           ⍝ Non-integer numeric shift
          :AndIf IsNum h
          :AndIf h≠⌊h
@@ -1149,7 +1296,10 @@
             bP← Ptr1 b
             :Select ×h
              :Case  1 ⋄ {}gNs.ShiftL ⍙ptr bP h                  ⍝ left shift: a multiplication by 2*h
-             :Case ¯1 ⋄ {}gNs.ShiftR ⍙ptr bP (-h)               ⍝ right shift: a division by 2*|h|, truncating toward zero
+             :Case ¯1
+               :If fl ⋄ {}gNs.ShiftRF ⍙ptr bP (-h)              ⍝ right shift: floored division by 2*|h|
+               :Else  ⋄ {}gNs.ShiftR ⍙ptr bP (-h)               ⍝ right shift: division by 2*|h|, truncating toward zero
+               :EndIf
             :Else
                :If ⍙ptr≠ bP ⋄ {}gNs.Set ⍙ptr bP ⋄ :EndIf        ⍝ Return mpz← b
             :EndSelect
@@ -1184,6 +1334,30 @@
             {}gNs.Xor ⍙ptr aP (Ptr1 b)
          :EndHold
          mpz← ⎕THIS
+      ∇
+
+   ⍝ Com:  mpz.Com   →→   mpz← ¬mpz  (bitwise NOT in two's complement, which is  ¯1-mpz).  Niladic, in place.
+      ∇ {mpz}← Com ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         {}gNs.Com ⍙ptr ⍙ptr
+         mpz← ⎕THIS
+      ∇
+   ⍝ PopCount: n← mpz.PopCount   Number of 1 bits. A negative number has infinitely many: returns UL_MAX then.
+      ∇ n← PopCount ; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         n← gNs.PopCount ⍙ptr
+      ∇
+   ⍝ HamDist: n← {a} mpz.HamDist b   Hamming distance: the number of bit positions in which a and b differ.
+   ⍝   If one is negative and the other not, there are infinitely many: returns UL_MAX.
+      ∇ n← {a} HamDist b ; aP; ⎕TRAP
+         :Access Public
+         ⎕TRAP← ∆TRAP
+         :Hold ∆STATICS
+            :If 900⌶⍬ ⋄ aP← ⍙ptr ⋄ :Else ⋄ aP← Ptr0 a ⋄ :EndIf
+            n← gNs.HamDist aP (Ptr1 b)
+         :EndHold
       ∇
 
    ⍝ Single-bit methods. Bit indexes honour the caller's ⎕IO (as does the Bit property).
@@ -1307,7 +1481,7 @@
             ∆io← (⊃⎕RSI).⎕IO
             ixs← ,∆io-⍨ ⊃arg.Indexers
             ⎕SIGNAL badBitIxÊ/⍨ 0=≢,ixs                         ⍝ Empty indexer list is an error
-            ⎕SIGNAL badBitIxÊ/⍨ (ixs<0)∨(ixs>UL_MAX)            ⍝ Negative indices are an error (get checks too)
+            ⎕SIGNAL badBitIxÊ/⍨ ∨/ (ixs<0)∨(ixs>UL_MAX)         ⍝ Negative indices are an error (get checks too)
             vals← ,(⍴ixs)⍴ arg.NewValue                         ⍝ Expand single bit => bit vector
             :For i :In ⍳≢ixs                                    ⍝ ⎕IO←0 here, so ⍳ gives 0-origin indices
                :If (i⊃vals)=1
@@ -1559,6 +1733,8 @@
 ⍝                  a -GI b    a - b             a ∧GI b   lcm
 ⍝                  a ×GI b    a × b             a |GI b   a|b  (a is modulus)
 ⍝                  a ÷GI b    floored a÷b       a ⌽GI b   shift b by a bits
+⍝                  a !GI b    a!b: b choose a, as APL's  3!5  is 10
+⍝                  a ⌈GI b    larger of a and b            a ⌊GI b    smaller of a and b
 ⍝                  a *GI b    a*b  (b may be ÷n for an n-th root)
 ⍝                  a *∘|GI b  (a ** exp) | mod, where (exp mod)←b
 ⍝                  a ÷∘|GI b  (a÷b) and (b|a), as a 2-element vector of NEW gmpz's
@@ -1576,6 +1752,7 @@
 ⍝                  ×GI b   sign, ¯1 0 1 (returns an APL integer, not an object)
 ⍝                  <GI b   b-1  (decrement; note the use of monadic <)
 ⍝                  >GI b   b+1  (increment)
+⍝                  ~GI b   bitwise NOT of b  (¯1-b)
 ⍝                  ≢GI b   length of b as a string (StrLen; an APL integer)
 ⍝                  ⍎GI b   b as an APL integer (IntDF; errors if it does not fit)
 ⍝                  ⎕VFI GI b   (ok int) like b.VFI: (1 int) if it fits, else (0 0)
@@ -1624,6 +1801,7 @@
           :Case '!'    ⋄ c.Fac b                                ⍝ c← !b
           :Case '<'    ⋄ (c.Set b).Dec                          ⍝ c← b-1
           :Case '>'    ⋄ (c.Set b).Inc                          ⍝ c← b+1
+          :Case '~'    ⋄ (c.Set b).Com                          ⍝ c← bitwise NOT of b (¯1-b)
           :Case '≢'    ⋄ res← (c.Set b).StrLen                  ⍝ int← ≢⌷b
           :Case '⍎'    ⋄ res← (c.Set b).IntDF                   ⍝ int← b.IntDF
           :Case '⎕VFI' ⋄ res← (c.Set b).VFI                     ⍝ Like (bits ints)← ⎕VFI b.
@@ -1652,6 +1830,11 @@
           :Case '⌷'   ⋄ res← (c.Set b).Bit[a]                   ⍝ bool← b.Bit [a]
           :Case '≢'   ⋄ res← (c.Set b).StrLenInBase a          ⍝ Get length of b in base a
           :Case '⌽'   ⋄ a c.Shift b                             ⍝ binary shift: a is the shift amount (APL int) L or R
+          :Case '!'   ⋄ b c.Bin a                               ⍝ a!b: b choose a (APL's order: 3!5 is 10)
+          :Case '⌈'                                             ⍝ larger of a and b
+            :If a c.Ge b ⋄ c.Set a ⋄ :Else ⋄ c.Set b ⋄ :EndIf
+          :Case '⌊'                                             ⍝ smaller of a and b
+            :If a c.Le b ⋄ c.Set a ⋄ :Else ⋄ c.Set b ⋄ :EndIf
          ⍝ ⊤GI and ⊥GI: Comparable to APL counterparts
           :Case '⊤'   ⋄ res← a gmpz.Get b                       ⍝ retrieve value of b as a STRING in base a.
           :Case '⊥'   ⋄ a c.Set b                               ⍝ return copy of INT STRING b, which is in base a.

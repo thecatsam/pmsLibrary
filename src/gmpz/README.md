@@ -34,24 +34,25 @@ For Dyalog APL v20 or later (developed with v21) and GMP 6.3 or later. [Tested o
 
 | Call | Result |
 | :----------------------------------------- | :---- |
-| `str← ⌷a` | *a* in base 10 as a string (any length). |
-| `a.Set value`, `base a.Set value` | Overwrite **a** with value (base applies to strings only, default 10). Returns **a** itself (shy), so calls can be chained. |
-| `c← a.Copy` | A new gmpz with the same value. |
-| `int← a.Int64` | a as a signed C long (64-bit on Unix/macOS), as an APL integer. Error (badIntÊ) if it doesn't fit. |
-| `int← a.IntDF` | a as an APL integer in decimal-float form: exact up to 34 digits (±(10\*34−1)). Error (badIntÊ) if it has more digits. |
-| `ok int← a.VFI` | `1 n` if a fits in 34 digits (as IntDF), else `0 0`. Never errors. |
-| `str← a.GetInBase n` | **a** as a string in base n (2 ≤ n ≤ 62). |
-| `str← [base] gmpz.Get b` | b (a gmpz, an APL integer or a *decimal* string) as a string in the base (default 10). |
-| `int← a.StrLen` | Number of characters in ⌷a, including the leading ¯. Same as ≢⌷a, without building the string. |
-| `int← a.StrLenInBase n` | Same as ≢a.GetInBase n, for 2 ≤ n ≤ 62. |
-| `int← a.BitLen` | Minimum number of bits to hold **a** in two's complement, *including the sign bit*: 0 is 1, 7 is 4, 8 is 5, ¯8 is 4, ¯1 is 1. Equals ≢a.Bits. |
-| `int← a.Signum` | ¯1, 0 or 1. |
-| `bool← a.Even`, `a.Odd` | 1 or 0 (visible results). |
-| `bool← a.Bit[i1 i2…]` | Read bits. Honours ⎕IO. See §5. |
-| `a.Bit[i1 i2…]← bool` | Write bits at specified indices. Honours ⎕IO. |
-| `bool← a.Bits` | **a**'s value efficiently returned as a boolean vector in two's complement, sign bit first. |
-| `a.Bits← bool` | **a**'s value efficiently set (replaced) from a boolean vector (leading bit is the sign). |
-| `int← a.ptr` | Address of the underlying GMP object. Be careful! |
+| <code>str←&nbsp;⌷a</code> | *a* in base 10 as a string (any length). |
+| <code>a.Set&nbsp;value</code>, <code>base&nbsp;a.Set&nbsp;value</code> | Overwrite **a** with value (base applies to strings only, default 10). Returns **a** itself (shy), so calls can be chained. |
+| <code>c←&nbsp;a.Copy</code> | A new gmpz with the same value. |
+| <code>int←&nbsp;a.Int64</code> | a as a signed C long (64-bit on Unix/macOS), as an APL integer. Error (badIntÊ) if it doesn't fit. |
+| <code>int←&nbsp;a.IntDF</code> | a as an APL integer in decimal-float form: exact up to 34 digits (±(10\*34−1)). Error (badIntÊ) if it has more digits. |
+| <code>ok&nbsp;int←&nbsp;a.VFI</code> | `1 n` if a fits in 34 digits (as IntDF), else `0 0`. Never errors. |
+| <code>str←&nbsp;a.GetInBase&nbsp;n</code> | **a** as a string in base n (2 ≤ n ≤ 62). |
+| <code>str←&nbsp;[base]&nbsp;gmpz.Get&nbsp;b</code> | b (a gmpz, an APL integer or a *decimal* string) as a string in the base (default 10). |
+| <code>int←&nbsp;a.StrLen</code> | Number of characters in ⌷a, including the leading ¯. Same as ≢⌷a, without building the string. |
+| <code>int←&nbsp;a.StrLenInBase&nbsp;n</code> | Same as ≢a.GetInBase n, for 2 ≤ n ≤ 62. |
+| <code>int←&nbsp;a.BitLen</code> | Minimum number of bits to hold **a** in two's complement, *including the sign bit*: 0 is 1, 7 is 4, 8 is 5, ¯8 is 4, ¯1 is 1. Equals ≢a.Bits. |
+| <code>int←&nbsp;a.Signum</code> | ¯1, 0 or 1. |
+| <code>f←&nbsp;a.Float</code> | a as an approximate APL float (a C double, truncated to 53 bits, then shown as its ~17-digit decimal: 2\*64 is 18446744073709552000). Compare with a tolerance, not exactly. badIntÊ if a has more than 1024 bits. |
+| <code>bool←&nbsp;a.Even</code>, <code>a.Odd</code> | 1 or 0 (visible results). |
+| <code>bool←&nbsp;a.Bit[i1&nbsp;i2…]</code> | Read bits. Honours ⎕IO. See §5. |
+| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Write bits at specified indices. Honours ⎕IO. |
+| <code>bool←&nbsp;a.Bits</code> | **a**'s value efficiently returned as a boolean vector in two's complement, sign bit first. |
+| <code>a.Bits←&nbsp;bool</code> | **a**'s value efficiently set (replaced) from a boolean vector (leading bit is the sign). |
+| <code>int←&nbsp;a.ptr</code> | Address of the underlying GMP object. Be careful! |
 
 **Int64 or IntDF?** Int64 is the machine integer (fast, 64-bit). IntDF is "as big as an APL decimal float can hold exactly" (34 digits) and needs `⎕FR←1287` in your session to display or compute with such values exactly. Use `VFI` to test safely.
 
@@ -89,7 +90,7 @@ A non-integer APL number signals badAplÊ, as does a numeric vector (including a
 
 * Dyadic arithmetic (Add, Sub, Mul, Div, DivRem, Gcd, Lcm, Pow, PowM, Invert, And, Or, Xor, Cmp…, Jacobi): `[a] c.Op b`; the left operand defaults to the receiver.
 * Left argument required: **Res** and **Shift**.
-* **Niladic, in place:** Neg, Abs, Inc, Dec. To set c to −b, write `(c.Set b).Neg`; to set c to \|b, `(c.Set b).Abs`.
+* **Niladic, in place:** Neg, Abs, Com, Inc, Dec. To set c to −b, write `(c.Set b).Neg`; to set c to \|b, `(c.Set b).Abs`.
 * **Right argument only** (a value is built from it, so it does not default to the receiver): Fac, NextPrime, PrevPrime, Rand, RandB, ProbabPrime. To use the receiver, pass it: `c.NextPrime c`.
 * **Mutating bit methods** (SetBit, ClrBit, Flip) act on the receiver only. To change a bit of another gmpz, call the method on that object.
 
@@ -99,25 +100,27 @@ A non-integer APL number signals badAplÊ, as does a numeric vector (including a
 
 | Method | Meaning | Notes |
 | :----------------------------------------------------------------------------------------------- | :----------- | :---------- |
-| `[a] c.Add b` | `c ← a + b` |  |
-| `[a] c.Sub b` | `c ← a − b` |  |
-| `[a] c.Mul b` | `c ← a × b` |  |
-| `[a] c.Div b` | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b.` Signals divZÊ if b is 0\. |
-| `rem← [a] c.DivRem m` | `c ← ⌊a÷m, returns rem← m\|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ 2\*64-1). divZÊ if m is 0. |
-| `m c.Res b` | `c ← m\|b` | APL residue, floored (sign follows m). 0\|b is b. Dyadic only. |
-| `[a] c.Gcd b` | `c ← a∨b` | ≥ 0\. Greatest common divisor. |
-| `[a] c.Lcm b` | `c ← a∧b` | ≥ 0\. Least common multiple. |
-| `[a] c.Pow n` | `c ← a\*n` | n must be a non-negative APL integer (not a string or gmpz), and must fit in a C unsigned long (powÊ otherwise). |
-| `[a] c.Pow ÷n` | `n-th root of a, truncated toward 0` | Same as ⌊a\*÷n for a≥0\. n a positive integer. If a\<0, n must be odd. |
-| `[a] c.PowM (e m)` | `c ← m\|a*e` | Modular exponentiation. e and m may be gmpz, integer or string. A negative exponent or a negative modulus signals powÊ (modulus 0 signals divZÊ). |
-| `rc← [a] c.Invert m` | `c ← a⁻¹ mod m` | Returns 1 if the inverse exists, 0 if not (then c is meaningless). m>0 (divZÊ for 0, powÊ for negative). |
-| `i c.Shift b` | `c ← b × 2*i` | Binary shift. i\>0 left, i\<0 right (truncating toward zero). Dyadic only. i may be an integer, an integer string or a gmpz; non-integers signal shiftÊ. |
-| `c.Neg` | `c ← −c` | Niladic. For c ← −b: `(c.Set b).Neg`. |
-| `c.Abs` | `c ← \|c` | Niladic. For c ← \|b: `(c.Set b).Abs`. |
-| `c.Fac n` | `c ← !n` | n ≥ 0; n may be an integer, string or gmpz. n must be ≤ 2\*64-1 (Windows: 2\*32-1), else facBadÊ. Large results are limited only by memory. |
-| `c.Inc` | `c ← c+1` | Niladic. |
-| `c.Dec` | `c ← c−1` | Niladic. |
-| `bool← c.Divisible b` | `1 if b divides c, else 0` | b=0: true only if c is 0\. Visible 0/1 result. |
+| <code>[a]&nbsp;c.Add&nbsp;b</code> | `c ← a + b` |  |
+| <code>[a]&nbsp;c.Sub&nbsp;b</code> | `c ← a − b` |  |
+| <code>[a]&nbsp;c.Mul&nbsp;b</code> | `c ← a × b` |  |
+| <code>[a]&nbsp;c.Div&nbsp;b</code> | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b.` Signals divZÊ if b is 0\. |
+| <code>rem←&nbsp;[a]&nbsp;c.DivRem&nbsp;m</code> | `c ← ⌊a÷m, returns rem← m\|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ 2\*64-1). divZÊ if m is 0. |
+| <code>m&nbsp;c.Res&nbsp;b</code> | `c ← m\|b` | APL residue, floored (sign follows m). 0\|b is b. Dyadic only. |
+| <code>[a]&nbsp;c.Gcd&nbsp;b</code> | `c ← a∨b` | ≥ 0\. Greatest common divisor. |
+| <code>[a]&nbsp;c.Lcm&nbsp;b</code> | `c ← a∧b` | ≥ 0\. Least common multiple. |
+| <code>[a]&nbsp;c.Divexact&nbsp;b</code> | `c ← a ÷ b` | Fast division that is only valid when b divides a exactly (otherwise the result is meaningless). divZÊ if b is 0\. |
+| <code>[a]&nbsp;c.Pow&nbsp;n</code> | `c ← a\*n` | n must be a non-negative APL integer (not a string or gmpz), and must fit in a C unsigned long (powÊ otherwise). |
+| <code>[a]&nbsp;c.Pow&nbsp;÷n</code> | `n-th root of a, truncated toward 0` | Same as ⌊a\*÷n for a≥0\. n a positive integer. If a\<0, n must be odd. |
+| <code>[a]&nbsp;c.PowM&nbsp;(e&nbsp;m)</code> | `c ← m\|a*e` | Modular exponentiation. e and m may be gmpz, integer or string. A negative exponent or a negative modulus signals powÊ (modulus 0 signals divZÊ). |
+| <code>rc←&nbsp;[a]&nbsp;c.Invert&nbsp;m</code> | `c ← a⁻¹ mod m` | Returns 1 if the inverse exists, 0 if not (then c is meaningless). m>0 (divZÊ for 0, powÊ for negative). |
+| <code>i&nbsp;c.Shift&nbsp;b</code> | `c ← b × 2*i` | Binary shift. i\>0 left, i\<0 right (truncating toward zero). Dyadic only. i may be an integer, an integer string or a gmpz; non-integers signal shiftÊ. |
+| <code>i&nbsp;c.ShiftFloor&nbsp;b</code> | `c ← ⌊b ÷ 2*-i` | As Shift, but a right shift *floors* (toward ¯∞): `¯1 c.ShiftFloor ¯7` is ¯4, where Shift gives ¯3. Same for non-negative b. |
+| <code>c.Neg</code> | `c ← −c` | Niladic. For c ← −b: `(c.Set b).Neg`. |
+| <code>c.Abs</code> | `c ← \|c` | Niladic. For c ← \|b: `(c.Set b).Abs`. |
+| <code>c.Fac&nbsp;n</code> | `c ← !n` | n ≥ 0; n may be an integer, string or gmpz. n must be ≤ 2\*64-1 (Windows: 2\*32-1), else facBadÊ. Large results are limited only by memory. |
+| <code>c.Inc</code> | `c ← c+1` | Niladic. |
+| <code>c.Dec</code> | `c ← c−1` | Niladic. |
+| <code>bool←&nbsp;c.Divisible&nbsp;b</code> | `1 if b divides c, else 0` | b=0: true only if c is 0\. Visible 0/1 result. |
 
 ```
     c← ⎕NEW gmpz
@@ -140,13 +143,13 @@ There are no \< or \> methods — use the named forms below or use `<GI`, `>GI`,
 
 | Method | APL equivalent | Returns |
 | :---- | :---- | :---- |
-| `[a] c.Cmp b` | `×a−b` | `¯1, 0 or 1` |
-| `[a] c.Lt b` | `a < b` | `0 or 1` |
-| `[a] c.Le b` | `a ≤ b` | `0 or 1` |
-| `[a] c.Eq b` | `a = b` | `0 or 1` |
-| `[a] c.Ne b` | `a ≠ b` | `0 or 1` |
-| `[a] c.Ge b` | `a ≥ b` | `0 or 1` |
-| `[a] c.Gt b` | `a > b` | `0 or 1` |
+| <code>[a]&nbsp;c.Cmp&nbsp;b</code> | `×a−b` | `¯1, 0 or 1` |
+| <code>[a]&nbsp;c.Lt&nbsp;b</code> | `a < b` | `0 or 1` |
+| <code>[a]&nbsp;c.Le&nbsp;b</code> | `a ≤ b` | `0 or 1` |
+| <code>[a]&nbsp;c.Eq&nbsp;b</code> | `a = b` | `0 or 1` |
+| <code>[a]&nbsp;c.Ne&nbsp;b</code> | `a ≠ b` | `0 or 1` |
+| <code>[a]&nbsp;c.Ge&nbsp;b</code> | `a ≥ b` | `0 or 1` |
+| <code>[a]&nbsp;c.Gt&nbsp;b</code> | `a > b` | `0 or 1` |
 
 ```
    c.Gt 100                       ⍝ is c > 100 ?
@@ -192,6 +195,9 @@ Note: Although GMP stores mpz_t values internally in sign-magnitude form, all bi
 | \[a\] c.And b | c ← a ∧ b, bit by bit |
 | \[a\] c.Or b | c ← a ∨ b, bit by bit |
 | \[a\] c.Xor b | c ← a ≠ b, bit by bit |
+| c.Com | c ← bitwise NOT of c (that is, ¯1−c). Niladic, in place. |
+| <code>n←&nbsp;c.PopCount</code> | Number of 1 bits. A negative number has infinitely many, so the result is 2\*64−1 (Windows: 2\*32−1). |
+| <code>n←&nbsp;[a]&nbsp;c.HamDist&nbsp;b</code> | Hamming distance: the number of bit positions where a and b differ (2\*64−1 if exactly one is negative). |
 
 ## **Bit methods (alternatives to the Bit property)**
 
@@ -199,12 +205,12 @@ All of these honour the caller's ⎕IO for their bit positions. A position below
 
 | Method | Meaning |
 | :---- | :---- |
-| `bool← [a] c.TestBit n` | Returns bit n. A visible result; `a` may be any operand (read-only). |
-| `val← c.SetBit n [val]` | Sets bit n to val (default 1): `c.SetBit 5` or `c.SetBit 5 0`. Receiver only; shy. |
-| `bit← c.ClrBit n` | Clears bit n (sets it to 0). Receiver only; shy. |
-| `bit← c.Flip n` | Complements bit n, and returns its new value. Receiver only; shy. |
-| `pos← [a] c.Iota bit` | Index of the lowest bit equal to bit (0 or 1), counted in your ⎕IO. Visible result. |
-| `pos← [a] c.Scan (start bit)` | Like Iota, but begins the search at index start (in your ⎕IO). Visible result. |
+| <code>bool←&nbsp;[a]&nbsp;c.TestBit&nbsp;n</code> | Returns bit n. A visible result; `a` may be any operand (read-only). |
+| <code>val←&nbsp;c.SetBit&nbsp;n&nbsp;[val]</code> | Sets bit n to val (default 1): `c.SetBit 5` or `c.SetBit 5 0`. Receiver only; shy. |
+| <code>bit←&nbsp;c.ClrBit&nbsp;n</code> | Clears bit n (sets it to 0). Receiver only; shy. |
+| <code>bit←&nbsp;c.Flip&nbsp;n</code> | Complements bit n, and returns its new value. Receiver only; shy. |
+| <code>pos←&nbsp;[a]&nbsp;c.Iota&nbsp;bit</code> | Index of the lowest bit equal to bit (0 or 1), counted in your ⎕IO. Visible result. |
+| <code>pos←&nbsp;[a]&nbsp;c.Scan&nbsp;(start&nbsp;bit)</code> | Like Iota, but begins the search at index start (in your ⎕IO). Visible result. |
 
 Iota and Scan return **2\*64−1** (2\*32−1 on Windows), *not* adjusted for ⎕IO, when there is no such bit.
 
@@ -222,9 +228,9 @@ Uses GMP's Mersenne Twister; its state is created on first use of a random numbe
 
 | Method | Meaning |
 | :---- | :---- |
-| `r.Rand b` | r ← uniform in \[0, b); b may be gmpz, integer or string; must be positive (randÊ). |
-| `r.RandB n` | r ← uniform in \[0, 2\*n); n ≥ 0. |
-| `gmpz.RandSeed u` | Seeds with an unsigned 64-bit u; returns the old seed (shy) as a string. RandSeed 0 reseeds from system entropy. |
+| <code>r.Rand&nbsp;b</code> | r ← uniform in \[0, b); b may be gmpz, integer or string; must be positive (randÊ). |
+| <code>r.RandB&nbsp;n</code> | r ← uniform in \[0, 2\*n); n ≥ 0. |
+| <code>gmpz.RandSeed&nbsp;u</code> | Seeds with an unsigned 64-bit u; returns the old seed (shy) as a string. RandSeed 0 reseeds from system entropy. |
 
 Only one random state exists for all objects; reseeding anywhere affects every later Rand and RandB.
 
@@ -245,6 +251,26 @@ PrevPrime relies on GMP's mpz\_prevprime (GMP 6.3+), which sets c to the greates
 
 c is the number being tested for ProbabPrime, Jacobi (when a is omitted) and Divisible.
 
+## **Further number theory**
+
+| Method | Meaning |
+| :---- | :---- |
+| <code>[n]&nbsp;c.Bin&nbsp;k</code> | `c ← n choose k` (n defaults to c; n may be negative — the generalised binomial). k a non-negative integer (badUIntÊ otherwise). APL's `k!n` is `n c.Bin k`. |
+| <code>c.Fib&nbsp;n</code> | `c ←` the n-th Fibonacci number (`Fib 0` is 0, `Fib 1` is 1). |
+| <code>c.Primorial&nbsp;n</code> | `c ←` the product of all primes ≤ n. |
+| <code>rem←&nbsp;c.SqrtRem&nbsp;b</code> | `c ← ⌊√b`, and the (shy) new gmpz `rem ← b − c*2`. sqrtNegÊ if b is negative. |
+| <code>st←&nbsp;[a]&nbsp;c.GcdExt&nbsp;b</code> | Extended gcd: `c ← a∨b`, and the (shy) pair `st← s t` of new gmpz's with `(a×s)+(b×t) = c`. |
+| <code>bool←&nbsp;c.IsSquare</code> | Is c a perfect square? (0 is; negatives are not.) |
+| <code>bool←&nbsp;c.IsPower</code> | Is c a perfect power `x*k`, k>1? (0 and 1 are; a negative only if an odd power.) |
+| <code>bool←&nbsp;[a]&nbsp;c.Congruent&nbsp;(b&nbsp;m)</code> | Is a ≡ b (mod m)? With m=0, true only if a=b. |
+
+```
+   c← ⎕NEW gmpz
+   240 c.GcdExt 46                ⍝ c is 2;  returns s t with 240×s + 46×t = 2
+   ⌷52 c.Bin 5                    ⍝ 2598960
+   ⌷c.Fib 100                     ⍝ 354224848179261915075
+```
+
 # **8\.  The GI operator: primitive-style, non-destructive**
 
 GI wraps the methods so they read like APL primitives. Arguments are never modified; a new gmpz is returned (comparisons, and several monadic and dyadic forms marked below, return plain values). GI is also defined in the namespace that holds gmpz, so it can be used from anywhere. Every result is a fresh object, so it never changes under a later GI call.
@@ -260,23 +286,26 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 
 | Dyadic | Meaning | Monadic | Meaning |
 | :---- | :---- | :---- | :---- |
-| `a +GI b` | a+b | `-GI b` | negate |
-| `a -GI b` | a−b | `\|GI b` | absolute value |
-| `a ×GI b` | a×b | `?GI b` | random in \[0, b) if b≥0; in \[0, 2\*\|b) (RandB) if b\<0 |
-| `a ÷GI b` | ⌊a÷b (floored) | `!GI b` | factorial |
+| <code>a&nbsp;+GI&nbsp;b</code> | a+b | `-GI b` | negate |
+| <code>a&nbsp;-GI&nbsp;b</code> | a−b | `\|GI b` | absolute value |
+| <code>a&nbsp;×GI&nbsp;b</code> | a×b | `?GI b` | random in \[0, b) if b≥0; in \[0, 2\*\|b) (RandB) if b\<0 |
+| <code>a&nbsp;÷GI&nbsp;b</code> | ⌊a÷b (floored) | `!GI b` | factorial |
 | `a ÷∘\|GI b` | DivRem: a 2-vector of new gmpz's, see note | `×GI b` | signum (plain integer) |
-| `a *GI b` | a\*b (b may be ÷n) | `<GI b` | b−1 |
-| `a ∨GI b` | gcd | `>GI b` | b+1 |
-| `a ∧GI b` | lcm | `≢GI b` | string length (b.StrLen, plain integer) |
+| <code>a&nbsp;*GI&nbsp;b</code> | a\*b (b may be ÷n) | `<GI b` | b−1 |
+| <code>a&nbsp;∨GI&nbsp;b</code> | gcd | `>GI b` | b+1 |
+| <code>a&nbsp;∧GI&nbsp;b</code> | lcm | `≢GI b` | string length (b.StrLen, plain integer) |
 | `a \|GI b` | a\|b (a is the modulus) | `⍎GI b` | b as an APL integer (IntDF; error if it does not fit) |
-| `a ⌽GI b` | shift b by a bits | `⎕VFI GI b` | `ok int` as b.VFI, never errors |
+| <code>a&nbsp;⌽GI&nbsp;b</code> | shift b by a bits | `⎕VFI GI b` | `ok int` as b.VFI, never errors |
 | `a *∘\|GI (e m)` | m\|a\*e (PowM) | `⌷GI b` | b as a two's complement bit vector (b.Bits) |
-| `a ⍳GI i` | position of the lowest bit of a equal to i (0 or 1); 2\*64−1 if none (plain integer) | `⊤GI b` | b as a decimal string |
-| `a ⌷GI b` | bit a of b (b.Bit\[a\]; plain 0/1) | `⊥GI b` | a new gmpz holding a copy of b |
-| `a <GI b` … | also ≤ \= ≥ \> ≠, returning 0 or 1 |  |  |
-| `a ⊤GI b` | b (gmpz, integer or decimal string) as a *string* in base a | | |
-| `a ⊥GI b` | a new gmpz from the string b read in base a | | |
-| `a ≢GI b` | length of the string of b in base a (plain integer) | | |
+| <code>a&nbsp;⍳GI&nbsp;i</code> | position of the lowest bit of a equal to i (0 or 1); 2\*64−1 if none (plain integer) | `⊤GI b` | b as a decimal string |
+| <code>a&nbsp;⌷GI&nbsp;b</code> | bit a of b (b.Bit\[a\]; plain 0/1) | `⊥GI b` | a new gmpz holding a copy of b |
+| <code>a&nbsp;!GI&nbsp;b</code> | a!b as in APL: b choose a (`3!GI 5` is 10) | `~GI b` | bitwise NOT of b (¯1−b) |
+| <code>a&nbsp;⌈GI&nbsp;b</code> | the larger of a and b | | |
+| <code>a&nbsp;⌊GI&nbsp;b</code> | the smaller of a and b | | |
+| <code>a&nbsp;<GI&nbsp;b</code> … | also ≤ \= ≥ \> ≠, returning 0 or 1 |  |  |
+| <code>a&nbsp;⊤GI&nbsp;b</code> | b (gmpz, integer or decimal string) as a *string* in base a | | |
+| <code>a&nbsp;⊥GI&nbsp;b</code> | a new gmpz from the string b read in base a | | |
+| <code>a&nbsp;≢GI&nbsp;b</code> | length of the string of b in base a (plain integer) | | |
 
 Note: `(mpz mpz)← a ÷∘|GI b` calls DivRem, returning `((a÷b), (b|a))`, floored, both new gmpz's.
 
@@ -305,6 +334,8 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 | primeÊ | 11 | Bad reps argument for ProbabPrime |
 | noPrevPrimeÊ | 11 | PrevPrime of a number ≤ 2 |
 | propSetÊ | 11 | Tried to assign to a.Bits\[i\]; use a.Bit\[i\] |
+| badUIntÊ | 11 | Value must be a non-negative integer no larger than a C unsigned long (Bin, Fib, Primorial) |
+| sqrtNegÊ | 11 | SqrtRem of a negative number |
 | randSeedÊ | 11 | Seed can't be converted to an unsigned integer |
 | randÊ | 11 | Arg must be positive (Rand bound ≤ 0, or RandB bits \< 0\) |
 | randStateÊ | 11 | Unable to initialise random # state |
@@ -314,7 +345,7 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 # **10\.  Quick reference and gotchas**
 
 1. In `a c.Op b`, **c** is the destination and is overwritten and **a** is the left operand; in `c.Op b` the receiver is both the left operand and the destination.
-2. Res (**\|**) and Shift (**⌽**) require a left argument; most other dyadic methods default it to the receiver. Neg, Abs, Inc and Dec are niladic. Fac, NextPrime, PrevPrime, Rand, RandB and ProbabPrime take only a right argument.
+2. Res (**\|**) and Shift (**⌽**) require a left argument; most other dyadic methods default it to the receiver. Neg, Abs, Com, Inc and Dec are niladic. Fac, NextPrime, PrevPrime, Rand, RandB and ProbabPrime take only a right argument.
 3. **Shy results:** the in-place arithmetic methods, DivRem, Fac, SetBit, ClrBit, Flip, Rand, RandB and RandSeed print nothing in the session. Assign the result, or use ⌷ to see a value. Predicates and queries (Even, Odd, Divisible, TestBit, Iota, Scan, ProbabPrime, Cmp and friends, Signum, Jacobi, Invert) are visible.
 4. **Pow exponent** must be a plain APL non-negative integer *n* or *÷n* (for roots). Negative exponents are invalid.
 5. **DivRem divisors** may be any supported operand type and must be non-zero (divZÊ if **0**).
