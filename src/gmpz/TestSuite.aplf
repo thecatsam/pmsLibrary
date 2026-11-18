@@ -1,8 +1,14 @@
-﻿ r←GmpzTest;⎕IO;⎕ML;⎕PP;⎕FR;rep;pass;fail;total;c;a;b;x;y;z;t;rem;rc;err;old;v;v1;v2;ok;i;pp;Chk;IsPass;line
+ r←GmpzTest;⎕IO;⎕ML;⎕PP;⎕FR;rep;pass;fail;total;c;a;b;x;y;z;t;rem;rc;err;old;v;v1;v2;ok;i;pp;Chk;IsPass;line;bases;vals;base;val;big
  ⎕IO ⎕ML ⎕PP ⎕FR←0 1 34 1287
+
+ :If 0=⎕NC'gmpz'
+     ⎕←'Load gmpz library before testing...'
+     :Return
+ :EndIf
+
  rep←⍬
 ⍝ Chk: monadic dfn, argument is (name expected actual), each enclosed.
-⍝ Returns 'PASS: name' or 'FAIL: name — expected: ... — got: ...'
+⍝ Returns '  PASS: name' or '**FAIL: name — expected: ... — got: ...'
  Chk←{
 ⍝ Use ↓ (drop) instead of indexed pick, so this works under
 ⍝ ⎕IO←0 and under ⎕IO←1 alike: 1⊃⍵ would mean different
@@ -14,12 +20,19 @@
      '**FAIL: ',nm,' — expected: ',(⍕exp),' — got: ',(⍕act)
  }
  IsPass←{'PASS'≡4↑2↓⍵}
+⍝ Big constants are written as strings, so the result does not depend on the ⎕FR in force when this
+⍝ function was fixed (long numeric literals are tokenised at fix time).
+ big←'123456789012345678901234567890'
 ⍝ ── 1. Construction ──────────────────────────────────────────────
  :Trap 0
      c←⎕NEW gmpz
      rep,←⊂Chk(⊂'New empty = 0')(⊂'0')(⊂(⌷c))
      c←⎕NEW gmpz ¯2
      rep,←⊂Chk(⊂'New from APL int ¯2')(⊂'¯2')(⊂(⌷c))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'New from APL int 0')(⊂'0')(⊂(⌷c))
+     c←⎕NEW gmpz 1
+     rep,←⊂Chk(⊂'New from APL int 1 (scalar boolean is an integer)')(⊂'1')(⊂(⌷c))
      c←⎕NEW gmpz'1234567 89012345678'
      rep,←⊂Chk(⊂'New from string, blanks ok')(⊂'123456789012345678')(⊂(⌷c))
      c←⎕NEW gmpz'¯42'
@@ -28,12 +41,18 @@
      rep,←⊂Chk(⊂'New from string in base 16, blanks ok')(⊂'3203386110')(⊂(⌷c))
      c←⎕NEW gmpz('ff' 16)
      rep,←⊂Chk(⊂'New (ff 16) = 255')(⊂'255')(⊂(⌷c))
-     c←⎕NEW gmpz'123456789012345678901234567890'
-     rep,←⊂Chk(⊂'New from 30-digit string')(⊂'123456789012345678901234567890')(⊂(⌷c))
+     c←⎕NEW gmpz big
+     rep,←⊂Chk(⊂'New from 30-digit string')(⊂big)(⊂(⌷c))
+     c←⎕NEW gmpz(2*70)
+     rep,←⊂Chk(⊂'New from decimal float 2*70 (beyond 64 bits)')(⊂'1180591620717411303424')(⊂(⌷c))
+     c←⎕NEW gmpz(-2*70)
+     rep,←⊂Chk(⊂'New from decimal float ¯2*70')(⊂'¯1180591620717411303424')(⊂(⌷c))
+     c←⎕NEW gmpz'18446744073709551615'
+     rep,←⊂Chk(⊂'New from string 2*64-1')(⊂'18446744073709551615')(⊂(⌷c))
  :Else
      rep,←⊂'**FAIL: Construction section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
-⍝ ── 2. New0 / New / Set ──────────────────────────────────────────
+⍝ ── 2. New0 / New / Set / Copy ───────────────────────────────────
  :Trap 0
      c←gmpz.New0
      rep,←⊂Chk(⊂'gmpz.New0 = 0')(⊂'0')(⊂(⌷c))
@@ -43,6 +62,11 @@
      rep,←⊂Chk(⊂'16 gmpz.New ff = 255')(⊂'255')(⊂(⌷c))
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'Set APL int, chained Inc')(⊂'6')(⊂(⌷((c.Set 5).Inc)))
+     c←⎕NEW gmpz 7
+     c.Set 0
+     rep,←⊂Chk(⊂'Set 0')(⊂'0')(⊂(⌷c))
+     c.Set 1
+     rep,←⊂Chk(⊂'Set 1')(⊂'1')(⊂(⌷c))
      c←⎕NEW gmpz 0
      16 c.Set'beef cafe'
      rep,←⊂Chk(⊂'16 Set beef cafe')(⊂'3203386110')(⊂(⌷c))
@@ -53,25 +77,53 @@
      rep,←⊂Chk(⊂'Set source unchanged')(⊂'77')(⊂(⌷a))
      x←⎕NEW gmpz 5
      rep,←⊂Chk(⊂'Set to self returns self, value kept')(⊂'5')(⊂(⌷(x.Set x)))
+     a←⎕NEW gmpz 5
+     b←a.Copy
+     b.Inc
+     rep,←⊂Chk(⊂'Copy is independent: copy changed')(⊂'6')(⊂(⌷b))
+     rep,←⊂Chk(⊂'Copy is independent: original unchanged')(⊂'5')(⊂(⌷a))
+     b←a
+     b.Inc
+     rep,←⊂Chk(⊂'Assignment aliases: original changed through b')(⊂'6')(⊂(⌷a))
  :Else
-     rep,←⊂'**FAIL: New0 / New / Set section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: New0 / New / Set / Copy section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
-⍝ ── 3. ⌷ / ptr / Int / VFI ───────────────────────────────────────
+⍝ ── 3. ⌷ / ptr / Int64 / IntDF / VFI ─────────────────────────────
  :Trap 0
      c←⎕NEW gmpz 123
      rep,←⊂Chk(⊂'⌷ 123')(⊂'123')(⊂(⌷c))
      rep,←⊂Chk(⊂'ptr is a live address (>0)')(⊂1)(⊂(0<c.ptr))
-    rep,←⊂Chk(⊂'Int 123')(⊂123)(⊂(c.Int))          ⍝ ¯9223372036854775806
-     c←⎕NEW gmpz ¯922337203685477600
-    rep,←⊂Chk(⊂'Int most-negative-ish fits')(⊂¯922337203685477600)(⊂(c.Int))
-     c←⎕NEW gmpz'123456789012345678901234567890'
-     rep,←⊂Chk(⊂'VFI huge number = 0 0')(⊂0 0)(⊂(c.VFI))
+     rep,←⊂Chk(⊂'Int64 123')(⊂123)(⊂(c.Int64))
+     c←⎕NEW gmpz'¯922337203685477600'
+     rep,←⊂Chk(⊂'Int64 most-negative-ish fits')(⊂'¯922337203685477600')(⊂⍕c.Int64)
+     c←⎕NEW gmpz'9223372036854775807'
+     rep,←⊂Chk(⊂'Int64 2*63-1 fits')(⊂'9223372036854775807')(⊂⍕c.Int64)
+     c←⎕NEW gmpz'¯9223372036854775808'
+     rep,←⊂Chk(⊂'Int64 ¯2*63 fits')(⊂'¯9223372036854775808')(⊂⍕c.Int64)
+     c←⎕NEW gmpz 123
+     rep,←⊂Chk(⊂'IntDF 123')(⊂123)(⊂(c.IntDF))
+     c←⎕NEW gmpz big
+     rep,←⊂Chk(⊂'IntDF 30-digit number')(⊂big)(⊂⍕c.IntDF)
+     c←⎕NEW gmpz('¯',big)
+     rep,←⊂Chk(⊂'IntDF negative 30-digit number')(⊂'¯',big)(⊂⍕c.IntDF)
+     c←⎕NEW gmpz'9223372036854775808'
+     rep,←⊂Chk(⊂'IntDF 2*63 (beyond Int64, within 34 digits)')(⊂'9223372036854775808')(⊂⍕c.IntDF)
+     c←⎕NEW gmpz big
+     rep,←⊂Chk(⊂'VFI 30-digit number = 1 (fits a decimal float)')(⊂1)(⊂⊃c.VFI)
+     c←⎕NEW gmpz(40⍴'9')
+     rep,←⊂Chk(⊂'VFI 40-digit number = 0 0')(⊂0 0)(⊂(c.VFI))
+     c←⎕NEW gmpz(34⍴'9')
+     rep,←⊂Chk(⊂'VFI 34 nines fits')(⊂1)(⊂⊃c.VFI)
+     c←⎕NEW gmpz(35⍴'9')
+     rep,←⊂Chk(⊂'VFI 35 nines = 0 0')(⊂0 0)(⊂(c.VFI))
      c←⎕NEW gmpz 42
      rep,←⊂Chk(⊂'VFI 42 = 1 42')(⊂1 42)(⊂(c.VFI))
+     c←⎕NEW gmpz ¯42
+     rep,←⊂Chk(⊂'VFI ¯42 = 1 ¯42')(⊂1 ¯42)(⊂(c.VFI))
  :Else
-     rep,←⊂'**FAIL: ⌷ / ptr / Int / VFI section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: ⌷ / ptr / Int64 / IntDF / VFI section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
-⍝ ── 4. GetInBase / StrLen / Len ──────────────────────────────────
+⍝ ── 4. GetInBase / Get / StrLen / StrLenInBase / BitLen ──────────
  :Trap 0
      c←⎕NEW gmpz 255
      rep,←⊂Chk(⊂'GetInBase 16 of 255')(⊂'ff')(⊂(c.GetInBase 16))
@@ -80,23 +132,54 @@
      rep,←⊂Chk(⊂'GetInBase 2 of ¯5')(⊂'¯101')(⊂(c.GetInBase 2))
      c←⎕NEW gmpz 255
      rep,←⊂Chk(⊂'GetInBase 62 of 255')(⊂'47')(⊂(c.GetInBase 62))
+     rep,←⊂Chk(⊂'gmpz.Get 255 (integer, default base 10)')(⊂'255')(⊂(gmpz.Get 255))
+     rep,←⊂Chk(⊂'16 gmpz.Get 255 (integer, base 16)')(⊂'ff')(⊂(16 gmpz.Get 255))
+     rep,←⊂Chk(⊂'16 gmpz.Get decimal string')(⊂'ff')(⊂(16 gmpz.Get'255'))
+     rep,←⊂Chk(⊂'2 gmpz.Get gmpz')(⊂'11111111')(⊂(2 gmpz.Get c))
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'StrLen 0 = 1')(⊂1)(⊂(c.StrLen))
-     rep,←⊂Chk(⊂'Len 0 = 1')(⊂1)(⊂(c.Len))
+     rep,←⊂Chk(⊂'BitLen 0 = 1')(⊂1)(⊂(c.BitLen))
      c←⎕NEW gmpz ¯123
      rep,←⊂Chk(⊂'StrLen ¯123 = 4 (sign counts)')(⊂4)(⊂(c.StrLen))
      rep,←⊂Chk(⊂'StrLen = ≢⌷ for ¯123')(⊂(≢⌷c))(⊂(c.StrLen))
      c←⎕NEW gmpz 8
-     rep,←⊂Chk(⊂'Len 8 = 4')(⊂4)(⊂(c.Len))
+     rep,←⊂Chk(⊂'BitLen 8 = 5 (0 1 0 0 0: sign bit included)')(⊂5)(⊂(c.BitLen))
      c←⎕NEW gmpz ¯8
-     rep,←⊂Chk(⊂'Len ¯8 = 4 (sign adds no bit)')(⊂4)(⊂(c.Len))
+     rep,←⊂Chk(⊂'BitLen ¯8 = 4 (1 0 0 0)')(⊂4)(⊂(c.BitLen))
      c←⎕NEW gmpz 7
-     rep,←⊂Chk(⊂'Len 7 = 3')(⊂3)(⊂(c.Len))
-     c←⎕NEW gmpz'123456789012345678901234567890'
+     rep,←⊂Chk(⊂'BitLen 7 = 4 (0 1 1 1)')(⊂4)(⊂(c.BitLen))
+     c←⎕NEW gmpz ¯1
+     rep,←⊂Chk(⊂'BitLen ¯1 = 1')(⊂1)(⊂(c.BitLen))
+     c←⎕NEW gmpz ¯5
+     rep,←⊂Chk(⊂'BitLen ¯5 = 4 (1 0 1 1)')(⊂4)(⊂(c.BitLen))
+     c←⎕NEW gmpz big
      rep,←⊂Chk(⊂'StrLen 30-digit = 30')(⊂30)(⊂(c.StrLen))
      rep,←⊂Chk(⊂'StrLen = ≢⌷ for 30-digit')(⊂(≢⌷c))(⊂(c.StrLen))
+   ⍝ StrLenInBase must equal ≢GetInBase, in every base and across the C-long boundary
+     vals←'0' '1' '¯1' '35' '1000000000000000000' '¯9223372036854775808' '9223372036854775807' '18446744073709551616'
+     vals,←⊂big
+     vals,←⊂'¯',big
+     ok←1
+     :For base :In 2 3 7 10 12 16 36 62
+         :For val :In vals
+             c←⎕NEW gmpz val
+             ok←ok∧(c.StrLenInBase base)≡(≢c.GetInBase base)
+         :EndFor
+     :EndFor
+     rep,←⊂Chk(⊂'StrLenInBase = ≢GetInBase, bases 2…62, values across the long boundary')(⊂1)(⊂ok)
+     c←⎕NEW gmpz'1000000000000000000'
+     rep,←⊂Chk(⊂'StrLenInBase 12 of 10*18 = 17 (was wrong for bases ≥ 12)')(⊂17)(⊂(c.StrLenInBase 12))
+   ⍝ BitLen must equal ≢Bits
+     vals←'0' '1' '¯1' '7' '8' '¯8' '255' '256' '¯256' '¯257' '9223372036854775807' '¯9223372036854775808' '18446744073709551616' '¯18446744073709551616' big
+     vals,←⊂'¯',big
+     ok←1
+     :For val :In vals
+         c←⎕NEW gmpz val
+         ok←ok∧(c.BitLen)≡(≢c.Bits)
+     :EndFor
+     rep,←⊂Chk(⊂'BitLen = ≢Bits across signs, 64-bit boundaries and big values')(⊂1)(⊂ok)
  :Else
-     rep,←⊂'**FAIL: GetInBase / StrLen / Len section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
+     rep,←⊂'**FAIL: GetInBase / Get / StrLen / StrLenInBase / BitLen section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
 ⍝ ── 5. Signum / Even / Odd / Inc / Dec ───────────────────────────
  :Trap 0
@@ -143,6 +226,10 @@
      c.Add a
      rep,←⊂Chk(⊂'In-place: receiver changed, operand unchanged')(⊂'10')(⊂(⌷a))
      rep,←⊂Chk(⊂'In-place: receiver is 52')(⊂'52')(⊂(⌷c))
+     c←⎕NEW gmpz 21
+     rep,←⊂Chk(⊂'Receiver as both operands: c c.Mul c')(⊂'441')(⊂(⌷(c c.Mul c)))
+     c←⎕NEW gmpz 5
+     rep,←⊂Chk(⊂'Add decimal float operand 2*70')(⊂'1180591620717411303429')(⊂(⌷(c.Add(2*70))))
  :Else
      rep,←⊂'**FAIL: Add / Sub / Mul section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -172,6 +259,9 @@
      x.Mul 2
      x.Add y
      rep,←⊂Chk(⊂'Div identity: 2×(¯7÷2) + (¯7|2) = ¯7')(⊂'¯7')(⊂(⌷x))
+     c←⎕NEW gmpz 0
+     rem←big c.DivRem'¯7'
+     rep,←⊂Chk(⊂'DivRem with a negative string divisor: remainder is 0 or ≤ 0')(⊂1)(⊂(rem.Le 0))
  :Else
      rep,←⊂'**FAIL: Div / DivRem section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -237,7 +327,7 @@
  :Else
      rep,←⊂'**FAIL: Res / Invert section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
-⍝ ── 11. Shift ────────────────────────────────────────────────────
+⍝ ── 11. Shift (incl. ToInt / Str2I: the shift may be a string or gmpz) ─
  :Trap 0
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'Shift left 1<<3 = 6')(⊂'6')(⊂(⌷(1 c.Shift 3)))
@@ -251,15 +341,24 @@
      rep,←⊂Chk(⊂'Shift right ¯3>>¯7 = 0 (truncates)')(⊂'0')(⊂(⌷(¯3 c.Shift ¯7)))
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'Shift 0 leaves value')(⊂'7')(⊂(⌷(0 c.Shift 7)))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'Shift amount as a string')(⊂'12')(⊂(⌷('2'c.Shift 3)))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'Shift amount as a negative string')(⊂'3')(⊂(⌷('¯1'c.Shift 7)))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'Shift amount as a gmpz')(⊂'12')(⊂(⌷((⎕NEW gmpz 2)c.Shift 3)))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'Shift left past 64 bits: 70<<1 = 2*70')(⊂'1180591620717411303424')(⊂(⌷(70 c.Shift 1)))
  :Else
      rep,←⊂'**FAIL: Shift section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
-⍝ ── 12. TestBit / SetBit / ClrBit / Flip ─────────────────────────
+⍝ ── 12. TestBit / SetBit / ClrBit / Flip (⎕IO←0) ─────────────────
  :Trap 0
      c←⎕NEW gmpz 10
      rep,←⊂Chk(⊂'TestBit 1 of 10 = 1')(⊂1)(⊂(c.TestBit 1))
      rep,←⊂Chk(⊂'TestBit 0 of 10 = 0')(⊂0)(⊂(c.TestBit 0))
      rep,←⊂Chk(⊂'TestBit 3 of 10 = 1')(⊂1)(⊂(c.TestBit 3))
+     rep,←⊂Chk(⊂'TestBit with a left operand: 5 c.TestBit 0')(⊂1)(⊂(5 c.TestBit 0))
      c←⎕NEW gmpz 10
      v←c.SetBit 0
      rep,←⊂Chk(⊂'SetBit 0 returns 1')(⊂1)(⊂v)
@@ -280,6 +379,9 @@
      v←c.Flip 1
      rep,←⊂Chk(⊂'Flip 1 returns new bit 0')(⊂0)(⊂v)
      rep,←⊂Chk(⊂'Flip 1: 10 becomes 8')(⊂'8')(⊂(⌷c))
+     c←⎕NEW gmpz 0
+     c.SetBit 100
+     rep,←⊂Chk(⊂'SetBit 100 grows the object to 2*100')(⊂'1267650600228229401496703205376')(⊂(⌷c))
  :Else
      rep,←⊂'**FAIL: TestBit / SetBit / ClrBit / Flip section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -294,6 +396,9 @@
      c←⎕NEW gmpz 8
      rep,←⊂Chk(⊂'Iota 1 of 8 = 3')(⊂3)(⊂(c.Iota 1))
      rep,←⊂Chk(⊂'Iota 0 of 8 = 0')(⊂0)(⊂(c.Iota 0))
+     c←⎕NEW gmpz 10
+     v←c.Scan 4 1
+     rep,←⊂Chk(⊂'Scan past the top 1-bit: not found = UL_MAX, not ⎕IO-adjusted')(⊂¯1+2*gmpz.WINDOWS⊃64 32)(⊂v)
  :Else
      rep,←⊂'**FAIL: Scan / Iota section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -305,15 +410,20 @@
      rep,←⊂Chk(⊂'Or 12∨10 = 14')(⊂'14')(⊂(⌷(c.Or 10)))
      c←⎕NEW gmpz 12
      rep,←⊂Chk(⊂'Xor 12≠10 = 6')(⊂'6')(⊂(⌷(c.Xor 10)))
+     c←⎕NEW gmpz 5
+     rep,←⊂Chk(⊂'Neg (niladic) 5 = ¯5')(⊂'¯5')(⊂(⌷c.Neg))
+     c←⎕NEW gmpz ¯5
+     rep,←⊂Chk(⊂'Neg (niladic) ¯5 = 5')(⊂'5')(⊂(⌷c.Neg))
      c←⎕NEW gmpz 0
-     rep,←⊂Chk(⊂'Neg 5 = ¯5')(⊂'¯5')(⊂(⌷(c.Neg 5)))
+     rep,←⊂Chk(⊂'(c.Set b).Neg sets c← -b')(⊂'¯5')(⊂(⌷(c.Set 5).Neg))
+     c←⎕NEW gmpz ¯5
+     rep,←⊂Chk(⊂'Abs (niladic) ¯5 = 5')(⊂'5')(⊂(⌷c.Abs))
      c←⎕NEW gmpz 0
-     rep,←⊂Chk(⊂'Neg ¯5 = 5')(⊂'5')(⊂(⌷(c.Neg ¯5)))
-     c←⎕NEW gmpz 0
-     rep,←⊂Chk(⊂'Abs ¯5 = 5')(⊂'5')(⊂(⌷(c.Abs ¯5)))
+     rep,←⊂Chk(⊂'(c.Set b).Abs sets c← |b')(⊂'5')(⊂(⌷(c.Set'¯5').Abs))
      c←⎕NEW gmpz 10
-     rep,←⊂Chk(⊂'Divisible 10 by 2')(⊂1)(⊂(c.Divisible 2))
+     rep,←⊂Chk(⊂'Divisible 10 by 2 = 1')(⊂1)(⊂(c.Divisible 2))
      rep,←⊂Chk(⊂'Divisible 10 by 3 = 0')(⊂0)(⊂(c.Divisible 3))
+     rep,←⊂Chk(⊂'Divisible 10 by a string = 1 (a 0/1 result, not a raw nonzero)')(⊂1)(⊂(c.Divisible'5'))
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'Divisible 0 by 0 = 1')(⊂1)(⊂(c.Divisible 0))
  :Else
@@ -334,16 +444,44 @@
  :Else
      rep,←⊂'**FAIL: Bit property section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
-⍝ ── 16. Bits ─────────────────────────────────────────────────────
+⍝ ── 16. Bits (get and set) ──────────────────────────────────────
  :Trap 0
      c←⎕NEW gmpz 10
-     rep,←⊂Chk(⊂'Bits 10 = 1 0 1 0')(⊂1 0 1 0)(⊂(c.Bits))
+     rep,←⊂Chk(⊂'Bits 10 = 0 1 0 1 0')(⊂0 1 0 1 0)(⊂(c.Bits))
      c←⎕NEW gmpz 0
-     rep,←⊂Chk(⊂'Bits 0 = 0')(⊂0)(⊂(c.Bits))
+     rep,←⊂Chk(⊂'Bits 0 = 0')(⊂,0)(⊂(c.Bits))
      c←⎕NEW gmpz 255
-     rep,←⊂Chk(⊂'Bits 255 = eight 1s')(⊂8⍴1)(⊂(c.Bits))
+     rep,←⊂Chk(⊂'Bits 255 = 0 then eight 1s')(⊂0,8⍴1)(⊂(c.Bits))
      c←⎕NEW gmpz 8
-     rep,←⊂Chk(⊂'Bits 8 = 1 0 0 0, ≢Bits = Len')(⊂(c.Len))(⊂(≢c.Bits))
+     rep,←⊂Chk(⊂'≢Bits = BitLen (8)')(⊂(c.BitLen))(⊂(≢c.Bits))
+     c←⎕NEW gmpz ¯5
+     rep,←⊂Chk(⊂'Bits ¯5 = 1 0 1 1 (two''s complement, no error)')(⊂1 0 1 1)(⊂(c.Bits))
+     c←⎕NEW gmpz ¯1
+     rep,←⊂Chk(⊂'Bits ¯1 = 1')(⊂,1)(⊂(c.Bits))
+     c←⎕NEW gmpz 0
+     c.Bits←0 1 0 1
+     rep,←⊂Chk(⊂'Bits← 0 1 0 1 sets 5')(⊂'5')(⊂(⌷c))
+     c.Bits←1 0 1 1
+     rep,←⊂Chk(⊂'Bits← 1 0 1 1 sets ¯5')(⊂'¯5')(⊂(⌷c))
+     c.Bits←,1
+     rep,←⊂Chk(⊂'Bits← ,1 sets ¯1')(⊂'¯1')(⊂(⌷c))
+     c.Bits←⍬
+     rep,←⊂Chk(⊂'Bits← ⍬ (empty, used to be a VALUE ERROR) sets 0')(⊂'0')(⊂(⌷c))
+   ⍝ round trip across the 64-bit limb boundaries
+     vals←'1' '¯1' '9223372036854775807' '9223372036854775808' '¯9223372036854775808' '¯9223372036854775809' '18446744073709551615' '18446744073709551616' '¯18446744073709551616' big
+     vals,←⊂'¯',big
+     ok←1
+     :For val :In vals
+         a←⎕NEW gmpz val
+         b←⎕NEW gmpz 0
+         b.Bits←a.Bits
+         ok←ok∧(a.Cmp b)≡0
+     :EndFor
+     rep,←⊂Chk(⊂'Bits round trip (a.Bits → b.Bits←) across 64-bit limb boundaries and signs')(⊂1)(⊂ok)
+     c←⎕NEW gmpz 5
+     rep,←⊂Chk(⊂'ExportBits 8 sign-extends: 5 = 0 0 0 0 0 1 0 1')(⊂0 0 0 0 0 1 0 1)(⊂(c.ExportBits 8))
+     c←⎕NEW gmpz ¯5
+     rep,←⊂Chk(⊂'ExportBits 8 sign-extends: ¯5 = 1 1 1 1 1 0 1 1')(⊂1 1 1 1 1 0 1 1)(⊂(c.ExportBits 8))
  :Else
      rep,←⊂'**FAIL: Bits section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -357,6 +495,8 @@
      rep,←⊂Chk(⊂'Fac 20')(⊂'2432902008176640000')(⊂(⌷(c.Fac 20)))
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'Fac string 5 = 120')(⊂'120')(⊂(⌷(c.Fac'5')))
+     c←⎕NEW gmpz 0
+     rep,←⊂Chk(⊂'Fac gmpz 5 = 120')(⊂'120')(⊂(⌷(c.Fac(⎕NEW gmpz 5))))
  :Else
      rep,←⊂'**FAIL: Fac section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -374,9 +514,12 @@
      rep,←⊂Chk(⊂'Ne 5≠7')(⊂1)(⊂(c.Ne 7))
      rep,←⊂Chk(⊂'Ge 5≥5')(⊂1)(⊂(c.Ge 5))
      rep,←⊂Chk(⊂'Gt 5>3')(⊂1)(⊂(c.Gt 3))
-     c←⎕NEW gmpz'123456789012345678901234567890'
-     rep,←⊂Chk(⊂'Cmp big vs string, equal')(⊂0)(⊂(c.Cmp'123456789012345678901234567890'))
+     c←⎕NEW gmpz big
+     rep,←⊂Chk(⊂'Cmp big vs string, equal')(⊂0)(⊂(c.Cmp big))
      rep,←⊂Chk(⊂'Cmp big vs smaller')(⊂1)(⊂(c.Cmp'1'))
+     c←⎕NEW gmpz'¯9223372036854775808'
+     rep,←⊂Chk(⊂'Cmp ¯2*63 vs ¯2*63 (the signed-int fast path boundary) = 0')(⊂0)(⊂(c.Cmp'¯9223372036854775808'))
+     rep,←⊂Chk(⊂'Cmp ¯2*63 vs ¯9223372036854775809 = 1')(⊂1)(⊂(c.Cmp'¯9223372036854775809'))
  :Else
      rep,←⊂'**FAIL: Comparison section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -384,27 +527,29 @@
  :Trap 0
      old←gmpz.RandSeed 42
      a←⎕NEW gmpz 0
-     v1←(a.Rand 1000000).Int
+     v1←(a.Rand 1000000).Int64
      old←gmpz.RandSeed 42
      rep,←⊂Chk(⊂'RandSeed 42 again returns old seed 42')(⊂'42')(⊂old)
      b←⎕NEW gmpz 0
-     v2←(b.Rand 1000000).Int
+     v2←(b.Rand 1000000).Int64
      rep,←⊂Chk(⊂'Rand deterministic: same seed, same draw')(⊂v1)(⊂v2)
      ok←1
      :For i :In ⍳20
-         v←(a.Rand 10).Int
+         v←(a.Rand 10).Int64
          ok←ok∧(0≤v)∧(v<10)
      :EndFor
      rep,←⊂Chk(⊂'Rand 10: 20 draws all in 0..9 (⎕IO←0)')(⊂1)(⊂ok)
      ok←1
      :For i :In ⍳20
-         v←(a.RandB 8).Int
+         v←(a.RandB 8).Int64
          ok←ok∧(0≤v)∧(v<256)
      :EndFor
      rep,←⊂Chk(⊂'RandB 8: 20 draws all in 0..255 (⎕IO←0)')(⊂1)(⊂ok)
      a←⎕NEW gmpz 0
-     v←(a.RandB 0).Int
+     v←(a.RandB 0).Int64
      rep,←⊂Chk(⊂'RandB 0 = 0')(⊂0)(⊂v)
+     a.Rand big
+     rep,←⊂Chk(⊂'Rand with a 30-digit string bound: result < bound')(⊂¯1)(⊂(a.Cmp big))
  :Else
      rep,←⊂'**FAIL: Rand / RandB / RandSeed section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -416,6 +561,7 @@
      rep,←⊂Chk(⊂'ProbabPrime 100 = 0 (not prime)')(⊂0)(⊂(c.ProbabPrime 24))
      c←⎕NEW gmpz 97
      rep,←⊂Chk(⊂'ProbabPrime 0 reps = default, 97 = 2')(⊂2)(⊂(c.ProbabPrime 0))
+     rep,←⊂Chk(⊂'ProbabPrime ⍬ reps = default, 97 = 2')(⊂2)(⊂(c.ProbabPrime ⍬))
      c←⎕NEW gmpz 0
      rep,←⊂Chk(⊂'NextPrime 10 = 11')(⊂'11')(⊂(⌷(c.NextPrime 10)))
      c←⎕NEW gmpz 0
@@ -428,6 +574,9 @@
      pp←c.PrevPrime2 10
      rep,←⊂Chk(⊂'PrevPrime2 10 prime = 7')(⊂'7')(⊂(⌷⊃pp))
      rep,←⊂Chk(⊂'PrevPrime2 10 certainty = 2')(⊂2)(⊂(1⊃pp))
+     c←⎕NEW gmpz 0
+     pp←c.PrevPrime2 2
+     rep,←⊂Chk(⊂'PrevPrime2 2: no previous prime, rc = 0 (no error)')(⊂0)(⊂(1⊃pp))
      c←⎕NEW gmpz 2
      rep,←⊂Chk(⊂'Jacobi (2/7) = 1')(⊂1)(⊂(c.Jacobi 7))
      c←⎕NEW gmpz 3
@@ -455,7 +604,7 @@
  :Else
      rep,←⊂'**FAIL: GI dyadic arithmetic section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
-⍝ ── 22. GI comparisons / DivRem / PowM / Iota / Bit ──────────────
+⍝ ── 22. GI comparisons / DivRem / PowM / Iota / Bit / ⊤ / ≢ ──────
  :Trap 0
      rep,←⊂Chk(⊂'GI 5<7')(⊂1)(⊂(5<GI 7))
      rep,←⊂Chk(⊂'GI 5≤5')(⊂1)(⊂(5≤GI 5))
@@ -467,10 +616,14 @@
      pp←7(÷∘|GI)2
      rep,←⊂Chk(⊂'GI ÷∘| 7÷2 quotient')(⊂'3')(⊂(⌷⊃pp))
      rep,←⊂Chk(⊂'GI ÷∘| 7÷2 remainder')(⊂'1')(⊂(⌷1⊃pp))
+     z←100+GI 1
+     rep,←⊂Chk(⊂'GI ÷∘| quotient survives a later GI call')(⊂'3')(⊂(⌷⊃pp))
      rep,←⊂Chk(⊂'GI *∘| 2*10 mod 1000')(⊂'24')(⊂(⌷(2(*∘|GI)(10 1000))))
      rep,←⊂Chk(⊂'GI 10⍳1 first 1-bit')(⊂1)(⊂(10⍳GI 1))
      rep,←⊂Chk(⊂'GI 1⌷10 bit 1 of 10')(⊂1)(⊂(1⌷GI 10))
      rep,←⊂Chk(⊂'GI 0⌷10 bit 0 of 10')(⊂0)(⊂(0⌷GI 10))
+     rep,←⊂Chk(⊂'GI 16⊤255 base-16 string')(⊂'ff')(⊂(16⊤GI 255))
+     rep,←⊂Chk(⊂'GI 16≢255 length in base 16')(⊂2)(⊂(16≢GI 255))
  :Else
      rep,←⊂'**FAIL: GI comparisons / DivRem / PowM / Iota / Bit section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -484,15 +637,23 @@
      rep,←⊂Chk(⊂'GI <5 decrement')(⊂'4')(⊂(⌷(<GI 5)))
      rep,←⊂Chk(⊂'GI >5 increment')(⊂'6')(⊂(⌷(>GI 5)))
      rep,←⊂Chk(⊂'GI ≢12345 StrLen')(⊂5)(⊂(≢GI'12345'))
-     rep,←⊂Chk(⊂'GI ⍎123 Int')(⊂123)(⊂(⍎GI'123'))
-     rep,←⊂Chk(⊂'GI ⌷123 string')(⊂1 1 1 1 0 1 1 )(⊂(⌷GI 123))
-    rep,←⊂Chk(⊂'GI ⊥123 fresh gmpz')(⊂'123')((⊂⌷(⊥GI'123')))
+     rep,←⊂Chk(⊂'GI ⍎123 IntDF')(⊂123)(⊂(⍎GI'123'))
+     rep,←⊂Chk(⊂'GI ⌷123 bit vector')(⊂0 1 1 1 1 0 1 1)(⊂(⌷GI 123))
+     rep,←⊂Chk(⊂'GI ⊤123 decimal string')(⊂'123')(⊂(⊤GI 123))
+     rep,←⊂Chk(⊂'GI ⊥123 fresh gmpz')(⊂'123')(⊂⌷(⊥GI'123'))
+     rep,←⊂Chk(⊂'GI ⎕VFI 42 = 1 42')(⊂1 42)(⊂((⎕VFI GI)'42'))
      ok←1
      :For i :In ⍳20
-         v←((?GI 10).Int)
+         v←(?GI 10).Int64
          ok←ok∧(0≤v)∧(v<10)
      :EndFor
      rep,←⊂Chk(⊂'GI ?10: 20 draws all in 0..9 (⎕IO←0)')(⊂1)(⊂ok)
+     ok←1
+     :For i :In ⍳20
+         v←(?GI ¯8).Int64
+         ok←ok∧(0≤v)∧(v<256)
+     :EndFor
+     rep,←⊂Chk(⊂'GI ?¯8 (RandB 8): 20 draws all in 0..255')(⊂1)(⊂ok)
  :Else
      rep,←⊂'**FAIL: GI monadic section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -508,6 +669,9 @@
      z←-GI a
      rep,←⊂Chk(⊂'GI monadic result -5')(⊂'¯5')(⊂(⌷z))
      rep,←⊂Chk(⊂'GI monadic argument unchanged')(⊂'5')(⊂(⌷a))
+     x←1+GI 1
+     y←2+GI 2
+     rep,←⊂Chk(⊂'GI results are independent objects (not the shared temp)')(⊂'2 4')(⊂(⌷x),' ',⌷y)
  :Else
      rep,←⊂'**FAIL: GI no-modify section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
  :EndTrap
@@ -553,7 +717,7 @@
      err←⎕DMX.EN
  :EndTrap
  rep,←⊂Chk(⊂'RandB ¯1 → randÊ EN 11')(⊂11)(⊂err)
-⍝ Set with a non-integer / invalid string
+⍝ Set with a non-integer / invalid value
  err←¯1
  :Trap 0
      c←⎕NEW gmpz 0
@@ -565,20 +729,85 @@
  err←¯1
  :Trap 0
      c←⎕NEW gmpz 0
+     c.Set 1 2 3
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Set numeric vector → badAplÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     c.Set 1 0 1
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Set boolean vector → badAplÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
      c.Set'12x'
  :Else
      err←⎕DMX.EN
  :EndTrap
  rep,←⊂Chk(⊂'Set invalid string → badObjÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     16 c.Set 255
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Set with a base but a numeric value → baseXtraÊ EN 11')(⊂11)(⊂err)
+⍝ ToInt / Str2I (reached through Shift): bad strings
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     v←'1.5'c.Shift 3
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Shift string ''1.5'' → badAplÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     v←'1 2'c.Shift 3
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Shift string ''1 2'' (two numbers) → badAplÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     v←''c.Shift 3
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Shift empty string → badAplÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     v←'abc'c.Shift 3
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Shift string ''abc'' → badAplÊ EN 11')(⊂11)(⊂err)
 ⍝ Int overflow
  err←¯1
  :Trap 0
      c←⎕NEW gmpz'9223372036854775808'
-     v←c.Int
+     v←c.Int64
  :Else
      err←⎕DMX.EN
  :EndTrap
- rep,←⊂Chk(⊂'Int 2*63 → badIntÊ EN 11')(⊂11)(⊂err)
+ rep,←⊂Chk(⊂'Int64 2*63 → badIntÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz(40⍴'9')
+     v←c.IntDF
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'IntDF 40 digits → badIntÊ EN 11')(⊂11)(⊂err)
 ⍝ Pow errors
  err←¯1
  :Trap 0
@@ -596,6 +825,22 @@
      err←⎕DMX.EN
  :EndTrap
  rep,←⊂Chk(⊂'Pow even root of negative → powÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 2
+     c.Pow 0.4
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Pow 0.4 (not the inverse of an integer) → powÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 2
+     c.Pow'3'
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Pow string exponent → powÊ EN 11')(⊂11)(⊂err)
  err←¯1
  :Trap 0
      c←⎕NEW gmpz 2
@@ -632,12 +877,19 @@
  err←¯1
  :Trap 0
      c←⎕NEW gmpz 0
-    c.Fac 2*70 40⊃⍨'Windows'≡7↑⊃'.'⎕WG'APLVersion'  ⍝ Different limit for microsoft!
-
+     c.Fac(⎕NEW gmpz ¯1)
  :Else
      err←⎕DMX.EN
  :EndTrap
- rep,←⊂Chk(⊂'Fac 2*32 → facBadÊ EN 11')(⊂11)(⊂err)
+ rep,←⊂Chk(⊂'Fac gmpz ¯1 → facBadÊ EN 11 (a gmpz argument is range-checked too)')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     c.Fac 2*(gmpz.WINDOWS⊃70 40)
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Fac beyond the C unsigned long maximum → facBadÊ EN 11')(⊂11)(⊂err)
 ⍝ Bit errors
  err←¯1
  :Trap 0
@@ -657,12 +909,20 @@
  rep,←⊂Chk(⊂'SetBit value 2 → badBitValÊ EN 11')(⊂11)(⊂err)
  err←¯1
  :Trap 0
-     c←⎕NEW gmpz ¯5
-     v←c.Bits
+     c←⎕NEW gmpz 10
+     v←c.SetBit ¯1
  :Else
      err←⎕DMX.EN
  :EndTrap
- rep,←⊂Chk(⊂'Bits of negative → badObjÊ EN 11')(⊂11)(⊂err)
+ rep,←⊂Chk(⊂'SetBit ¯1 → badBitIxÊ EN 3')(⊂3)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 10
+     v←5 c.SetBit 1
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'SetBit with a left argument → SYNTAX ERROR EN 2 (mutators act on the receiver only)')(⊂2)(⊂err)
  err←¯1
  :Trap 0
      c←⎕NEW gmpz 10
@@ -671,6 +931,14 @@
      err←⎕DMX.EN
  :EndTrap
  rep,←⊂Chk(⊂'Bit[¯1] → badBitIxÊ EN 3')(⊂3)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     c.Bits←1 0 2
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'Bits← containing 2 → badBitsÊ EN 11')(⊂11)(⊂err)
 ⍝ Other domain errors
  err←¯1
  :Trap 0
@@ -690,6 +958,14 @@
  rep,←⊂Chk(⊂'GetInBase 63 → badAplÊ EN 11')(⊂11)(⊂err)
  err←¯1
  :Trap 0
+     c←⎕NEW gmpz 255
+     v←c.StrLenInBase 1
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'StrLenInBase 1 → badAplÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
      c←⎕NEW gmpz 2
      v←c.Jacobi 6
  :Else
@@ -704,6 +980,14 @@
      err←⎕DMX.EN
  :EndTrap
  rep,←⊂Chk(⊂'ProbabPrime ¯1 → primeÊ EN 11')(⊂11)(⊂err)
+ err←¯1
+ :Trap 0
+     c←⎕NEW gmpz 0
+     c.PrevPrime 2
+ :Else
+     err←⎕DMX.EN
+ :EndTrap
+ rep,←⊂Chk(⊂'PrevPrime 2 → noPrevPrimeÊ EN 11')(⊂11)(⊂err)
  err←¯1
  :Trap 0
      old←gmpz.RandSeed ¯1
@@ -727,31 +1011,49 @@
      err←⎕DMX.EN
  :EndTrap
  rep,←⊂Chk(⊂'Shift 1.5 (non-integer shift) → shiftÊ EN 11')(⊂11)(⊂err)
-⍝ ── 26. ⎕IO←1 — Bit / Iota / Scan / Rand (known-issue area) ─────
-⍝    These are reported like any other check.  If they FAIL, that is
-⍝    the Bit / Bits ⎕IO handling Pete already knows about and has
-⍝    left as-is for now — do not treat a FAIL here as a new bug
-⍝    without checking it against that decision.
+⍝ ── 26. ⎕IO←1 — Bit / TestBit / SetBit / ClrBit / Flip / Iota / Scan / Rand ─
+⍝    The bit-index methods and Rand/RandB honour the caller's ⎕IO. These checks run under ⎕IO←1.
+⍝    A FAIL here means the caller's ⎕IO is not being picked up (see the ∆io← (⊃⎕RSI).⎕IO lines
+⍝    in gmpz), not necessarily a wrong result in the origin-0 code.
  ⎕IO←1
  :Trap 0
      c←⎕NEW gmpz 10
      rep,←⊂Chk(⊂'IO=1 Bit[2] of 10 = 1')(⊂1)(⊂(c.Bit[2]))
      rep,←⊂Chk(⊂'IO=1 Bit[1] of 10 = 0')(⊂0)(⊂(c.Bit[1]))
+     rep,←⊂Chk(⊂'IO=1 TestBit 2 of 10 = 1')(⊂1)(⊂(c.TestBit 2))
+     rep,←⊂Chk(⊂'IO=1 TestBit 1 of 10 = 0 (the first bit used to be rejected)')(⊂0)(⊂(c.TestBit 1))
+     c←⎕NEW gmpz 10
+     v←c.SetBit 1
+     rep,←⊂Chk(⊂'IO=1 SetBit 1: 10 becomes 11')(⊂'11')(⊂(⌷c))
+     c←⎕NEW gmpz 10
+     v←c.ClrBit 2
+     rep,←⊂Chk(⊂'IO=1 ClrBit 2: 10 becomes 8')(⊂'8')(⊂(⌷c))
+     c←⎕NEW gmpz 10
+     v←c.Flip 1
+     rep,←⊂Chk(⊂'IO=1 Flip 1: 10 becomes 11')(⊂'11')(⊂(⌷c))
+     c←⎕NEW gmpz 10
      rep,←⊂Chk(⊂'IO=1 Iota 1 of 10 = 2')(⊂2)(⊂(c.Iota 1))
      rep,←⊂Chk(⊂'IO=1 Iota 0 of 10 = 1')(⊂1)(⊂(c.Iota 0))
      rep,←⊂Chk(⊂'IO=1 Scan (2 1) of 10 = 2')(⊂2)(⊂(c.Scan 2 1))
      ok←1
      :For i :In ⍳20
-         v←(c.Rand 10).Int
+         v←(c.Rand 10).Int64
          ok←ok∧(1≤v)∧(v≤10)
      :EndFor
      rep,←⊂Chk(⊂'IO=1 Rand 10: 20 draws all in 1..10')(⊂1)(⊂ok)
      ok←1
      :For i :In ⍳20
-         v←(c.RandB 8).Int
+         v←(c.RandB 8).Int64
          ok←ok∧(1≤v)∧(v≤256)
      :EndFor
      rep,←⊂Chk(⊂'IO=1 RandB 8: 20 draws all in 1..256')(⊂1)(⊂ok)
+     err←¯1
+     :Trap 0
+         v←c.TestBit 0
+     :Else
+         err←⎕DMX.EN
+     :EndTrap
+     rep,←⊂Chk(⊂'IO=1 TestBit 0 → badBitIxÊ EN 3')(⊂3)(⊂err)
      ⎕IO←0
  :Else
      ⎕IO←0

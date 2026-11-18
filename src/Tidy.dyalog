@@ -242,7 +242,7 @@ Tidy← {
                         
                         '''[^'']*'''      'qt'        ⋄   '[[{(]+'          'grpB'      
                         '[]})]+'          'grpE'      ⋄   '::?\h?'          'guard'     
-                        '⍝.*'             'cm'        ⋄   '←(?!\h)'         'assign' 
+                        '⍝.*'             'cm'        ⋄   '\h*←\h*'         'assign' 
                   )
                ⍝  pn: Each pattern name refers to its ⎕R pattern number.
                ⍝      I.e. pn.newLine← 0  ⋄  pn.assign← ¯1+≢pats
@@ -336,7 +336,7 @@ Tidy← {
                       Case pn.cmL:       DLB DTB f0  ⊣ Tok()⊣ tabs[î.cmLine]⊢← 1 ⍝ Space+Comments anchored to left
                         
                       Case pn.(qt cm):   f0                             ⍝ 'abc'    ⍝ after code
-                      Case pn.assign:    f0, ' '                        ⍝ Any ← 
+                      Case pn.assign:    (f0~' '),' '                   ⍝ Any ← 
                       Case pn.dmdL:      1 Dmd ⍵ RF 1                   ⍝ diamonds inside and outside () and []
                       Case pn.dmd:       0 Dmd f0                       ⍝ -do-
                       Case pn.localL:    1 CanonLocal ⍵ ⊢ 1             ⍝ local vars in Tradfn
