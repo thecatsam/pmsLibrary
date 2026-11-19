@@ -1,8 +1,9 @@
-<center>
-<big><big><strong>gmpz</strong>: A Dyalog APL class with an APL-style helper operator <i>GI</i><br></big></big>
-<i>Backed by GMP mpz calls (libgmp)  •  Nov 2026 Edition (2026-11-17)</i><br>
-For Dyalog APL v20 or later (developed with v21) and GMP 6.3 or later. <br>[Tested on macOS; designed for macOS, Linux, and Windows]
-</center>
+## ***gmpz***: A Dyalog APL class with an APL-style helper operator *GI*
+
+* Backed by GMP mpz calls (libgmp)  •  Nov 2026 Edition (2026-11-17)
+* For Dyalog APL v20 or later (developed with v21) and GMP 6.3 or later. 
+* [Tested on macOS; designed for macOS, Linux, and Windows]
+
 
 ## **0\. Setup**
 
@@ -285,8 +286,8 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
     x← 2 *GI 100                   ⍝ 2*100
     y← x +GI 1                     ⍝ x + 1
     z← 10 |GI y                    ⍝ 10|y   (left is the modulus)
-    ⌷ !GI 30                       ⍝ factorial, shown as a string (⌷ on a gmpz is its string form)
-    ⊤GI 30                         ⍝ plain string of 30 (a GI call returning a string, not an object)
+    ⌷ !GI 30                       ⍝ factorial, shown as a string 
+    ⊤GI 30                         ⍝ plain string of '30'
     7 <GI x                        ⍝ comparison → 0/1
 ```
 
@@ -308,7 +309,7 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | <code>a&nbsp;!GI&nbsp;b</code> | a!b as in APL: b choose a (`3!GI 5` is 10) | `~GI b` | bitwise NOT of b (¯1−b) |
 | <code>a&nbsp;⌈GI&nbsp;b</code> | the larger of `a` and `b` | | |
 | <code>a&nbsp;⌊GI&nbsp;b</code> | the smaller of `a` and `b` | | |
-| <code>a&nbsp;<GI&nbsp;b</code> … | also ≤ \= ≥ \> ≠, returning 0 or 1 |  |  |
+| <code>a&nbsp;<GI&nbsp;b</code> | Similarly: ≤ \= ≥ \> ≠, returning 0 or 1 |  |  |
 | <code>a&nbsp;⊤GI&nbsp;b</code> | `b` (gmpz, integer or decimal string) as a *string* in base `a` | | |
 | <code>a&nbsp;⊥GI&nbsp;b</code> | a new gmpz from the string `b` read in base `a` | | |
 | <code>a&nbsp;≢GI&nbsp;b</code> | length of the string of `b` in base `a` (plain integer) | | |
@@ -360,7 +361,7 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 8. The base (2 through 62) can be specified when importing numeric strings; it is invalid for other operand types.
 9. `a.Int64` only succeeds when the value fits a C long (signed 64-bit); `a.IntDF` allows up to 34 digits. Use **VFI** to test safely. Set `⎕FR←1287` in your session if you manipulate integers beyond 2\*53.
 10. Copy, don't assign: `b←a` aliases; `b←a.Copy` copies.
-11. ⎕IO: only the bit-position methods (Bit, TestBit, SetBit, ClrBit, Flip, Iota, Scan) and Rand/RandB depend on ⎕IO.
+11. `⎕IO`: only the bit-position methods (Bit, TestBit, SetBit, ClrBit, Flip, Iota, Scan) and Rand/RandB depend on ⎕IO.
 12. Objects are lost on `)SAVE`/`)LOAD`; huge arguments can exhaust memory and stop the session (see §1).
 
 ## 
