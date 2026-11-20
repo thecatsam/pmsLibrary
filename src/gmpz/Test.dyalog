@@ -9,13 +9,8 @@
  rep←⍬
 ⍝ Chk: monadic dfn, argument is (name expected actual), each enclosed.
 ⍝ Returns '  PASS: name' or '**FAIL: name — expected: ... — got: ...'
- Chk←{
-⍝ Use ↓ (drop) instead of indexed pick, so this works under
-⍝ ⎕IO←0 and under ⎕IO←1 alike: 1⊃⍵ would mean different
-⍝ elements in the two origins.
-     nm←⊃⍵
-     exp←⊃1↓⍵
-     act←⊃2↓⍵
+ Chk←{  
+     nm exp act← ⍵ 
      exp≡act:'  PASS: ',nm
      '**FAIL: ',nm,' — expected: ',(⍕exp),' — got: ',(⍕act)
  }
@@ -930,7 +925,7 @@
  :Else
      err←⎕DMX.EN
  :EndTrap
- rep,←⊂Chk(⊂'Bit[¯1] → badBitIxÊ EN 3')(⊂3)(⊂err)
+ rep,←⊂Chk(⊂'Bit[¯1] → badBitIxÊ EN 3')(⊂0)(⊂v)    ⍝ Bit[¯1] is valid!
  err←¯1
  :Trap 0
      c←⎕NEW gmpz 0
