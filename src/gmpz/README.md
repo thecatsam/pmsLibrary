@@ -53,8 +53,8 @@
 | <code>int←&nbsp;a.Signum</code> | ¯1, 0 or 1. |
 | <code>f←&nbsp;a.Float</code> | `a` as an approximate APL float: `2*64` is `18446744073709552000.` Signals `badIntÊ` if `a` has more than 1024 bits. |
 | <code>bool←&nbsp;a.Even</code>, <code>a.Odd</code> | 1 or 0 (explicitly returned). |
-| <code>bool←&nbsp;a.Bit[i1&nbsp;i2…]</code> | Read bits. Honours `⎕IO`. See §5. |
-| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Write bits at specified indices. Honours `⎕IO`. |
+| <code>bool←&nbsp;a.Bit[i1&nbsp;i2…]</code> | Read bits at specified indices, from low- to high-order bits. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. See §5. |
+| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Write bits at specified indices. HHonours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. |
 | <code>bool←&nbsp;a.Bits</code> | `a`'s value efficiently returned as a boolean vector in two's complement, sign bit first. |
 | <code>a.Bits←&nbsp;bool</code> | `a`'s value efficiently set (replaced) from a boolean vector (leading bit is the sign). |
 | <code>int←&nbsp;a.ptr</code> | Address of the underlying GMP object. ***Use with care!*** |
@@ -134,7 +134,7 @@ A non-integer APL number signals `badAplÊ`, as does a numeric vector (including
     2 c.Pow 200                    ⍝ c ← 2*200
     c.Mul 3                        ⍝ c ← c × 3
     1000 c.Res c                   ⍝ c ← 1000|c
-    ¯7 c.Shift c                   ⍝ c ← c ÷ 2*7, truncated toward 0. (Shift bits right)
+    ¯7 c.Shift c                   ⍝ c ← c ÷ 2*7, i.e. shift bits right.
     c.Pow ÷2                       ⍝ c ← √c (truncated toward 0)
     c.Fac 100                      ⍝ c ← !100
     r← ⎕NEW gmpz
@@ -370,104 +370,23 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 
 Implement a simplified[^1] **RSA key generation, encryption, and decryption** workflow.
 This demonstrates the core lifecycle of GMP integers:
-initialization, random prime generation, modular arithmetic, modular inverse, and memory cleanup.
+* initialization,
+* random prime generation,
+* modular arithmetic,
+* modular inverse, and 
+* memory cleanup.
 
-### **Example Code: ___GmpzExample___**
+### Load and run the example code.
 
 ```
-∇ ret← GmpzExample msgIn
-⍝  To run:
-⍝    ret@CV← GmpzExample msgIn@CV
-⍝  msgIn: An APL string that can be encoded in fewer than modBits (1024) bits (UTF-8)
-⍝  Success if it returns a happy message
-
-⍝--1 DECLARATIONS AND INITIALIZATION ------------------------------------------------------------------
-⍝  Declarations, definitions, etc.
-⍝  Declare helper functions
-     ; HS; Tidy
-⍝  Declare all mpz_t variables
-     ; p; q; n; phi; e; d; msg; cipher; decrypted
-⍝  Declare # of bits in the modulus
-     ; modBits
-
-⍝  Define helper fn HS (Unicode => hexadecimal String)
-⍝  HS:    str@CV← [[1: encrypt | 0: decrypt]] ∇ str@CV
-   HS← {⎕IO← 0 ⋄ ⍺← 1 ⋄ hd← ⎕D,'abcdef' ⋄ U← 'UTF-8'∘⎕UCS
-     ⍺=1: ,hd[⍉16 16⊤U ⍵] ⋄ U 16⊥hd⍳⍉t⍴⍨2,⍨2÷⍨≢t← ⎕C ⍵~' '
-   }
-⍝  Define helper fn Tidy: Print long results in nice rows of 64 bytes, with left margin of  4 spaces
-⍝  Tidy:    ∇ str@CV
-   Tidy← 64 { ⍺← ⍬ ⋄ p← ⍵⍵⍴'' ⋄ ⍺⍺≥ ≢⍵: ↑⍺,⊂p, ⍵ ⋄ (⍺, ⊂p, ⍺⍺↑⍵) ∇ ⍺⍺↓⍵ } 4
-
-⍝  Initialize all mpz variables
-   p q n phi e d msg cipher decrypted← gmpz.New¨9⍴0
-
-⍝  Initialise modBits: max # of bits in the modulus.  Must be even.
-   modBits← 1024                                             ⍝ Best practices: modBits∊ 2048 4096
-   'Modulus must be even number of bits' ⎕SIGNAL 11/⍨ 0≠ 2|modBits
-
-⍝--2 GENERATE PUBLIC AND PRIVATE KEYS -----------------------------------------------------------------
-⍝  Initialize random number generator with entropy
-⍝     (automatic/default when RandB is first called)
-⍝   Generate two distinct 512-bit probable primes (p and q)
-
-⍝  p...
-   p.(NextPrime RandB) modBits÷2
-
-⍝  q...
-   :Repeat  ⍝⍝ Ensure p ≠ q
-      q.(NextPrime RandB) modBits÷2
-   :Until q.Ne p
-
-⍝  Compute the  modulus n: n ← p × q, where n.BitLen is approx modBits (may be a bit smaller)
-   p n.Mul q
-
-⍝  Compute Euler's totient: phi← (p - 1) × (q - 1)
-   p.Dec phi.Mul q.Dec                                       ⍝ p is now p-1, q is now q-1
-
-⍝  Set public exponent e = 65537 and compute private exponent
-   e.Set 65537
-   :If 0=e d.Invert phi                                      ⍝ Invert: d← e*-1 mod phi
-      ret← 'Error: e and phi are not coprime.'  ⋄ :Return
-   :EndIf
-
-⍝- 3 IMPORT MSG -----------------------------------------------------------------------------------
-⍝  Import the plaintext msgIn ==> msg, where msgIn will be encoded via UTF-8 for simplicity.
-   16 msg.Set HS msgIn
-
-   :If msg.BitLen≥ n.BitLen                                  ⍝ length limited for demo...
-      ret← 'Your message is too big' ⋄  :Return
-   :EndIf
-
-⍝--4 ENCRYPT --------------------------------------------------------------------------------------
-⍝  Encrypt: cipher ← (msg * e) mod n
-   msg cipher.PowM e n
-
-⍝--5 DECRYPT -------------------------------------------------------------------------------------
-⍝  Decrypt: decrypted ← (cipher * d) mod n
-   cipher decrypted.PowM d n
-
-⍝--6 PRINT AND VERIFY-----------------------------------------------------------------------------
-⍝  Print results
-   ⎕← 'Public Modulus (n): '  ⋄ ⎕← Tidy n.GetInBase 16
-   ⎕← 'Encrypted Cipher:   '  ⋄ ⎕← Tidy cipher.GetInBase 16
-   ⎕← 'Decrypted Message:  '  ⋄ ⎕← Tidy 0 HS decrypted.GetInBase 16
-
-⍝  Verify correctness
-   :If 0=msg.Cmp decrypted
-      ret← 'Success: Decrypted message matches original'
-   :Else
-      ret← 'Failure: Decrypted message does not match original'
-   :EndIf
-
-⍝--7 FREE STUFF ----------------------------------------------------------------------------------
-⍝  Free all allocated memory
-⍝  gmpz does it all for you!
+]load gmpz/Example.aplf
+GmpzExample
 ```
 
-#### OUTPUT [2]
+#### Running GmpzExample [2]
+
 ```
-      GmpzExample  '🙂 This is a cat 🙂'             ⍝ Unicode string
+    GmpzExample  '🙂 This is a cat 🙂'             ⍝ A random Unicode string
 Public Modulus (n):
     7c09b76d3dabfc23419a94a9db4452e891747b45e86a0ef162c3712ce1a53c31
     ...

@@ -841,7 +841,7 @@
             len← (n- (n>1)∧ (|v)< base*n-1) + v<0             ⍝ n=1 is exact (guards 0)
          :Else
             t← ⎕NEW ∆THIS                                     ⍝ scratch; freed on exit
-            {}RAW.UiPow t.ptr base (n-1)                      ⍝ t← base*n-1
+            {}RAW.UiPow t.ptr base n                      ⍝ t← base*n-1
             len← (n- 0> RAW.CmpAbs ⍙ptr t.ptr) + ¯1= PSignum ⍙ptr
          :EndIf
       ∇
@@ -1485,37 +1485,52 @@
    ⍝  a.Bits ≡ ⌽a.Bit[⍳a.BitLen]
       :Property Keyed Bit
        :Access Public Instance
-         ∇ vals← get arg ; ixs; ∆io; b; ⎕TRAP
+         ∇ vals← get arg ; ixs; ∆io; b; len; ⎕TRAP
             ⎕TRAP← ∆TRAP
             ∆io← (⊃⎕RSI).⎕IO
             ixs← ⊃arg.Indexers 
             :If 0= ≢ixs                                       ⍝ No indices? Return empty
                vals← ⍬  
             :Else 
-               vals← (⍴ixs)⍴ ⍙ptr BitGet¨BitIx ixs ∆io ⍙ptr 
+               len← LenMinBits ⍙ptr 
+               vals← (⍴ixs)⍴ ⍙ptr BitGet¨BitMap ⍙ptr ixs ∆io len 
             :EndIf 
          ∇
          
-         ∇ set arg ; vals; ixs; ∆io; b; ⎕TRAP
+         ∇ set arg ; vals; ixs; ∆io; b; len; ⎕TRAP
             ⎕TRAP← ∆TRAP
             ∆io← (⊃⎕RSI).⎕IO
             ixs← ⊃arg.Indexers
             vals← arg.NewValue
-            :If 0≠ ≢ixs                                        ⍝ No indices? Do nothing
-              {}vals BitSet¨BitIx ixs ∆io ⍙ptr                               ⍝ If valis is a scalar, it is used for all...
+            last← (len← LenMinBits ⍙ptr)- ~∆io 
+            BS← last BitSet 
+            :If 0≠ ≢ixs                                       ⍝ No indices? Do nothing
+               vals BS¨BitMap ⍙ptr ixs ∆io len                    ⍝ If valis is a scalar, it is used for all...
             :EndIf 
          ∇
       :EndProperty
-
-       BitIx← { ixs ∆io ⍙ptr← ⍵ 
-            ((ixs>0)/ixs)-← ∆io                                ⍝ Add index origin to pos indices
-            q← ∨/ b← ixs<0 
-            (b/ixs)+← LenMinBits⍣q⊢ ⍙ptr                       ⍝ adjust negative indices
-             ixs⊣ ⎕SIGNAL badBitIxÊ/⍨ ∨/ (ixs<0)∨ ixs>UL_MAX        ⍝ adjusted indices out of range? Bye.
-      }
-      BitGet← { RAW.TstBit ⍺ ⍵}
-      BitSet← { 1= ⍺: RAW.SetBit ⍙ptr ⍵ ⋄ 0= ⍺: RAW.ClrBit ⍙ptr ⍵ ⋄ ⎕SIGNAL badBitValÊ }
-
+      ⍝:Section Bit Property Helpers 
+         BitMap← { ⍙ptr ixs ∆io len← ⍵ 
+            ((ixs>0)/ixs)-← ∆io                               ⍝ Add index origin to pos indices
+           ~∨/ixs<0: ixs 
+            ((ixs<0)/ixs)+← len 
+            ixs⊣ ⎕SIGNAL badBitIxÊ/⍨ ∨/ (ixs<0)∨ ixs>UL_MAX   ⍝ adjusted indices out of range? Bye.
+         }
+         BitGet← { RAW.TstBit ⍺ ⍵}
+         BitSet← {  ⍝ Shy 
+           ⍵= ⍺⍺: _← SetSignBit ⍙ptr ⍺⍺ ⍺ 
+           1= ⍺:  _← RAW.SetBit ⍙ptr ⍵ 
+           0= ⍺:  _← RAW.ClrBit ⍙ptr ⍵ 
+            ⎕SIGNAL badBitValÊ 
+         }
+         SetSignBit← { ptr ix val← ⍵                          ⍝ <ix> MUST be the sign bit...
+           val= RAW.TstBit ptr ix: ⍬                         ⍝ Do nothing if the sign bit isn't changing.
+            tPtr← Ptr0 0                                      ⍝ Get a pre-allocated  object's ptr.
+            _← RAW.SetBit tPtr ix                              ⍝ Sets tPtr to 2^ix   
+           val= 0: RAW.Add ptr ptr tPtr
+            RAW.Sub ptr ptr tPtr
+         } 
+      ⍝:EndSection Bit Property Helpers 
       
    ⍝ Bits:  bool← a.Bits ,   a.Bits← bool
    ⍝   Get or set the entire object as a boolean vector in two's complement form, sign bit first
