@@ -23,38 +23,40 @@
    a← ⎕NEW gmpz                         ⍝ 0
    a← ⎕NEW gmpz ¯2                      ⍝ from an APL integer
    a← ⎕NEW gmpz '1234567 89012345678'   ⍝ from a string ('¯' => '-'). Blanks ok!
-   a← ⎕NEW gmpz ('bee cafe' 16)         ⍝ from a string in base 16 (base ∊ 2…62)
-   a← ⎕NEW gmpz ('10101110' 2)          ⍝ from a string in base 2 (see also Bits).
-   a← gmpz.New0                         ⍝ Alternative: new object, value 0
-   a← gmpz.New '999999999'              ⍝ Alternative: new object from a value
+   a← ⎕NEW gmpz ('bee cafe' 16)         ⍝ <= string in base 16 (base ∊ 2…62)
+   a← ⎕NEW gmpz ('10101110' 2)          ⍝ <= from a string in base 2 (see also Bits).
+   a← gmpz.New0                         ⍝ Same as ⎕NEW gmpz
+   a← gmpz.New '999999999'              ⍝ Same as ⎕NEW gmpz ...
+   a b c← gmpz.New¨0 0 0                ⍝ Initialise 3 new gmpz objects
    b← 16 gmpz.New 'ff'                  ⍝ ... works with a base on the left
    16 b.Set 'bee cafe'                  ⍝ Set b to a new string value (in base 16)
-   b.Set a                              ⍝ copy the value of another gmpz into b
-   b.Bits← 1 0 1 0 1 1 1 0 ...          ⍝ copy APL bits efficiently into a (2s complement)
-   c← a.Copy                            ⍝ a new, independent gmpz with a's value
-   ⌷b                                   ⍝ value of b in string form
+   b.Set a                              ⍝ copy the value of mpz a into b
+⍝  copy APL bits EN MASSE efficiently as twos complement
+   b.Bits← 1 0 1 1 1 1 0 0 0            ⍝ value ¯136; leading bit 1 is sign (1= neg)  
+   c← a.Copy                            ⍝ a new, independent mpz with a's value
+   ⌷b                                   ⍝ value of b in string form (base 10)
 ```
 
 **Assignment aliases.** `b← a` makes `b` and `a` the *same* object, so `b.Inc` changes `a` too. Use `b← a.Copy` for an independent copy.
 
 | Call | Result |
 | :----------------------------------------- | :---- |
-| <code>str←&nbsp;⌷a</code> | `a`in base 10 as a string (any length). |
-| <code>a.Set&nbsp; value</code><br><code>base &nbsp;a.Set &nbsp;value</code> | Overwrite `a` with `value` (`base` is valid  ony with strings, default `10`). Returns `a` itself (shy), so calls can be chained: `(a.Set value).Signum` |
+| <code>str←&nbsp;⌷a</code> | `a` in base 10 as a string (any length). |
+| <code>a.Set&nbsp; value</code><br><code>base &nbsp;a.Set &nbsp;value</code> | Overwrite `a` with `value` (`base` is valid only with strings, default `10`). Returns `a` itself (shy), so calls can be chained: `(a.Set value).Signum` |
 | <code>c←&nbsp;a.Copy</code> | A new gmpz with the same value. |
 | <code>int←&nbsp;a.Int64</code> | `a`, a C-language *long* (Unix: 64-bits; Windows: 32-bits), as an APL integer. Error `badIntÊ`, if it doesn't fit. |
 | <code>int←&nbsp;a.IntDF</code> | `a` as an APL integer in decimal-float form: exact up to 34 digits (±`¯1+10*34`). Error (`badIntÊ`) if it has more digits. |
 | <code>ok&nbsp;int←&nbsp;a.VFI</code> | `1 n` if a fits in 34 digits (as IntDF), else `0 0`. Never errors. |
 | <code>str←&nbsp;a.GetInBase&nbsp;n</code> | `a` as a string in base `n` (2 ≤ `n` ≤ 62). |
 | <code>str←&nbsp;[base]&nbsp;gmpz.Get&nbsp;b</code> | `b` (a gmpz, an APL integer or a *decimal* string) as a string in the base (default 10). |
-| <code>int←&nbsp;a.StrLen</code> | Number of characters in `⌷a`, including the leading *minus*`¯`. Same as `≢⌷a`, without building the string. |
+| <code>int←&nbsp;a.StrLen</code> | Number of characters in `⌷a`, including the leading *minus* `¯`. Same as `≢⌷a`, without building the string. |
 | <code>int←&nbsp;a.StrLenInBase&nbsp;n</code> | Same as `≢a.GetInBase n`, for 2 ≤ n ≤ 62. |
 | <code>int←&nbsp;a.BitLen</code> | Minimum number of bits to hold `a` in two's complement, *including the sign bit*: 0 is 1, 7 is 4, 8 is 5, ¯8 is 4, ¯1 is 1. Equals `≢a.Bits`. |
 | <code>int←&nbsp;a.Signum</code> | ¯1, 0 or 1. |
 | <code>f←&nbsp;a.Float</code> | `a` as an approximate APL float: `2*64` is `18446744073709552000.` Signals `badIntÊ` if `a` has more than 1024 bits. |
 | <code>bool←&nbsp;a.Even</code>, <code>a.Odd</code> | 1 or 0 (explicitly returned). |
 | <code>bool←&nbsp;a.Bit[i1&nbsp;i2…]</code> | Read bits at specified indices, from low- to high-order bits. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. See §5. |
-| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Write bits at specified indices. HHonours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. |
+| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Write bits at specified indices. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. |
 | <code>bool←&nbsp;a.Bits</code> | `a`'s value efficiently returned as a boolean vector in two's complement, sign bit first. |
 | <code>a.Bits←&nbsp;bool</code> | `a`'s value efficiently set (replaced) from a boolean vector (leading bit is the sign). |
 | <code>int←&nbsp;a.ptr</code> | Address of the underlying GMP object. ***Use with care!*** |
@@ -63,7 +65,7 @@
 
 **Memory:** A gmpz object and its GMP storage are allocated for you. They are freed automatically when the object goes out of scope, when `⎕EX` is executed on the object, when the workspace is cleared, or when the session ends. The random-number state is created the first time you call Rand, RandB or RandSeed.
 
-**Tracing.** Set `DEBUG←1`in the class source to trace allocations and frees; `DEBUG←2` also traces the random state and the library bindings.
+**Tracing.** Set `DEBUG←1` in the class source to trace allocations and frees; `DEBUG←2` also traces the random state and the library bindings.
 
 **Not saved with the workspace.** Objects hold raw C pointers: they should ***not*** be used after a `)SAVE`, `)LOAD`, or `⎕OR`: you ***must*** recreate them to safely continue.
 
@@ -83,13 +85,11 @@ Operands (a, b) may each be:
 
 * a gmpz object (used directly, never copied);
 * an APL integer (positive or negative, a whole-number scalar of up to 34 digits when `⎕FR←1287`; beyond a C long, it is converted through its decimal string — return a string directly for anything bigger);
-* an APL minus sign '¯'  is accepted as a minus sign on input and returned on string output. 
-  
-
+* an APL minus sign '¯' is accepted as a minus sign on input and returned on string output. 
 
 An operand may repeat another operand or the receiver: `c c.Mul c` is safe.
 
-Non-gmpz operands are copied into three hidden scratch gmpz objects, so don't rely on their values between calls. Methods use `:Hold` around the shared scratch objects, so concurrent threads queue for them.
+Non-gmpz operands are copied into three hidden scratch gmpz objects, so don't rely on their values between calls. All class-level shared state—the scratch objects, `RandState`, and the `GI` operator—is thread-safe (`:Hold` serializes access to the scratch objects and random state, while `GI` allocates a fresh result per call without shared state). Only concurrent mutations on the *same* `gmpz` instance require caller-side synchronization.
 
 A non-integer APL number signals `badAplÊ`, as does a numeric vector (including a boolean vector). A single scalar 0 or 1 is just an integer.
 
@@ -97,7 +97,7 @@ A non-integer APL number signals `badAplÊ`, as does a numeric vector (including
 
 * Dyadic arithmetic (Add, Sub, Mul, Div, DivRem, Gcd, Lcm, Pow, PowM, Invert, And, Or, Xor, Cmp…, Jacobi): `[a] c.Op b`; the left operand defaults to the receiver.
 * Left argument required: Res and Shift.
-* **Niladic, in place:** Neg, Abs, Com, Inc, Dec. To set `c` to `−b`, write: `(c.Set b).Neg`; to set `c`to `|b`, write:`(c.Set b).Abs`.
+* **Niladic, in place:** Neg, Abs, Com, Inc, Dec. To set `c` to `−b`, write: `(c.Set b).Neg`; to set `c` to `|b`, write: `(c.Set b).Abs`.
 * **Right argument only** (a value is built from it, so it does not default to the receiver): Fac, NextPrime, PrevPrime, Rand, RandB, ProbabPrime. To use the receiver, pass it: `c.NextPrime c`.
 * **Mutating bit methods** (SetBit, ClrBit, Flip) act on the receiver only. To change a bit of another gmpz, call the method on that object.
 
@@ -110,7 +110,7 @@ A non-integer APL number signals `badAplÊ`, as does a numeric vector (including
 | <code>[a]&nbsp;c.Add&nbsp; b</code> | `c ← a + b` |  |
 | <code>[a]&nbsp;c.Sub&nbsp; b</code> | `c ← a − b` |  |
 | <code>[a]&nbsp;c.Mul&nbsp; b</code> | `c ← a × b` |  |
-| <code>[a]&nbsp;c.Div&nbsp; b</code> | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b.` Signals divZÊ if b is 0\. |
+| <code>[a]&nbsp;c.Div&nbsp; b</code> | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b`. Signals divZÊ if b is 0\. |
 | <code>rem←&nbsp;[a]&nbsp;c.DivRem&nbsp;m</code> | `c ← ⌊a÷m, returns rem← m\|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ `¯1+2*64`. divZÊ if `m` is 0. |
 | <code>m&nbsp;c.Res&nbsp;b</code> | `c ← m\|b` | APL residue, floored (sign follows `m`). 0\|b is `b`. Dyadic only. |
 | <code>[a]&nbsp;c.Gcd&nbsp; b</code> | `c ← a∨b` | ≥ 0\. Greatest common divisor. |
@@ -280,7 +280,7 @@ c is the number being tested for ProbabPrime, Jacobi (when a is omitted) and Div
 
 ## **8\.  The GI operator: primitive-style, non-destructive**
 
-GI wraps the methods so they read like APL primitives. Arguments are never modified; a new gmpz is returned (comparisons, and several monadic and dyadic forms marked below, return plain values). GI is also defined in the namespace that holds gmpz, so it can be used from anywhere. Every result is a fresh object, so it never changes under a later GI call.
+GI wraps the methods so they read like APL primitives. Arguments are never modified; a new gmpz is returned (comparisons, and several monadic and dyadic forms marked below, return plain values). GI is also defined in the namespace that holds gmpz, so it can be used from anywhere. Every result is a fresh object with no shared scratch state, so `GI` calls are thread-safe and a result never changes under a later `GI` call.
 
 ```
     x← 2 *GI 100                   ⍝ 2*100
@@ -353,7 +353,7 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 
 1. In `a c.Op b`, `c` is the destination and is overwritten and `a` is the left operand; in `c.Op b` the receiver is both the left operand and the destination.
 2. Res (`|`) and Shift (`⌽`) require a left argument; most other dyadic methods default it to the receiver. Neg, Abs, Com, Inc and Dec are niladic. Fac, NextPrime, PrevPrime, Rand, RandB and ProbabPrime take only a right argument.
-3. Shy results: the in-place arithmetic methods, DivRem, Fac, SetBit, ClrBit, Flip, Rand, RandB and RandSeed print nothing in the session. Assign the result, or use `⌷`to see a value. Predicates and queries (Even, Odd, Divisible, TestBit, Iota, Scan, ProbabPrime, Cmp and friends, Signum, Jacobi, Invert) are visible.
+3. Shy results: the in-place arithmetic methods, DivRem, Fac, SetBit, ClrBit, Flip, Rand, RandB and RandSeed print nothing in the session. Assign the result, or use `⌷` to see a value. Predicates and queries (Even, Odd, Divisible, TestBit, Iota, Scan, ProbabPrime, Cmp and friends, Signum, Jacobi, Invert) are visible.
 4. Pow's exponent must be a plain APL non-negative integer `n` or `÷n` (for roots, as in APL). Negative exponents are invalid.
 5. DivRem divisors may be any supported operand type and must be non-zero (`divZÊ` if **0**).
 6. Use `⌷a` to see the final (string) value. It is more efficient to keep working with gmpz objects, so that no unnecessary conversions to and from strings are needed.
@@ -363,8 +363,8 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 10. Copy, don't assign: `b←a` aliases; `b←a.Copy` copies.
 11. `⎕IO`: only the bit-position methods (Bit, TestBit, SetBit, ClrBit, Flip, Iota, Scan) and Rand/RandB depend on ⎕IO.
 12. Objects are lost on `)SAVE`/`)LOAD`; huge arguments can exhaust memory and stop the session (see §1).
+13. **Thread safety:** Class-level scratch buffers, `Rand`/`RandB`/`RandSeed`, and `GI` expressions are thread-safe across Dyalog threads (`&`). If two threads mutate the *same* `gmpz` instance concurrently, guard access to that instance with `:Hold` (or give each thread its own `.Copy`).
 
-## 
 
 ## **Appendix: Encrypt a Message Using Simplified RSA Key**
 
@@ -401,3 +401,5 @@ Success: Decrypted message matches original
 
 [1]:  RSA encryption is still useful today, provided you use 2048- or, preferably, 4096-bit encryption.<p>
 [2]:  The output is abridged (...) for pedagogical purposes.
+gmpz-primer.md
+Displaying gmpz-primer.md.
