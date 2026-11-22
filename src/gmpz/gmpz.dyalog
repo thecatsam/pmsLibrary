@@ -191,12 +191,14 @@
    ⍝       (DEBUG≥2 traces it) and uses the outer lib, error variables and DmxSig.
    ⍝ Call:    rs← ⎕NEW randState                                 ⍝ Not directly called by user. See fns Rand, RandB.
    ⍝ When rs goes out of scope, the storage is released.
-    :Field Private Instance   r⍙ptr← 0
+    :Field Public  Shared     DEBUG← ##.DEBUG 
+    :Field Private Shared     r⍙ptr← 0
     :Field Public  Shared     active← 0                          ⍝ Only 1 active instance is allowed!
     :Field Public  Shared     seeds← (?¯1+ 2* ##.WINDOWS⊃63 32) 0 ⍝ Order: newseed oldseed. A seed fits in a UL.
       ∇ Init0 ; ok
        :Access Public
          :Implements Constructor
+          randActiveÊ← ⊂('EN' 11 ⋄ 'Message' 'Only one randState variable is supported')
          :If active ⋄ ⎕SIGNAL randActiveÊ ⋄ :EndIf
          ok← 0
          :Trap 0
@@ -207,12 +209,12 @@
             {}RAW.RandInitDef r⍙ptr
             ok← 1
             {}RAW.RandSeedU r⍙ptr (⊃seeds)                       ⍝ Seed from APL random #
-            :If 2≤ ##.DEBUG ⋄ ⎕← 'rand: Alloc state var [',(⍕r⍙ptr),']'  ⋄ :EndIf
+            :If 2≤ DEBUG ⋄ ⎕← 'rand: Alloc state var [',(⍕r⍙ptr),']'  ⋄ :EndIf
          :Else
             :If 0≠ r⍙ptr
                :If ok ⋄ {}RAW.RandClear r⍙ptr ⋄ :EndIf
                {}RAW.Free r⍙ptr
-               :If 2≤ ##.DEBUG ⋄ ⎕← 'rand: Free state var [',(⍕r⍙ptr),']'  ⋄ :EndIf
+               :If 2≤ DEBUG ⋄ ⎕← 'rand: Free state var [',(⍕r⍙ptr),']'  ⋄ :EndIf
                r⍙ptr← 0
             :EndIf
             ##.DmxSig⍬                                           ⍝ Re-signal at the caller; do NOT set active←1
@@ -221,7 +223,7 @@
       ∇
       ∇ Free
          :Implements Destructor
-         :If 2≤ ##.DEBUG ⋄ ⎕← 'rand: Free state var [',(⍕r⍙ptr),']'  ⋄ :EndIf
+         :If 2≤ DEBUG ⋄ ⎕← 'rand: Free state var [',(⍕r⍙ptr),']'  ⋄ :EndIf
          :If 0≠ r⍙ptr
             {}RAW.RandClear r⍙ptr
             {}RAW.Free r⍙ptr
@@ -264,7 +266,7 @@
       'powÊ'          11 'Invalid power: neither an integer nor the inverse of one'
       'primeÊ'        11 'ProbabPrime reps must be a non-negative integer (⍬ or 0 for the default of 24; 15-50 is usual)'
       'propSetÊ'      11 '⍵.Bits[i] is invalid. To set an individual bit, use ⍵.Bit[n]'
-      'randActiveÊ'  911 'Logic error: only one randState instance may be active at a time'
+    ⍝ 'randActiveÊ'  See the randState class 
       'randSeedÊ'     11 'Object cannot be converted to an unsigned integer'
       'randStateÊ'    11 'Unable to initialise random # state'
       'randÊ'         11 'Arg must be positive'
