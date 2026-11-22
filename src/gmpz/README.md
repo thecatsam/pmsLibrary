@@ -53,8 +53,8 @@
 | <code>int←&nbsp;a.Signum</code> | ¯1, 0 or 1. |
 | <code>f←&nbsp;a.Float</code> | `a` as an approximate APL float: `2*64` is `18446744073709552000.` Signals `badIntÊ` if `a` has more than 1024 bits. |
 | <code>bool←&nbsp;a.Even</code>, <code>a.Odd</code> | 1 or 0 (explicitly returned). |
-| <code>bool←&nbsp;a.Bit[i1&nbsp;i2…]</code> | Read bits at specified indices from low- to high-order bits. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. See §5. |
-| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Writes bits at specified indices from low- to high-order bits. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. See §5.  |
+| <code>bool←&nbsp;a.Bit[i1&nbsp;i2…]</code> | Read bits at specified indices from low- to high-order bits.  See §5 for details. |
+| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Writes bits at specified indices from low- to high-order bits.  See §5 for details.  |
 | <code>bool←&nbsp;a.Bits</code> | `a`'s value efficiently returned as a boolean vector in two's complement, sign bit first. `a.Bits`  is equivalent to `⌽a.Bit[⍳a.Bitlen]`, but substantially faster. |
 |  <code>a.Bits←&nbsp;bool</code> | `a`'s value efficiently set (replaced) from a boolean vector (leading bit is the sign). |
 | <code>int←&nbsp;a.ptr</code> | Address of the underlying GMP object. Use with care to avoid ___destabilizing___ APL. |
@@ -180,13 +180,13 @@ a.Bits                      ⍝ 0 1 0 0 1   (sign bit first, then most-significa
 
 | Form | Meaning |
 | :---- | :---- |
-| `a.Bit[n]` | Read bit n (0 or 1). |
-| `a.Bit[n]← 1\|0` | Set or clear bit n. |
-| `a.Bit[n1 n2 n3]` | Read several bits. |
-| <code>a.Bit[n1&nbsp;n2&nbsp;n3]←&nbsp;1&nbsp;0&nbsp;1</code> | Set or clear several bits (one value per index, or one value for all). |
+| `a.Bit[n]` | Read bit (boolean value) at index `n`.  |
+| `a.Bit[n]← b` | Set  bit at index `n` to `b`, a boolean (1 or 0). |
+| `a.Bit[n1 n2 n3]` | Read  bits at indices `n1 n2 n3`. Indices may be positive or negative. Honours `⎕IO` for positive indices, which select bits from low to high. Negative indices select from the high-order bits. Index ¯1 is the first HOB, i.e. the sign. |
+| <code>a.Bit[n1&nbsp;n2&nbsp;n3]←&nbsp;1&nbsp;0&nbsp;1</code><br><code>a.Bit[n1&nbsp;n2&nbsp;n3]←&nbsp;1</code> | Set one or more bits (one value per index, or one value for all). Honours `⎕IO` for positive indices, which select bits from low to high. Negative indices select from the high-order bits. Index ¯1 is the first HOB, i.e. the sign. |
 | `a.Bits` | **All** bits as a boolean vector in two's complement, sign bit first (the reverse of a.Bit\[⍳a.BitLen\]). |
-| `a.Bits← 1 0 1` | Replace **all** the bits of object `a`; the leading bit is the sign (`a.Bits← ,1` is ¯1; an empty vector is 0). |
-| `a.ExportBits w` | As a.Bits but exactly `w` bits wide (sign-extended), w ≥ a.BitLen. `0` means the minimum. |
+| `a.Bits← 1 0 1` | Replace **all** the bits of object `a`; the leading bit is the sign. `a.Bits←1` sets `a` to `¯1`; an empty vector sets it to `0`). |
+| `a.ExportBits w` | As `a.Bits` but exactly `w` bits wide (sign-extended), `w ≥ a.BitLen`. `0` means the minimum. |
 | <code>a.ImportBits&nbsp;bits</code> | Same as `a.Bits← bits`. |
 
 Values assigned to bits must be 0 or 1 (badBitValÊ). Setting a bit beyond the current length to 1 is valid; the object grows automatically. Clearing high-order bits shrinks it.
@@ -202,7 +202,7 @@ Note: Although GMP stores mpz_t values internally in sign-magnitude form, all bi
 | `[a] c.Xor b` | c ← a ≠ b, bit by bit |
 | `c.Com` | c ← bitwise NOT of c (that is, ¯1−c). Niladic, in place. |
 | <code>n←&nbsp;c.PopCount</code> | Number of 1 bits. A negative number has infinitely many, so the result is `gmpz.UL_MAX` (Unix: `¯1+2*64`; Windows: `¯1+2*32`). |
-| <code>n←&nbsp;[a]&nbsp;c.HamDist&nbsp;b</code> | Hamming distance: the number of bit positions where a and b differ (`¯1+2*64` if exactly one is negative). |
+| <code>n←&nbsp;[a]&nbsp;c.HamDist&nbsp;b</code> | Hamming distance: the number of bit positions where a and b differ (`gmpz.UL_MAX` if exactly one is negative). |
 
 ### **Bit methods (alternatives to the Bit property)**
 
