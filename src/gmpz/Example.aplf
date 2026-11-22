@@ -1,12 +1,13 @@
 ∇ ret← {modBits} GmpzExample secret_msg
 ⍝  A nice example of gmpz in operation: RSA encoding of a "secret" message.
 ⍝  To run:
-⍝    GmpzExample secret_msg
-⍝  Choose a secret message to encode using a private and public key.
+⍝    GmpzExample secret_msg     e.g.     Gmpz '🐱 This is a cat 🐱'
+⍝  Choose a secret message (⍵) to encode using a private and public key.
 ⍝  Here everything else is done for you. 
-⍝  You can also change the modBits from the default (1024) to 2048 or 4096.
+⍝  You can also change the modBits (⍺) from the default (1024) to (say) 2048 or 4096:
+⍝   Gmpz '🐱 This is a cat 🐱'
 ⍝
-⍝  Note: The message must be smaller than the key size (everything in bits).
+⍝  Note: The message must be smaller than the key size (based on the Unicode encoding).
 ⍝        Bigger messages are best handled through combining the RSA message with another
 ⍝        faster method (using the RSA message to encode the keys for that method).
 
@@ -37,7 +38,7 @@
    :IF 900⌶⍬
        modBits← 1024                                            ⍝ Best practices: modBits∊ 2048 4096
    :EndIf 
-   'Modulus must be even number of bits' ⎕SIGNAL 11/⍨ 0≠ 2|modBits
+   'Modulus must be an even number' ⎕SIGNAL 11/⍨ 0≠ 2|modBits
 
 ⍝--2 GENERATE PUBLIC AND PRIVATE KEYS -----------------------------------------------------------------
 ⍝  Initialize random number generator with entropy
@@ -83,7 +84,7 @@
 
 ⍝--6 PRINT AND VERIFY-----------------------------------------------------------------------------
 ⍝  Print results--- Key elements are in Base 62 for brevity.
-    '' 
+    'Key Components are in Base 62'                                    ⋄   '' 
     'Public Key Modulus    (n)  ' ⋄  Tidy n.GetInBase 62               ⋄   '' 
     'Public Key Exponent   (e) '  ⋄  Tidy e.GetInBase 62               ⋄   '' 
     'Private Key Exponent  (d) '  ⋄  Tidy d.GetInBase 62               ⋄   '' 

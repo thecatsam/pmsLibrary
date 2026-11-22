@@ -15,7 +15,7 @@
 * Dyalog APL v20 or later (64-bit) and the GMP shared library (libgmp).
 * GMP 6.3 or later is required — PrevPrime uses mpz\_prevprime, which does not exist in earlier GMP versions, and the class binds all its routines on load (an older library fails with gmpLoadÊ).
 * Inside the class, `⎕IO ⎕ML ⎕PP ⎕FR` are `0 1 34 1287`. 
-* Set `⎕FR←1287` in your own session if you want to type 64-bit integers directly. Numeric literals of more than 16 digits are read using the ⎕FR in force when the code is fixed or entered, so for big constants in saved code, use strings.
+* Set `⎕FR←1287` in your own session if you want to use 64-bit integers directly. Numeric literals of more than 16 digits are read using the `⎕FR` in force when the code is fixed or entered, so for big constants in saved code, ***use strings.***
 
 ## **1\.  Creating and reading values**
 
@@ -23,9 +23,10 @@
    a← ⎕NEW gmpz                         ⍝ 0
    a← ⎕NEW gmpz ¯2                      ⍝ from an APL integer
    a← ⎕NEW gmpz '1234567 89012345678'   ⍝ from a string ('¯' => '-'). Blanks ok!
-   a← ⎕NEW gmpz ('bee cafe' 16)         ⍝ from a string in base 16 (base ∊ 2…62)
+   a← ⎕NEW gmpz ('bee cafe' 16)         ⍝ from a hexadecimal string (base 16)
    a← ⎕NEW gmpz ('10101110' 2)          ⍝ from a string in base 2 (see also Bits).
    a← gmpz.New0                         ⍝ Alternative: new object, value 0
+   a b c← gmpz.New¨ 0 1 2               ⍝ Initialise a, b, and c as 0 1 2
    a← gmpz.New '999999999'              ⍝ Alternative: new object from a value
    b← 16 gmpz.New 'ff'                  ⍝ ... works with a base on the left
    16 b.Set 'bee cafe'                  ⍝ Set b to a new string value (in base 16)
@@ -40,11 +41,11 @@
 | Call | Result |
 | :----------------------------------------- | :---- |
 | <code>str←&nbsp;⌷a</code> | `a` in base 10 as a string (any length). |
-| <code>a.Set&nbsp; value</code><br><code>base &nbsp;a.Set &nbsp;value</code> | Overwrite `a` with `value` (`base` is valid only with strings, default `10`). Returns `a` itself (shy), so calls can be chained: `(a.Set value).Signum` |
+| <code>a.Set&nbsp; value</code><br><code>base &nbsp;a.Set &nbsp;value</code> | Overwrite `a` with `value` (`base` requires a string argument, `base ∊` `2`…`62`, default `10`). <br>Returns `a` itself (shy), so calls can be chained: `(a.Set value).Signum`   |
 | <code>c←&nbsp;a.Copy</code> | A new gmpz with the same value. |
 | <code>int←&nbsp;a.Int64</code> | `a`, a C-language *long* (Unix: 64-bits; Windows: 32-bits), as an APL integer. Error `badIntÊ`, if it doesn't fit. |
-| <code>int←&nbsp;a.IntDF</code> | `a` as an APL integer in decimal-float form: exact up to 34 digits (±`¯1+10*34`). Error (`badIntÊ`) if it has more digits. |
-| <code>ok&nbsp;int←&nbsp;a.VFI</code> | `1 n` if a fits in 34 digits (as IntDF), else `0 0`. Never errors. |
+| <code>int←&nbsp;a.IntDF</code> | `a` as an APL integer in decimal-float form: exact up to 34 digits (±`¯1+10*34`). Error `badIntÊ`, if it can't be represented exactly. |
+| <code>ok&nbsp;int←&nbsp;a.VFI</code> | `1 n` if a fits in 34 digits (see IntDF), else `0 0`. Never errors. |
 | <code>str←&nbsp;a.GetInBase&nbsp;n</code> | `a` as a string in base `n` (2 ≤ `n` ≤ 62). |
 | <code>str←&nbsp;[base]&nbsp;gmpz.Get&nbsp;b</code> | `b` (a gmpz, an APL integer or a *decimal* string) as a string in the base (default 10). |
 | <code>int←&nbsp;a.StrLen</code> | Number of characters in `⌷a`, including the leading *minus* `¯`. Same as `≢⌷a`, without building the string. |
@@ -59,19 +60,19 @@
 |  <code>a.Bits←&nbsp;bool</code> | `a`'s value efficiently set (replaced) from a boolean vector (leading bit is the sign). |
 | <code>int←&nbsp;a.ptr</code> | Address of the underlying GMP object. Use with care to avoid ___destabilizing___ APL. |
 
-**Int64 or IntDF?** Int64 is the machine integer (fast, 64-bit). IntDF is "as big as an APL decimal float can hold exactly" (34 digits) and needs `⎕FR←1287` in your session to display or compute with such values exactly. Use `VFI` to test safely.
+**Int64 or IntDF?** Int64 is the machine integer (fast, 64-bit). IntDF is "as big as an APL *decimal float* can hold exactly" (34 digits) and needs `⎕FR←1287` in your session to display or compute with such values exactly. Use `VFI` to test safely.
 
 **Memory:** A gmpz object and its GMP storage are allocated for you. They are freed automatically when the object goes out of scope, when `⎕EX` is executed on the object, when the workspace is cleared, or when the session ends. The random-number state is created the first time you call Rand, RandB or RandSeed.
 
-**Tracing.** Set `DEBUG←1` in the class source to trace allocations and frees; `DEBUG←2` also traces the random state and the library bindings.
+**Tracing.** Set `DEBUG←1` in the class source to trace allocations and frees; `DEBUG←2` also traces the random state allocations and frees and the library binding for each gmpz function.
 
-**Not saved with the workspace.** Objects hold raw C pointers: they should ***not*** be used after a `)SAVE`, `)LOAD`, or `⎕OR`: you ***must*** create them in each session to safely continue.
+**Not saved with the workspace.** Objects hold raw C pointers: they should ***not*** be used after a `)SAVE`, `)LOAD`, or `⎕OR`: you ***must*** create them in each session to safely continue.  (You can import and export them efficiently as APL booleans or as strings).
 
 **Resources.** GMP stops the whole process if it runs out of memory. Methods such as Fac, Pow, Shift and RandB accept arguments up to `¯1+2*64`, so a mistyped argument (say `c.Fac 1E12`) will end your session *with prejudice*. Check sizes first.
 
 ## **2\.  The operating model**
 
-Most methods are in place. The receiver is overwritten and returned (shy).
+Most methods are in place. The receiver `c` is overwritten by the result and returned (shy).
 
 ```
    c.Add b             ⍝ c ← c + b
@@ -91,6 +92,8 @@ Non-gmpz operands are copied into three hidden scratch gmpz objects, so don't re
 
 A non-integer APL number signals `badAplÊ`, as does a numeric vector (including a boolean vector). A single scalar 0 or 1 is just an integer.
 
+Remember, when `c` is returned, it is `c` itself, not a separate copy.
+
 **Which methods take what.**
 
 * Dyadic arithmetic (Add, Sub, Mul, Div, DivRem, Gcd, Lcm, Pow, PowM, Invert, And, Or, Xor, Cmp…, Jacobi): `[a] c.Op b`; the left operand defaults to the receiver.
@@ -101,28 +104,28 @@ A non-integer APL number signals `badAplÊ`, as does a numeric vector (including
 
 ## **3\.  Arithmetic methods (in place)**
 
-\[a\]: if a is omitted, it defaults to the receiver c.
+`[a]`: if `a` is omitted, it defaults to the receiver `c`.
 
-| Method | Meaning | Notes |
+| Method | APL Equivalent | Notes |
 | :----------------------------------------------------------------------------------------------- | :----------- | :---------- |
 | <code>[a]&nbsp;c.Add&nbsp; b</code> | `c ← a + b` |  |
 | <code>[a]&nbsp;c.Sub&nbsp; b</code> | `c ← a − b` |  |
 | <code>[a]&nbsp;c.Mul&nbsp; b</code> | `c ← a × b` |  |
-| <code>[a]&nbsp;c.Div&nbsp; b</code> | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b`. Signals divZÊ if b is 0\. |
-| <code>rem←&nbsp;[a]&nbsp;c.DivRem&nbsp;m</code> | `c ← ⌊a÷m, returns rem← m\|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ `¯1+2*64`. divZÊ if `m` is 0. |
+| <code>[a]&nbsp;c.Div&nbsp; b</code> | `c ← ⌊a ÷ b` | Floored (rounds toward ¯∞), like APL's `⌊a÷b`. Signals `divZÊ` if b is 0\. |
+| <code>rem←&nbsp;[a]&nbsp;c.DivRem&nbsp;m</code> | `c ← ⌊a÷m`, <br>`rem← m\|a` | Same floored quotient as Div. The remainder is returned as a new **gmpz** object (shy), not as an APL integer. The divisor may be a **gmpz**, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ `¯1+2*64`. divZÊ if `m` is 0. |
 | <code>m&nbsp;c.Res&nbsp;b</code> | `c ← m\|b` | APL residue, floored (sign follows `m`). 0\|b is `b`. Dyadic only. |
-| <code>[a]&nbsp;c.Gcd&nbsp; b</code> | `c ← a∨b` | ≥ 0\. Greatest common divisor. |
-| <code>[a]&nbsp;c.Lcm&nbsp; b</code> | `c ← a∧b` | ≥ 0\. Least common multiple. |
-| <code>[a]&nbsp;c.Divexact &nbsp;b</code> | `c ← a ÷ b` | Fast division that is only valid when `b` divides a exactly (otherwise the result is meaningless). divZÊ if b is 0\. |
+| <code>[a]&nbsp;c.Gcd&nbsp; b</code> | `c ← a∨b` | `≥0`.\. Greatest common divisor. |
+| <code>[a]&nbsp;c.Lcm&nbsp; b</code> | `c ← a∧b` | `≥0`.\. Least common multiple. |
+| <code>[a]&nbsp;c.Divexact &nbsp;b</code> | `c ← a ÷ b` | Fast division that is only valid when `b` divides `a` exactly (otherwise the result is undefined). `divZÊ` if `b=0`.\. |
 | <code>[a]&nbsp;c.Pow &nbsp;n</code> | `c ← a*n` | `n` must be a non-negative APL integer (not a string or gmpz), and must fit in a C unsigned long (powÊ otherwise). |
-| <code>[a]&nbsp;c.Pow&nbsp; ÷n</code> | `n-th root of a, truncated toward 0` | Same as `⌊a*÷n` for `a≥0`\. `n` must be a positive integer. If `a<0`, `n` must be odd. |
-| <code>[a]&nbsp;c.PowM&nbsp; e&nbsp; m</code> | `c ← m\|a*e` | Modular exponentiation. `e` and `m` may be gmpz, integer or string. A negative exponent or a negative modulus signals `powÊ` (modulus 0 signals `divZÊ`). |
-| <code>rc←&nbsp;[a]&nbsp;c.Invert&nbsp; m</code> | `c ← a⁻¹ mod m` | Returns 1 if the inverse exists, 0 if not (then c is meaningless). m>0 (divZÊ for 0, powÊ for negative). |
-| <code>i&nbsp;c.Shift&nbsp;b</code> | `c ← b × 2*i` | Binary shift. `i\>0` left, `i\<0` right (truncating toward zero). Dyadic only. i may be an integer, an integer string or a gmpz; non-integers signal shiftÊ. |
-| <code>i&nbsp;c.ShiftFloor&nbsp;b</code> | `c ← ⌊b ÷ 2*-i` | As Shift, but a right shift *floors* (toward ¯∞): `¯1 c.ShiftFloor ¯7` is ¯4, where Shift gives `¯3`. Same for non-negative `b`. |
+| <code>[a]&nbsp;c.Pow&nbsp; ÷n</code> | `a* ÷n` | Same as `⌊a*÷n` for `a≥0`;\. `n` must be a positive integer. <br>If `a<0`, `n` must be odd  and the result is the real solution to `⌊a*÷n`. |
+| <code>[a]&nbsp;c.PowM&nbsp; e&nbsp; m</code> | `c ← m\|a*e` | Modular exponentiation&mdash;: efficient. `e` and `m` may be gmpz, integer or string. <br>If `e<0` or `m<0`, signals`powÊ`; if`m=0`, signals `divZÊ`. |
+| <code>rc←&nbsp;[a]&nbsp;c.Invert&nbsp; m</code> | `c ← a⁻¹ mod m` | Returns 1 if the inverse exists, 0 if not (then `c` is meaningless). `m` must be a positive integer.  If `m<0`, signals`powÊ`; if`m=0`, signals `divZÊ`. |
+| <code>i&nbsp;c.Shift&nbsp;b</code> | `c ← b × 2*i` | Binary shift. `i>0` left, `i<0` right (truncating toward `0`). Dyadic only. `i`may be an integer, an integer string or a gmpz; non-integers signal `shiftÊ`. |
+| <code>i&nbsp;c.ShiftFloor&nbsp;b</code> | `c ← ⌊b ÷ 2*-i` | Like Shift, but a right shift *floors* (toward ¯∞): `¯1 c.ShiftFloor ¯7` is `¯4`, where Shift gives `¯3`. Same for non-negative `b`. |
 | <code>c.Neg</code> | `c ← −c` | Niladic. For `c← −b`: `(c.Set b).Neg`. |
 | <code>c.Abs</code> | `c ← \|c` | Niladic. For `c← \|b`: `(c.Set b).Abs`. |
-| <code>c.Fac&nbsp;n</code> | `c ← !n` | `n` ≥ 0; `n` may be an integer, string or gmpz. `n` must be ≤ `¯1+2*64` (Windows: `¯1+2*32`), else `facBadÊ`. Large results are limited only by memory. |
+| <code>c.Fac&nbsp;n</code> | `c ← !n` | `n` ≥ 0; `n` may be an integer, string or gmpz. `n≤¯1+2*64` (Windows: `n≤¯1+2*32`), else `facBadÊ`. Large results are limited only by memory. |
 | <code>c.Inc</code> | `c ← c+1` | Niladic. |
 | <code>c.Dec</code> | `c ← c−1` | Niladic. |
 | <code>bool←&nbsp;c.Divisible&nbsp;b</code> | `1` if `b` divides `c`, else `0`. | If `b=0`, result is `1` (true) only if `c` is 0. Returns a non-shy result `0` or `1`. |
@@ -221,7 +224,13 @@ Iota and Scan return `gmpz.UL_MAX` (`¯1+2*64` on *Unix* systems, `¯1+2*32` on 
 
 ## **6\.  Random numbers**
 
-Uses GMP's Mersenne Twister; its state is created on first use of a random number function and seeded from system entropy by default (it can be changed via RandSeed). Rand and RandB are ⎕IO-sensitive — in ⎕IO←1 Rand returns 1…b and RandB returns `1`…`2*n` (in ⎕IO←0, `0`…`b-1` and `0`…`2*n`).
+Uses GMP's Mersenne Twister; its state is created on first use of a random number function and seeded from system entropy by default (it can be changed via RandSeed). Rand and RandB are `⎕IO`-sensitive:
+
+| ⎕IO | Range for `Rand n` | Range for `RandB e` |
+| :-- | :---------------------- | :---------------------- |
+| `1` |  `1` through `n`   | `2*1`=>`2` through `2*e`  |
+| `0` |  `0` through `n-1` | `2*0`=>`1` through `¯1+2*e` |
+Table 6.0: ⎕IO for Rand and RandB 
 
 ```
    c← ⎕NEW gmpz '123456789012345678901234567890'
@@ -233,9 +242,9 @@ Uses GMP's Mersenne Twister; its state is created on first use of a random numbe
 
 | Method | Meaning |
 | :---- | :---- |
-| <code>r.Rand&nbsp;b</code> | r ← uniform in \[0, b); b may be gmpz, integer or string; must be positive (randÊ). |
-| <code>r.RandB&nbsp;n</code> | r ← uniform in \[`0`, `2*n`); n ≥ 0. |
-| <code>gmpz.RandSeed&nbsp;u</code> | Seeds with an unsigned 64-bit u; returns the old seed (shy) as a string. RandSeed 0 reseeds from system entropy. |
+| <code>r.Rand&nbsp;n</code>  | Produces random numbers up to `n` (`⎕IO←0`). See **Table 6.0** above. Honours `⎕IO`. |
+| <code>r.RandB&nbsp;e</code> | Produces random numbers up to `2*e` (`⎕IO←0`). See **Table 6.0** above. Honours `⎕IO`. |
+| <code>gmpz.RandSeed&nbsp;u</code> | Seeds with an unsigned 64-bit `u`; returns the old seed (shy) as a string. <br>`RandSeed 0` reseeds from system entropy. |
 
 Only one random state exists for all objects; reseeding anywhere affects every later Rand and RandB.
 
