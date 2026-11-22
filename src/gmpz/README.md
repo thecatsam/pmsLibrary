@@ -23,18 +23,16 @@
    a← ⎕NEW gmpz                         ⍝ 0
    a← ⎕NEW gmpz ¯2                      ⍝ from an APL integer
    a← ⎕NEW gmpz '1234567 89012345678'   ⍝ from a string ('¯' => '-'). Blanks ok!
-   a← ⎕NEW gmpz ('bee cafe' 16)         ⍝ <= string in base 16 (base ∊ 2…62)
-   a← ⎕NEW gmpz ('10101110' 2)          ⍝ <= from a string in base 2 (see also Bits).
-   a← gmpz.New0                         ⍝ Same as ⎕NEW gmpz
-   a← gmpz.New '999999999'              ⍝ Same as ⎕NEW gmpz ...
-   a b c← gmpz.New¨0 0 0                ⍝ Initialise 3 new gmpz objects
+   a← ⎕NEW gmpz ('bee cafe' 16)         ⍝ from a string in base 16 (base ∊ 2…62)
+   a← ⎕NEW gmpz ('10101110' 2)          ⍝ from a string in base 2 (see also Bits).
+   a← gmpz.New0                         ⍝ Alternative: new object, value 0
+   a← gmpz.New '999999999'              ⍝ Alternative: new object from a value
    b← 16 gmpz.New 'ff'                  ⍝ ... works with a base on the left
    16 b.Set 'bee cafe'                  ⍝ Set b to a new string value (in base 16)
-   b.Set a                              ⍝ copy the value of mpz a into b
-⍝  copy APL bits EN MASSE efficiently as twos complement
-   b.Bits← 1 0 1 1 1 1 0 0 0            ⍝ value ¯136; leading bit 1 is sign (1= neg)  
-   c← a.Copy                            ⍝ a new, independent mpz with a's value
-   ⌷b                                   ⍝ value of b in string form (base 10)
+   b.Set a                              ⍝ copy the value of another gmpz into b
+   b.Bits← 1 0 1 0 1 1 1 0 ...          ⍝ copy APL bits efficiently into a (2s complement)
+   c← a.Copy                            ⍝ a new, independent gmpz with a's value
+   ⌷b                                   ⍝ value of b in string form
 ```
 
 **Assignment aliases.** `b← a` makes `b` and `a` the *same* object, so `b.Inc` changes `a` too. Use `b← a.Copy` for an independent copy.
@@ -56,10 +54,10 @@
 | <code>f←&nbsp;a.Float</code> | `a` as an approximate APL float: `2*64` is `18446744073709552000.` Signals `badIntÊ` if `a` has more than 1024 bits. |
 | <code>bool←&nbsp;a.Even</code>, <code>a.Odd</code> | 1 or 0 (explicitly returned). |
 | <code>bool←&nbsp;a.Bit[i1&nbsp;i2…]</code> | Read bits at specified indices, from low- to high-order bits. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. See §5. |
-| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Write bits at specified indices. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. |
-| <code>bool←&nbsp;a.Bits</code> | `a`'s value efficiently returned as a boolean vector in two's complement, sign bit first. |
-| <code>a.Bits←&nbsp;bool</code> | `a`'s value efficiently set (replaced) from a boolean vector (leading bit is the sign). |
-| <code>int←&nbsp;a.ptr</code> | Address of the underlying GMP object. ***Use with care!*** |
+| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Write bits at specified indices. Honours `⎕IO` for non-negative indices, starting with the low-order bits. The method supports negative indices, which select from the high-order bits (*HOBs*): index `¯1` is the first HOB, i.e. the sign. |
+| <code>bool←&nbsp;a.Bits</code> | `a`'s value efficiently returned as a boolean vector in two's complement, sign bit first. `a.Bits`  is equivalent to `⌽a.Bit[⍳a.Bitlen]`, but substantially faster. |
+|  <code>a.Bits←&nbsp;bool</code> | `a`'s value efficiently set (replaced) from a boolean vector (leading bit is the sign). |
+| <code>int←&nbsp;a.ptr</code> | Address of the underlying GMP object. Use with care to avoid ___destabilizing___ APL. |
 
 **Int64 or IntDF?** Int64 is the machine integer (fast, 64-bit). IntDF is "as big as an APL decimal float can hold exactly" (34 digits) and needs `⎕FR←1287` in your session to display or compute with such values exactly. Use `VFI` to test safely.
 
@@ -67,7 +65,7 @@
 
 **Tracing.** Set `DEBUG←1` in the class source to trace allocations and frees; `DEBUG←2` also traces the random state and the library bindings.
 
-**Not saved with the workspace.** Objects hold raw C pointers: they should ***not*** be used after a `)SAVE`, `)LOAD`, or `⎕OR`: you ***must*** recreate them to safely continue.
+**Not saved with the workspace.** Objects hold raw C pointers: they should ***not*** be used after a `)SAVE`, `)LOAD`, or `⎕OR`: you ***must*** create them in each session to safely continue.
 
 **Resources.** GMP stops the whole process if it runs out of memory. Methods such as Fac, Pow, Shift and RandB accept arguments up to `¯1+2*64`, so a mistyped argument (say `c.Fac 1E12`) will end your session *with prejudice*. Check sizes first.
 
@@ -365,6 +363,47 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 12. Objects are lost on `)SAVE`/`)LOAD`; huge arguments can exhaust memory and stop the session (see §1).
 13. **Thread safety:** Class-level scratch buffers, `Rand`/`RandB`/`RandSeed`, and `GI` expressions are thread-safe across Dyalog threads (`&`). If two threads mutate the *same* `gmpz` instance concurrently, guard access to that instance with `:Hold` (or give each thread its own `.Copy`).
 
+## **11\.  Multi-Core Execution with Dyalog Isolates**
+
+Dyalog APL threads (`&`) multiplex cooperatively on a single OS interpreter thread and block on `⎕NA` calls. To run CPU-intensive `gmpz` routines (such as `NextPrime`, `ProbabPrime`, `PowM`, or large `Fac`) in true parallel across multiple CPU cores, use Dyalog's built-in **`isolate`** workspace (`ws/isolate`), which runs each worker in a separate OS process.
+
+### Setup & Serialization Rules
+
+* **Load `gmpz` inside each isolate using `2 isos.⎕FIX`:** Passing left argument `2` tells `⎕FIX` to return the character name `'#.gmpz'` rather than a class reference (isolates forbid returning class or function references across process boundaries).
+* **Never pass `gmpz` instances across isolate boundaries:** Each isolate has its own OS address space and `libgmp` instance, so raw C pointers (`⍙ptr`) cannot cross IPC boundaries. Serialize values as **Base-62 strings** (`x.GetInBase 62` / `62 p.Set str`) for moderate integers, or **two's-complement bit vectors** (`x.Bits` / `p.Bits← bits`) for very large integers.
+* **Reuse a persistent worker pool:** Create `N` isolates once, fix `gmpz` and your worker functions into them, and close the pool with `_← isos.Close` when finished.
+
+```apl
+   'isolate' ⎕CY 'isolate'
+
+   ⍝ 1. Spin up 4 worker processes and load gmpz + worker function into each
+   isos← isolate.New¨ 4⍴⊂''
+   {}2 isos.⎕FIX ⊂'gmpz/gmpz.dyalog'
+
+   ∇ resStr← seedStr PrimeWorker offset; p; i
+     p← gmpz.New0
+     62 p.Set ∊seedStr
+     p.Add offset
+     :For i :In ⍳40
+        p.NextPrime p
+     :EndFor
+     resStr← p.GetInBase 62
+   ∇
+   {}isos.⎕FX ⊂⎕NR 'PrimeWorker'
+
+   ⍝ 2. Dispatch across all 4 OS cores (returns futures immediately)
+   seedStr← (1536 (gmpz.New 0).Shift 2).GetInBase 62
+   futures← (4⍴⊂seedStr) isos.PrimeWorker 100000× ⍳4
+   primes← (62∘gmpz.New)¨ ⍕¨futures       ⍝ Realize futures and rebuild local gmpz objects
+
+   _← isos.Close
+```
+
+### When to Use Isolates vs. Threads (`&`)
+
+* **Use Dyalog Threads (`&`)** for fast, fine-grained arithmetic (`Add`, `Mul`, `RandB`, `GI` expressions) or when workers share mutable `gmpz` instances via `:Hold`.
+* **Use Isolates (`isolate.New`)** when individual GMP operations take **> 5–10 ms** of CPU time so true multi-core execution easily outweighs IPC serialization overhead.
+On a Mac with 4 "performance" cores (and 6 "efficiency" cores), large GMP operations saw a speedup of 3.4 fold with 4 isolates.  Speedups improved only a small amount with 5 or even 10 isolates. For smaller uneven tasks, a larger number of isolates might achieve greater speedups: benchmark and see!
 
 ## **Appendix: Encrypt a Message Using Simplified RSA Key**
 
@@ -401,5 +440,3 @@ Success: Decrypted message matches original
 
 [1]:  RSA encryption is still useful today, provided you use 2048- or, preferably, 4096-bit encryption.<p>
 [2]:  The output is abridged (...) for pedagogical purposes.
-gmpz-primer.md
-Displaying gmpz-primer.md.

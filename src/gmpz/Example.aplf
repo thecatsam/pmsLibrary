@@ -1,8 +1,14 @@
-∇ ret← {modBits} GmpzExample msgIn
+∇ ret← {modBits} GmpzExample secret_msg
+⍝  A nice example of gmpz in operation: RSA encoding of a "secret" message.
 ⍝  To run:
-⍝    ret@CV← GmpzExample msgIn@CV
-⍝  msgIn: An APL string that can be encoded in fewer than modBits (1024) bits (UTF-8)
-⍝  Success if it returns a happy message
+⍝    GmpzExample secret_msg
+⍝  Choose a secret message to encode using a private and public key.
+⍝  Here everything else is done for you. 
+⍝  You can also change the modBits from the default (1024) to 2048 or 4096.
+⍝
+⍝  Note: The message must be smaller than the key size (everything in bits).
+⍝        Bigger messages are best handled through combining the RSA message with another
+⍝        faster method (using the RSA message to encode the keys for that method).
 
 ⍝--1 DECLARATIONS AND INITIALIZATION ------------------------------------------------------------------
 ⍝  Declarations, definitions, etc.
@@ -59,8 +65,8 @@
    :EndIf
 
 ⍝- 3 IMPORT MSG -----------------------------------------------------------------------------------
-⍝  Import the plaintext msgIn ==> msg, where msgIn will be encoded via UTF-8 for simplicity.
-   16 msg.Set HS msgIn
+⍝  Import the plaintext secret_msg ==> msg, where secret_msg will be encoded via UTF-8 for simplicity.
+   16 msg.Set HS secret_msg
 
    :If msg.BitLen≥ n.BitLen                                  ⍝ length limited for demo...
       ret← 'Your message is too big' ⋄  :Return

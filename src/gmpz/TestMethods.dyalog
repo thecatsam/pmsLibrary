@@ -1,7 +1,14 @@
-﻿r← GmpzTest count
+﻿r← TestMethods count
+⍝  To use:
+⍝      TestMethods 1  -- Verifies that all operations work properly...
+⍝      TestMethods 25 -- Exercises all operations by running through them 25 times.
+⍝      TestMethods nn -- Choose a number nn (10, 25, ...) to exercise operations even more.
+⍝
   ; ⎕IO; ⎕ML; ⎕PP; ⎕FR
   ; curCount; Say
-  ; rep; pass; fail; total; c; a; b; x; y; z; t; rem; rc; err; old; v; v1; v2; ok; i; pp; Chk; IsPass; line; bases; vals; base; val; big
+  ; rep; pass; fail; total; line; bases; vals; base; val; big
+  ; c; a; b; x; y; z; t; rem; rc; err; old; v; v1; v2; ok; i; pp
+  ; Chk; IsPass
 ⎕IO ⎕ML ⎕PP ⎕FR← 0 1 34 1287
 
 :If count≤1

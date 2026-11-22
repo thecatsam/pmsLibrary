@@ -33,7 +33,7 @@ LoadGmpz
 ⍝ 1. CORRECTNESS & RACE-CONDITION SUITE
 ⍝ =========================================================================
 
-∇ r←RaceConditions(nThreads nIters);serial;workers;ok;results;okShared;okDeadlock
+∇ r←RaceConditions(nThreads nIters);serial;workers;ok;results;okShared;okDeadlock;okGI
   ⎕←'1A. Scratch-buffer race test:' nThreads 'threads x' nIters 'iterations...'
   ⍝ Serial baseline: deterministic chain forcing string & integer scratch conversion
   serial←Worker nIters
@@ -45,7 +45,7 @@ LoadGmpz
   ⎕←'1B. Shared-instance mutation & limb-realloc test: 50 threads x' nIters 'iterations...'
   okShared←TestSharedInstance 50 nIters
 
-  ⎕←'1C. Multi-operand AB-BA deadlock safety test: 2 threads x 2000 iterations...'
+  ⎕←' 1C. Multi-operand AB-BA deadlock safety test: 2 threads x 2000 iterations...'
   okDeadlock←TestDeadlockSafety 2000
 
   ⎕←'1D. Lock-free GI operator concurrency test: 50 threads x' nIters 'iterations...'
@@ -149,7 +149,7 @@ LoadGmpz
 ⍝ =========================================================================
 
 ∇ res←Contention
-  ⍝ Convenience entry point running all four contention suites
+  ⍝ Convenience entry point running all contention & scaling suites
   ⎕←'--- A. Scratch Lock Contention (Pure gmpz vs. String/Int) ---'
   ⎕←BenchScratchContention (1 2 4 8) 20000
   ⎕←'--- B. Instance Lock Contention (Hot Shared vs. Sharded) ---'
@@ -158,6 +158,8 @@ LoadGmpz
   ⎕←BenchLongHoldBlocking 4 5000
   ⎕←'--- D. Global RandState Contention ---'
   ⎕←BenchRandContention (1 2 4 8) 20000
+  ⎕←'--- E. Multi-Core Isolate Scaling (4 Threads vs. 4 OS Isolates) ---'
+  ⎕←BenchIsolateScaling 4 40
   res←'Benchmarks complete.'
 ∇
 
@@ -290,6 +292,59 @@ LoadGmpz
   r←1
 ∇
 
+⍝ --- Benchmark E: Multi-Core Isolate Scaling (Threads vs. OS Isolates) ---
+∇ res←BenchIsolateScaling(nWorkers nIters);isoNS;isos;seed;seedStr;offsets;t0;tWorkers;tRes;tMs;futures;iRes;iMs;match
+  ⍝ Load Dyalog's built-in isolate workspace into a local sub-namespace
+  isoNS←⎕NS ''
+  'isolate' isoNS.⎕CY 'isolate'
+
+  ⍝ Build 1536-bit seed and distinct offsets per worker
+  seed←gmpz.New 2
+  1536 seed.Shift seed
+  seedStr←seed.GetInBase 62
+  offsets←100000×⍳nWorkers
+
+  ⍝ 1. Single-process APL green threads (&)
+  t0←NowMs
+  tWorkers←(⊂seedStr)∘IsoPrimeWorker&¨nIters,¨offsets
+  tRes←⎕TSYNC tWorkers
+  tMs←1⌈(NowMs)-t0
+
+  ⍝ 2. Multi-process OS isolates (true multi-core execution)
+  isos←isoNS.isolate.New¨nWorkers⍴⊂''
+  {}2 isos.⎕FIX ⊂'gmpz/gmpz.dyalog'
+  ⍝ {}isos.⎕FX ⊂⎕NR 'LoadIsoGmpz'
+  ⍝ {}⍕¨isos.LoadIsoGmpz
+  {}isos.⎕FX ⊂⎕NR 'IsoPrimeWorker'
+
+  t0←NowMs
+  futures←(nWorkers⍴⊂seedStr) isos.IsoPrimeWorker nIters,¨offsets
+   iRes←⍕¨futures
+  iMs←1⌈(NowMs)-t0
+
+  _← isos.Close
+  match←tRes≡iRes
+
+  res←1 4⍴'Threads_ms' 'Isolates_ms' 'Speedup' 'Exact_Match'
+  res⍪←tMs iMs (0.01×⌊0.5+100×tMs÷iMs) match
+∇
+
+∇ resStr←seedStr IsoPrimeWorker iters_offset;nIters;offset;p;i
+  (nIters offset)←iters_offset
+  p←gmpz.New0
+  62 p.Set ∊seedStr
+  p.Add offset
+  :For i :In ⍳nIters
+      p.NextPrime p
+  :EndFor
+  resStr←p.GetInBase 62
+∇
+
+∇ ok←LoadIsoGmpz
+  {}2 #.⎕FIX 'gmpz/gmpz.dyalog'
+  ok←1
+∇
+
 ∇ ms←NowMs;ts;⎕FR
   ⎕FR←1287
   ⍝ High-resolution wall-clock timestamp in milliseconds from ⎕TS
@@ -297,4 +352,6 @@ LoadGmpz
   ms←(24 60 60 1000⊥4↑3↓ts)+86400000×1 ⎕DT ⊂3↑ts
 ∇
 
+CR ← ⎕UCS 13 
+⎕DF (⍕⎕THIS),CR,'∘ Run',CR,'   TestThreads.RunAll'
 :EndNamespace
