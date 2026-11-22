@@ -243,18 +243,23 @@ Only one random state exists for all objects; reseeding anywhere affects every l
 
 ```
 ⍝  rc: 2 definitely prime, 1 probably prime, 0 not prime
-   rc← c.ProbabPrime ⍬        ⍝ ⍬ or 0: default of 24 Miller-Rabin reps (the argument itself is required)
-   rc← c.ProbabPrime 15       ⍝ 15 reps (15–50 is reasonable)
+   rc← c.ProbabPrime ⍬        ⍝ ⍬ or 0: default of 24 (Miller-Rabin reps).
+   rc← c.ProbabPrime 15       ⍝ See note below.
    c.NextPrime n              ⍝ c ← next prime > n
-   c.PrevPrime n              ⍝ c ← greatest prime < n  (noPrevPrimeÊ if n ≤ 2)
-   (c rc)← c.PrevPrime2 n     ⍝ Like PrevPrime, but also returns rc: 2 definitely, 1 probably, 0 none (no error)
+   c.PrevPrime n              ⍝ c ← greatest prime < n. See below.
+   (c rc)← c.PrevPrime2 n     ⍝ Like PrevPrime, but also returns the result of `ProbabPrime`.
    rc← [a] c.Jacobi b         ⍝ Jacobi symbol (a/b): ¯1, 0 or 1. b must be odd (badAplÊ if even).
    rc← [a] c.Invert m         ⍝ modular inverse (see §3)
 ```
 
-PrevPrime relies on GMP's mpz\_prevprime (GMP 6.3+), which sets c to the greatest prime strictly less than n and itself returns 2, 1 or 0\. PrevPrime2 returns (mpz rc) where rc is that GMP return code; plain PrevPrime signals noPrevPrimeÊ when the code is 0.
+* `c.ProbabPrime n` performs `n` iterations of various tests to increase the confidence that the number `c` is prime. By default, when `n` is shown as `0` or `⍬`, `24` such tests are conducted; reasonable values of `n` are typically between `15` and `50`. ProbabPrime returns `2` (**definitely prime**), `1` (**possibly prime**), or `0` (**not prime**).
 
-c is the number being tested for ProbabPrime, Jacobi (when a is omitted) and Divisible.
+* PrevPrime relies on GMP's mpz\_prevprime (GMP 6.3+), which sets `c` to the greatest prime strictly less than `n`.  
+If there is no such prime (`n` is `2`), PrevPrime signals `noPrevPrimeÊ`.
+
+* PrevPrime2 returns `mpz rc` where `rc` is the `ProbabPrime` return code. If there is no previous prime, the result is `2 0`.
+
+* For ProbabPrime, Jacobi (when `a` is omitted), and Divisible, `c` is the number being tested.
 
 ### **Further number theory**
 
