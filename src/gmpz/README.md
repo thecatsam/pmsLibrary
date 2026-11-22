@@ -53,8 +53,8 @@
 | <code>int←&nbsp;a.Signum</code> | ¯1, 0 or 1. |
 | <code>f←&nbsp;a.Float</code> | `a` as an approximate APL float: `2*64` is `18446744073709552000.` Signals `badIntÊ` if `a` has more than 1024 bits. |
 | <code>bool←&nbsp;a.Even</code>, <code>a.Odd</code> | 1 or 0 (explicitly returned). |
-| <code>bool←&nbsp;a.Bit[i1&nbsp;i2…]</code> | Read bits at specified indices, from low- to high-order bits. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. See §5. |
-| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Write bits at specified indices. Honours `⎕IO` for non-negative indices, starting with the low-order bits. The method supports negative indices, which select from the high-order bits (*HOBs*): index `¯1` is the first HOB, i.e. the sign. |
+| <code>bool←&nbsp;a.Bit[i1&nbsp;i2…]</code> | Read bits at specified indices from low- to high-order bits. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. See §5. |
+| <code>a.Bit[i1&nbsp;i2…]←&nbsp;bool</code> | Writes bits at specified indices from low- to high-order bits. Honours `⎕IO` for positive indices; allows negative indices to select from the end (high-order bits) of the object. Index ¯1 is the first HOB, i.e. the sign. See §5.  |
 | <code>bool←&nbsp;a.Bits</code> | `a`'s value efficiently returned as a boolean vector in two's complement, sign bit first. `a.Bits`  is equivalent to `⌽a.Bit[⍳a.Bitlen]`, but substantially faster. |
 |  <code>a.Bits←&nbsp;bool</code> | `a`'s value efficiently set (replaced) from a boolean vector (leading bit is the sign). |
 | <code>int←&nbsp;a.ptr</code> | Address of the underlying GMP object. Use with care to avoid ___destabilizing___ APL. |
