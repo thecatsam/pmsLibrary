@@ -115,17 +115,17 @@ A non-integer APL number signals `badAplÊ`, as does a numeric vector (including
 | <code>[a]&nbsp;c.Lcm&nbsp; b</code> | `c ← a∧b` | ≥ 0\. Least common multiple. |
 | <code>[a]&nbsp;c.Divexact &nbsp;b</code> | `c ← a ÷ b` | Fast division that is only valid when `b` divides a exactly (otherwise the result is meaningless). divZÊ if b is 0\. |
 | <code>[a]&nbsp;c.Pow &nbsp;n</code> | `c ← a*n` | `n` must be a non-negative APL integer (not a string or gmpz), and must fit in a C unsigned long (powÊ otherwise). |
-| <code>[a]&nbsp;c.Pow&nbsp; ÷n</code> | `n-th root of a, truncated toward 0` | Same as `⌊a*÷n` for `a≥0`\. n a positive integer. If a\<0, n must be odd. |
-| <code>[a]&nbsp;c.PowM&nbsp; e&nbsp; m</code> | `c ← m\|a*e` | Modular exponentiation. `e` and `m` may be gmpz, integer or string. A negative exponent or a negative modulus signals powÊ (modulus 0 signals divZÊ). |
+| <code>[a]&nbsp;c.Pow&nbsp; ÷n</code> | `n-th root of a, truncated toward 0` | Same as `⌊a*÷n` for `a≥0`\. `n` must be a positive integer. If `a<0`, `n` must be odd. |
+| <code>[a]&nbsp;c.PowM&nbsp; e&nbsp; m</code> | `c ← m\|a*e` | Modular exponentiation. `e` and `m` may be gmpz, integer or string. A negative exponent or a negative modulus signals `powÊ` (modulus 0 signals `divZÊ`). |
 | <code>rc←&nbsp;[a]&nbsp;c.Invert&nbsp; m</code> | `c ← a⁻¹ mod m` | Returns 1 if the inverse exists, 0 if not (then c is meaningless). m>0 (divZÊ for 0, powÊ for negative). |
 | <code>i&nbsp;c.Shift&nbsp;b</code> | `c ← b × 2*i` | Binary shift. `i\>0` left, `i\<0` right (truncating toward zero). Dyadic only. i may be an integer, an integer string or a gmpz; non-integers signal shiftÊ. |
-| <code>i&nbsp;c.ShiftFloor&nbsp;b</code> | `c ← ⌊b ÷ 2*-i` | As Shift, but a right shift *floors* (toward ¯∞): `¯1 c.ShiftFloor ¯7` is ¯4, where Shift gives ¯3. Same for non-negative b. |
+| <code>i&nbsp;c.ShiftFloor&nbsp;b</code> | `c ← ⌊b ÷ 2*-i` | As Shift, but a right shift *floors* (toward ¯∞): `¯1 c.ShiftFloor ¯7` is ¯4, where Shift gives `¯3`. Same for non-negative `b`. |
 | <code>c.Neg</code> | `c ← −c` | Niladic. For `c← −b`: `(c.Set b).Neg`. |
 | <code>c.Abs</code> | `c ← \|c` | Niladic. For `c← \|b`: `(c.Set b).Abs`. |
 | <code>c.Fac&nbsp;n</code> | `c ← !n` | `n` ≥ 0; `n` may be an integer, string or gmpz. `n` must be ≤ `¯1+2*64` (Windows: `¯1+2*32`), else `facBadÊ`. Large results are limited only by memory. |
 | <code>c.Inc</code> | `c ← c+1` | Niladic. |
 | <code>c.Dec</code> | `c ← c−1` | Niladic. |
-| <code>bool←&nbsp;c.Divisible&nbsp;b</code> | `1 if b divides c, else 0` | b=0: true only if `c` is 0\. Visible 0/1 result. |
+| <code>bool←&nbsp;c.Divisible&nbsp;b</code> | `1` if `b` divides `c`, else `0`. | If `b=0`, result is `1` (true) only if `c` is 0. Returns a non-shy result `0` or `1`. |
 
 ```
     c← ⎕NEW gmpz
@@ -140,11 +140,11 @@ A non-integer APL number signals `badAplÊ`, as does a numeric vector (including
     c.Neg                          ⍝ c ← -c
 ```
 
-**Floored division:** Div, DivRem and Res are floored (round toward ¯∞), matching APL's ⌊ and ⍺\|⍵, so a \= (m×⌊a÷m) \+ m\|a for any signs. This differs from C, where integer division (/) truncates toward zero. Right Shift truncates toward zero, so that identity holds for Div/Res but not for right Shift. The n-th root, Pow ÷n, also truncates toward zero, which only matters for negative a with odd n.
+**Floored division:** Div, DivRem and Res are floored (round toward ¯∞), matching APL's `⌊⍺÷⍵` and `⍺|⍵`. This differs from C, where integer division `/` truncates toward zero. Right Shift truncates toward zero, so that identity holds for Div/Res but not for right Shift. The n-th root, `Pow ÷n`, also truncates toward zero, which only matters for negative `a` with odd `n`.
 
 ## **4\.  Comparison**
 
-There are no \< or \> methods — use the named forms below or use `<GI`, `>GI`, etc. If a is omitted, it defaults to the receiver. If b is an APL integer in the signed 64-bit range, a faster signed-integer comparison is used.
+There are no `<` or `>` methods — use the named forms below or use `<GI`, `>GI`, etc. If `a` is omitted, it defaults to the receiver. If `b` is an APL integer in the signed 64-bit range, a fast(er) signed-integer comparison is used.
 
 | Method | APL equivalent | Returns |
 | :---- | :---- | :---- |
