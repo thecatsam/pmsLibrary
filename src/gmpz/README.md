@@ -193,13 +193,13 @@ Values assigned to bits must be 0 or 1 (badBitValÊ). Setting a bit beyond the c
 
 Note: Although GMP stores mpz_t values internally in sign-magnitude form, all bitwise operations and shifts emulate infinite-width two's complement arithmetic. Non-negative integers are treated as having an infinite prefix of 0 bits and negative integers an infinite prefix of 1 bits, while left and right bit shifts correspond to exact multiplication and truncating division by `2*b`.
 
-### **Whole-number bitwise operations (in place)**
+### **Whole-number bitwise operations**
 
 | Method | Meaning |
 | :---- | :---- |
-| `\[a\] c.And b` | c ← a ∧ b, bit by bit |
-| `\[a\] c.Or b` | c ← a ∨ b, bit by bit |
-| `\[a\] c.Xor b` | c ← a ≠ b, bit by bit |
+| `[a] c.And b` | c ← a ∧ b, bit by bit |
+| `[a] c.Or b` | c ← a ∨ b, bit by bit |
+| `[a] c.Xor b` | c ← a ≠ b, bit by bit |
 | `c.Com` | c ← bitwise NOT of c (that is, ¯1−c). Niladic, in place. |
 | <code>n←&nbsp;c.PopCount</code> | Number of 1 bits. A negative number has infinitely many, so the result is `gmpz.UL_MAX` (Unix: `¯1+2*64`; Windows: `¯1+2*32`). |
 | <code>n←&nbsp;[a]&nbsp;c.HamDist&nbsp;b</code> | Hamming distance: the number of bit positions where a and b differ (`¯1+2*64` if exactly one is negative). |
