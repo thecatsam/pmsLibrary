@@ -186,7 +186,7 @@ a.Bits                      ⍝ 0 1 0 0 1   (sign bit first, then most-significa
 | <code>a.Bit[n1&nbsp;n2&nbsp;n3]←&nbsp;1&nbsp;0&nbsp;1</code> | Set or clear several bits (one value per index, or one value for all). |
 | `a.Bits` | **All** bits as a boolean vector in two's complement, sign bit first (the reverse of a.Bit\[⍳a.BitLen\]). |
 | `a.Bits← 1 0 1` | Replace **all** the bits of object `a`; the leading bit is the sign (`a.Bits← ,1` is ¯1; an empty vector is 0). |
-| `a.ExportBits w` | As a.Bits but exactly w bits wide (sign-extended), w ≥ a.BitLen. `0` means the minimum. |
+| `a.ExportBits w` | As a.Bits but exactly `w` bits wide (sign-extended), w ≥ a.BitLen. `0` means the minimum. |
 | <code>a.ImportBits&nbsp;bits</code> | Same as `a.Bits← bits`. |
 
 Values assigned to bits must be 0 or 1 (badBitValÊ). Setting a bit beyond the current length to 1 is valid; the object grows automatically. Clearing high-order bits shrinks it.
