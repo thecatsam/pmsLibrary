@@ -15,7 +15,7 @@
 ⍝  Declare helper functions
      ; HS; Tidy
 ⍝  Declare all mpz_t variables
-     ; p; q; n; phi; e; d; msg; cipher; decrypted
+     ; p; q; n; phi; e; eN; d; msg; cipher; decrypted
 
 ⍝  Be sure gmpz is loaded...
    :IF 0= #.⎕NC 'gmpz'
@@ -59,7 +59,8 @@
    p.Dec phi.Mul q.Dec                                       ⍝ p is now p-1, q is now q-1
 
 ⍝  Set public exponent e = 65537 and compute private exponent
-   e.Set 65537
+   eN← 65537   
+   e.Set eN 
    :If 0=e d.Invert phi                                      ⍝ Invert: d← e*-1 mod phi
       ret← 'Error: e and phi are not coprime.'  ⋄ :Return
    :EndIf
@@ -81,31 +82,41 @@
    cipher decrypted.PowM d n
 
 ⍝--6 PRINT AND VERIFY-----------------------------------------------------------------------------
-⍝  Print results
-   ⎕← 'Public Modulus (n): '  ⋄ ⎕← Tidy n.GetInBase 16
-   ⎕← 'Encrypted Cipher:   '  ⋄ ⎕← Tidy cipher.GetInBase 16
-   ⎕← 'Decrypted Message:  '  ⋄ ⎕← Tidy 0 HS decrypted.GetInBase 16
-
+⍝  Print results--- Key elements are in Base 62 for brevity.
+    '' 
+    'Public Key Modulus    (n)  ' ⋄  Tidy n.GetInBase 62               ⋄   '' 
+    'Public Key Exponent   (e) '  ⋄  Tidy e.GetInBase 62               ⋄   '' 
+    'Private Key Exponent  (d) '  ⋄  Tidy d.GetInBase 62               ⋄   '' 
+    'Encrypted Message'           ⋄  Tidy cipher.GetInBase 62          ⋄   '' 
+    'Decrypted Message'           ⋄  Tidy 0 HS decrypted.GetInBase 16  ⋄   '' 
 ⍝  Verify correctness
    :If 0=msg.Cmp decrypted
-      ret← 'Success: Decrypted message matches original'
+      ret← '🙂🙂🙂 Success: Decrypted message matches original'
    :Else
-      ret← 'Failure: Decrypted message does not match original'
+      ret← '😖😖😖 Failure: Decrypted message does not match original'
    :EndIf
 
-⍝--7 FREE STUFF ----------------------------------------------------------------------------------
+⍝--7 CLEAN UP / FREE MEMORY ----------------------------------------------------------------------------------
 ⍝  Free all allocated memory
 ⍝  gmpz does it all for you!
 ⍝  (i.e. there's nothing for you to do.)
  
-⍝--8 TEST RUN ---------------------------------------------------------------------------------
-⍝      GmpzExample  '🙂 This is a cat 🙂'             ⍝ Unicode string
-⍝ Public Modulus (n):
-⍝    7c09b76d3dabfc23419a94a9db4452e891747b45e86a0ef162c3712ce1a53c31
-⍝   ...
-⍝ Encrypted Cipher:
-⍝    646d47879ff5b113e3ec0172062eaeaec75ac21d5630fa815c6f8e91b49569f1
-⍝     ...
-⍝ Decrypted Message:
-⍝     🙂 This is a cat 🙂
-⍝ Success: Decrypted message matches original
+⍝--8 TEST RUN (abridged) --------------------------------------------------------------------------------------
+⍝ GmpzExample '🐱 This is a cat 🐱'  
+⍝ 
+⍝ Public Key Modulus    (n)  
+⍝     Lo8ZzLofubJlwMYj3GhaW6cytVYNk4RzJzrJGNAeT8PDnxHisJnaHwRBo1wiZXPd...                  
+⍝
+⍝ Public Key Exponent   (e) 
+⍝     H33
+⍝
+⍝ Private Key Exponent  (d) 
+⍝     HBpcPxScN3WQo0vh8GopYjNSqceMnzOsG0SZo7x7hPwymp3a04M8ikDrGUwwNVJK...                   
+⍝
+⍝ Encrypted Message
+⍝     73jaAzZZBfu0dWBQE14O7qnX12eBzhgumcESOsnx6RcH7cPdzWibgpN6munVdLIq...                   
+⍝
+⍝ Decrypted Message
+⍝     🐱 This is a cat 🐱
+⍝
+⍝ 🙂🙂🙂 Success: Decrypted message matches original
