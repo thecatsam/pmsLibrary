@@ -14,15 +14,11 @@ LoadGmpz
 
 CR← ⎕UCS 13
 CRt← CR, (4⍴' ')
-
 ⎕← 'To run both',CRt,'∘ test methods, and ',CRt,'∘ performance tests,',CR,'execute:',CRt,(⍕⎕THIS),'.Run'
-
 ⎕DF '[*GmpzTest*]'
 
 ∇ Run   
-  :IF LoadGmpz 
-      BANNER 'Loaded gmpz/gmpz'
-  :EndIf 
+  LoadGmpz BANNER 'Loaded gmpz/gmpz'
 
   BANNER 'Running TestMethods 1'
   TestMethods 1
@@ -36,7 +32,9 @@ CRt← CR, (4⍴' ')
    BANNER 'Done'
 ∇ 
 
-∇ BANNER headline; pw 
+∇ {dontSkip} BANNER headline; pw 
+:IF 900⌶⍬ ⋄ dontSkip← 1 ⋄ :EndIf 
+:IF ~dontSkip ⋄ :RETURN ⋄ :EndIf 
 pw← 80-4
 ⎕← ('+ '),(pw⍴'-'),' +'
 lh← 0⌈ 0.5× pw- ≢headline
@@ -1422,8 +1420,10 @@ r← pass fail total
   ⎕←BenchLongHoldBlocking 4 5000
   ⎕←'--- D. Global RandState Contention ---'
   ⎕←BenchRandContention (1 2 4 8) 20000
-  ⎕←'--- E. Multi-Core Isolate Scaling (4 Threads vs. 4 OS Isolates) ---'
+  ⎕←'--- E1. Multi-Core Isolate Scaling (4 Threads vs. 4 OS Isolates) ---'
   ⎕←BenchIsolateScaling 4 40
+  ⎕←'--- E2. Multi-Core Isolate Scaling (6 Threads vs. 6 OS Isolates) ---'
+  ⎕←BenchIsolateScaling 6 40
   res←'Benchmarks complete.'
 ∇
 
