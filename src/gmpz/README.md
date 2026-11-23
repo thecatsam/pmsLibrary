@@ -392,7 +392,7 @@ Dyalog APL threads (`&`) multiplex cooperatively on a single OS interpreter thre
 
    ⍝ 1. Spin up 4 worker processes and load gmpz + worker function into each
    isos← isolate.New¨ 4⍴⊂''
-   {}2 isos.⎕FIX ⊂'gmpz/gmpz.dyalog'
+   _← 2 isos.⎕FIX ⊂'gmpz/gmpz.dyalog'
 
    ∇ resStr← seedStr PrimeWorker offset; p; i
      p← gmpz.New0
@@ -403,13 +403,12 @@ Dyalog APL threads (`&`) multiplex cooperatively on a single OS interpreter thre
      :EndFor
      resStr← p.GetInBase 62
    ∇
-   {}isos.⎕FX ⊂⎕NR 'PrimeWorker'
+   _← isos.⎕FX ⊂⎕NR 'PrimeWorker'
 
    ⍝ 2. Dispatch across all 4 OS cores (returns futures immediately)
    seedStr← (1536 (gmpz.New 0).Shift 2).GetInBase 62
    futures← (4⍴⊂seedStr) isos.PrimeWorker 100000× ⍳4
    primes← (62∘gmpz.New)¨ ⍕¨futures       ⍝ Realize futures and rebuild local gmpz objects
-
    _← isos.Close
 ```
 
@@ -421,7 +420,7 @@ On a Mac with 4 "performance" cores (and 6 "efficiency" cores), large GMP operat
 
 ## **Appendix: Encrypt a Message Using Simplified RSA Key**
 
-Implement a simplified[^1] **RSA key generation, encryption, and decryption** workflow.
+Implement a simplified[1] **RSA key generation, encryption, and decryption** workflow.
 This demonstrates the core lifecycle of GMP integers:
 * initialization,
 * random prime generation,
@@ -439,17 +438,24 @@ GmpzExample
 #### Running GmpzExample [2]
 
 ```
-    GmpzExample  '🙂 This is a cat 🙂'             ⍝ A random Unicode string
-Public Modulus (n):
-    7c09b76d3dabfc23419a94a9db4452e891747b45e86a0ef162c3712ce1a53c31
-    ...
-Encrypted Cipher:
-    646d47879ff5b113e3ec0172062eaeaec75ac21d5630fa815c6f8e91b49569f1
-    ...
-Decrypted Message:
-    🙂 This is a cat 🙂
-Success: Decrypted message matches original
+    GmpzExample '🐱 This is a cat 🐱'
+Key Components are in Base 62
 
+Public Key Modulus    (n)  
+    Rj1QwDZppdw6ael7OzH4P8HogDGjzMlKx3gf3xmbHj8vyHYjpPcX0DzILADosmUC
+    ...                  
+Public Key Exponent   (e) 
+    H33
+Private Key Exponent  (d) 
+    6kEWniBBwhDm5yBsvfk1PVaeCqY238KkscifnbXuvYrz4ozDRQVn2fAagMT9V0XT
+    ...                   
+Encrypted Message
+    5Welwh9U2V0jVKS13iAjc5En5PdK9vFNxmSDkZoC1NT4KEE2hotWcprDQBktEYXS  
+    ...                 
+Decrypted Message
+    🐱 This is a cat 🐱
+
+🙂🙂🙂 Success: Decrypted message matches original
 ```
 
 [1]:  RSA encryption is still useful today, provided you use 2048- or, preferably, 4096-bit encryption.<p>
