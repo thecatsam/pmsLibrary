@@ -115,7 +115,7 @@ Tidy← {
                   GetFi← {  fiNm← ⍵                                               
                         _← (⎕∘← )⍣ o.list⊢ fiNm                         ⍝ List file for user?
                         outLns← o Main⊢ inLns← ⊃⎕NGET fiNm 1            ⍝ Get file lines & then tidy
-                      outLns≡inLns: outLns⊣ ⎕← 'Nothing changed in ',fiNm 
+                        outLns≡inLns: outLns⊣ ⎕← 'Nothing changed in ',fiNm 
                         _← outLns⊂⍛⎕NPUT⍣o.updt⊢ fiNm 1                 ⍝ Update the file. (if o.updt=1) 
                         outLns                                          ⍝ Return shyly.
                   }
@@ -214,7 +214,7 @@ Tidy← {
                         cmLftP←   '^(?:\h{0,', m2, '}⍝|\h*⍝⍝).*'
                         cmSectBP← '(?i)^\h*⍝(?|\h*:Section|:S).*$'      ⍝ ⍝ :S or :Section
                         localLP← '^\h*;\h*([\w_∆⍙⎕]+)\h*'
-                        localP←  '((;\h*([\w_∆⍙⎕]+)\h*)+)(⍝|$)'  
+                        localP←  '((;\h*([\w_∆⍙⎕]+)\h*)+)'  
                         ⋄ ifMatches← 'Name|Sect|If|Rep|For|Sel|Whil|Trap|With|Hold|Disp|Class|Property'
                         ctrlIfP←   '(?i):(', ifMatches, ')\w*'
                         ctrlElseP← '(?i):(?|Else|And|Or)\w*'            ⍝ Else, ElseIf, And, AndIf, Or, OrIf
@@ -270,10 +270,10 @@ Tidy← {
                               f0 ⊣ Tok () ⊣ grpStk↓⍨← -≢f0 ⊣ skip.groupCt-← ∆ 
                         }
                         Guard← { f0← ⍵                                  ⍝ Format a guard (: or ::)  
-                              skip.other∨← 0≠ skip.groupCt∨ '('= ⊃⌽grpStk    
-                              tabs[î.guard]← ~skip.other
+                              ign← skip.other∨ (0≠ skip.groupCt)∨ '('= ⊃⌽grpStk     ⍝ Guard ignored if line frozen or inside a group
+                              tabs[î.guard]← ~ign
                               f0,← ''↑⍨' '≠⊃⌽f0                         ⍝ Ensure at least one space after guard...
-                            skip.other: f0 ⋄ f0 ⊣ Tok (isLast: 1 ⋄ force: 1)  ⍝ Guard inside one-line dfn def is ignored.
+                            ign: f0 ⋄ f0 ⊣ Tok (isLast: 1 ⋄ force: 1)  ⍝ Ignored guard: indent unchanged. Real guard: exdent + freeze.
                         } 
                         Newline← {                                      ⍝ Handle the start of each line.
                               tabs[î.resetV]← skip.(other⊢← groupCt⊢← 0) ⍝ Turned off before each line   
@@ -342,7 +342,7 @@ Tidy← {
                       Case pn.localL:    1 CanonLocal ⍵ ⊢ 1             ⍝ local vars in Tradfn
                       Case pn.local:     0 CanonLocal ⍵ ⊢ 1             ⍝ -do-
                         
-                      Case pn.grpB:      1 Grp f0                       ⍝ ([{       
+                      Case pn.grpB:      1 Grp f0                      ⍝ ([{       
                       Case pn.grpE:      0 Grp f0                       ⍝ }])  
                         
                       Case pn.guard:     Guard f0                       ⍝ : and :: (wherever they appear)
