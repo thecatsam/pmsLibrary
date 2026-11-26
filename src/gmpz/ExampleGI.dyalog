@@ -12,10 +12,10 @@ DHExample←{
 ⍝ Production DH wants a safe prime and a verified generator — this is a demo.
 ⍝ The cipher is a one-time-pad-style addition of the shared secret:
 ⍝ it shows the exchange working; it is not a production cipher.
-⍝ ⍴GI forms: ⍴GI b is the next prime after b; ¯1 ⍴GI b the previous prime;
-⍝ 0 ⍴GI b the current prime.
+⍝ ○GI forms: ○GI b is the next prime after b; ¯1 ○GI b the previous prime;
+⍝ 0 ○GI b the current prime.
     ⎕IO←0
-    p←⍴GI (2*GI 127)   ⍝ public prime
+    p←○GI (2*GI 127)   ⍝ public prime
     g←2                ⍝ public generator
 
     GenerateKeys←{      ⍝ ⍵: private-key bits → (private public)
@@ -24,11 +24,11 @@ DHExample←{
     }
 
     Encrypt←{           ⍝ ⍺: shared secret; ⍵: message (APL char vec => UTF-8 => gmpz)
-        ⍺+GI  ⊢GI  ⍵ 
+        ⍺+GI  ⎕UCS GI  ⍵      ⍝ ⎕UCS GI takes (in this case) a char vec and returns a gmpz integer!
     }
 
     Decrypt←{           ⍝ ⍺: shared secret; ⍵: ciphertext => UTF-8 => char vec 
-        ⊣GI ⍵-GI ⍺
+        ⎕UCS GI ⍵-GI ⍺  ⍝ ⎕UCS GI takes (in this case) a gmpz and returns a char vec!
     }
 
     (aA A)←GenerateKeys 127

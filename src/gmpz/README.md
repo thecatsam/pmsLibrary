@@ -117,7 +117,7 @@ Remember, when `c` is returned, it is `c` itself, not a separate copy.
 | <code>rem←&nbsp;[a]&nbsp;c.DivRem&nbsp;m</code> | `c ← ⌊a÷m`, <br>`rem← m\|a` | Same floored quotient as Div. The remainder is returned as a new *gmpz* object (shy), not as an APL integer. The divisor may be a *gmpz*, an APL integer or a string — it does not have to fit in 64 bits (the fast unsigned path is used only when it is a non-negative APL integer ≤ `¯1+2*64`. divZÊ if `m` is 0. |
 | <code>m&nbsp;c.Res&nbsp;b</code> | `c ← m\|b` | APL residue, floored (sign follows `m`). 0\|b is `b`. Dyadic only. |
 | <code>[a]&nbsp;c.Gcd&nbsp; b</code> | `c ← a∨b` | `≥0`.\. Greatest common divisor. |
-| <code>[a]&nbsp;c.Lcm&nbsp; b</code> | `c ← a∧b` | `≥0`.\. Least common multiple. |
+| <code>[a]&nbsp;c.Lcm&nbsp; b</code> | `c ← a∧b` | `≥0`.\. Lowest common multiple. |
 | <code>[a]&nbsp;c.Divexact &nbsp;b</code> | `c ← a ÷ b` | Fast division that is only valid when `b` divides `a` exactly (otherwise the result is undefined). `divZÊ` if `b=0`.\. |
 | <code>[a]&nbsp;c.Pow &nbsp;n</code> | `c ← a*n` | `n` must be a non-negative APL integer (not a string or gmpz), and must fit in a C unsigned long (powÊ otherwise). |
 | <code>[a]&nbsp;c.Pow&nbsp; ÷n</code> | `a* ÷n` | Same as `⌊a*÷n` for `a≥0`;\. `n` must be a positive integer. <br>If `a<0`, `n` must be odd  and the result is the real solution to `⌊a*÷n`. |
@@ -279,11 +279,11 @@ If there is no such prime (`n` is `2`), PrevPrime signals `noPrevPrimeÊ`.
 | <code>[n]&nbsp;c.Bin&nbsp;k</code> | `c ← n choose k` (n defaults to c; n may be negative — the generalised binomial). k a non-negative integer (badUIntÊ otherwise). APL's `k!n` is `n c.Bin k`. |
 | <code>c.Fib&nbsp;n</code> | `c ←` the n-th Fibonacci number (`Fib 0` is 0, `Fib 1` is 1). |
 | <code>c.Primorial&nbsp;n</code> | `c ←` the product of all primes ≤ n. |
-| <code>rem←&nbsp;c.SqrtRem&nbsp;b</code> | `c ← ⌊√b`, and the (shy) new gmpz `rem ← b − c*2`. sqrtNegÊ if b is negative. |
+| <code>rem←&nbsp;c.SqrtRem&nbsp;b</code> | Sets `c ← ⌊√b` and (shyly) returns a new gmpz `rem ← b − c*2`. Signals `sqrtNegÊ` if `b<0`. |
 | <code>st←&nbsp;[a]&nbsp;c.GcdExt&nbsp;b</code> | Extended gcd: `c ← a∨b`, and the (shy) pair `st← s t` of new gmpz's with `(a×s)+(b×t) = c`. |
-| <code>bool←&nbsp;c.IsSquare</code> | Is c a perfect square? (0 is; negatives are not.) |
-| <code>bool←&nbsp;c.IsPower</code> | Is c a perfect power `x*k`, k>1? (0 and 1 are; a negative only if an odd power.) |
-| <code>bool←&nbsp;[a]&nbsp;c.Congruent&nbsp;(b&nbsp;m)</code> | Is a ≡ b (mod m)? With m=0, true only if a=b. |
+| <code>bool←&nbsp;c.IsSquare</code> | Is c a perfect square? (0 is a perfect square; negative integers are not.) |
+| <code>bool←&nbsp;c.IsPower</code> | True if `c` is a perfect power `c ≡ x*k`, where `x>0` and `k>1`. (GMP defines `0` and `1` as perfect powers; `x<0`, only if `k` is an odd power.) |
+| <code>bool←&nbsp;[a]&nbsp;c.Congruent&nbsp;(b&nbsp;m)</code> | Is `a ≡ b (mod m)`? With `m=0`, true only if `a=b`. |
 
 ```
    c← ⎕NEW gmpz
@@ -294,46 +294,48 @@ If there is no such prime (`n` is `2`), PrevPrime signals `noPrevPrimeÊ`.
 
 ## **8\.  The GI operator: primitive-style, non-destructive**
 
-GI wraps the methods so they read like APL primitives. Arguments are never modified; a new gmpz is returned (comparisons, and several monadic and dyadic forms marked below, return plain values). GI is also defined in the namespace that holds gmpz, so it can be used from anywhere. Every result is a fresh object with no shared scratch state, so `GI` calls are thread-safe and a result never changes under a later `GI` call.
+GI wraps the methods so they read like APL primitives. Arguments are never modified; a new gmpz is returned (comparisons, and several monadic and dyadic forms marked below, return APL integer values). GI is also defined in the namespace that holds gmpz, so it can be used from anywhere. Every result is a fresh object with no shared scratch state, so `GI` calls are thread-safe and a result never changes under a later `GI` call.
 
 ```
     x← 2 *GI 100                   ⍝ 2*100
     y← x +GI 1                     ⍝ x + 1
     z← 10 |GI y                    ⍝ 10|y   (left is the modulus)
     ⌷ !GI 30                       ⍝ factorial, shown as a string 
-    ⊥GI 30                         ⍝ plain string of '30'
+    ⊥GI 30                         ⍝ returns APL string '30'
     7 <GI x                        ⍝ comparison → 0/1
 ```
 
 | Dyadic | Meaning | Monadic | Meaning |
 | :---- | :---- | :---- | :---- |
-| <code>a&nbsp;+GI&nbsp;b</code> | a+b | `-GI b` | negate |
-| <code>a&nbsp;-GI&nbsp;b</code> | a−b | `\|GI b` | absolute value |
-| <code>a&nbsp;×GI&nbsp;b</code> | a×b | `?GI b` | random number: if `b≥0`, in \[`0`,&nbsp;`b`); if `b<0`, in \[`0`,&nbsp;`2*\|b`) (`RandB`) |
-| <code>a&nbsp;÷GI&nbsp;b</code> | ⌊a÷b (floored) | `!GI b` | factorial |
-| <code>a ÷∘\|GI b</code> | DivRem: a 2-vector of new gmpz's, see note | `×GI b` | signum (plain integer) |
+| <code>a&nbsp;+GI&nbsp;b</code> | `a+b` | `-GI b` | negate |
+| <code>a&nbsp;-GI&nbsp;b</code> | `a−b` | `\|GI b` | absolute value |
+| <code>a&nbsp;×GI&nbsp;b</code> | `a×b` | `?GI b` | random number: if `b>0`, in \[`0`,&nbsp;`b`); if `b<0`, in \[`0`,&nbsp;`2*\|b`) (`RandB`).<small>`b` may not be `0`.</small> |
+| <code>a&nbsp;÷GI&nbsp;b</code> | `⌊a÷b` (floored) | `!GI b` | factorial |
+| <code>a ÷∘\|GI b</code> | division and remainder: a 2-vector of new gmpz's, <small>see note \[1\].</small> | `×GI b` | signum (APL int) |
 | <code>a&nbsp;*GI&nbsp;b</code> | `a*b` (`b` may be `÷n`) | `<GI b` | `b−1` |
-| <code>a&nbsp;∨GI&nbsp;b</code> | gcd, `a∨b` | `>GI b` | `b+1` |
-| <code>a&nbsp;∧GI&nbsp;b</code> | lcm, `a∧b` | `≢GI b` | string length (`b.StrLen`, an APL integer) |
-| <code>a \|GI b</code> | a\|b (a is the modulus) | `⍎GI b` | `b` as an APL integer (`IntDF`); signals an error if it does not fit |
-| <code>a&nbsp;⌽GI&nbsp;b</code> | shift `b` by `a` bits, `a` a pos. or neg. integer | <code>⎕VFI&nbsp;GI&nbsp;b</code> | `ok int` as `b.VFI`, never errors |
-| <code>a&nbsp;*∘\|GI&nbsp;(e&nbsp;m)</code> | `m\|a*e` (PowM) | `⌷GI b` | `b` as a two's complement bit vector, `b.Bits` |
-| <code>a&nbsp;⍳GI&nbsp;i</code> | position of the lowest bit of `a` equal to `i` (`0` or `1`); `¯1+2*64` if none (plain integer) | | |
-| <code>a&nbsp;⌷GI&nbsp;b</code> | bit `a` of `b` (`b.Bit[a]`; plain `0`or `1`) | | |
+| <code>a&nbsp;∨GI&nbsp;b</code> | <small>greatest common divisor</small>, `a∨b` | `>GI b` | `b+1` |
+| <code>a&nbsp;∧GI&nbsp;b</code> | <small>lowest common multiple</small>, `a∧b` | `≢GI b` | string length (`b.StrLen`, an APL int) |
+| <code>a \|GI b</code> | `a\|b` (`a` is the modulus) | `⍎GI b` | `b` as an APL int (`IntDF`); signals an error if it does not fit |
+| <code>a&nbsp;⌽GI&nbsp;b</code> | shift `b` by `a` bits, `a` a pos. or neg. int | <code>⎕VFI&nbsp;GI&nbsp;b</code> | `ok int` as `b.VFI`, never errors |
+| <code>a&nbsp;*∘\|GI&nbsp;(e&nbsp;m)</code> | `m\|a*e` (PowM) | | |
+| <code>a&nbsp;⍳GI&nbsp;i</code> | position of the lowest bit of `a` equal to `i` (`0` or `1`); `¯1+2*64` if none (APL int) |  `⎕UCS GI b` | `b` a *gmpz*: Convert gmp int to APL Unicode string via *UTF-8*;<br>`b` a char/int vector: Convert string `s` (or `⎕UCS s`) to a *gmpz* int via *UTF-8*. |
+| <code>a&nbsp;⌷GI&nbsp;b</code> | bit `a` of `b` (`b.Bit[a]`; APL `0`or `1`). <small>Access low-order bits first.</small> See note \[2\]. | `⌷GI b` | `b` as a two's complement bit vector, `b.Bits`. <small>Sign bit and high-order bits first.</small> See note \[2\].|
 | <code>a&nbsp;!GI&nbsp;b</code> | `a!b` as in APL: `b` choose `a` (`3!GI 5` is `10`) | `~GI b` | bitwise NOT of `b`, i.e. `¯1−b` |
 | <code>a&nbsp;⌈GI&nbsp;b</code> | the larger of `a` and `b` | <code>a&nbsp;⌊GI&nbsp;b</code> | the smaller of `a` and `b` |
-| <code>a&nbsp;<GI&nbsp;b</code> | Similarly: `≤ = ≥ > ≠`, returning `0` or `1` |  |  |
-| <code>a&nbsp;⊥GI&nbsp;b</code> | "decode" `b` (gmpz, integer or integer string) as an APL *string* in base `a` |`⊥GI b` | "decode" `b` as an APL integer string |
-| <code>a&nbsp;⊤GI&nbsp;b</code> | "encode" a new gmpz from the string `b` read in base `a` | `⊤GI b` | "encode" a new gmpz holding a copy of object `b` |
-| <code>a&nbsp;≢GI&nbsp;b</code> | length of the string of `b` in base `a` (plain integer) | | |
+| <code>a&nbsp;<GI&nbsp;b</code> | Compare APL `⍺<b`.  | `≤ = ≥ > ≠` | Like `a<GI b`, returning `0` or `1` |
+| <code>a&nbsp;⊥GI&nbsp;b</code> | *"decode to APL"* `b` (gmpz, int or int string) as an APL *string* in base `a` |`⊥GI b` | *"decode to APL"* `b` as an APL int string |
+| <code>a&nbsp;⊤GI&nbsp;b</code> | *"encode to gmpz"* a copy of the numeric string `b` read in base `a` | `⊤GI b` | *"encode to gmpz"* a copy of the numeric object `b` in base 10 |
+| <code>a&nbsp;≢GI&nbsp;b</code> | length of the string of `b` in base `a` (APL int) | `a ○GI b`|If `a=1`, find *next* prime after `b`;<br> If `a=¯1`, find *last* prime before `b`;<br>If `a=0`, check if `b` is probably a prime.<br><small>The glyph `○` is the APL *circle*</small>. |
 
-Note: `(mpz mpz)← a ÷∘|GI b` calls DivRem, returning `((a÷b), (b|a))`, floored, both new gmpz's.
+Note \[1\]: `(mpz mpz)← a ÷∘|GI b` returns two gmpz's: `( (⌊a÷b), (⌊b|a) )` (calls `DivRem`).
 
-Use the gmpz methods directly when you want to avoid allocating a new object per operation. An unsupported glyph gives unknownÊ.
+Note \[2\]: `⌷GI` accesses APL boolean values. Compare `⌷` applied to a *gmpz* object, which returns a base-10 string.
+
+Use *gmpz* methods directly when you want to avoid allocating a new object per operation. An unsupported glyph signals `unknownÊ`.
 
 ## **9\.  Errors**
 
-Errors in public methods are trapped and re-signalled from your line, so ⎕DMX points at your code.
+Errors in public methods are trapped and re-signalled up the line, so ⎕DMX points at your code.
 
 | Name | EN | Meaning |
 | :---- | :---- | :---- |
@@ -367,7 +369,7 @@ Errors in public methods are trapped and re-signalled from your line, so ⎕DMX 
 1. In `a c.Op b`, `c` is the destination and is overwritten and `a` is the left operand; in `c.Op b` the receiver is both the left operand and the destination.
 2. Res (`|`) and Shift (`⌽`) require a left argument; most other dyadic methods default it to the receiver. Neg, Abs, Com, Inc and Dec are niladic. Fac, NextPrime, PrevPrime, Rand, RandB and ProbabPrime take only a right argument.
 3. Shy results: the in-place arithmetic methods, DivRem, Fac, SetBit, ClrBit, Flip, Rand, RandB and RandSeed print nothing in the session. Assign the result, or use `⌷` to see a value. Predicates and queries (Even, Odd, Divisible, TestBit, Iota, Scan, ProbabPrime, Cmp and friends, Signum, Jacobi, Invert) are visible.
-4. Pow's exponent must be a plain APL non-negative integer `n` or `÷n` (for roots, as in APL). Negative exponents are invalid.
+4. Pow's exponent must be an APL non-negative integer `n` or `÷n` (for roots, as in APL). Negative exponents are invalid.
 5. DivRem divisors may be any supported operand type and must be non-zero (`divZÊ` if **0**).
 6. Use `⌷a` to see the final (string) value. It is more efficient to keep working with gmpz objects, so that no unnecessary conversions to and from strings are needed.
 7. Strings may use the high minus `¯` on input; it is converted to `-` by gmpz utilities.

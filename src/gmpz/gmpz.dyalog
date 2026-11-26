@@ -1896,11 +1896,14 @@
           :Case '⍎'    ⋄ res← (toMpz b).IntDF                 ⍝ int← b.IntDF
           :Case '⎕VFI' ⋄ res← (toMpz b).VFI                   ⍝ (ok int)← b.VFI
           :Case '⌷'    ⋄ res← (toMpz b).Bits                  ⍝ bits← b.Bits
-          :Case '⊤'    ⋄ res← gmpz.Get b                      ⍝ decimal string
-          :Case '⊥'    ⋄ res← gmpz.New b                     ⍝ new gmpz from b
-          :Case '⍴'    ⋄ res← gmpz.New0.NextPrime b        
-          :Case '⊢'    ⋄ res← gmpz.New0.ImportUnicode b  
-          :Case '⊣'    ⋄ res← (toMpz b).ExportUnicode 
+          :Case '⊥'    ⋄ res← gmpz.Get b                      ⍝ gmpz => APL 
+          :Case '⊤'    ⋄ res← gmpz.New b                      ⍝ APL => gmpz
+          :Case '○'    ⋄ res← gmpz.New0.NextPrime b        
+          :Case '⎕UCS' ⋄ res← {t← 80| ⎕DR b 
+            t= 6: b.ExportUnicode 
+            t∊ 0 3: gmpz.New0.ImportUnicode b
+            ⎕SIGNAL 11 
+          } b  
          :Else ⋄ ⎕SIGNAL unknownÊ
          :EndSelect
       :Else
@@ -1930,7 +1933,7 @@
           :Case '⊥'    ⋄ res← a gmpz.Get b  ⍝ Decode to APL 
           :Case '⊤'    ⋄ res← a c.Set b    ⍝ Encode to gmpz
           :Case '⍳'    ⋄ res← a c.Iota b
-          :Case '⍴'    ⋄ res← a{  ⍝ Find the previous, probable, next prime.
+          :Case '○'    ⋄ res← a{  ⍝ Find the previous, probable, next prime.
                     ⍺=¯1: res← ⍵.PrevPrime b
                     ⍺= 0: res← ⍵.ProbabPrime b  
                     ⍺= 1: res← ⍵.NextPrime b   
