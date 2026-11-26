@@ -170,7 +170,7 @@ There are no `<` or `>` methods — use the named forms below or use `<GI`, `>GI
 
 ## **5\.  Retrieving and manipulating bits**
 
-`a.Bit[ix]` reads or writes individual bits in place. The least significant bit is at index 0 if ⎕IO=0, and at index 1 if ⎕IO=1.
+`a.Bit[ix]` reads or writes individual bits in place. The least significant bit is at index `0` if `⎕IO=0`, and at index `1` if `⎕IO=1`.
 
 ```
 a← ⎕NEW gmpz 15             ⍝ 1111₂
@@ -187,14 +187,14 @@ a.Bits                      ⍝ 0 1 0 0 1   (sign bit first, then most-significa
 | :---- | :---- |
 | `a.Bit[n]` | Read bit (boolean value) at index `n`.  |
 | `a.Bit[n]← b` | Set  bit at index `n` to `b`, a boolean (1 or 0). |
-| `a.Bit[n1 n2 n3]` | Read  bits at indices `n1 n2 n3`. Indices may be positive or negative. Honours `⎕IO` for positive indices, which select bits from low to high. Negative indices select from the high-order bits. Index ¯1 is the first HOB, i.e. the sign. |
-| <code>a.Bit[n1&nbsp;n2&nbsp;n3]←&nbsp;1&nbsp;0&nbsp;1</code><br><code>a.Bit[n1&nbsp;n2&nbsp;n3]←&nbsp;1</code> | Set one or more bits (one value per index, or one value for all). Honours `⎕IO` for positive indices, which select bits from low to high. Negative indices select from the high-order bits. Index ¯1 is the first HOB, i.e. the sign. |
+| `a.Bit[n1 n2 n3]` | Read  bits at indices `n1 n2 n3`. Indices may be positive or negative. Honours `⎕IO` for positive indices, which select bits from low to high. Negative indices select from the ***high-order*** bits. Index `¯1` is the first HOB, i.e. the sign. |
+| <code>a.Bit[n1&nbsp;n2&nbsp;n3]←&nbsp;1&nbsp;0&nbsp;1</code><br><code>a.Bit[n1&nbsp;n2&nbsp;n3]←&nbsp;1</code> | Set one or more bits (one value per index, or one value for all). Honours `⎕IO` for positive indices, which select bits from low to high. Negative indices select from the high-order bits. Index `¯1` is the first HOB, i.e. the sign. |
 | `a.Bits` | **All** bits as a boolean vector in two's complement, sign bit first (the reverse of `a.Bit[⍳a.BitLen]`). |
 | `a.Bits← 1 0 1` | Replace **all** the bits of object `a`; the leading bit is the sign. `a.Bits←1` sets `a` to `¯1`; an empty vector sets it to `0`). |
 | `a.ExportBits w` | As `a.Bits` but exactly `w` bits wide (sign-extended), `w ≥ a.BitLen`. `0` means the minimum. |
 | <code>a.ImportBits&nbsp;bits</code> | Same as `a.Bits← bits`. |
 
-Values assigned to bits must be 0 or 1 (badBitValÊ). Setting a bit beyond the current length to 1 is valid; the object grows automatically. Clearing high-order bits shrinks it.
+Values assigned to bits must be `0` or `1` (else `badBitValÊ`). Setting a bit beyond the current length to 1 is valid; the object grows automatically. Clearing high-order bits shrinks it.
 
 Note: Although GMP stores mpz_t values internally in sign-magnitude form, all bitwise operations and shifts emulate infinite-width two's complement arithmetic. Non-negative integers are treated as having an infinite prefix of 0 bits and negative integers an infinite prefix of 1 bits, while left and right bit shifts correspond to exact multiplication and truncating division by `2*b`.
 
@@ -202,27 +202,27 @@ Note: Although GMP stores mpz_t values internally in sign-magnitude form, all bi
 
 | Method | Meaning |
 | :---- | :---- |
-| `[a] c.And b` | c ← a ∧ b, bit by bit |
-| `[a] c.Or b` | c ← a ∨ b, bit by bit |
-| `[a] c.Xor b` | c ← a ≠ b, bit by bit |
-| `c.Com` | c ← bitwise NOT of c (that is, ¯1−c). Niladic, in place. |
+| `[a] c.And b` | `c ← a ∧ b`, bit by bit |
+| `[a] c.Or b` | `c ← a ∨ b`, bit by bit |
+| `[a] c.Xor b` | `c ← a ≠ b`, bit by bit |
+| `c.Com` | `c ←` bitwise NOT of `c` (that is, `¯1−c`). Niladic, in place. |
 | <code>n←&nbsp;c.PopCount</code> | Number of 1 bits. A negative number has infinitely many, so the result is `gmpz.UL_MAX` (Unix: `¯1+2*64`; Windows: `¯1+2*32`). |
-| <code>n←&nbsp;[a]&nbsp;c.HamDist&nbsp;b</code> | Hamming distance: the number of bit positions where a and b differ (`gmpz.UL_MAX` if exactly one is negative). |
+| <code>n←&nbsp;[a]&nbsp;c.HamDist&nbsp;b</code> | Hamming distance: the number of bit positions where `a` and `b` differ (`gmpz.UL_MAX` if exactly one is negative). |
 
 ### **Bit methods (alternatives to the Bit property)**
 
-All of these honour the caller's ⎕IO for their bit positions. A position below ⎕IO signals badBitIxÊ.
+All of these honour the caller's ⎕IO for their bit positions. A position below `⎕IO` signals `badBitIxÊ`.
 
 | Method | Meaning |
 | :---- | :---- |
-| <code>bool←&nbsp;[a]&nbsp;c.TestBit&nbsp;n</code> | Returns bit n. A visible result; `a` may be any operand (read-only). |
-| <code>val←&nbsp;c.SetBit&nbsp;n&nbsp;[val]</code> | Sets bit n to val (default 1): `c.SetBit 5` or `c.SetBit 5 0`. Receiver only; shy. |
-| <code>bit←&nbsp;c.ClrBit&nbsp;n</code> | Clears bit n (sets it to 0). Receiver only; shy. |
-| <code>bit←&nbsp;c.Flip&nbsp;n</code> | Complements bit n, and returns its new value. Receiver only; shy. |
-| <code>pos←&nbsp;[a]&nbsp;c.Iota&nbsp;bit</code> | Index of the lowest bit equal to bit (0 or 1), counted in your ⎕IO. Visible result. |
-| <code>pos←&nbsp;[a]&nbsp;c.Scan&nbsp;(start&nbsp;bit)</code> | Like Iota, but begins the search at index start (in your ⎕IO). Visible result. |
+| <code>n←&nbsp;[a]&nbsp;c.TestBit&nbsp;n</code> | Returns bit `n` (`1`\|`0`). A visible result; `a` may be any operand (read-only). |
+| <code>val←&nbsp;c.SetBit&nbsp;n&nbsp;[val]</code> | Sets bit `n` to `val` (`1`\|`0`; default `1)`: `c.SetBit 5` or `c.SetBit 5 0`. Receiver only; shy. |
+| <code>bit←&nbsp;c.ClrBit&nbsp;n</code> | Clears bit `n` (sets it to `0`). Receiver only; shy. |
+| <code>bit←&nbsp;c.Flip&nbsp;n</code> | Complements bit `n`, and returns its new value. Receiver only; shy. |
+| <code>pos←&nbsp;[a]&nbsp;c.Iota&nbsp;bit</code> | Index of the lowest bit equal to bit (`0` or `1`), counted in your `⎕IO`. Visible result. |
+| <code>pos←&nbsp;[a]&nbsp;c.Scan&nbsp;(start&nbsp;bit)</code> | Like Iota, but begins the search at the index `start` (in your `⎕IO`). Visible result. |
 
-Iota and Scan return `gmpz.UL_MAX` (`¯1+2*64` on *Unix* systems, `¯1+2*32` on *Windows*), *not* adjusted for ⎕IO, when there is no such bit.
+Iota and Scan return `gmpz.UL_MAX` (`¯1+2*64` on *Unix* systems, `¯1+2*32` on *Windows*), *not* adjusted for `⎕IO`, when there is no such bit.
 
 ## **6\.  Random numbers**
 
@@ -232,7 +232,7 @@ Uses GMP's Mersenne Twister; its state is created on first use of a random numbe
 | :-- | :---------------------- | :---------------------- |
 | `1` |  `1` through `n`   | `2*1`=>`2` through `2*e`  |
 | `0` |  `0` through `n-1` | `2*0`=>`1` through `¯1+2*e` |
-Table 6.0: ⎕IO for Rand and RandB 
+Table 6.0: `⎕IO` for Rand and RandB 
 
 ```
    c← ⎕NEW gmpz '123456789012345678901234567890'
@@ -281,7 +281,7 @@ If there is no such prime (`n` is `2`), PrevPrime signals `noPrevPrimeÊ`.
 | <code>c.Primorial&nbsp;n</code> | `c ←` the product of all primes ≤ n. |
 | <code>rem←&nbsp;c.SqrtRem&nbsp;b</code> | Sets `c ← ⌊√b` and (shyly) returns a new gmpz `rem ← b − c*2`. Signals `sqrtNegÊ` if `b<0`. |
 | <code>st←&nbsp;[a]&nbsp;c.GcdExt&nbsp;b</code> | Extended gcd: `c ← a∨b`, and the (shy) pair `st← s t` of new gmpz's with `(a×s)+(b×t) = c`. |
-| <code>bool←&nbsp;c.IsSquare</code> | Is c a perfect square? (0 is a perfect square; negative integers are not.) |
+| <code>bool←&nbsp;c.IsSquare</code> | Is `c` a perfect square? (`0` is a perfect square; negative integers are not.) |
 | <code>bool←&nbsp;c.IsPower</code> | True if `c` is a perfect power `c ≡ x*k`, where `x>0` and `k>1`. (GMP defines `0` and `1` as perfect powers; `x<0`, only if `k` is an odd power.) |
 | <code>bool←&nbsp;[a]&nbsp;c.Congruent&nbsp;(b&nbsp;m)</code> | Is `a ≡ b (mod m)`? With `m=0`, true only if `a=b`. |
 
@@ -325,7 +325,7 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | <code>a&nbsp;<GI&nbsp;b</code> | Compare APL `⍺<b`.  | `≤ = ≥ > ≠` | Like `a<GI b`, returning `0` or `1` |
 | <code>a&nbsp;⊥GI&nbsp;b</code> | *"decode to APL"* `b` (gmpz, int or int string) as an APL *string* in base `a` |`⊥GI b` | *"decode to APL"* `b` as an APL int string |
 | <code>a&nbsp;⊤GI&nbsp;b</code> | *"encode to gmpz"* a copy of the numeric string `b` read in base `a` | `⊤GI b` | *"encode to gmpz"* a copy of the numeric object `b` in base 10 |
-| <code>a&nbsp;≢GI&nbsp;b</code> | length of the string of `b` in base `a` (APL int) | `a ○GI b`|If `a=1`, find *next* prime after `b`;<br> If `a=¯1`, find *last* prime before `b`;<br>If `a=0`, check if `b` is probably a prime.<br><small>The glyph `○` is the APL *circle*</small>. |
+| <code>a&nbsp;≢GI&nbsp;b</code> | length of the string of `b` in base `a` (APL int) | `a ○GI b`|If `a=1`, find *next* prime after `b`;<br> If `a=¯1`, find prime *previous* to `b`;<br>If `a=0`, check if `b` is probably a prime (with the default number of iterations: 24).<br><small>The glyph `○` is the APL *circle*</small>. |
 
 Note \[1\]: `(mpz mpz)← a ÷∘|GI b` returns two gmpz's: `( (⌊a÷b), (⌊b|a) )` (calls `DivRem`).
 
@@ -373,21 +373,21 @@ Errors in public methods are trapped and re-signalled up the line, so ⎕DMX poi
 5. DivRem divisors may be any supported operand type and must be non-zero (`divZÊ` if **0**).
 6. Use `⌷a` to see the final (string) value. It is more efficient to keep working with gmpz objects, so that no unnecessary conversions to and from strings are needed.
 7. Strings may use the high minus `¯` on input; it is converted to `-` by gmpz utilities.
-8. The base (2 through 62) can be specified when importing numeric strings; it is invalid for other operand types.
-9. `a.Int64` only succeeds when the value fits a C long (signed 64-bit); `a.IntDF` allows up to 34 digits. Use **VFI** to test safely. Set `⎕FR←1287` in your session if you manipulate integers beyond 2\*53.
+8. The base (2 through 62) can be specified when importing numeric strings; it is not allowed for other operand types.
+9. `a.Int64` only succeeds when the value fits a C long (signed 64-bit); `a.IntDF` allows up to 34 digits. Use **VFI** to test safely. Set `⎕FR←1287` in your session if you manipulate integers beyond `2*53`.
 10. Copy, don't assign: `b←a` aliases; `b←a.Copy` copies.
-11. `⎕IO`: only the bit-position methods (Bit, TestBit, SetBit, ClrBit, Flip, Iota, Scan) and Rand/RandB depend on ⎕IO.
+11. `⎕IO`: only the bit-position methods (Bit, TestBit, SetBit, ClrBit, Flip, Iota, Scan) and Rand/RandB depend on `⎕IO`.
 12. Objects are lost on `)SAVE`/`)LOAD`; huge arguments can exhaust memory and stop the session (see §1).
-13. **Thread safety:** Class-level scratch buffers, `Rand`/`RandB`/`RandSeed`, and `GI` expressions are thread-safe across Dyalog threads (`&`). If two threads mutate the *same* *gmpz* instance concurrently, guard access to that instance with `:Hold` (or give each thread its own `.Copy`).
+13. **Thread safety:** Class-level scratch buffers, `Rand`, `RandB`, `RandSeed`, and `GI` expressions are thread-safe across Dyalog threads (`&`). If two threads mutate the ***same*** *gmpz* instance concurrently, guard access to that instance with `:Hold` (or give each thread its own copy).
 
 ## **11\.  Multi-Core Execution with Dyalog Isolates**
 
-Dyalog APL threads (`&`) multiplex cooperatively on a single OS interpreter thread and block on `⎕NA` calls. To run CPU-intensive *gmpz* routines (such as `NextPrime`, `ProbabPrime`, `PowM`, or large `Fac`) in true parallel across multiple CPU cores, use Dyalog's built-in **`isolate`** workspace (`ws/isolate`), which runs each worker in a separate OS process.
+Dyalog APL threads (`&`) multiplex cooperatively on a single OS interpreter thread and block on `⎕NA` calls. To run CPU-intensive *gmpz* routines (such as `NextPrime`, `ProbabPrime`, `PowM`, or large `Fac`) in true parallel fashion across multiple CPU cores, use Dyalog's built-in `isolate` workspace, which runs each worker in a separate OS process. Details follow.
 
 ### Setup & Serialization Rules
 
 * **Load *gmpz* inside each isolate using `2 isos.⎕FIX`:** Passing left argument `2` tells `⎕FIX` to return the character name `'#.gmpz'` rather than a class reference (isolates forbid returning class or function references across process boundaries).
-* **Never pass *gmpz* instances across isolate boundaries:** Each isolate has its own OS address space and `libgmp` instance, so raw C pointers (`⍙ptr`) cannot cross IPC boundaries. Serialize values as **Base-62 strings** (`x.GetInBase 62` / `62 p.Set str`) for moderate integers, or **two's-complement bit vectors** (`x.Bits` / `p.Bits← bits`) for very large integers.
+* **Never pass *gmpz* instances across isolate boundaries:** Each isolate has its own OS address space and `libgmp` instance, so raw C pointers (`⍙ptr`) cannot cross IPC boundaries. Serialize values as **Base-62 strings** (`x.GetInBase 62`, `62 p.Set str`) for moderate integers, or **two's-complement bit vectors** (`x.Bits`, `p.Bits← bits`) for very large integers.
 * **Reuse a persistent worker pool:** Create `N` isolates once, fix *gmpz* and your worker functions into them, and close the pool with `_← isos.Close` when finished.
 
 ```apl
