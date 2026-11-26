@@ -17,25 +17,33 @@ CRt← CR, (4⍴' ')
 ⎕← 'To run both',CRt,'∘ test methods, and ',CRt,'∘ performance tests,',CR,'execute:',CRt,(⍕⎕THIS),'.Run'
 ⎕DF '[*GmpzTest*]'
 
-∇ Run   
+∇ Run    ;res 
+  :TRAP 1000
   LoadGmpz BANNER 'Loaded gmpz/gmpz'
 
   BANNER 'Running TestMethods 1'
-  TestMethods 1
+  ⌷ res← TestMethods 1
+  BANNER 'Success Rate:',  (1⍕100×(0⊃res)÷1⌈2⊃res),'%'
+
 
   BANNER 'Running TestMethods 100 -- to exercise any memory leaks'
   TestMethods 100
+   BANNER 'Success Rate:' , (1⍕100×(0⊃res)÷1⌈2⊃res),'%'
 
    BANNER 'Running PerformanceTests'
    PerformanceTests
 
    BANNER 'Done'
+ :Else 
+   BANNER 'Aborted by user with error code ',⍕⎕EN 
+:EndTrap 
 ∇ 
 
 ∇ {dontSkip} BANNER headline; pw 
 :IF 900⌶⍬ ⋄ dontSkip← 1 ⋄ :EndIf 
 :IF ~dontSkip ⋄ :RETURN ⋄ :EndIf 
 pw← 80-4
+headline← ∊headline 
 ⎕← ('+ '),(pw⍴'-'),' +'
 lh← 0⌈ 0.5× pw- ≢headline
 ⎕← '+ ',(''⍴⍨⌊lh),headline,(''⍴⍨ ⌈lh),' +'
@@ -72,11 +80,6 @@ lh← 0⌈ 0.5× pw- ≢headline
 :EndIf
 
 total← pass← 0
-
-:If 0=⎕NC'gmpz'
-   ⎕← 'Load gmpz library before testing...'
-   :Return
-:EndIf
 
 rep← ⍬
 ⍝ Chk: monadic dfn, argument is (name expected actual), each enclosed.
@@ -673,7 +676,7 @@ big← '123456789012345678901234567890'
       rep,← ⊂Chk(⊂'GI 7|¯2 residue')(⊂'5')(⊂(⌷(7|GI ¯2)))
       rep,← ⊂Chk(⊂'GI 1⌽3 shift left')(⊂'6')(⊂(⌷(1⌽GI 3)))
       rep,← ⊂Chk(⊂'GI ¯1⌽7 shift right')(⊂'3')(⊂(⌷(¯1⌽GI 7)))
-      rep,← ⊂Chk(⊂'GI 16⊥ff base')(⊂'255')(⊂(⌷(16⊥GI'ff')))
+      rep,← ⊂Chk(⊂'GI 16⊥ff base')(⊂'255')(⊂(⌷(16⊤GI'ff')))
       rep,← ⊂Chk(⊂'GI big: string + string')(⊂'111111111011111111100')(⊂(⌷('12345678901234567890'+GI'98765432109876543210')))
    :Else
       rep,← ⊂'**FAIL: GI dyadic arithmetic section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
@@ -696,7 +699,7 @@ big← '123456789012345678901234567890'
       rep,← ⊂Chk(⊂'GI 10⍳1 first 1-bit')(⊂1)(⊂(10⍳GI 1))
       rep,← ⊂Chk(⊂'GI 1⌷10 bit 1 of 10')(⊂1)(⊂(1⌷GI 10))
       rep,← ⊂Chk(⊂'GI 0⌷10 bit 0 of 10')(⊂0)(⊂(0⌷GI 10))
-      rep,← ⊂Chk(⊂'GI 16⊤255 base-16 string')(⊂'ff')(⊂(16⊤GI 255))
+      rep,← ⊂Chk(⊂'GI 16⊤255 base-16 string')(⊂'ff')(⊂(16⊥GI 255))
       rep,← ⊂Chk(⊂'GI 16≢255 length in base 16')(⊂2)(⊂(16≢GI 255))
    :Else
       rep,← ⊂'**FAIL: GI comparisons / DivRem / PowM / Iota / Bit section — unexpected error EN ',(⍕⎕DMX.EN),' Message: ',⎕DMX.Message
@@ -713,8 +716,8 @@ big← '123456789012345678901234567890'
       rep,← ⊂Chk(⊂'GI ≢12345 StrLen')(⊂5)(⊂(≢GI'12345'))
       rep,← ⊂Chk(⊂'GI ⍎123 IntDF')(⊂123)(⊂(⍎GI'123'))
       rep,← ⊂Chk(⊂'GI ⌷123 bit vector')(⊂0 1 1 1 1 0 1 1)(⊂(⌷GI 123))
-      rep,← ⊂Chk(⊂'GI ⊤123 decimal string')(⊂'123')(⊂(⊤GI 123))
-      rep,← ⊂Chk(⊂'GI ⊥123 fresh gmpz')(⊂'123')(⊂⌷(⊥GI'123'))
+      rep,← ⊂Chk(⊂'GI ⊤123 decimal string')(⊂'123')(⊂(⊥GI 123))
+      rep,← ⊂Chk(⊂'GI ⊥123 fresh gmpz')(⊂'123')(⊂⌷(⊤GI'123'))
       rep,← ⊂Chk(⊂'GI ⎕VFI 42 = 1 42')(⊂1 42)(⊂((⎕VFI GI)'42'))
       ok← 1
       :For i :In ⍳20
@@ -1337,7 +1340,7 @@ r← pass fail total
       (q r)←x ÷∘|GI (i+3)
       x←(q ⌈GI y) +GI (r ×GI (i+2))
   :EndFor
-  res←(⌷x) (≢GI x) (16 ⊤GI x)
+  res←(⌷x) (≢GI x) (16 ⊥GI x)
 ∇
 
 ∇ res←Worker nIters;acc;i
