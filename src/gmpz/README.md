@@ -421,45 +421,36 @@ Dyalog APL threads (`&`) multiplex cooperatively on a single OS interpreter thre
 * **Use Isolates (`isolate.New`)** when individual GMP operations take **> 5–10 ms** of CPU time so true multi-core execution easily outweighs IPC serialization overhead.
 On a Mac with 4 "performance" cores (and 6 "efficiency" cores), large GMP operations saw a speedup of 3.4 fold with 4 isolates.  Speedups improved only a small amount with 5 or even 10 isolates. For smaller uneven tasks, a larger number of isolates might achieve greater speedups: benchmark and see!
 
-## **Appendix: Encrypt a Message Using Simplified RSA Key**
+## **Appendix: Example Code** 
 
-Implement a simplified[1] **RSA key generation, encryption, and decryption** workflow.
-This demonstrates the core lifecycle of GMP integers:
-* initialization,
+We provide two examples: one, demonstrating *gmpz* methods and the other, 
+the use of *GI* operands (functions). Both show (simplified) encryption/decryption algorithms,
+which are natural use cases for large integer calculations. Both demonstrate: 
+
+* initialization of objects,
 * random prime generation,
 * modular arithmetic,
 * modular inverse, and 
 * memory cleanup.
 
-### Load and run the example code.
+
+### Load the examples:
+
+The `examples` namespace (from file **gmpz/examples.dyalog**) includes instructions for demonstrating key generation, encoding, and decoding of a Unicode string using two common methods: RSA and Diffie-Hellman. The examples are not meant to be production-level code.
+
 
 ```
-]load gmpz/Example.aplf
-GmpzExample
+     ]load gmpz/examples
+∘ examples.Rsa  An example using gmpz method calls
+                Encoding/decoding a message using RSA encoding
+
+  examples.Rsa '🐱 This is a cat 🐱'
+
+∘ examples.Diffie: An example using the GI "Apl-style" interface
+                   A Diffie-Hellman key exchange
+  examples.Diffie '🐱 This is a cat 🐱'
+
+#.examples
 ```
 
-#### Running GmpzExample [2]
 
-```
-    GmpzExample '🐱 This is a cat 🐱'
-Key Components are in Base 62
-
-Public Key Modulus    (n)  
-    Rj1QwDZppdw6ael7OzH4P8HogDGjzMlKx3gf3xmbHj8vyHYjpPcX0DzILADosmUC
-    ...                  
-Public Key Exponent   (e) 
-    H33
-Private Key Exponent  (d) 
-    6kEWniBBwhDm5yBsvfk1PVaeCqY238KkscifnbXuvYrz4ozDRQVn2fAagMT9V0XT
-    ...                   
-Encrypted Message
-    5Welwh9U2V0jVKS13iAjc5En5PdK9vFNxmSDkZoC1NT4KEE2hotWcprDQBktEYXS  
-    ...                 
-Decrypted Message
-    🐱 This is a cat 🐱
-
-🙂🙂🙂 Success: Decrypted message matches original
-```
-
-[1]:  RSA encryption is still useful today, provided you use 2048- or, preferably, 4096-bit encryption.<p>
-[2]:  The output is abridged (...) for pedagogical purposes.
