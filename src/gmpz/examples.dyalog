@@ -144,7 +144,7 @@
    ⍝
    ∇  
    
-   ⎕← '∘ examples.Diffie: An example of using the GI "Apl-style" interface'
+   ⎕← '∘ examples.Diffie: An example using the GI "Apl-style" interface'
    ⎕← '                   A Diffie-Hellman key exchange'
    ⎕← '  examples.Diffie ''🐱 This is a cat 🐱'''
    ⎕← ''
