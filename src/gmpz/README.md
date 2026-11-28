@@ -48,9 +48,9 @@
 | <code>ok&nbsp;int←&nbsp;a.VFI</code> | `1 n` if a fits in 34 digits (see IntDF), else `0 0`. Never errors. |
 | <code>str←&nbsp;a.GetInBase&nbsp;n</code> | `a` as a string in base `n` (2 ≤ `n` ≤ 62). |
 | <code>str←&nbsp;[base]&nbsp;gmpz.Get&nbsp;b</code> | `b` (a *gmpz*, an APL integer or a *decimal* string) as a string in the base (default 10). |
-| <code>int←&nbsp;a.StrLen</code> | Number of characters in `⌷a`, including the leading *minus* `¯`. Same as `≢⌷a`, without building the string. |
+| <code>int←&nbsp;a.StrLen</code> | Number of characters in `⌷a`, including the leading *minus* `¯`. Same as `≢⌷a`, without the overhead of building the string. |
 | <code>int←&nbsp;a.StrLenInBase&nbsp;n</code> | Same as `≢a.GetInBase n`, for 2 ≤ n ≤ 62. |
-| <code>int←&nbsp;a.BitLen</code> | Minimum number of bits to hold `a` in two's complement, *including the sign bit*: 0 is 1, 7 is 4, 8 is 5, ¯8 is 4, ¯1 is 1. Equals `≢a.Bits`. |
+| <code>int←&nbsp;a.BitLen</code> | Minimum number of bits to hold `a` in two's complement, *including the sign bit*: 0 is 1, 7 is 4, 8 is 5, ¯8 is 4, ¯1 is 1. Equals `≢a.Bits`, but *faster*. |
 | <code>int←&nbsp;a.Signum</code> | ¯1, 0 or 1. |
 | <code>f←&nbsp;a.Float</code> | `a` as an approximate APL float: `2*64` is `18446744073709552000.` Signals `badIntÊ` if `a` has more than 1024 bits. |
 | <code>bool←&nbsp;a.Even</code>, <code>a.Odd</code> | 1 or 0 (explicitly returned). |
@@ -124,7 +124,7 @@ Remember, when `c` is returned, it is `c` itself, not a separate copy.
 | <code>[a]&nbsp;c.PowM&nbsp; e&nbsp; m</code> | `c ← m\|a*e` | Modular exponentiation&mdash;: efficient. `e` and `m` may be gmpz, integer or string. <br>If `e<0` or `m<0`, signals`powÊ`; if`m=0`, signals `divZÊ`. |
 | <code>rc←&nbsp;[a]&nbsp;c.Invert&nbsp; m</code> | `c ← a⁻¹ mod m` | Returns 1 if the inverse exists, 0 if not (then `c` is meaningless). `m` must be a positive integer.  If `m<0`, signals`powÊ`; if`m=0`, signals `divZÊ`. |
 | <code>i&nbsp;c.Shift&nbsp;b</code> | `c ← b × 2*i` | Binary shift. `i>0` left, `i<0` right (truncating toward `0`). Dyadic only. `i`may be an integer, an integer string or a gmpz; non-integers signal `shiftÊ`. |
-| <code>i&nbsp;c.ShiftFloor&nbsp;b</code> | `c ← ⌊b ÷ 2*-i` | Like Shift, but a right shift *floors* (toward ¯∞): `¯1 c.ShiftFloor ¯7` is `¯4`, where Shift gives `¯3`. Same for non-negative `b`. |
+| <code>i&nbsp;c.ShiftFloor&nbsp;b</code> | <code>c&nbsp;←&nbsp;⌊b&nbsp;×&nbsp;2*i</code> | Like Shift, but a right shift *floors* (toward ¯∞): `¯1 c.ShiftFloor ¯7` is `¯4`, where Shift gives `¯3`. Same for non-negative `b`. |
 | <code>c.Neg</code> | `c ← −c` | Niladic. For `c← −b`: `(c.Set b).Neg`. |
 | <code>c.Abs</code> | `c ← \|c` | Niladic. For `c← \|b`: `(c.Set b).Abs`. |
 | <code>c.Fac&nbsp;n</code> | `c ← !n` | `n` ≥ 0; `n` may be an integer, string or gmpz. `n≤¯1+2*64` (Windows: `n≤¯1+2*32`), else `facBadÊ`. Large results are limited only by memory. |
@@ -196,7 +196,7 @@ a.Bits                      ⍝ 0 1 0 0 1   (sign bit first, then most-significa
 
 Values assigned to bits must be `0` or `1` (else `badBitValÊ`). Setting a bit beyond the current length to 1 is valid; the object grows automatically. Clearing high-order bits shrinks it.
 
-Note: Although GMP stores mpz_t values internally in sign-magnitude form, all bitwise operations and shifts emulate infinite-width two's complement arithmetic. Non-negative integers are treated as having an infinite prefix of 0 bits and negative integers an infinite prefix of 1 bits, while left and right bit shifts correspond to exact multiplication and truncating division by `2*b`.
+Note: Although GMP stores values internally in sign-magnitude form, all bitwise operations and shifts emulate infinite-width two's complement arithmetic. Non-negative integers are treated as having an infinite prefix of 0 bits and negative integers an infinite prefix of 1 bits, while left and right bit shifts correspond to exact multiplication and (truncating) division by `2*b`.
 
 ### **Whole-number bitwise operations**
 
@@ -206,8 +206,8 @@ Note: Although GMP stores mpz_t values internally in sign-magnitude form, all bi
 | `[a] c.Or b` | `c ← a ∨ b`, bit by bit |
 | `[a] c.Xor b` | `c ← a ≠ b`, bit by bit |
 | `c.Com` | `c ←` bitwise NOT of `c` (that is, `¯1−c`). Niladic, in place. |
-| <code>n←&nbsp;c.PopCount</code> | Number of 1 bits. A negative number has infinitely many, so the result is `gmpz.UL_MAX` (Unix: `¯1+2*64`; Windows: `¯1+2*32`). |
-| <code>n←&nbsp;[a]&nbsp;c.HamDist&nbsp;b</code> | Hamming distance: the number of bit positions where `a` and `b` differ (`gmpz.UL_MAX` if exactly one is negative). |
+| <code>n←&nbsp;c.PopCount</code> | Number of 1 bits. A negative number has infinitely many, so the result is `gmpz.INFINITE` (Unix: `¯1+2*64`; Windows: `¯1+2*32`). |
+| <code>n←&nbsp;[a]&nbsp;c.HamDist&nbsp;b</code> | Hamming distance: the number of bit positions where `a` and `b` differ (`gmpz.INFINITE` (**an infinite number**) if exactly one is negative). |
 
 ### **Bit methods (alternatives to the Bit property)**
 
@@ -222,7 +222,7 @@ All of these honour the caller's ⎕IO for their bit positions. A position below
 | <code>pos←&nbsp;[a]&nbsp;c.Iota&nbsp;bit</code> | Index of the lowest bit equal to bit (`0` or `1`), counted in your `⎕IO`. Visible result. |
 | <code>pos←&nbsp;[a]&nbsp;c.Scan&nbsp;(start&nbsp;bit)</code> | Like Iota, but begins the search at the index `start` (in your `⎕IO`). Visible result. |
 
-Iota and Scan return `gmpz.UL_MAX` (`¯1+2*64` on *Unix* systems, `¯1+2*32` on *Windows*), *not* adjusted for `⎕IO`, when there is no such bit.
+When a searched-for bit is not found, Iota and Scan return `gmpz.INFINITE` (`¯1+2*64` on *Unix* systems, `¯1+2*32` on *Windows*), *not* adjusted for `⎕IO`.
 
 ## **6\.  Random numbers**
 
@@ -317,8 +317,8 @@ GI wraps the methods so they read like APL primitives. Arguments are never modif
 | <code>a&nbsp;∧GI&nbsp;b</code> | <small>lowest common multiple</small>, `a∧b` | `≢GI b` | string length (`b.StrLen`, an APL int) |
 | <code>a \|GI b</code> | `a\|b` (`a` is the modulus) | `⍎GI b` | `b` as an APL int (`IntDF`); signals an error if it does not fit |
 | <code>a&nbsp;⌽GI&nbsp;b</code> | shift `b` by `a` bits, `a` a pos. or neg. int | <code>⎕VFI&nbsp;GI&nbsp;b</code> | `ok int` as `b.VFI`, never errors |
-| <code>a&nbsp;*∘\|GI&nbsp;(e&nbsp;m)</code> | `m\|a*e` (PowM) | | |
-| <code>a&nbsp;⍳GI&nbsp;i</code> | position of the lowest bit of `a` equal to `i` (`0` or `1`); `¯1+2*64` if none (APL int) |  `⎕UCS GI b` | `b` a *gmpz*: Convert gmp int to APL Unicode string via *UTF-8*;<br>`b` a char/int vector: Convert string `s` (or `⎕UCS s`) to a *gmpz* int via *UTF-8*. |
+| <code>a&nbsp;*∘\|GI&nbsp;(b&nbsp;m)</code> | `m\|a*b` (PowM) | <code>a&nbsp;×∘\|GI&nbsp;(b&nbsp;m)</code> | `m\|a×b`. Not an intrinsic; uses Mul and Mod|
+| <code>a&nbsp;⍳GI&nbsp;i</code> | position of the lowest bit of `a` equal to `i` (`0` or `1`); `¯1+2*64` if none (APL int) |  `⎕UCS GI b` | `b` a *gmpz*: Convert gmp int to APL Unicode string via *UTF-8*;<br>`b` a char or int vector: Convert string `s` (or `⎕UCS s`) to a *gmpz* int via *UTF-8*. |
 | <code>a&nbsp;⌷GI&nbsp;b</code> | bit `a` of `b` (`b.Bit[a]`; APL `0`or `1`). <small>Access low-order bits first.</small> See note \[2\]. | `⌷GI b` | `b` as a two's complement bit vector, `b.Bits`. <small>Sign bit and high-order bits first.</small> See note \[2\].|
 | <code>a&nbsp;!GI&nbsp;b</code> | `a!b` as in APL: `b` choose `a` (`3!GI 5` is `10`) | `~GI b` | bitwise NOT of `b`, i.e. `¯1−b` |
 | <code>a&nbsp;⌈GI&nbsp;b</code> | the larger of `a` and `b` | <code>a&nbsp;⌊GI&nbsp;b</code> | the smaller of `a` and `b` |
